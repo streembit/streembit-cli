@@ -1,0 +1,31 @@
+{
+    "name": "streembit-cli",
+    "version": "1.0.1",
+    "description": "Streembit command-line interface",
+    "main": "streembit.js",
+    "author": {
+        "name": "T Z Pardi",
+    "   email": "tzpardi@streembit.com"
+    },
+    "dependencies": {
+        "async": "^2.1.5",
+        "browserify-aes": "^1.0.6",
+        "bs58check": "^1.1.1",
+        "clarinet": "^0.11.0",
+        "collections": "^1.2.4",
+        "commander": "^2.9.0",
+        "elliptic": "^6.3.2",
+        "hat": "0.0.3",
+        "ip": "^1.1.0",
+        "leveldown": "^1.4.3",
+        "levelup": "^1.3.1",
+        "lodash": "^4.15.0",
+        "merge": "^1.2.0",
+        "ms": "^0.7.1",
+        "pm2": "^1.0.0",
+        "restify": "^4.0.4",
+        "secure-random": "^1.1.1",
+        "uuid": "^3.0.1",
+        "xml2js": "~0.1.14"
+    }
+}
