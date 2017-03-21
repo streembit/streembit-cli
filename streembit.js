@@ -23,22 +23,12 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
-var DEFAULT_STREEMBIT_PORT = 32320;
+var config = require('./config');
 
 var program = require('commander');
-var config = require('./config');
 var assert = require('assert');
-var path = require('path');
-var fs = require('fs');
-var crypto = require('crypto');
-var levelup = require('levelup');
-var async = require('async');
-var util = require('util');
-var assert = require('assert');
-//var account = require("./account");
-//var peernet = require("./peernet");
-//var bootclient = require("./bootclient");
-//var seeds = require("./seeds");
+var runner = require('./runner');
+var prompt = require('prompt');
 
 
 function parseIpPort(val) {
@@ -58,6 +48,7 @@ program
     .option('-w, --password [value]', 'Password to protect the private key')
     .option('-i, --ip [value]', 'IP address for the Streembit seed')
     .option('-p, --port <num>', 'Port for the Streembit client', parseIpPort)
+    .option('-c, --client', 'Run as a streembit client')
     .option('-s, --seednode', 'Run as a seed node')
     .option('-b, --blockchain', 'Run as a blockchain node')
     .option('-t, --iot', 'Run as an IoT device node')
@@ -67,9 +58,6 @@ var ipport = program.port ? program.port : 0;
 if (!ipport) {
     //  check the config file
     ipport = config.port;
-    if (!ipport) {
-        ipport = DEFAULT_STREEMBIT_PORT;
-    }
 }
 
 var ipaddress = program.ip;
@@ -78,24 +66,30 @@ if (!ipaddress) {
     ipaddress = config.ipaddress || 0;
 }
 
-var isseednode = program.seednode ? program.seednode : false;
-if (!isseednode) {
+var is_streembit_client = program.client ? program.client : false;
+if (!is_streembit_client) {
     //  check the config file
-    isseednode = config.seed_node.run ? true : false;
+    is_streembit_client = config.func_client.run ? true : false;
 }
 
-var isblockchain = program.blockchain ? program.blockchain : false;
-if (!isblockchain) {
+var is_seednode = program.seednode ? program.seednode : false;
+if (!is_seednode) {
     //  check the config file
-    isblockchain = config.blockchain_node.run ? true : false;
+    is_seednode = config.func_seed.run ? true : false;
+}
+
+var is_blockchain = program.blockchain ? program.blockchain : false;
+if (!is_blockchain) {
+    //  check the config file
+    is_blockchain = config.func_blockchain.run ? true : false;
 }
 
 
-var isiot = program.iot ? program.iot : false;
-var isiot = program.isiot ? program.isiot : false;
-if (!isiot) {
+var is_iothandler = program.iot ? program.iot : false;
+var is_iothandler = program.isiot ? program.isiot : false;
+if (!is_iothandler) {
     //  check the config file
-    isiot = config.iot_node.run ? true : false;
+    is_iothandler = config.func_iot.run ? true : false;
 }
 
 var password = program.password;
@@ -103,131 +97,57 @@ if (!password) {
     //  check the config file
     password = config.password ? config.password : 0;
 }
-assert(password, "Password that protects the private key must exist in the command line arguments or in the config.json file");
 
-console.log('port: %j', ipport);
-console.log('ipaddress: %j', ipaddress);
-console.log('seednode: %j', isseednode);
-console.log('blockchain: %j', isblockchain);
-console.log('password: %j', isiot);
---console.log('password: %j', password);
+// show the prompt if the password was not supplied in the cmd line argument nor in the config file
+if (!password) {
+    var schema = {
+        properties: {
+            password: {
+                hidden: true
+            }
+        }
+    };
 
+    prompt.message = "";
 
+    //
+    // Start the prompt
+    //
+    prompt.start();
 
-/*
-var DEFAULT_STREEMBIT_PORT = 32320;
-
-var config = require('./config');
-
-var logger = require("streembitlib/logger/logger");
-global.applogger = logger;
-
-var assert = require('assert');
-var path = require('path');
-var fs = require('fs');
-var crypto = require('crypto');
-var levelup = require('levelup');
-var async = require('async');
-var util = require('util');
-var assert = require('assert');
-var wotkad = require('streembitlib/kadlib');
-streembit.account = require("./account");
-streembit.peernet = require("./peernet");
-streembit.bootclient = require("./bootclient");
-var Seeds = require("./seeds");
-
-assert(config.node, "node field must exists in the config.json file");
-assert(config.node.address && typeof config.node.address == "string" && config.node.address.trim().length > 0, "valid address must must exists in the config.node field");
-assert(config.node.seeds, "seeds must exists in the config.node field");
-assert(Array.isArray(config.node.seeds), 'Invalid seeds supplied. "seeds" must be an array');
-
-if (!config.node.port) {
-    config.node.port = DEFAULT_STREEMBIT_PORT; 
+    //
+    // Get two properties from the user: email, password
+    //
+    prompt.get(schema, function (err, result) {
+        password = result.password;
+        assert(password, "Password that protects the private key must exist in the command line arguments or in the config.json file or you must type at the command prompt.");
+        run();
+    });
+}
+else {
+    run();
 }
 
-var is_seed_node = config.is_seed_node;
+function run() {
+    console.log('port: %j', ipport);
+    console.log('ipaddress: %j', ipaddress);
+    console.log('client: %j', is_streembit_client);
+    console.log('seednode: %j', is_seednode);
+    console.log('blockchain: %j', is_blockchain);
+    console.log('isiot: %j', is_iothandler);
 
-// ensure the ports of the seeds are correct
-config.node.seeds.forEach(function (item, index, array) {
-    if (!item.address || typeof item.address != "string" || item.address.trim().length == 0) {
-        throw new Error("Application error: address for a seed is required")
-    }
-    if (!item.port) {
-        item.port = DEFAULT_STREEMBIT_PORT;
-    }
-});
+    var opts = {
+        client: is_streembit_client,
+        seed: is_seednode,
+        blockc: is_blockchain,
+        iot: is_iothandler,
+        pwd: password
+    };
 
-// initialize the database path
-var maindb_path = path.join(__dirname, 'db', 'streembitdb');
+    //
+    // run the application
+    //
+    runner(opts);
+}
 
-async.waterfall(
-    [
-        function (callback) {
-            var wdir = process.cwd();
-            var logspath = path.join(wdir, 'logs');
-            var loglevel = config.log && config.log.level ? config.log.level : "debug";
-            logger.init(loglevel, logspath, null, callback);
-        },      
-        function (callback) {
-            // create the db directory
-            logger.info("initializing database, maindb_path: %s", maindb_path);
-            var exists = fs.existsSync(maindb_path);
-            if (exists) {
-                return callback();
-            }
-             
-            logger.info("Creating database directory ...");
-            var dbdir_path = path.join(__dirname, 'db');
-            try {
-                fs.mkdirSync(dbdir_path);
-            }
-            catch (e) {
-                return callback("creating database error: " + e.message);
-            }
-            try {
-                fs.mkdirSync(maindb_path);
-            }
-            catch (e) {
-                return callback("creating database error: " + e.message);
-            }
 
-            exists = fs.existsSync(maindb_path);
-            if (!exists) {
-                callback("Unable to create data directory");
-            }
-            else {
-                logger.info("DB directory created");
-                callback();
-            }
-
-        },    
-        function (callback) {
-            streembit.account.create(callback);
-        },
-        function (callback) {
-            // get the seeds
-            var seedhandler = new Seeds();
-            seedhandler.load(callback);
-        },
-        function (seeds, callback) {
-            try {
-                var maindb = levelup(maindb_path);
-                callback(null, seeds, maindb);
-            }
-            catch (e) {
-                callback("create database error: " + e.message);
-            }
-        },
-        function (seeds, maindb, callback) {
-            streembit.peernet.start(maindb, seeds, callback);
-        }
-    ], 
-    function (err, result) {
-        if (err) {
-            console.log("Main init error: %j", err);
-            logger.error("Main init error: %j", err);
-        }
-    }
-);
-
-*/

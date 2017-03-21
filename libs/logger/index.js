@@ -126,7 +126,7 @@ function log_warn(msg, val1, val2, val3, val4) {
 }
 
 
-function config_log(loglevel, logpath, excpath, taskbar_infofn) {
+function configure(loglevel, logpath, excpath, taskbar_infofn) {
     var transports = [
         new winston.transports.Console({
             level: loglevel,
@@ -192,7 +192,7 @@ function init_log(loglevel, logdir, taskbar_infofn, callback) {
         return callback(e.message);
     }
 
-    config_log(loglevel || "debug", logfile, path.join(logdir, 'exception.log'), taskbar_infofn);
+    configure(loglevel || "debug", logfile, path.join(logdir, 'exception.log'), taskbar_infofn);
     logger.info("logspath: " + logdir);
 
     return callback();

@@ -19,36 +19,18 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-
 'use strict';
 
-var crypto = require('crypto');
-var ecckey = require('./libs/index').crypto;
-var secrand = require('secure-random');
+var streembit = streembit || {};
 
-var password;
-try {
-    if (process.argv.indexOf("-pksecret") != -1) {
-        password = process.argv[process.argv.indexOf("-pksecret") + 1]; 
+var logger = require("../libs/logger");
+
+module.exports = exports = function (opts, callback) {
+    if (!opts.client) {
+        logger.debug("Don't run streembit client handler");
+        return callback();
     }
-}
-catch (err) {
-}
 
-if (password) {
-    password = crypto.createHash('sha256').update(password).digest('hex');
-}
-else {
-    password = secrand.randomBuffer(32).toString("hex");
-}
-
-var entropy = crypto.createHash('sha256').update(password).digest('hex');
-
-var key = new ecckey();
-key.generateKey(entropy);
-
-console.log("Key created");
-console.log("Private key: %s", key.privateKeyHex);
-console.log("Public key HEX: %s", key.publicKeyHex);
-console.log("Public key BS58: %s", key.publicKeyBs58);
-console.log("Public key hash: %s", key.pubkeyhash);
+    logger.info("Run streembit client handler");
+    callback();
+};
