@@ -23,14 +23,20 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
-var logger = require("../libs/logger");
+var config = require("config");
+var logger = require("libs/logger");
 
-module.exports = exports = function (opts, callback) {
-    if (!opts.client) {
-        logger.debug("Don't run streembit client handler");
+module.exports = exports = function (callback) {
+    var confarr = config.modules.filter(function (item) {
+        return item.name == "iot";
+    });
+
+    var moduleconf = confarr && confarr.length ? confarr[0] : [];
+    if (!moduleconf.run) {
+        logger.debug("Don't run IoT handler");
         return callback();
     }
 
-    logger.info("Run streembit client handler");
+    logger.info("Run IoT handler");
     callback();
 };

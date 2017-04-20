@@ -34,10 +34,11 @@ var async = require('async');
 var util = require('util');
 var assert = require('assert');
 var logger = require("./libs/logger");
-var seedrunner = require("./func_seed");
-var clientrunner = require("./func_client");
-var bcrunner = require("./func_bc");
-var iotrunner = require("./func_iot");
+var seedrunner = require("./modules/seed");
+var clientrunner = require("./modules/client");
+var bcrunner = require("./modules/blockchain");
+var iotrunner = require("./modules/iot");
+var db = require("./libs/database");
 
 // initialize the logger
 function initialize_logger(callback) {
@@ -47,11 +48,15 @@ function initialize_logger(callback) {
     logger.init(loglevel, logspath, null, callback);
 }
 
+
 module.exports = exports = function (opts) {
 
     async.waterfall(
         [
             initialize_logger,
+            function (callback) {
+                db.init_streembitdb(__dirname, callback);
+            },            
             function (callback) {
                 seedrunner(opts, callback);
             },
@@ -59,10 +64,10 @@ module.exports = exports = function (opts) {
                 clientrunner(opts, callback);
             },
             function (callback) {
-                bcrunner(opts, callback);
+                bcrunner(callback);
             },
             function (callback) {
-                iotrunner(opts, callback);
+                iotrunner(callback);
             }        
         ],
         function (err, result) {

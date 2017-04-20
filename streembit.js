@@ -23,6 +23,8 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
+require('app-module-path').addPath(__dirname);
+
 var config = require('./config');
 
 var program = require('commander');
@@ -43,63 +45,18 @@ function parseIpPort(val) {
     return port;
 }
 
-program
-    .version('1.0.1')
-    .option('-w, --password [value]', 'Password to protect the private key')
-    .option('-i, --ip [value]', 'IP address for the Streembit seed')
-    .option('-p, --port <num>', 'Port for the Streembit client', parseIpPort)
-    .option('-c, --client', 'Run as a streembit client')
-    .option('-s, --seednode', 'Run as a seed node')
-    .option('-b, --blockchain', 'Run as a blockchain node')
-    .option('-t, --iot', 'Run as an IoT device node')
-    .parse(process.argv);
+function init(callback) {
+    var password = program.password;
+    if (!password) {
+        //  check the config file
+        password = config.password ? config.password : 0;
+    }
 
-var ipport = program.port ? program.port : 0;
-if (!ipport) {
-    //  check the config file
-    ipport = config.port;
-}
+    if (password) {
+        return callback(password);
+    }
 
-var ipaddress = program.ip;
-if (!ipaddress) {
-    //  check the config file
-    ipaddress = config.ipaddress || 0;
-}
-
-var is_streembit_client = program.client ? program.client : false;
-if (!is_streembit_client) {
-    //  check the config file
-    is_streembit_client = config.func_client.run ? true : false;
-}
-
-var is_seednode = program.seednode ? program.seednode : false;
-if (!is_seednode) {
-    //  check the config file
-    is_seednode = config.func_seed.run ? true : false;
-}
-
-var is_blockchain = program.blockchain ? program.blockchain : false;
-if (!is_blockchain) {
-    //  check the config file
-    is_blockchain = config.func_blockchain.run ? true : false;
-}
-
-
-var is_iothandler = program.iot ? program.iot : false;
-var is_iothandler = program.isiot ? program.isiot : false;
-if (!is_iothandler) {
-    //  check the config file
-    is_iothandler = config.func_iot.run ? true : false;
-}
-
-var password = program.password;
-if (!password) {
-    //  check the config file
-    password = config.password ? config.password : 0;
-}
-
-// show the prompt if the password was not supplied in the cmd line argument nor in the config file
-if (!password) {
+    // show the prompt if the password was not supplied in the cmd line argument nor in the config file
     var schema = {
         properties: {
             password: {
@@ -119,35 +76,46 @@ if (!password) {
     // Get two properties from the user: email, password
     //
     prompt.get(schema, function (err, result) {
-        password = result.password;
+        password = result.password.trim();
         assert(password, "Password that protects the private key must exist in the command line arguments or in the config.json file or you must type at the command prompt.");
-        run();
+        callback(password);
     });
 }
-else {
-    run();
+
+program
+    .version('1.0.1')
+    .option('-w, --password [value]', 'Password to protect the private key')
+    .option('-i, --ip [value]', 'IP address for the Streembit seed')
+    .option('-p, --port <num>', 'Port for the Streembit client', parseIpPort)
+    .parse(process.argv);
+
+var ipport = program.port ? program.port : 0;
+if (!ipport) {
+    //  check the config file
+    ipport = config.port;
 }
 
-function run() {
+var ipaddress = program.ip;
+if (!ipaddress) {
+    //  check the config file
+    ipaddress = config.ipaddress || 0;
+}
+
+// call the init function
+init(function (pwd) {
     console.log('port: %j', ipport);
     console.log('ipaddress: %j', ipaddress);
-    console.log('client: %j', is_streembit_client);
-    console.log('seednode: %j', is_seednode);
-    console.log('blockchain: %j', is_blockchain);
-    console.log('isiot: %j', is_iothandler);
 
     var opts = {
-        client: is_streembit_client,
-        seed: is_seednode,
-        blockc: is_blockchain,
-        iot: is_iothandler,
-        pwd: password
+        ipaddress: ipaddress,
+        port: ipport,
+        password: password
     };
 
     //
     // run the application
     //
     runner(opts);
-}
+});
 
 

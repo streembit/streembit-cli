@@ -1,0 +1,64 @@
+{
+    "properties": [
+        {
+            "name": "principal",
+            "data_type": "duble",
+            "value": 1000
+        },
+        {
+            "name": "currency",
+            "data_type": "string",
+            "value": "GBP"
+        },
+        {
+            "name": "maturity_unit",
+            "data_type": "string",
+            "value": "year"
+        },
+        {
+            "name": "maturity_value",
+            "data_type": "duble",
+            "value": 3.5
+        },
+        {
+            "name": " coupon_base",
+            "data_type": "string",
+            "value": "LIBOR"
+        },
+        {
+            "name": " coupon_ratio",
+            "data_type": "string",
+            "value": "“percentage”"
+        },
+        {
+            "name": "coupon_ratio_value",
+            "data_type": "double",
+            "value": 2.2
+        },
+        {
+            "name": "interest_frequency",
+            "data_type": "string",
+            "value": "annual"
+        },
+        {
+            "name": " credit_quality ",
+            "data_type": "string",
+            "value": "AAA"
+        },
+        {
+            "name": "credit_quality_issuer",
+            "data_type": "string",
+            "value": " Moody's"
+        },
+        {
+            "name": " credit_quality_signature",
+            "data_type": "string",
+            "value": "\"068521dd4086d903af5df32b57b4d1809e81f2ff"
+        },
+        {
+            "name": " borrower_signature ",
+            "data_type": "string",
+            "value": "2a545d0a3448ab528ee30d652ac73ee2c04d5636"
+        }
+    ]
+}
