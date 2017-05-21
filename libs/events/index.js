@@ -54,24 +54,27 @@ function AppEvents() {
     this.APP_INIT = "app-init";
     this.APP_UINOTIFY = "app-ui-notify";
     this.UINAVIGATE = "ui-navigate";
+    this.APPLOG = "app-log";
+    this.CONFIG_UPDATE = "config-update";
 
     events.EventEmitter.call(this);
 }
 
-AppEvents.prototype.navigate = function(route){
-    this.emit(this.UINAVIGATE, route);
-}
 
 AppEvents.prototype.appinit = function (route) {
     this.emit(this.APP_INIT);
 }
 
-AppEvents.prototype.onNavigate = function (callback) {
-    this.on(this.UINAVIGATE, function (value) {
-        callback(value);
-    });
+
+AppEvents.prototype.log = function (payload) {
+    this.emit(this.APPLOG, payload);
 }
 
+AppEvents.prototype.onLog = function (callback) {
+    this.on(this.APPLOG, function (payload) {
+        callback(payload);
+    });
+}
 
 var instance;
 if (!instance) {

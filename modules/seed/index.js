@@ -23,16 +23,26 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
-var config = require("config");
-var logger = require("libs/logger");
+const config = require("libs/config");
+const logger = require("libs/logger");
 
-module.exports = exports = function (opts, callback) {
-    var confarr = config.modules.filter(function (item) {
-        return item.name == "seed";
-    });
+//const crypto = require('crypto');
+//const kad = require('libs/kad');
 
-    var moduleconf = confarr && confarr.length ? confarr[0] : [];
-    if (!moduleconf.run) {
+//const db = require("./libs/database");
+//const transport = new kad.UDPTransport();
+//const identity = kad.utils.getRandomKeyBuffer();
+//const contact = { hostname: 'localhost', port: 1337 };
+
+streembit.kad = (function (kadlib) {
+
+
+}(streembit.kad || {}));
+
+
+module.exports = exports = function (callback) {
+    var conf = config.seed_config;
+    if (!conf.run) {
         logger.debug("Don't run seed handler");
         return callback();
     }

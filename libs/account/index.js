@@ -24,11 +24,13 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
-var async = require("async");
-var crypto = require('crypto');
-var ecckey = require('./libs/index').crypto;
-var secrand = require('secure-random');
-streembit.config = require("./config.json");
+const async = require("async");
+const crypto = require('crypto');
+const ecckey = require('./libs/index').crypto;
+const secrand = require('secure-random');
+const logger = require("libs/logger");
+const config = require("config");
+
 
 streembit.account = (function (accountobj, logger) {
     

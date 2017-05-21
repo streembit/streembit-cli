@@ -1,3 +1,34 @@
+/*
+ 
+This file is part of Streembit application. 
+Streembit is an open source project to create a real time communication system for humans and machines. 
+
+Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+as published by the Free Software Foundation, either version 3.0 of the License, or (at your option) any later version.
+
+Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with Streembit software.  
+If not, see http://www.gnu.org/licenses/.
+ 
+-------------------------------------------------------------------------------------------------------------------------
+Author: Tibor Zsolt Pardi 
+Copyright (C) 2016 The Streembit software development team
+-------------------------------------------------------------------------------------------------------------------------
+
+*/
+
+/*
+ * Implementation is based on https://github.com/kadtools/kad 
+ * Huge thanks to Gordon Hall https://github.com/gordonwritescode & https://github.com/bookchin the author of kad library!
+ * @module kad
+ * @license AGPL-3.0
+ * @author Gordon Hall gordon@gordonwritescode.com
+*/
+
+
+
 'use strict';
 
 const uuid = require('uuid');
@@ -69,10 +100,10 @@ class AbstractNode extends EventEmitter {
 
     this._middlewares = { '*': [] };
     this._errors = { '*': [] };
-    this._transport = options.transport;
     this._pending = new Map();
 
     this.rpc = options.messenger;
+    this.transport = options.transport;
     this.storage = options.storage;
     this.identity = options.identity;
     this.contact = options.contact;
@@ -87,10 +118,10 @@ class AbstractNode extends EventEmitter {
    * @private
    */
   _init() {
-    this.rpc.serializer.pipe(this._transport).pipe(this.rpc.deserializer);
+    this.rpc.serializer.pipe(this.transport).pipe(this.rpc.deserializer);
     this.rpc.on('error', (err) => this.logger.warn(err.message));
     this.rpc.deserializer.on('data', (data) => this._process(data));
-    this._transport.on('error', (err) => this.logger.warn(err.message));
+    this.transport.on('error', (err) => this.logger.warn(err.message));
     setInterval(() => this._timeout(), constants.T_RESPONSETIMEOUT);
   }
 
@@ -209,7 +240,7 @@ class AbstractNode extends EventEmitter {
    */
   plugin(func) {
     assert(typeof func === 'function', 'Invalid plugin supplied');
-    func(this);
+    return func(this);
   }
 
   /**
@@ -246,7 +277,7 @@ class AbstractNode extends EventEmitter {
     this.use(handlers.methodNotFound.bind(handlers));
     this.use(handlers.internalError.bind(handlers));
 
-    this._transport.listen(...arguments);
+    this.transport.listen(...arguments);
   }
 
   /**
@@ -292,7 +323,11 @@ class AbstractNode extends EventEmitter {
    */
   _stack(type, method, args, callback) {
     async.eachSeries(this[type][method] || [], (middleware, done) => {
-      middleware(...args, done);
+      try {
+        middleware(...args, done);
+      } catch (err) {
+        done(err);
+      }
     }, callback);
   }
 

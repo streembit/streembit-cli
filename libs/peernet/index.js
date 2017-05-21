@@ -22,7 +22,7 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 var streembit = streembit || {};
-var DEFAULT_STREEMBIT_PORT = 32320;
+
 
 var applogger = 0;
 

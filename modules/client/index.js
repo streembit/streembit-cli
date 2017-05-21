@@ -23,19 +23,15 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
-var config = require("config");
+var config = require("libs/config");
 var logger = require("libs/logger");
 
-module.exports = exports = function (opts, callback) {
-    var confarr = config.modules.filter(function (item) {
-        return item.name == "client";
-    });
-
-    var moduleconf = confarr && confarr.length ? confarr[0] : [];
-    if (!moduleconf.run) {
+module.exports = exports = function (callback) {
+    var conf = config.client_config;
+    if (!conf.run) {
         logger.debug("Don't run streembit client handler");
         return callback();
-    }
+    }   
 
     logger.info("Run streembit client handler");
     callback();

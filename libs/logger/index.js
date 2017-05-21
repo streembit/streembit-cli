@@ -24,8 +24,7 @@ var fs = require('fs');
 var winston = require('winston');
 var util = require('util');
 
-
-var logger = {};
+var logger = logger || {};
 
 function log_error(err, param) {
     try {

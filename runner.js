@@ -38,6 +38,7 @@ var seedrunner = require("./modules/seed");
 var clientrunner = require("./modules/client");
 var bcrunner = require("./modules/blockchain");
 var iotrunner = require("./modules/iot");
+var iotrunner = require("./modules/iot");
 var db = require("./libs/database");
 
 // initialize the logger
@@ -49,7 +50,7 @@ function initialize_logger(callback) {
 }
 
 
-module.exports = exports = function (opts) {
+module.exports = exports = function () {
 
     async.waterfall(
         [
@@ -58,21 +59,21 @@ module.exports = exports = function (opts) {
                 db.init_streembitdb(__dirname, callback);
             },            
             function (callback) {
-                seedrunner(opts, callback);
+                seedrunner(callback);
             },
             function (callback) {
-                clientrunner(opts, callback);
+                clientrunner( callback);
             },
             function (callback) {
                 bcrunner(callback);
             },
             function (callback) {
                 iotrunner(callback);
-            }        
+            }
         ],
         function (err, result) {
             if (err) {
-                console.log("application init error: %j", err);
+                //console.log("application init error: %j", err);
                 return logger.error("application init error: %j", err);
             }
 
