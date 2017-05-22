@@ -27,50 +27,52 @@ var streembit = streembit || {};
 var fs = require('fs');
 var path = require('path');
 var log = require("libs/logger");
+var config = require("libs/config");
 var levelup = require('levelup');
 
 streembit.database = (function (db, logger) {
 
     var _streembitdb = null;
+    var _appdb = null;
+    var _blockchaindb = null;
 
-    function initialize_streembitdb_dir (dirname) {
+
+    function initialize_db_dir(dbname, dirname) {
         // create the db directory
-        var maindb_path = path.join(dirname, 'db', 'streembitdb');
-        logger.info("initializing database, maindb_path: %s", maindb_path);
-        var exists = fs.existsSync(maindb_path);
+        var db_path = path.join(dirname, 'db', dbname);
+        logger.info("initializing database, path: %s", db_path);
+        var exists = fs.existsSync(db_path);
         if (exists) {
             return;
         }
 
         /* the DB directory doesn't exist */
-        logger.info("Creating database directory ...");
+        logger.info("Creating " + dbname + " database directory ...");
         var dbdir_path = path.join(__dirname, 'db');
         try {
             fs.mkdirSync(dbdir_path);
         }
         catch (e) {
             if (e.message.indexOf("EEXIST") < 0) {
-                throw new Error("creating database error: " + e.message);
+                throw new Error("creating " + dbname + " database error: " + e.message);
             }
         }
 
         try {
-            fs.mkdirSync(maindb_path);
+            fs.mkdirSync(db_path);
         }
         catch (e) {
-            throw new Error("creating database error: " + e.message);
+            throw new Error("creating " + dbname + " database error: " + e.message);
         }
 
-        exists = fs.existsSync(maindb_path);
+        exists = fs.existsSync(db_path);
         if (!exists) {
-            throw new Error("Unable to create data directory");
+            throw new Error("Unable to create " + dbname + " data directory");
         }
         else {
-            logger.info("streembitdb database directory created");
-            callback();
+            logger.info(dbname + " database directory created");
         }
     }
-
 
     Object.defineProperty(db, "streembitdb", {
         get: function () {
@@ -82,58 +84,59 @@ streembit.database = (function (db, logger) {
         }
     });
 
-    db.init_streembitdb = function (dirname, callback) {
-        try {
-            initialize_streembitdb_dir(dirname);
+    Object.defineProperty(db, "appdb", {
+        get: function () {
+            return _appdb;
+        },
 
-            var maindb_path = path.join(dirname, 'db', 'streembitdb');
-            var dbobj = levelup(maindb_path);
-            db.streembitdb = dbobj;
-
-            logger.debug("streembitdb database created");
-
-            callback();
+        set: function (value) {
+            _appdb = value;
         }
-        catch (err) {
-            return callback(err.message)
+    });
+
+    Object.defineProperty(db, "blockchaindb", {
+        get: function () {
+            return _blockchaindb;
+        },
+
+        set: function (value) {
+            _blockchaindb = value;
         }
-    };
+    });
 
-    db.init_appdb = function (dirname, callback) {
-        try {
-            initialize_streembitdb_dir(dirname);
+    db.init_databases = function (dirname, callback) {
 
-            var maindb_path = path.join(dirname, 'db', 'appdb');
-            var dbobj = levelup(maindb_path);
-            db.streembitdb = dbobj;
+        initialize_db_dir('streembitdb', dirname);
+        var maindb_path = path.join(dirname, 'db', 'streembitdb');
+        var main_dbobj = levelup(maindb_path);
+        db.streembitdb = main_dbobj;
 
+        logger.debug("streembitdb database created");
+
+        var client_conf = config.client_config;
+        var iot_conf = config.iot_config;
+        if (client_conf.run || iot_conf.run) {
+            initialize_db_dir('appdb', dirname);
+            var appdb_path = path.join(dirname, 'db', 'appdb');
+            var app_dbobj = levelup(appdb_path);
+            db.appdb = app_dbobj;
             logger.debug("appdb database created");
-
-            callback();
         }
-        catch (err) {
-            return callback(err.message)
-        }
-    };
 
-    db.init_blockchaindb = function (dirname, callback) {
-        try {
-            initialize_streembitdb_dir(dirname);
-
-            var maindb_path = path.join(dirname, 'db', 'blockchaindb');
-            var dbobj = levelup(maindb_path);
-            db.streembitdb = dbobj;
-
+        var bc_conf = config.blockchain_config;
+        if (bc_conf.run) {
+            initialize_db_dir('blockchaindb', dirname);
+            var bcdb_path = path.join(dirname, 'db', 'blockchaindb');
+            var bc_dbobj = levelup(bcdb_path);
+            db.blockchaindb = bc_dbobj;
             logger.debug("blockchaindb database created");
+        }
 
-            callback();
-        }
-        catch (err) {
-            return callback(err.message)
-        }
+        callback();
     };
 
     return db;
+
 }(streembit.database || {}, log));
 
 

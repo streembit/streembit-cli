@@ -27,12 +27,17 @@ var config = require("libs/config");
 var logger = require("libs/logger");
 
 module.exports = exports = function (callback) {
-    var conf = config.client_config;
-    if (!conf.run) {
-        logger.debug("Don't run streembit client handler");
-        return callback();
-    }   
+    try {
+        var conf = config.client_config;
+        if (!conf.run) {
+            logger.debug("Don't run streembit client handler");
+            return callback();
+        }
 
-    logger.info("Run streembit client handler");
-    callback();
+        logger.info("Run streembit client handler");
+        callback();
+    }
+    catch (err) {
+        callback(err.message);
+    }
 };

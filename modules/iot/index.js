@@ -27,12 +27,17 @@ var config = require("libs/config");
 var logger = require("libs/logger");
 
 module.exports = exports = function (callback) {
-    var conf = config.iot_config;
-    if (!conf.run) {
-        logger.debug("Don't run IoT handler");
-        return callback();
-    }
+    try {
+        var conf = config.iot_config;
+        if (!conf.run) {
+            logger.debug("Don't run IoT handler");
+            return callback();
+        }
 
-    logger.info("Run IoT handler");
-    callback();
+        logger.info("Run IoT handler");
+        callback();
+    }
+    catch (err) {
+        callback(err.message);
+    }
 };

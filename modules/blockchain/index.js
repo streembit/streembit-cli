@@ -23,17 +23,14 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
-var config = require("config");
+var config = require("libs/config");
 var logger = require("libs/logger");
 var merkle = require("./merkle");
 
 module.exports = exports = function (callback) {
-    var confarr = config.modules.filter(function (item) {
-        return item.name == "blockchain";
-    });
 
-    var moduleconf = confarr && confarr.length ? confarr[0] : [];
-    if (!moduleconf.run) {
+    var conf = config.blockchain_config;
+    if (!conf.run) {
         logger.debug("Don't run blockchain handler");
         return callback();
     }

@@ -36,6 +36,7 @@ streembit.config = (function (cnfobj) {
     var m_seed_config = null;
     var m_client_config = null;
     var m_iot_config = null;
+    var m_blockchain_config = null;
     var m_password = null;
     var m_port = null;
     var m_ipaddress = null;
@@ -87,6 +88,16 @@ streembit.config = (function (cnfobj) {
 
         set: function (value) {
             m_iot_config = value;
+        }
+    });
+
+    Object.defineProperty(cnfobj, "blockchain_config", {
+        get: function () {
+            return m_blockchain_config;
+        },
+
+        set: function (value) {
+            m_blockchain_config = value;
         }
     });
 
@@ -183,7 +194,6 @@ streembit.config = (function (cnfobj) {
             var iot_confarr = config.modules.filter(function (item) {
                 return item.name == "iot";
             });
-
             var iotconf = iot_confarr && iot_confarr.length ? iot_confarr[0] : 0;
             cnfobj.iot_config = iotconf;
             //throw an exception if the IoT config entry is missing
@@ -202,6 +212,14 @@ streembit.config = (function (cnfobj) {
             if (isseed && cnfobj.client_config.run) {
                 throw new Error("Invalid configuration. Client handler cannot run when the seed is configured to run");
             }
+
+            var blockchain_confarr = config.modules.filter(function (item) {
+                return item.name == "blockchain";
+            });
+            var bcconf = blockchain_confarr && blockchain_confarr.length ? blockchain_confarr[0] : 0;
+            cnfobj.blockchain_config = bcconf;
+            //throw an exception if the IoT config entry is missing
+            assert(cnfobj.blockchain_config && cnfobj.blockchain_config.hasOwnProperty("run"), "Invalid blockchain configuration section");
 
             var password = program.password;
             if (!password) {

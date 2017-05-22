@@ -26,27 +26,59 @@ var streembit = streembit || {};
 const config = require("libs/config");
 const logger = require("libs/logger");
 
-//const crypto = require('crypto');
-//const kad = require('libs/kad');
+const kad = require('libs/kad');
 
-//const db = require("./libs/database");
-//const transport = new kad.UDPTransport();
-//const identity = kad.utils.getRandomKeyBuffer();
-//const contact = { hostname: 'localhost', port: 1337 };
+const db = require("libs/database");
+const transport = new kad.UDPTransport();
+const identity = kad.utils.getRandomKeyBuffer();
+const contact = { hostname: 'localhost', port: 1337 };
 
 streembit.kad = (function (kadlib) {
 
+    var _node = null;
+
+    Object.defineProperty(kadlib, "node", {
+        get: function () {
+            return _node;
+        },
+
+        set: function (value) {
+            _node = value;
+        }
+    });
+
+    kadlib.run = function (callback) {
+        var storage = db.streembitdb;
+        var node = kad({ transport, storage, logger, identity, contact });
+        kadlib.node = node;
+
+        callback();
+    };
+
+    return kadlib;
 
 }(streembit.kad || {}));
 
 
 module.exports = exports = function (callback) {
-    var conf = config.seed_config;
-    if (!conf.run) {
-        logger.debug("Don't run seed handler");
-        return callback();
-    }
+    try {
+        var conf = config.seed_config;
+        if (!conf.run) {
+            logger.debug("Don't run seed handler");
+            return callback();
+        }
 
-    logger.info("Run seed handler");
-    callback();
+        streembit.kad.run(function (err) {
+            if (err) {
+                return callback(err);
+            }
+
+            logger.info("Run seed handler");
+            callback();
+        });
+
+    }
+    catch (err) {
+        callback(err.message);
+    }
 };

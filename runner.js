@@ -56,8 +56,8 @@ module.exports = exports = function () {
         [
             initialize_logger,
             function (callback) {
-                db.init_streembitdb(__dirname, callback);
-            },            
+                db.init_databases(__dirname, callback);
+            },    
             function (callback) {
                 seedrunner(callback);
             },
