@@ -14,7 +14,7 @@ If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
 Author: Tibor Zsolt Pardi 
-Copyright (C) 2016 The Streembit software development team
+Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
 */

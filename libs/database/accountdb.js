@@ -28,7 +28,6 @@ class AccountsDb {
         this.m_database = 0;
     }
 
-
     get database () {
         if (!this.m_database) {
             this.m_database = db.appdb;

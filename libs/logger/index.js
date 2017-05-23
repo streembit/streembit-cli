@@ -24,7 +24,7 @@ var fs = require('fs');
 var winston = require('winston');
 var util = require('util');
 
-var logger = logger || {};
+var logger = 0;
 
 function log_error(err, param) {
     try {
@@ -72,6 +72,9 @@ function log_error(err, param) {
 
 function level_log(level, msg, val1, val2, val3, val4) {
     try {
+        if (!logger) {
+            return;
+        }
 
         if (!logger.log) {
             console.log(msg);

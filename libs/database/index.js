@@ -27,7 +27,6 @@ var streembit = streembit || {};
 var fs = require('fs');
 var path = require('path');
 var log = require("libs/logger");
-var config = require("libs/config");
 var levelup = require('levelup');
 
 streembit.database = (function (db, logger) {
@@ -118,14 +117,11 @@ streembit.database = (function (db, logger) {
         db.appdb = app_dbobj;
         logger.debug("appdb database created");        
 
-        var bc_conf = config.blockchain_config;
-        if (bc_conf.run) {
-            initialize_db_dir('blockchaindb', dirname);
-            var bcdb_path = path.join(dirname, 'db', 'blockchaindb');
-            var bc_dbobj = levelup(bcdb_path);
-            db.blockchaindb = bc_dbobj;
-            logger.debug("blockchaindb database created");
-        }
+        initialize_db_dir('blockchaindb', dirname);
+        var bcdb_path = path.join(dirname, 'db', 'blockchaindb');
+        var bc_dbobj = levelup(bcdb_path);
+        db.blockchaindb = bc_dbobj;
+        logger.debug("blockchaindb database created");        
 
         callback();
     };

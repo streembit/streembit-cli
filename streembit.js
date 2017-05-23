@@ -25,26 +25,95 @@ var streembit = streembit || {};
 
 require('app-module-path').addPath(__dirname);
 
-var config = require('libs/config');
-var runner = require('runner');
+const program = require('commander');
+const config = require('libs/config');
+const runner = require('runner');
+const utils = require("libs/utils");
+const Account = require("libs/account");
+const async = require('async');
+const db = require("./libs/database");
+const path = require('path');
+
+// show the command prompt when the user type --help
+// and get the configuration values from the command prompt
+program
+    .version('1.0.1')
+    .option('-s, --password [value]', 'Password (secret) to protect the private key')
+    .option('-i, --ip [value]', 'IP address for the Streembit seed')
+    .option('-p, --port <num>', 'Port for the Streembit client', utils.parse_ipport)
+    .option('-d, --data', 'Print node ID')
+    .option('-b, --backup', 'Backup node data')
+    .parse(process.argv);
+
+var cmd = "run";
+if (program.data) {
+    cmd = "data";
+}
+else if (program.backup) {
+    cmd = "backup";
+}
+
+function display_data() {
+    async.waterfall(
+        [
+            function (callback) {
+                db.init_databases(__dirname, callback);
+            },
+            function (callback) {
+                utils.prompt_for_password(callback);
+            },
+            function (password, callback) {
+                var account = new Account();
+                account.load(password, callback);
+            }
+        ],
+        function (err, result) {
+            if (err) {
+                return console.log(err.message || err);
+            }
+
+            var account = new Account();
+            //print the node ID
+            console.log("node ID: %s", account.accountid);
+        }
+    ); 
+}
+
+function backup() {
+    console.log("backup account data");
+}
+
+function run_application() {
+    config.init(program.port, program.ip, program.password, function (err) {
+        if (err) {
+            return console.log("Configuration initializiation error: " + err);
+        }
+
+        console.log("config initialized port: " + config.port + ", ipaddress: " + config.ipaddress)
+
+        try {
+            //
+            // run the application
+            //
+            runner();
+        }
+        catch (e) {
+            console.log("runner error: " + e.message);
+        }
+    });
+}
 
 
-config.init(function (err) {
-    if (err) {
-        return console.log("Configuration initializiation error: " + err);
-    }
+console.log("cmd: " + cmd);
 
-    console.log("config initialized port: " + config.port + ", ipaddress: " + config.ipaddress + ", password: " + config.password)
-
-    try {
-        //
-        // run the application
-        //
-        runner();
-    }
-    catch (e) {
-        console.log("runner error: " + e.message);
-    }
-});
-
-
+switch (cmd) {
+    case "data":
+        display_data();
+        break;
+    case "backup":
+        backup();
+        break;
+    default:
+        run_application();
+        break;
+}

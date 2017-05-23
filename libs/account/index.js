@@ -27,7 +27,6 @@ const crypto = require('crypto');
 const ecckey = require('libs/crypto');
 var createHash = require('create-hash');
 const secrand = require('secure-random');
-const logger = require("libs/logger");
 const config = require("libs/config");
 const Database = require("libs/database/accountdb");
 const peermsg = require("libs/message");
@@ -133,7 +132,6 @@ class Account {
             var cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
 
             this.addToDB(this.accountid, cipher_context, function (err) { 
-                logger.info("accountid: %s", key.pkrmd160hash);
                 callback(err);
             });
         }
@@ -143,10 +141,10 @@ class Account {
         }
     };
 
-    initialize(data, password, callback) {
+    load_account(data, password, callback) {
         try {
             if (!data || !password) {
-                return callback("Invalid parameters, the account and passwords are required");
+                return callback("Invalid parameters, the data and password parameterss are required");
             }
 
             var pbkdf2 = this.getCryptPassword(password);
@@ -188,8 +186,6 @@ class Account {
 
             this.crypto_key = key;
             this.connsymmkey = accountobj.connsymmkey;
-
-            logger.info("accountid: %s", this.accountid)
 
             // the account exists and the encrypted entropy is correct!
             callback();
@@ -311,13 +307,26 @@ class Account {
                 this.create_account(password, callback);
             }
             else {
-                this.initialize(data, password, callback);
+                this.load_account(data, password, callback);
             }
-
         });
-
     }
 
+    load(password, callback) {
+        // get the account details from the database
+        var db = new Database();
+        db.data((err, data) => {
+            if (err) {
+                return callback("Account database error: " + (err.message || err));
+            }
+
+            if (!data) {
+                return callback("Data doesn't exists in the account database");
+            }
+     
+            this.load_account(data, password, callback);            
+        });
+    }
 }
 
 

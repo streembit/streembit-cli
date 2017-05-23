@@ -25,8 +25,7 @@ var streembit = streembit || {};
 
 var assert = require('assert');
 var config = require('config');
-var program = require('commander');
-var prompt = require('prompt');
+var utils = require("libs/utils");
 
 
 streembit.config = (function (cnfobj) {
@@ -111,62 +110,11 @@ streembit.config = (function (cnfobj) {
         }
     });
 
-    function parseIpPort(val) {
-        var port = 0;
-        if (val) {
-            port = parseInt(val);
-            if (isNaN(port)) {
-                console.log("Invald port was entered - will be using the default port");
-                port = 0;
-            }
-        }
-        return port;
-    }
 
-    //
-    // Validate the configuration file
-    //
-    function validate_config() {
-
-    }
-
-    function prompt_for_password(callback) {
-        // show the prompt if the password was not supplied in the cmd line argument nor in the config file
-        var schema = {
-            properties: {
-                password: {
-                    hidden: true
-                }
-            }
-        };
-
-        prompt.message = "";
-
-        // Since there is no password was provided start the command prompt
-        // Get the password from the user via the command prompt
-        prompt.start();
-        prompt.get(schema, function (err, result) {
-            var password = result.password.trim();
-            assert(password, "Password that protects the private key must exist in the command line arguments or in the config.json file or you must type at the command prompt.");
-            callback(password);
-        });
-
-    }
-
-    cnfobj.init = function (callback) {
+    cnfobj.init = function (argv_port, argv_ip, argv_password, callback) {
         try {
 
-            // show the command prompt when the user type --help
-            // and get the configuration values from the command prompt
-            program
-                .version('1.0.1')
-                .option('-s, --password [value]', 'Password (secret) to protect the private key')
-                .option('-i, --ip [value]', 'IP address for the Streembit seed')
-                .option('-p, --port <num>', 'Port for the Streembit client', parseIpPort)
-                .parse(process.argv);
-
-
-            var ipport = program.port ? program.port : 0;
+            var ipport = argv_port ? argv_port : 0;
             if (!ipport) {
                 //  check the config file
                 ipport = config.port || DEFAULT_STREEMBIT_PORT;
@@ -174,7 +122,7 @@ streembit.config = (function (cnfobj) {
             assert(ipport > 0 && ipport < 65535, "Invalid port configuration value");
             cnfobj.port = ipport;
 
-            var ip = program.ip;
+            var ip = argv_ip;
             if (!ip) {
                 //  check the config file
                 ip = config.ipaddress || 0;
@@ -221,20 +169,20 @@ streembit.config = (function (cnfobj) {
             //throw an exception if the IoT config entry is missing
             assert(cnfobj.blockchain_config && cnfobj.blockchain_config.hasOwnProperty("run"), "Invalid blockchain configuration section");
 
-            var password = program.password;
-            if (!password) {
+            var password = argv_password;
+            if (!password && config.password) {
                 //  check the config file
-                password = config.password ? config.password : 0;
-                cnfobj.password = password;
-            }
-
-            if (password) {
+                cnfobj.password = config.password;  
                 return callback();
             }
 
             // get the password from the command prompt
-            prompt_for_password(function (pwd) {
-                cnfobj.password = password;
+            utils.prompt_for_password(function (err, pwd) {
+                if (err) {
+                    return callback(err);
+                }
+
+                cnfobj.password = pwd;
                 callback();
             });
             
