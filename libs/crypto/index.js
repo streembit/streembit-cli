@@ -68,11 +68,21 @@ Object.defineProperty(EccKey.prototype, 'pubkeyhash', {
 Object.defineProperty(EccKey.prototype, 'publicKeyrmd160', {
     get: function () {
         var pkhex = this.key.getPublic('hex');
-        var buffer = new Buffer(pkhex, 'hex');
+        var buffer = new Buffer(pkhex, 'hex');  
         var rmd160buffer = createHash('rmd160').update(buffer).digest();
         return rmd160buffer;
     }
 })
+
+Object.defineProperty(EccKey.prototype, 'pkrmd160hash', {
+    get: function () {
+        var pkhex = this.key.getPublic('hex');
+        var buffer = new Buffer(pkhex, 'hex');
+        var rmd160buffer = createHash('rmd160').update(buffer).digest('hex');
+        return rmd160buffer;
+    }
+})
+
 
 Object.defineProperty(EccKey.prototype, 'publicKeyBs58', {
     get: function () {

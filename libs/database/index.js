@@ -110,18 +110,13 @@ streembit.database = (function (db, logger) {
         var maindb_path = path.join(dirname, 'db', 'streembitdb');
         var main_dbobj = levelup(maindb_path);
         db.streembitdb = main_dbobj;
-
         logger.debug("streembitdb database created");
 
-        var client_conf = config.client_config;
-        var iot_conf = config.iot_config;
-        if (client_conf.run || iot_conf.run) {
-            initialize_db_dir('appdb', dirname);
-            var appdb_path = path.join(dirname, 'db', 'appdb');
-            var app_dbobj = levelup(appdb_path);
-            db.appdb = app_dbobj;
-            logger.debug("appdb database created");
-        }
+        initialize_db_dir('appdb', dirname);
+        var appdb_path = path.join(dirname, 'db', 'appdb');
+        var app_dbobj = levelup(appdb_path);
+        db.appdb = app_dbobj;
+        logger.debug("appdb database created");        
 
         var bc_conf = config.blockchain_config;
         if (bc_conf.run) {

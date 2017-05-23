@@ -22,129 +22,303 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var streembit = streembit || {};
 
-const async = require("async");
 const crypto = require('crypto');
-const ecckey = require('./libs/index').crypto;
+const ecckey = require('libs/crypto');
+var createHash = require('create-hash');
 const secrand = require('secure-random');
 const logger = require("libs/logger");
-const config = require("config");
+const config = require("libs/config");
+const Database = require("libs/database/accountdb");
+const peermsg = require("libs/message");
+
+let instance = null;
+
+class Account {
+
+    constructor() {
+        if (!instance) {
+            instance = this;
+            this.m_key = null;
+        }
+
+        return instance;
+    }
+
+    get crypto_key() {
+        return this.m_key;
+    }
+
+    set crypto_key (value) {
+        this.m_key = value;
+    }
+
+    get private_key () {
+        return this.m_key ? key.privateKey : '';
+    }
+
+    get public_key () {
+        return this.m_key ? this.m_key.publicKeyHex : '';
+    }
+
+    get public_key_hash() {
+        return this.m_key ? this.m_key.pubkeyhash : '';
+    }
+
+    get accountid() {
+        return this.m_key ? this.m_key.pkrmd160hash : '';
+    }
+
+    get is_user_initialized () {
+        return this.m_key ? true : false;
+    }
 
 
-streembit.account = (function (accountobj, logger) {
-    
-    var m_name = null;
-    var key = null;
-    var ecdhkey = null;
-    var m_port = null;
-    var m_address = null;
-    var m_ecdhkeys = null;
-    var m_lastpkey = null;
-    
-    Object.defineProperty(accountobj, "name", {
-        get: function () {
-            return m_name;
-        },
-        
-        set: function (value) {
-            m_name = value;
-        }
-    });
-    
-    Object.defineProperty(accountobj, "port", {
-        get: function () {
-            return m_port;
-        },
-        
-        set: function (value) {
-            m_port = value;
-        }
-    });
-    
-    Object.defineProperty(accountobj, "address", {
-        get: function () {
-            return m_address;
-        },
-        
-        set: function (value) {
-            m_address = value;
-        }
-    });
-    
-    Object.defineProperty(accountobj, "crypto_key", {
-        get: function () {
-            return key;
-        },
-        
-        set: function (value) {
-            key = value;
-        }
-    });
-    
-    Object.defineProperty(accountobj, "private_key", {
-        get: function () {
-            return key ? key.privateKey : '';
-        }
-    });
-    
-    
-    Object.defineProperty(accountobj, "public_key", {
-        get: function () {
-            return key ? key.publicKeyHex : '';
-        }
-    });
+    getCryptPassword(password) {
+        var salt = createHash('sha256').update(password).digest('hex');
+        var pwdhex = createHash('sha256').update(salt).digest('hex');
+        return pwdhex;
+    }
 
-    Object.defineProperty(accountobj, "publicKeyBs58", {
-        get: function () {
-            return key ? key.publicKeyBs58 : '';
-        }
-    });
-    
-    
-    Object.defineProperty(accountobj, "is_user_initialized", {
-        get: function () {
-            var isuser = m_name && key && ecdhkey;
-            return isuser ? true : false;
-        }
-    });
-   
-    
-    accountobj.create = function (callback) {
-        try {    
-            if (!streembit.config.private_network) {
-                return callback();
+    addToDB(accountid, cipher_context, callback) {
+        var data = {
+            "accountid": accountid,
+            "cipher": cipher_context
+        };
+
+        var strdata = JSON.stringify(data);
+
+        var appdb = new Database()
+
+        appdb.put(strdata, function (err) {
+            if (err) {
+                return callback("Database update error: " + ( err.message || err));
             }
 
-            var privatekeyhex = streembit.config.privatekey;
-            if (!privatekeyhex) {
-                return callback("private key is required for private networks");
-            }
+            logger.debug("Account was added to database");
 
+            if (callback) {
+                callback();
+            }
+        });
+    }
+
+   create_account (password, callback) {
+        try {
+            if (!password)
+                throw new Error("create_account invalid password parameter");
+
+            var symcrypt_key = this.getCryptPassword(password);
+
+            // get an entropy for the ECC key
+            var rndstr = secrand.randomBuffer(32).toString("hex");
+            var entropy = createHash("sha256").update(rndstr).digest("hex");
+
+            // create ECC key
             var key = new ecckey();
-            key.keyFromPrivate(privatekeyhex);
-            
-            // set the PPKI key
-            accountobj.crypto_key = key;
+            key.generateKey(entropy);
 
-            // The account name will be the ip address + port set by the node StreembitContact object 
-            accountobj.name = streembit.config.username ? streembit.config.username : key.pubkeyhash;
+            //  encrypt the account data
+            var skrnd = secrand.randomBuffer(32).toString("hex");
+            var skhash = createHash("sha256").update(skrnd).digest("hex");
+            var user_context = {
+                "privatekey": key.privateKeyHex,
+                "connsymmkey": skhash,
+                "timestamp": Date.now()
+            };
 
-            callback();
+            this.crypto_key = key;
+            this.connsymmkey = skhash;
+
+            var cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
+
+            this.addToDB(this.accountid, cipher_context, function (err) { 
+                logger.info("accountid: %s", key.pkrmd160hash);
+                callback(err);
+            });
         }
         catch (err) {
-            callback("create_account error: " + err.message);
+            logger.error("create_account error %j", err);
+            callback(err);
         }
     };
 
-    accountobj.clear = function () {
-        accountobj.crypto_key = null;
-        accountobj.name = null;
-        accountobj.ecdh_key = null;
+    initialize(data, password, callback) {
+        try {
+            if (!data || !password) {
+                return callback("Invalid parameters, the account and passwords are required");
+            }
+
+            var pbkdf2 = this.getCryptPassword(password);
+
+            // decrypt the cipher
+            var plain_text;
+            try {
+                plain_text = peermsg.aes256decrypt(pbkdf2, data.cipher);
+            }
+            catch (err) {
+                if (err.message && err.message.indexOf("decrypt") > -1) {
+                    return callback("Account initialize error, most likely an incorrect password was entered");
+                }
+                else {
+                    return callback("Account initialize error: " + err.message);
+                }
+            }
+
+            var accountobj;
+            try {
+                accountobj = JSON.parse(plain_text);
+                if (!accountobj || !accountobj.privatekey || !accountobj.timestamp || !accountobj.connsymmkey) {
+                    return callback("invalid password or invalid user object stored");
+                }
+            }
+            catch (e) {
+                return callback("Account initialize error. Select a saved account and enter the valid password. The encrypted account information must exists on the computer.");
+            }
+
+            var hexPrivatekey = accountobj.privatekey;
+
+            // create ECC key
+            var key = new ecckey();
+            key.keyFromPrivate(hexPrivatekey, 'hex');
+
+            if (key.pkrmd160hash != data.accountid) {
+                return callback("Error in initializing the account, most likely an incorrect password");
+            }
+
+            this.crypto_key = key;
+            this.connsymmkey = accountobj.connsymmkey;
+
+            logger.info("accountid: %s", this.accountid)
+
+            // the account exists and the encrypted entropy is correct!
+            callback();
+        }
+        catch (err) {
+            callback(err)
+        }
+    };
+
+    restore (password, data, callback) {
+        try {
+            if (!user || !user.account) {
+                throw new Error("invalid user data");
+            }
+
+            var account = user.account;
+
+            var pbkdf2 = this.getCryptPassword(password, account);
+
+            // decrypt the cipher
+            var plain_text;
+            try {
+                plain_text = peermsg.aes256decrypt(pbkdf2, data.cipher);
+            }
+            catch (err) {
+                if (err.message && err.message.indexOf("decrypt") > -1) {
+                    return callback("Account initialize error, most likely an incorrect password was entered");
+                }
+                else {
+                    return callback("Account initialize error: " + err.message);
+                }
+            }
+
+            var accountobj;
+            try {
+                accountobj = JSON.parse(plain_text);
+                if (!accountobj || !accountobj.privatekey || !accountobj.timestamp) {
+                    return callback("invalid password");
+                }
+            }
+            catch (e) {
+               return callback("Account initialize error. Select a saved account and enter the valid password.");
+            }
+
+            var hexPrivatekey = accountobj.privatekey;
+
+            // create ECC key
+            var key = new ecckey();
+            key.keyFromPrivate(hexPrivatekey, 'hex');
+            if (key.pkrmd160hash != accountobj.accountid) {
+                return callback("Error in restoring the account, incorrect password or invalid backup data");
+            }
+
+            if (!accountobj.connsymmkey) {
+                return callback("Error in restoring the account, incorrect connection key in backup data");
+            }
+
+            //  encrypt this
+            var user_context = {
+                "privatekey": key.privateKeyHex,
+                "connsymmkey": accountobj.connsymmkey,
+                "timestamp": Date.now()
+            };
+
+            var cipher_context = peermsg.aes256encrypt(pbkdf2, JSON.stringify(user_context));
+
+            this.crypto_key = key;
+            this.connsymmkey = accountobj.connsymmkey;
+
+            this.addToDB(this.accountid, cipher_context, function () {               
+                callback();
+            });
+        }
+        catch (e) {
+           return callback("Account restore error: %j", e);
+        }
+    };
+
+    change_password (password, callback) {
+        try {
+            if (!password) {
+               return callback("Invalid parameters, the account and passwords are required");
+            }
+
+
+            var symcrypt_key = this.getCryptPassword(password, account);
+            var user_context = {
+                "privatekey": this.crypto_key.privateKeyHex,
+                "connsymmkey": this.connsymmkey,
+                "timestamp": Date.now()
+            };
+
+            var cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
+            this.addToDB(this.accountid, cipher_context, function () {
+                callback();
+            });
+        }
+        catch (err) {
+            callback(err);
+        }
+    };
+
+    clear() {
+        usrobj.crypto_key = null;
+        usrobj.name = null;
     }
-    
-    return accountobj;
 
-}(streembit.account || {}, global.applogger ));
+    init(callback) {
+        // get the account details from the database
+        var db = new Database();
+        db.data((err, data) => {
+            if (err) {
+                return callback("Account database error: " + (err.message || err));
+            }
 
-module.exports = streembit.account;
+            var password = config.password;
+            if (!data) {
+                // the account does not exists -> set it up
+                this.create_account(password, callback);
+            }
+            else {
+                this.initialize(data, password, callback);
+            }
+
+        });
+
+    }
+
+}
+
+
+module.exports = Account;

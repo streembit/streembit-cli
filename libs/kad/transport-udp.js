@@ -1,3 +1,32 @@
+/*
+ 
+This file is part of Streembit application. 
+Streembit is an open source project to create a real time communication system for humans and machines. 
+
+Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+as published by the Free Software Foundation, either version 3.0 of the License, or (at your option) any later version.
+
+Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with Streembit software.  
+If not, see http://www.gnu.org/licenses/.
+ 
+-------------------------------------------------------------------------------------------------------------------------
+Author: Tibor Zsolt Pardi 
+Copyright (C) 2017 The Streembit software development team
+-------------------------------------------------------------------------------------------------------------------------
+  
+*/
+
+/**
+ * Implementation is based on https://github.com/kadtools/kad 
+ * Huge thanks to Gordon Hall https://github.com/gordonwritescode the author of kad library!
+ * @module kad
+ * @license GPL-3.0
+ * @author Gordon Hall gordon@gordonwritescode.com
+ */
+
 'use strict';
 
 const merge = require('merge');
@@ -23,9 +52,31 @@ class UDPTransport extends DuplexStream {
    * @param {object} [socketOpts] - Passed to dgram.createSocket(options)
    */
   constructor(options) {
-    super({ objectMode: true });
-    this.socket = dgram.createSocket(merge(UDPTransport.DEFAULTS, options))
-      .on('error', (err) => this.emit('error', err));
+
+      super({ objectMode: true });
+
+      this.m_log = 0;
+
+      if (options && options.logger) {
+          this.logger = options.logger;
+      }
+
+      this.socket = dgram.createSocket(merge(UDPTransport.DEFAULTS, options))
+        .on('error', (err) => this.error_handler(err));
+
+  }
+
+
+  get logger() {
+      return this.m_log;
+  }
+
+  set logger(l) {
+      this.m_log = l;
+  }
+
+  error_handler(err) {
+      this.emit('error', err);
   }
 
   /**
@@ -56,7 +107,15 @@ class UDPTransport extends DuplexStream {
    * @param {function} [callback]
    */
   listen() {
-    this.socket.bind(...arguments);
+
+      this.socket.on('listening', () => {
+          var address = this.socket.address();
+          this.logger.info('server listening %s:%d', address.address, address.port);
+      });
+
+      //console.dir(...arguments);
+      this.socket.bind(...arguments);
+
   }
 
 }

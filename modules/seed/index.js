@@ -23,42 +23,12 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
+const async = require("async");
 const config = require("libs/config");
 const logger = require("libs/logger");
-
-const kad = require('libs/kad');
-
 const db = require("libs/database");
-const transport = new kad.UDPTransport();
-const identity = kad.utils.getRandomKeyBuffer();
-const contact = { hostname: 'localhost', port: 1337 };
-
-streembit.kad = (function (kadlib) {
-
-    var _node = null;
-
-    Object.defineProperty(kadlib, "node", {
-        get: function () {
-            return _node;
-        },
-
-        set: function (value) {
-            _node = value;
-        }
-    });
-
-    kadlib.run = function (callback) {
-        var storage = db.streembitdb;
-        var node = kad({ transport, storage, logger, identity, contact });
-        kadlib.node = node;
-
-        callback();
-    };
-
-    return kadlib;
-
-}(streembit.kad || {}));
-
+const kad = require("libs/peernet/kadhandler");
+const Account = require("libs/account");
 
 module.exports = exports = function (callback) {
     try {
@@ -68,14 +38,26 @@ module.exports = exports = function (callback) {
             return callback();
         }
 
-        streembit.kad.run(function (err) {
-            if (err) {
-                return callback(err);
-            }
+        async.waterfall(
+            [
+                function (cb) {
+                    var account = new Account();
+                    account.init(cb)
+                },
+                function (cb) {
+                    var kadnet = new kad.KadHandler();
+                    kadnet.init(cb);
+                }
+            ],
+            function (err) {
+                if (err) {
+                    return callback(err);
+                }
 
-            logger.info("Run seed handler");
-            callback();
-        });
+                logger.info("Run seed handler");
+                callback();
+            }
+        );
 
     }
     catch (err) {

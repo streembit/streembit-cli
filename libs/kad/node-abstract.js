@@ -108,6 +108,13 @@ class AbstractNode extends EventEmitter {
     this.identity = options.identity;
     this.contact = options.contact;
     this.logger = options.logger;
+    if (options.logger) {
+        this.transport.logger = options.logger;
+    }
+
+    this.logger.debug("node identity: %s", this.identity.toString("hex"));
+    this.logger.debug("node contact: %s", JSON.stringify(this.contact));
+
     this.router = new RoutingTable(this.identity);
 
     this._init();

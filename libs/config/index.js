@@ -146,7 +146,7 @@ streembit.config = (function (cnfobj) {
         // Get the password from the user via the command prompt
         prompt.start();
         prompt.get(schema, function (err, result) {
-            password = result.password.trim();
+            var password = result.password.trim();
             assert(password, "Password that protects the private key must exist in the command line arguments or in the config.json file or you must type at the command prompt.");
             callback(password);
         });
@@ -160,7 +160,7 @@ streembit.config = (function (cnfobj) {
             // and get the configuration values from the command prompt
             program
                 .version('1.0.1')
-                .option('-w, --password [value]', 'Password to protect the private key')
+                .option('-s, --password [value]', 'Password (secret) to protect the private key')
                 .option('-i, --ip [value]', 'IP address for the Streembit seed')
                 .option('-p, --port <num>', 'Port for the Streembit client', parseIpPort)
                 .parse(process.argv);
