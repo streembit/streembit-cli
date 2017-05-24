@@ -21,9 +21,6 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var streembit = streembit || {};
-
-var config = require('./config');
 
 var program = require('commander');
 var path = require('path');
@@ -40,6 +37,9 @@ var bcrunner = require("./modules/blockchain");
 var iotrunner = require("./modules/iot");
 var iotrunner = require("./modules/iot");
 var db = require("./libs/database");
+var config = require('libs/config');
+var utils = require("libs/utils");
+var Account = require("libs/account");
 
 // initialize the logger
 function initialize_logger(callback) {
@@ -49,12 +49,17 @@ function initialize_logger(callback) {
     logger.init(loglevel, logspath, null, callback);
 }
 
-
-module.exports = exports = function () {
+module.exports = exports = function (port, ip, password) {
 
     async.waterfall(
         [
-            initialize_logger,
+            function (callback) {
+                config.init(port, ip, password, callback);
+            },
+            function (callback) {
+                console.log("config initialized port: " + config.port + ", ipaddress: " + config.ipaddress)
+                initialize_logger(callback);
+            },
             function (callback) {
                 db.init_databases(__dirname, callback);
             },    
@@ -80,5 +85,38 @@ module.exports = exports = function () {
             logger.info("The application has been initialized.")
         }
     );
-
 };
+
+module.exports.display_data = function () {
+    async.waterfall(
+        [
+            function (callback) {
+                db.init_databases(__dirname, callback);
+            },
+            function (callback) {
+                utils.prompt_for_password(callback);
+            },
+            function (password, callback) {
+                var account = new Account();
+                account.load(password, callback);
+            }
+        ],
+        function (err, result) {
+            if (err) {
+                return console.log(err.message || err);
+            }
+
+            var account = new Account();
+            //print the node ID
+            console.log("node ID: %s", account.accountid);
+        }
+    ); 
+}
+
+module.exports.changepwd = function() {
+    console.log("app change password");
+}
+
+module.exports.backup = function() {
+    console.log("app backup account data");
+}

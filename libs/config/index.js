@@ -39,6 +39,7 @@ streembit.config = (function (cnfobj) {
     var m_password = null;
     var m_port = null;
     var m_ipaddress = null;
+    var m_log = null;
 
     Object.defineProperty(cnfobj, "password", {
         get: function () {
@@ -110,9 +111,20 @@ streembit.config = (function (cnfobj) {
         }
     });
 
+    Object.defineProperty(cnfobj, "log", {
+        get: function () {
+            return m_log;
+        },
+
+        set: function (value) {
+            m_log = value;
+        }
+    });
 
     cnfobj.init = function (argv_port, argv_ip, argv_password, callback) {
         try {
+
+            cnfobj.log = config.log;
 
             var ipport = argv_port ? argv_port : 0;
             if (!ipport) {
