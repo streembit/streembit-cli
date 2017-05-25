@@ -43,8 +43,8 @@ logs/*.log
 
 *.ldb
 *.dat
-/db/appdb
-/db/blockchaindb
+/db/appdb/
+/db/blockchaindb/
 /db/streembitdb/
 /build
 
