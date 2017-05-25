@@ -43,7 +43,9 @@ logs/*.log
 
 *.ldb
 *.dat
-/db
+/db/appdb
+/db/blockchaindb
+/db/streembitdb/
 /build
 
 /.vs/config/applicationhost.config
