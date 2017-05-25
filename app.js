@@ -88,6 +88,7 @@ module.exports = exports = function (port, ip, password) {
 };
 
 module.exports.display_data = function () {
+
     async.waterfall(
         [
             function (callback) {
@@ -111,6 +112,7 @@ module.exports.display_data = function () {
             console.log("node ID: %s", account.accountid);
         }
     ); 
+
 }
 
 module.exports.changepwd = function() {

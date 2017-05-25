@@ -95,7 +95,16 @@ class AbstractNode extends EventEmitter {
    * @param {object} [options.messenger] - {@tutorial messengers}
    */
   constructor(options) {
+
+      if (!options.identity) {
+        // set the identity to IP address/host name and port
+        // this will guarantee that peers will  in that ip  
+        var tcpidentity = utils.getTCPNodeId(options.contact.hostname, options.contact.port);
+        options.identity = tcpidentity;
+    }
+
     AbstractNode.validate(options = merge(AbstractNode.DEFAULTS, options));
+
     super();
 
     this._middlewares = { '*': [] };
@@ -105,7 +114,9 @@ class AbstractNode extends EventEmitter {
     this.rpc = options.messenger;
     this.transport = options.transport;
     this.storage = options.storage;
+
     this.identity = options.identity;
+
     this.contact = options.contact;
     this.logger = options.logger;
     if (options.logger) {

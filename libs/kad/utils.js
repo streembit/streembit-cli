@@ -37,6 +37,14 @@ const assert = require('assert');
 const crypto = require('crypto');
 const constants = require('./constants');
 
+
+exports.getTCPNodeId = function (host, port) {
+    var address = host + ":" + port;
+    var id = crypto.createHash('rmd160').update(address).digest('hex');
+    return id;
+};
+
+
 /**
  * Returns a random valid key/identity as a string
  * @returns {string}

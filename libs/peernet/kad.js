@@ -26,6 +26,7 @@ const logger = require("libs/logger");
 const db = require("libs/database");
 const kad = require('libs/kad');
 const Account = require("libs/account");
+const utils = require("libs/utils");
 
 class KadHandler {
     constructor() {
@@ -43,13 +44,14 @@ class KadHandler {
     init(callback) {
         var transport = new kad.UDPTransport();
         var account = new Account();
-        var accountid = account.accountid;
-        var contact = { hostname: config.ipaddress, port: config.port };
+        var bs58pk = account.bs58pk;
+        var contact = { hostname: config.ipaddress, port: config.port, pubkey: bs58pk};
         var storage = db.streembitdb;
-        var kadnode = kad({ transport: transport, storage: storage, logger: logger, identity: accountid, contact: contact });
+        var kadnode = kad({ transport: transport, storage: storage, logger: logger, contact: contact });
         this.node = kadnode;
 
-        this.node.listen(config.port, config.ipaddress);
+        var host = utils.is_ipaddress(config.ipaddress) ? config.ipaddress : null;
+        this.node.listen(config.port, host);
 
         callback();
     }

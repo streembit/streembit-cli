@@ -27,7 +27,7 @@ const async = require("async");
 const config = require("libs/config");
 const logger = require("libs/logger");
 const db = require("libs/database");
-const kad = require("libs/peernet/kadhandler");
+const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
 
 module.exports = exports = function (callback) {

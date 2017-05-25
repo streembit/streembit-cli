@@ -60,6 +60,10 @@ class Account {
         return this.m_key ? this.m_key.publicKeyHex : '';
     }
 
+    get bs58pk() {
+        return this.m_key ? this.m_key.publicKeyBs58 : '';
+    }
+
     get public_key_hash() {
         return this.m_key ? this.m_key.pubkeyhash : '';
     }
