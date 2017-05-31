@@ -30,6 +30,5 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 module.exports = {
-    AddressPortContact: require('./address-port-contact'),
     StreembitContact: require('./streembit-contact')
 };

@@ -50,7 +50,7 @@ function TCPTransport(contact, options) {
         return new TCPTransport(contact, options);
     }
 
-    assert(contact instanceof StreembitContact || contact instanceof StreembitContact, 'Invalid contact supplied');
+    assert(contact instanceof StreembitContact , 'Invalid contact supplied');
     assert(typeof contact.address === 'string' && contact.address.length > 0, 'Invalid address was supplied');
     assert(typeof contact.port === 'number' && contact.port > 0, 'Invalid port was supplied');
 

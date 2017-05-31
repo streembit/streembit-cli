@@ -63,25 +63,13 @@ streembit.database = (function (db, logger) {
     function initialize_db_dir(dbname, dirname) {
         // create the db directory
         var db_path = path.join(dirname, 'db', dbname);
-        logger.info("initializing database, path: %s", db_path);
         var exists = fs.existsSync(db_path);
         if (exists) {
             return;
         }
 
-        /* the DB directory doesn't exist */
-        logger.info("Creating " + dbname + " database directory ...");
-        var dbdir_path = path.join(__dirname, 'db');
         try {
-            fs.mkdirSync(dbdir_path);
-        }
-        catch (e) {
-            if (e.message.indexOf("EEXIST") < 0) {
-                throw new Error("creating " + dbname + " database error: " + e.message);
-            }
-        }
-
-        try {
+            logger.info("creating database, path: %s", db_path);
             fs.mkdirSync(db_path);
         }
         catch (e) {
@@ -135,19 +123,19 @@ streembit.database = (function (db, logger) {
             var maindb_path = path.join(dirname, 'db', 'streembitdb');
             var main_dbobj = levelup(maindb_path);
             db.streembitdb = main_dbobj;
-            logger.debug("streembitdb database created");
+            logger.debug("streembitdb database initialized");
 
             initialize_db_dir('appdb', dirname);
             var appdb_path = path.join(dirname, 'db', 'appdb');
             var app_dbobj = levelup(appdb_path);
             db.appdb = app_dbobj;
-            logger.debug("appdb database created");
+            logger.debug("appdb database initialized");
 
             initialize_db_dir('blockchaindb', dirname);
             var bcdb_path = path.join(dirname, 'db', 'blockchaindb');
             var bc_dbobj = levelup(bcdb_path);
             db.blockchaindb = bc_dbobj;
-            logger.debug("blockchaindb database created");
+            logger.debug("blockchaindb database initialized");
 
             callback();
         }

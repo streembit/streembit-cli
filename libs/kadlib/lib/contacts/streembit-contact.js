@@ -84,12 +84,14 @@ StreembitContact.prototype._createNodeID = function () {
 * Generate a user-friendly string for the contact
 */
 StreembitContact.prototype.toString = function () {
-    if (this.publickey) {
-        return this.publickey;
-    }
-    else {
-        return this.address + ':' + this.port;
-    }
+    //if (this.publickey && typeof this.publickey === "string" && this.publickey.length > 0) {
+    //    return this.publickey;
+    //}
+    //else {
+    //    return this.address + ':' + this.port;
+    //}
+
+    return this.address + ':' + this.port;
 };
 
 module.exports = StreembitContact;

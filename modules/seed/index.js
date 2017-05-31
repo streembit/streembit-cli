@@ -30,6 +30,17 @@ const db = require("libs/database");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
 
+
+function on_node_message (request, response, next) {
+    let [identityString] = request.contact
+
+    if ([/* identity blacklist */].includes(identityString)) {
+        return next(new Error('You have been blacklisted'));
+    }
+
+    next();
+}
+
 module.exports = exports = function (callback) {
     try {
         var conf = config.seed_config;
@@ -45,8 +56,18 @@ module.exports = exports = function (callback) {
                     account.init(cb)
                 },
                 function (cb) {
-                    var kadnet = new kad.KadHandler();
-                    kadnet.init(cb);
+                    try {
+                        var options = {
+                            seeds: config.seeds,
+                            onNodeMessage: on_node_message
+                        };
+
+                        var kadnet = new kad.KadHandler();
+                        kadnet.init(options, cb);
+                    }
+                    catch (e) {
+                        callback(e.message);
+                    }
                 }
             ],
             function (err) {

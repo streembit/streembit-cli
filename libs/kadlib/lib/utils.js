@@ -42,7 +42,7 @@ var constants = require('./constants');
  * @returns {Boolean}
  */
 exports.isValidKey = function (key) {
-    return !!key && key.length === constants.B / 4;
+    return !!key && key.length === constants.B / 8;
 };
 
 /**
@@ -51,11 +51,12 @@ exports.isValidKey = function (key) {
  * @returns {String}
  */
 exports.createID = function (data) {
-    if (exports.isValidKey(data)) {
-        return data;
-    }
+    //if (exports.isValidKey(data)) {
+    //    return data;
+    //}
 
-    return crypto.createHash('sha1').update(data).digest('hex');
+    //return crypto.createHash('sha1').update(data).digest('hex');
+    return crypto.createHash('rmd160').update(data).digest('hex');
 };
 
 /**
@@ -64,8 +65,9 @@ exports.createID = function (data) {
  * @returns {Buffer}
  */
 exports.hexToBuffer = function (hexString) {
-    var buf = new Buffer(constants.B / 8);
-    buf.write(hexString, 0, 'hex');
+    //var buf = new Buffer(constants.B / 8);
+    //buf.write(hexString, 0, 'hex');
+    var buf = Buffer.from(hexString, 'hex');
     return buf;
 };
 

@@ -26,12 +26,9 @@ var streembit = streembit || {};
 var assert = require('assert');
 var config = require('config');
 var utils = require("libs/utils");
-
+var constants = require("libs/constants");
 
 streembit.config = (function (cnfobj) {
-
-    const DEFAULT_STREEMBIT_PORT = 32320;
-
     var m_seed_config = null;
     var m_client_config = null;
     var m_iot_config = null;
@@ -40,6 +37,7 @@ streembit.config = (function (cnfobj) {
     var m_port = null;
     var m_ipaddress = null;
     var m_log = null;
+    var m_seeds = null;
 
     Object.defineProperty(cnfobj, "password", {
         get: function () {
@@ -121,6 +119,16 @@ streembit.config = (function (cnfobj) {
         }
     });
 
+    Object.defineProperty(cnfobj, "seeds", {
+        get: function () {
+            return m_seeds;
+        },
+
+        set: function (value) {
+            m_seeds = value;
+        }
+    });
+
     cnfobj.init = function (argv_port, argv_ip, argv_password, callback) {
         try {
 
@@ -129,7 +137,7 @@ streembit.config = (function (cnfobj) {
             var ipport = argv_port ? argv_port : 0;
             if (!ipport) {
                 //  check the config file
-                ipport = config.port || DEFAULT_STREEMBIT_PORT;
+                ipport = config.port || constants.DEFAULT_STREEMBIT_PORT;
             }
             assert(ipport > 0 && ipport < 65535, "Invalid port configuration value");
             cnfobj.port = ipport;
@@ -140,6 +148,8 @@ streembit.config = (function (cnfobj) {
                 ip = config.ipaddress || 0;
             }
             cnfobj.ipaddress = ip;
+
+            cnfobj.seeds = config.seeds;
 
             // Validate the configuration file. There are some configurations disallowed. Throw an exception here if we detect such invalid configuration
             var seedcfarr = config.modules.filter(function (item) {

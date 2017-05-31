@@ -22,8 +22,10 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-var prompt = require('prompt');
-var assert = require('assert');
+const prompt = require('prompt');
+const assert = require('assert');
+const constants = require("libs/constants");
+const kad = require('libs/kad');
 
 (function () {
     var utils = {
@@ -68,50 +70,39 @@ var assert = require('assert');
             var ipPattern = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/; // /^(\d{ 1, 3 })\.(\d { 1, 3 })\.(\d { 1, 3 })\.(\d { 1, 3 })$/;   
             var valid = ipPattern.test(address);
             return valid;
+        },
+
+        ensure_seeds: function (seeds) {    
+            if (!seeds || !Array.isArray(seeds)) {
+                return null;
+            }
+
+            var result = [];
+            // ensure the ports of the seeds are correct
+            seeds.forEach(function (item, index, array) {
+                var identity = item.id;
+                if (!item.id || typeof item.id != "string" || item.id.trim().length == 0) {
+                    identity = kad.utils.getTCPNodeId(item.node.host, item.node.port);
+                }
+
+                if (!item.node.port) {
+                    item.node.port = constants.DEFAULT_STREEMBIT_PORT;
+                }
+
+                var seed = [
+                    identity,
+                    {
+                        hostname: item.node.host,
+                        port: item.node.port
+                    }
+                ];
+                result.push(seed);                        
+            });
+
+            return result;
         }
     };
 
     module.exports = utils;
 })();
 
-//class Utils {
-
-//    constructor() {
-
-//    }
-
-//    parse_ipport(val) {
-//        console.log("parse_ipport");
-//        var port = 0;
-//        if (val) {
-//            port = parseInt(val);           
-//        }
-//        assert(ipport > 0 && ipport < 65535, "Invalid port value was entered");
-//        return port;
-//    }
-
-//    prompt_for_password(callback) {
-//        // show the prompt if the password was not supplied in the cmd line argument nor in the config file
-//        var schema = {
-//            properties: {
-//                password: {
-//                    hidden: true
-//                }
-//            }
-//        };
-
-//        prompt.message = "";
-
-//        // Since there is no password was provided start the command prompt
-//        // Get the password from the user via the command prompt
-//        prompt.start();
-//        prompt.get(schema, function (err, result) {
-//            var password = result.password.trim();
-//            assert(password, "Invalid password was entered. Enter the password! Spaces are not allowed in the password");
-//            callback(password);
-//        });
-
-//    }
-//}
-
-//module.export = new Utils();

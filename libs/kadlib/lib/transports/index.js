@@ -27,6 +27,7 @@ Copyright (C) 2016 The Streembit software development team
  * @license GPL-3.0
  * @author Gordon Hall gordon@gordonwritescode.com
  */
+
 'use strict';
 
 module.exports = {
