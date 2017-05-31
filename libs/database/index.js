@@ -37,16 +37,19 @@ streembit.database = (function (db, logger) {
 
     function initialize_db_rootpath(dirname) {
 
-        var dbdir_path = path.join(__dirname, 'db');
-        var exists = fs.existsSync(dbdir_path);
+        if (!dirname) {
+            throw new Error("the directory for databases is invalid");
+        }
 
+        var dbdir_path = path.join(dirname, 'db');
+        var exists = fs.existsSync(dbdir_path);
         if (exists) {
             logger.debug("DB directory exists");   
             return;
         }
 
         /* the DB directory doesn't exist */
-        logger.info("Creating " + dbname + " database directory ...");        
+        logger.info("Creating " + dirname + " database directory ...");        
         try {
             fs.mkdirSync(dbdir_path);
         }
@@ -125,28 +128,32 @@ streembit.database = (function (db, logger) {
     });
 
     db.init_databases = function (dirname, callback) {
+        try {
+            initialize_db_rootpath(dirname);
 
-        initialize_db_rootpath();
+            initialize_db_dir('streembitdb', dirname);
+            var maindb_path = path.join(dirname, 'db', 'streembitdb');
+            var main_dbobj = levelup(maindb_path);
+            db.streembitdb = main_dbobj;
+            logger.debug("streembitdb database created");
 
-        initialize_db_dir('streembitdb', dirname);
-        var maindb_path = path.join(dirname, 'db', 'streembitdb');
-        var main_dbobj = levelup(maindb_path);
-        db.streembitdb = main_dbobj;
-        logger.debug("streembitdb database created");
+            initialize_db_dir('appdb', dirname);
+            var appdb_path = path.join(dirname, 'db', 'appdb');
+            var app_dbobj = levelup(appdb_path);
+            db.appdb = app_dbobj;
+            logger.debug("appdb database created");
 
-        initialize_db_dir('appdb', dirname);
-        var appdb_path = path.join(dirname, 'db', 'appdb');
-        var app_dbobj = levelup(appdb_path);
-        db.appdb = app_dbobj;
-        logger.debug("appdb database created");        
+            initialize_db_dir('blockchaindb', dirname);
+            var bcdb_path = path.join(dirname, 'db', 'blockchaindb');
+            var bc_dbobj = levelup(bcdb_path);
+            db.blockchaindb = bc_dbobj;
+            logger.debug("blockchaindb database created");
 
-        initialize_db_dir('blockchaindb', dirname);
-        var bcdb_path = path.join(dirname, 'db', 'blockchaindb');
-        var bc_dbobj = levelup(bcdb_path);
-        db.blockchaindb = bc_dbobj;
-        logger.debug("blockchaindb database created");        
-
-        callback();
+            callback();
+        }
+        catch (e) {
+            callback(e.message);
+        }
     };
 
     return db;
