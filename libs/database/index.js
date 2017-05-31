@@ -35,6 +35,27 @@ streembit.database = (function (db, logger) {
     var _appdb = null;
     var _blockchaindb = null;
 
+    function initialize_db_rootpath(dirname) {
+
+        var dbdir_path = path.join(__dirname, 'db');
+        var exists = fs.existsSync(dbdir_path);
+
+        if (exists) {
+            logger.debug("DB directory exists");   
+            return;
+        }
+
+        /* the DB directory doesn't exist */
+        logger.info("Creating " + dbname + " database directory ...");        
+        try {
+            fs.mkdirSync(dbdir_path);
+        }
+        catch (e) {
+            if (e.message.indexOf("EEXIST") < 0) {
+                throw new Error("creating " + dbname + " database error: " + e.message);
+            }
+        }
+    }
 
     function initialize_db_dir(dbname, dirname) {
         // create the db directory
@@ -104,6 +125,8 @@ streembit.database = (function (db, logger) {
     });
 
     db.init_databases = function (dirname, callback) {
+
+        initialize_db_rootpath();
 
         initialize_db_dir('streembitdb', dirname);
         var maindb_path = path.join(dirname, 'db', 'streembitdb');
