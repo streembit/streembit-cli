@@ -246,7 +246,7 @@ RPC.prototype.receive = function (buffer) {
     }
 
     if (!buffer) {
-        self._log.warn('missing or empty reply from contact');
+        self._log.debug('missing or empty reply from contact');
         return self.emit('MESSAGE_DROP');
     }
 

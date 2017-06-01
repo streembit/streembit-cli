@@ -38,6 +38,8 @@ streembit.config = (function (cnfobj) {
     var m_ipaddress = null;
     var m_log = null;
     var m_seeds = null;
+    var m_usertype = null;
+    var m_account_name = null;
 
     Object.defineProperty(cnfobj, "password", {
         get: function () {
@@ -129,6 +131,26 @@ streembit.config = (function (cnfobj) {
         }
     });
 
+    Object.defineProperty(cnfobj, "usertype", {
+        get: function () {
+            return m_usertype;
+        },
+
+        set: function (value) {
+            m_usertype = value;
+        }
+    });
+
+    Object.defineProperty(cnfobj, "account_name", {
+        get: function () {
+            return m_account_name;
+        },
+
+        set: function (value) {
+            m_account_name = value;
+        }
+    });
+
     cnfobj.init = function (argv_port, argv_ip, argv_password, callback) {
         try {
 
@@ -150,6 +172,10 @@ streembit.config = (function (cnfobj) {
             cnfobj.host = ip;
 
             cnfobj.seeds = config.seeds;
+
+            cnfobj.usertype = config.usertype || constants.USERTYPE_HUMAN;
+
+            cnfobj.account_name = config.account;
 
             // Validate the configuration file. There are some configurations disallowed. Throw an exception here if we detect such invalid configuration
             var seedcfarr = config.modules.filter(function (item) {

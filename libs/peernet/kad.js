@@ -14,7 +14,7 @@ If not, see http://www.gnu.org/licenses/.
 
 -------------------------------------------------------------------------------------------------------------------------
 Author: Tibor Zsolt Pardi
-Copyright (C) 2016 The Streembit software development team
+Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
 */
@@ -28,6 +28,8 @@ const kad = require('libs/kad');
 const Account = require("libs/account");
 const utils = require("libs/utils");
 const async = require("async");
+const constants = require("libs/constants");
+const PeerNet = require("libs/peernet");
 
 class KadHandler {
     constructor() {
@@ -40,6 +42,21 @@ class KadHandler {
 
     set node(n) {
         this.m_node = n;
+    }
+
+    publish_account(callback) {
+        var account = new Account();
+        var public_key = account.bs58pk;
+        var address = config.host;
+        var port = config.port;
+        var transport = constants.DEFAULT_TRANSPORT;
+        var type = config.usertype;
+        var pubkeyhash = account.public_key_hash;
+        var symcryptkey = account.connsymmkey;
+        var account_name = config.account;
+
+        var peernet = new PeerNet();
+        peernet.publish_account(symcryptkey, pubkeyhash, public_key, transport, address, port, type, account_name, callback);
     }
 
     join(seeds, callback) {
@@ -131,7 +148,9 @@ class KadHandler {
             logger: logger,
             storage: db.streembitdb,
             seeds: seeds,
-            onPeerMessage: options.onPeerMessage
+            onPeerMessage: options.onPeerMessage,
+            onTransaction: options.onTransaction,
+            isseed: options.isseed
         };
 
 

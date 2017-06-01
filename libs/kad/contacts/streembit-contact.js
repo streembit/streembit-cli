@@ -59,6 +59,7 @@ function StreembitContact(options) {
     this.publickey = "";
     this.host = options.host;
     this.port = options.port;
+    this.isseed = options.isseed ? false : true;
 
     if (options.publickey) {
         assert(typeof options.publickey === 'string', 'Invalid public key was supplied');
@@ -84,13 +85,6 @@ StreembitContact.prototype._createNodeID = function () {
 * Generate a user-friendly string for the contact
 */
 StreembitContact.prototype.toString = function () {
-    //if (this.publickey && typeof this.publickey === "string" && this.publickey.length > 0) {
-    //    return this.publickey;
-    //}
-    //else {
-    //    return this.host + ':' + this.port;
-    //}
-
     return this.host + ':' + this.port;
 };
 

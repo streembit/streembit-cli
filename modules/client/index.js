@@ -23,8 +23,14 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
+var async = require("async");
 var config = require("libs/config");
 var logger = require("libs/logger");
+var peerutils = require("libs/peernet/peerutils");
+const kad = require("libs/peernet/kad");
+const Account = require("libs/account");
+const msghandler = require("libs/peernet/msghandler");
+
 
 module.exports = exports = function (callback) {
     try {
@@ -35,7 +41,52 @@ module.exports = exports = function (callback) {
         }
 
         logger.info("Run streembit client handler");
-        callback();
+
+        async.waterfall(
+            [
+                function (cb) {
+                    var account = new Account();
+                    account.init(cb)
+                },
+                function (cb) {
+                    peerutils.discovery(config.host, config.seeds, cb)
+                },
+                function (host, cb) {
+                    try {
+
+                        if (config.host != host) {
+                            config.host = host;
+                        }
+
+                        var options = {
+                            seeds: config.seeds,
+                            onKadMessage: msghandler.on_kad_message,
+                            onPeerMessage: msghandler.on_peer_message,
+                            onTransportError: msghandler.on_transport_error,
+                            isseed: false
+                        };
+
+                        var kadnet = new kad.KadHandler();
+                        kadnet.init(options, cb);
+                    }
+                    catch (e) {
+                        callback(e.message);
+                    }
+                },
+                function (cb) {
+
+                }
+            ],
+            function (err) {
+                if (err) {
+                    return callback(err);
+                }
+
+                logger.info("Client handler started");
+                callback();
+            }
+        );
+
     }
     catch (err) {
         callback(err.message);

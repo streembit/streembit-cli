@@ -29,21 +29,8 @@ const logger = require("libs/logger");
 const db = require("libs/database");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
+const msghandler = require("libs/peernet/msghandler");
 
-
-function on_transport_error(err) {
-    logger.error('RPC error: %j', err);
-}
-
-function on_node_message(message, contact, next) {
-
-    next();
-}
-
-function on_peer_message(message, contact, next) {
-
-    next();
-}
 
 module.exports = exports = function (callback) {
     try {
@@ -63,9 +50,9 @@ module.exports = exports = function (callback) {
                     try {
                         var options = {
                             seeds: config.seeds,
-                            onKadMessage: on_node_message,
-                            onPeerMessage: on_peer_message,
-                            onTransportError: on_transport_error
+                            onKadMessage: msghandler.on_kad_message,
+                            onPeerMessage: msghandler.on_peer_message,
+                            onTransportError: msghandler.on_transport_error
                         };
 
                         var kadnet = new kad.KadHandler();
@@ -81,7 +68,7 @@ module.exports = exports = function (callback) {
                     return callback(err);
                 }
 
-                logger.info("Run seed handler");
+                logger.info("Seed handler started");
                 callback();
             }
         );

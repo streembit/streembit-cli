@@ -80,7 +80,7 @@ function Node(options) {
     this._bindRPCMessageHandlers(options);
     this._startReplicationInterval();
     this._startExpirationInterval();
-    this._log.info('node created Contact: %s nodeID: %s', this._self.toString(), this._self.nodeID);
+    this._log.info('node created Contact: ' + this._self.toString() + '; nodeID: ' + this._self.nodeID + '; isseed: ' + this._self.isseed);
 }
 /**
  * Called when a value is retrieved or stored to validate the pair
@@ -476,6 +476,23 @@ Node.prototype._ensureTransportState = function (callback) {
     this._rpc.open(callback);
 };
 
+
+
+Node.prototype._handleDiscovery = function (msg, callback) {
+    var contact = this._rpc._createContact(incomingMsg.params.contact);
+    var message = new Message({
+        id: incomingMsg.id,
+        result: { contact: this._self }
+    });
+
+    this._log.info(
+        'received PING from %s, sending PONG',
+        incomingMsg.params.contact.nodeID
+    );
+    this._rpc.send(contact, message);
+};
+
+
 /**
  * Setup event listeners for rpc messages
  * @private
@@ -492,6 +509,15 @@ Node.prototype._bindRPCMessageHandlers = function (options) {
 
     if (options.onPeerMessage && (typeof options.onPeerMessage == "function")) {
         this._rpc.on('PEERMSG', options.onPeerMessage.bind(this));
+    }
+
+    if (options.onTransaction && (typeof options.onTransaction == "function")) {
+        this._rpc.on('TXN', options.onTransaction.bind(this));
+    }
+    else {
+        this._rpc.on('TXN', function (message) {
+            self._log.debug('default TXN handler');
+        });
     }
 
     this._rpc.on('ready', function () {

@@ -14,26 +14,73 @@ If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
 Author: Tibor Zsolt Pardi 
-Copyright (C) 2016 The Streembit software development team
+Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
 */
 
 'use strict';
 
-var streembit = streembit || {};
+const constants = require("libs/constants");
+const peermsg = require("libs/message");
+
+class PeerNet {
+    constructor() {
+    }
+
+    publish_account(symcryptkey, key, public_key, transport, address, port, type, account_name, callback) {
+        try {
+            if (!callback || typeof callback != "function") {
+                throw new Error("publish_account error: invalid callback parameter")
+            }
+
+            //  publishing user data
+            if (!public_key || !address || (transport == "tcp" && !port)) {
+                return callback("invalid parameters at publish_account");
+            }
+
+            if (!symcryptkey) {
+                return callback("invalid symmetric key at publish_account");
+            }
+
+            //  publish the public keys so this client can communicate with the devices
+            //  via direct peer to peer messaging as well
+            // create the WoT message 
+            var ctype = type || constants.USERTYPE_HUMAN;
+
+            var payload = {};
+            payload.type = peermsg.MSGTYPE.PUBPK;
+
+            var plain = {};
+            plain[peermsg.MSGFIELD.ACCOUNT] = account_name;
+            plain[peermsg.MSGFIELD.PUBKEY] = public_key;
+            plain[peermsg.MSGFIELD.PROTOCOL] = transport;
+            plain[peermsg.MSGFIELD.HOST] = address;
+            plain[peermsg.MSGFIELD.PORT] = port;
+            plain[peermsg.MSGFIELD.UTYPE] = ctype;
+
+            var cipher = peermsg.aes256encrypt(symcryptkey, JSON.stringify(plain));
+            payload[peermsg.MSGFIELD.CIPHER] = cipher;
+
+            logger.debug("publish_user with key: %s", key);
+
+            var value = peermsg.create_jwt_token(appsrvc.cryptokey, create_id(), payload, null, null, public_key, null, null);
+
+            //  For this public key upload message the key is the device name
+            net.put(key, value, function (err) {
+                if (err) {
+                    return callback(err.message ? err.message : err);
+                }
+
+                logger.debug("peer key " + key + " published");
+                callback();
+            });
+        }
+        catch (e) {
+            callback("Publish peer user error: " + e.message);
+        }
+    }
+}
 
 
-var applogger = 0;
-
-
-streembit.PeerNet = (function (peerobj, logger) {
-
-    peerobj.is_connected = false;
-
-    return peerobj;
-
-}(streembit.PeerNet || {}, applogger));
-
-
-module.exports = streembit.PeerNet;
+module.exports = PeerNet;

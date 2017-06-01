@@ -23,7 +23,10 @@ Copyright (C) 2016 The Streembit software development team
 
 
 var constants = {
-    DEFAULT_STREEMBIT_PORT: 32320
+    DEFAULT_STREEMBIT_PORT: 32320,
+    DEFAULT_TRANSPORT: "http",
+    USERTYPE_HUMAN: "human",
+    USERTYPE_DEVICE: "device"
 };
 
 module.exports = constants;

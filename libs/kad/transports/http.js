@@ -86,6 +86,37 @@ HTTPTransport.prototype._open = function(done) {
            self._protocol.createServer(handler);
   }
 
+  function preProcessor(payload, req, res) {
+      try {
+          var retval = false;
+
+          var data = JSON.parse(payload);
+          if (!data || !data.type) {
+              return false;
+          }
+
+          switch (data.type) {
+              case "DISCOVERY":
+                  var ipaddress = req.connection.remoteAddress;
+                  var reply = JSON.stringify({ address: ipaddress });
+                  res.end(reply);
+                  retval = true;
+                  break;
+
+              case "PEERMSG":
+
+                  break;
+          }
+      }
+      catch (err) {
+          self._log.error('HTTP preProcessor error: %s', err.message);
+          res.end();
+          return true;
+      }
+
+      return retval;
+  }
+
   this._server = createServer(function(req, res) {
     var payload = '';
     var message = null;
@@ -114,6 +145,11 @@ HTTPTransport.prototype._open = function(done) {
 
     //request end
     req.on('end', function () {
+
+        var processed = preProcessor(payload, req, res);
+        if (processed) {
+            return;
+        }
 
         var buffer = new Buffer(payload);
 
@@ -178,8 +214,8 @@ HTTPTransport.prototype._send = function(data, contact) {
     });
   }
 
-  if (this._pendingmsgs.has[parsed.id]) {
-      this._pendingmsgs.get(parsed.id).response.end(buffer);
+  if (this._pendingmsgs.has(parsed.id)) {
+      this._pendingmsgs.get(parsed.id).response.end(data);
       this._pendingmsgs.delete(parsed.id);
       return;
   }
@@ -202,7 +238,6 @@ HTTPTransport.prototype._send = function(data, contact) {
   req.setNoDelay(true); // disable the tcp nagle algorithm
 
   req.on('error', function (err) {
-    self._log.error('HTTP request error: %j', err);
     self.receive(null);
   });
 

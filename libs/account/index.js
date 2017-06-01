@@ -40,6 +40,7 @@ class Account {
         if (!instance) {
             instance = this;
             this.m_key = null;
+            this.m_connsymmkey = null;
         }
 
         return instance;
@@ -75,6 +76,14 @@ class Account {
 
     get is_user_initialized () {
         return this.m_key ? true : false;
+    }
+
+    get connsymmkey() {
+        return this.m_connsymmkey;
+    }
+
+    set connsymmkey(value) {
+        this.m_connsymmkey = value;
     }
 
 
@@ -123,20 +132,20 @@ class Account {
             key.generateKey(entropy);
 
             //  encrypt the account data
-            var skrnd = secrand.randomBuffer(32).toString("hex");
-            var skhash = createHash("sha256").update(skrnd).digest("hex");
             var user_context = {
                 "privatekey": key.privateKeyHex,
-                "connsymmkey": skhash,
                 "timestamp": Date.now()
             };
-
-            this.crypto_key = key;
-            this.connsymmkey = skhash;
-
             var cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
 
-            this.addToDB(this.accountid, cipher_context, function (err) { 
+            this.crypto_key = key;
+
+            var skrnd = secrand.randomBuffer(32).toString("hex");
+            var skhash = createHash("sha256").update(skrnd).digest("hex");
+            this.connsymmkey = skhash;           
+
+            this.addToDB(this.accountid, cipher_context, (err) => {
+                logger.info("created bs58pk: " + this.bs58pk);
                 callback(err);
             });
         }
@@ -152,12 +161,12 @@ class Account {
                 return callback("Invalid parameters, the data and password parameterss are required");
             }
 
-            var pbkdf2 = this.getCryptPassword(password);
+            var symcrypt_key = this.getCryptPassword(password);
 
             // decrypt the cipher
             var plain_text;
             try {
-                plain_text = peermsg.aes256decrypt(pbkdf2, data.cipher);
+                plain_text = peermsg.aes256decrypt(symcrypt_key, data.cipher);
             }
             catch (err) {
                 if (err.message && err.message.indexOf("decrypt") > -1) {
@@ -171,7 +180,7 @@ class Account {
             var accountobj;
             try {
                 accountobj = JSON.parse(plain_text);
-                if (!accountobj || !accountobj.privatekey || !accountobj.timestamp || !accountobj.connsymmkey) {
+                if (!accountobj || !accountobj.privatekey || !accountobj.timestamp ) {
                     return callback("invalid password or invalid user object stored");
                 }
             }
@@ -180,8 +189,7 @@ class Account {
             }
 
             var hexPrivatekey = accountobj.privatekey;
-
-            // create ECC key
+            // load ECC key from the hex private key
             var key = new ecckey();
             key.keyFromPrivate(hexPrivatekey, 'hex');
 
@@ -190,7 +198,12 @@ class Account {
             }
 
             this.crypto_key = key;
-            this.connsymmkey = accountobj.connsymmkey;
+
+            var skrnd = secrand.randomBuffer(32).toString("hex");
+            var skhash = createHash("sha256").update(skrnd).digest("hex");
+            this.connsymmkey = skhash;
+
+            logger.info("loaded bs58pk: " + this.bs58pk);
 
             // the account exists and the encrypted entropy is correct!
             callback();
