@@ -32,30 +32,30 @@ Copyright (C) 2016 The Streembit software development team
 module.exports = {};
 
 /** {@link Bucket} */
-module.exports.Bucket = require('./lib/bucket');
+module.exports.Bucket = require('./bucket');
 /** {@link Contact} */
-module.exports.Contact = require('./lib/contact');
+module.exports.Contact = require('./contact');
 
 /** {@link Message} */
-module.exports.Message = require('./lib/message');
+module.exports.Message = require('./message');
 /** {@link Node} */
-module.exports.Node = require('./lib/node');
+module.exports.Node = require('./node');
 /** {@link Router} */
-module.exports.Router = require('./lib/router');
+module.exports.Router = require('./router');
 /** {@link RPC} */
-module.exports.RPC = require('./lib/rpc');
+module.exports.RPC = require('./rpc');
 /** {@link module:kad/contacts} */
-module.exports.contacts = require('./lib/contacts');
+module.exports.contacts = require('./contacts');
 /** {@link module:kad/transports} */
-module.exports.transports = require('./lib/transports');
+module.exports.transports = require('./transports');
 /** {@link module:kad/hooks} */
-module.exports.hooks = require('./lib/hooks');
+module.exports.hooks = require('./hooks');
 /** {@link module:kad.storage} */
-//module.exports.storage = require('./lib/storage');
+//module.exports.storage = require('./storage');
 /** {@link module:kad/utils} */
-module.exports.utils = require('./lib/utils');
+module.exports.utils = require('./utils');
 /** {@link module:kad/constants} */
-module.exports.constants = require('./lib/constants');
+module.exports.constants = require('./constants');
 
 /*
  *  Creates the node
@@ -67,7 +67,7 @@ module.exports.constants = require('./lib/constants');
 
 module.exports.create = function (options, callback) {
     var async = require('async');
-    var node = require('./lib/node');
+    var node = require('./node');
     
     if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
         throw new Error("alogger that implements the error, info, warn and debug methods must be passed to the node");
@@ -139,7 +139,7 @@ module.exports.create = function (options, callback) {
 
 
 module.exports.create_node = function (options) {
-    var node = require('./lib/node');
+    var node = require('./node');
 
     if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
         throw new Error("alogger that implements the error, info, warn and debug methods must be passed to the node");

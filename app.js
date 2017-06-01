@@ -57,7 +57,7 @@ module.exports = exports = function (port, ip, password) {
                 config.init(port, ip, password, callback);
             },
             function (callback) {
-                console.log("config initialized port: " + config.port + ", ipaddress: " + config.ipaddress)
+                console.log("config initialized port: " + config.port + ", host: " + config.host)
                 initialize_logger(callback);
             },
             function (callback) {
@@ -78,7 +78,6 @@ module.exports = exports = function (port, ip, password) {
         ],
         function (err, result) {
             if (err) {
-                //console.log("application init error: %j", err);
                 return logger.error("application init error: %j", err);
             }
 

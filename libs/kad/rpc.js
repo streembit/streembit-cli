@@ -357,7 +357,7 @@ RPC.prototype._createContact = function (options) {
 RPC.prototype._execPendingCallback = function (message) {
     var pendingCall = this._pendingCalls[message.id];
 
-    this._log.debug('checking pending rpc callback stack for %s', message.id);
+    //this._log.debug('checking pending rpc callback stack for %s', message.id);
 
     if (Message.isResponse(message) && pendingCall) {
         pendingCall.callback(null, message);
@@ -385,7 +385,7 @@ RPC.prototype._execPendingCallback = function (message) {
  * @private
  */
 RPC.prototype._expireCalls = function () {
-    this._log.debug('checking pending rpc callbacks for expirations');
+    //this._log.debug('checking pending rpc callbacks for expirations');
 
     for (var rpcID in this._pendingCalls) {
         var pendingCall = this._pendingCalls[rpcID];

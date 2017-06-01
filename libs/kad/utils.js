@@ -42,7 +42,7 @@ var constants = require('./constants');
  * @returns {Boolean}
  */
 exports.isValidKey = function (key) {
-    return !!key && key.length === constants.B / 8;
+    return !!key && key.length === constants.B / 4;
 };
 
 /**

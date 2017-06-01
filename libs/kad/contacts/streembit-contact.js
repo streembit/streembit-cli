@@ -43,7 +43,7 @@ var MIN_KEY_LEN = 64;
  * @constructor
  * @extends {Contact}
  * @param {Object} options
- * @param {String} options.address - IP or hostname
+ * @param {String} options.host - IP or hostname
  * @param {Number} options.port - Listening port
  * @param {Number} options.publickey - Contacts public key
  */
@@ -53,11 +53,11 @@ function StreembitContact(options) {
     }
 
     assert(typeof options === 'object', 'Invalid options were supplied: options != object');
-    assert(typeof options.address === 'string', 'Invalid address was supplied options.address != string');
+    assert(typeof options.host === 'string', 'Invalid host was supplied options.host != string');
     assert(typeof options.port === 'number', 'Invalid port was supplied options.port != number');
 
     this.publickey = "";
-    this.address = options.address;
+    this.host = options.host;
     this.port = options.port;
 
     if (options.publickey) {
@@ -73,7 +73,7 @@ function StreembitContact(options) {
 inherits(StreembitContact, Contact);
 
 /**
-* Generate a NodeID by taking the SHA1 hash of the address and port
+* Generate a NodeID by taking the SHA1 hash of the host and port
 * @private
 */
 StreembitContact.prototype._createNodeID = function () {
@@ -88,10 +88,10 @@ StreembitContact.prototype.toString = function () {
     //    return this.publickey;
     //}
     //else {
-    //    return this.address + ':' + this.port;
+    //    return this.host + ':' + this.port;
     //}
 
-    return this.address + ':' + this.port;
+    return this.host + ':' + this.port;
 };
 
 module.exports = StreembitContact;

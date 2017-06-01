@@ -95,25 +95,58 @@ class KadHandler {
     }
 
     init(options, callback) {
-        var transport = new kad.HTTPTransport();
+
         var account = new Account();
         var bs58pk = account.bs58pk;
-        var contact = { hostname: config.ipaddress, port: config.port, pubkey: bs58pk};
-        var storage = db.streembitdb;
+
+        var contact_param = {
+            host: config.host,
+            port: config.port,
+            publickey: bs58pk
+        };
+
+        var contact = kad.contacts.StreembitContact(contact_param);
+        logger.info('this contact object: ' + contact.toString());
+
+
+        var transport = kad.transports.HTTP(contact, { logger: logger});
+        transport.after('open', function (next) {
+            // exit middleware stack if contact is blacklisted
+            logger.info('TCP peer connection is opened');
+
+            // otherwise pass on
+            next();
+        });
+       
+        // message validator
+        transport.before('receive', options.onKadMessage);
+
+        // handle errors from RPC
+        transport.on('error', options.onTransportError);
 
         var seeds = utils.ensure_seeds(options.seeds);
 
-        this.node = kad({ transport: transport, storage: storage, logger: logger, contact: contact });
+        var options = {
+            transport: transport,
+            logger: logger,
+            storage: db.streembitdb,
+            seeds: seeds,
+            onPeerMessage: options.onPeerMessage
+        };
 
-        if (options.onNodeMessage && (typeof options.onNodeMessage === "function")) {
-            this.node.use(options.onNodeMessage);
-        }
 
-        var host = utils.is_ipaddress(config.ipaddress) ? config.ipaddress : null;
-        this.node.listen(config.port, host, () => {
-            logger.debug("node listen complete")
-            this.join(seeds, callback);
-        });        
+        let node = this.node;
+
+        kad.create(options, function (err, peer) {
+            if (err) {
+                logger.error("peernet start error: %j", err);
+            }
+
+            // still set the objects so the very first node on the network is still operational
+            node = peer;
+            callback();
+        });
+
     }
 
 }

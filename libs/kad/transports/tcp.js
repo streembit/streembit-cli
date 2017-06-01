@@ -51,7 +51,7 @@ function TCPTransport(contact, options) {
     }
 
     assert(contact instanceof StreembitContact , 'Invalid contact supplied');
-    assert(typeof contact.address === 'string' && contact.address.length > 0, 'Invalid address was supplied');
+    assert(typeof contact.host === 'string' && contact.host.length > 0, 'Invalid host was supplied');
     assert(typeof contact.port === 'number' && contact.port > 0, 'Invalid port was supplied');
 
     RPC.call(this, contact, options);
@@ -100,7 +100,7 @@ TCPTransport.prototype._send = function(data, contact) {
         return this.receive(null);
     }
 
-    var sock = net.createConnection(contact.port, contact.address);
+    var sock = net.createConnection(contact.port, contact.host);
 
     sock.on('error', function(err) {
         //self._log.error('error connecting to peer: ' + err.message);
@@ -175,7 +175,7 @@ TCPTransport.prototype._handleConnection = function (connection) {
                         case "PEERMSG":
                             var addr = connection.remoteAddress;
                             var port = connection.remotePort;
-                            self.emit('PEERMSG', parsed, { address: addr, port: port });
+                            self.emit('PEERMSG', parsed, { host: addr, port: port });
                             break;
 
                         default:

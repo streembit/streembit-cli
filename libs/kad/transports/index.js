@@ -31,5 +31,6 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 module.exports = {
-  TCP: require('./tcp')
+    TCP: require('./tcp'),
+    HTTP: require('./http')
 };

@@ -57,14 +57,13 @@ function HTTPTransport(contact, options) {
     return new HTTPTransport(contact, options);
   }
 
-  this._queuedResponses = {};
   this._cors = options && !!options.cors;
   this._sslopts = options && options.ssl;
   this._protocol = this._sslopts ? https : http;
   // assign the correct agent based on the protocol:
   this._agent = this._sslopts ? httpsagent : httpagent;
 
-  this._pending = new Map();
+  this._queuedResponses = new Map();
 
   assert(contact instanceof StreembitContact, 'Invalid contact supplied');
   RPC.call(this, contact, options);
@@ -99,6 +98,14 @@ HTTPTransport.prototype._open = function(done) {
       return res.end();
     }
 
+    if (!['POST', 'OPTIONS'].includes(req.method)) {
+        res.statusCode = 405;
+    }
+
+    if (req.method !== 'POST') {
+        return res.end();
+    }
+
     req.on('error', function(err) {
       self._log.warn('remote client terminated early: %s', err.message);
       self.receive(null);
@@ -113,16 +120,36 @@ HTTPTransport.prototype._open = function(done) {
 
       try {
         message = Message.fromBuffer(buffer);
-      } catch(err) {
+      }
+      catch (err) {
         return self.receive(null);
       }
 
-      if (Message.isRequest(message)) {
-        self._queuedResponses[message.id] = res;
+      if (!req.headers['x-kad-message-id']) {
+          res.statusCode = 400;
+          return res.end();
       }
+
+      res.setHeader('X-Kad-Message-ID', req.headers['x-kad-message-id']);
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.setHeader('Access-Control-Allow-Methods', '*');
+      res.setHeader('Access-Control-Allow-Headers', '*');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+      if (!Message.isRequest(message)) {
+          res.statusCode = 400;
+          return res.end();
+      }
+
+      var pending = {
+          timestamp: Date.now(),
+          response: res
+      };
+      this._queuedResponses.set(req.headers['x-kad-message-id'], pending);
 
       self.receive(buffer, {});
     });
+
   });
 
   // we should disable nagling as all of our response gets sent in one go:
@@ -161,10 +188,16 @@ HTTPTransport.prototype._send = function(data, contact) {
     });
   }
 
-  if (this._queuedResponses[parsed.id]) {
-    this._queuedResponses[parsed.id].end(data);
-    delete this._queuedResponses[parsed.id];
-    return;
+  //if (this._queuedResponses[parsed.id]) {
+  //  this._queuedResponses[parsed.id].end(data);
+  //  delete this._queuedResponses[parsed.id];
+  //  return;
+  //}
+
+  if (this._queuedResponses.has[parsed.id]) {
+      this._queuedResponses.get(parsed.id).response.end(buffer);
+      this._queuedResponses.delete(parsed.id);
+      return;
   }
 
   if (!contact.valid()) {
@@ -183,7 +216,7 @@ HTTPTransport.prototype._send = function(data, contact) {
   //});
 
   var req = self._protocol.request({
-    hostname: contact.address,
+    hostname: contact.host,
     port: contact.port,
     method: 'POST',
     agent: self._agent
@@ -232,8 +265,8 @@ HTTPTransport.prototype._handleDroppedMessage = function(buffer) {
   }
 
   if (this._queuedResponses[message.id]) {
-    this._queuedResponses[message.id].end();
-    delete this._queuedResponses[message.id];
+    this._queuedResponses.get(message.id).response.end();
+    this._queuedResponses.delete(message.id);
   }
 
   return true;

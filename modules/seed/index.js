@@ -31,12 +31,16 @@ const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
 
 
-function on_node_message (request, response, next) {
-    let [identityString] = request.contact
+function on_transport_error(err) {
+    logger.error('RPC error: %j', err);
+}
 
-    if ([/* identity blacklist */].includes(identityString)) {
-        return next(new Error('You have been blacklisted'));
-    }
+function on_node_message(message, contact, next) {
+
+    next();
+}
+
+function on_peer_message(message, contact, next) {
 
     next();
 }
@@ -59,13 +63,16 @@ module.exports = exports = function (callback) {
                     try {
                         var options = {
                             seeds: config.seeds,
-                            onNodeMessage: on_node_message
+                            onKadMessage: on_node_message,
+                            onPeerMessage: on_peer_message,
+                            onTransportError: on_transport_error
                         };
 
                         var kadnet = new kad.KadHandler();
                         kadnet.init(options, cb);
                     }
                     catch (e) {
+                        console.dir(e.stack);
                         callback(e.message);
                     }
                 }

@@ -49,7 +49,7 @@ streembit.config = (function (cnfobj) {
         }
     });
 
-    Object.defineProperty(cnfobj, "ipaddress", {
+    Object.defineProperty(cnfobj, "host", {
         get: function () {
             return m_ipaddress;
         },
@@ -145,9 +145,9 @@ streembit.config = (function (cnfobj) {
             var ip = argv_ip;
             if (!ip) {
                 //  check the config file
-                ip = config.ipaddress || 0;
+                ip = config.host || 0;
             }
-            cnfobj.ipaddress = ip;
+            cnfobj.host = ip;
 
             cnfobj.seeds = config.seeds;
 

@@ -80,23 +80,14 @@ const kad = require('libs/kad');
             var result = [];
             // ensure the ports of the seeds are correct
             seeds.forEach(function (item, index, array) {
-                var identity = item.id;
-                if (!item.id || typeof item.id != "string" || item.id.trim().length == 0) {
-                    identity = kad.utils.getTCPNodeId(item.node.host, item.node.port);
+                if (!item.port) {
+                    item.port = constants.DEFAULT_STREEMBIT_PORT;
                 }
 
-                if (!item.node.port) {
-                    item.node.port = constants.DEFAULT_STREEMBIT_PORT;
-                }
-
-                var seed = [
-                    identity,
-                    {
-                        hostname: item.node.host,
-                        port: item.node.port
-                    }
-                ];
-                result.push(seed);                        
+                result.push({
+                    host: item.host,
+                    port: item.port
+                });                        
             });
 
             return result;
