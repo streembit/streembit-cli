@@ -63,7 +63,7 @@ function StreembitContact(options) {
     if (options.publickey) {
         assert(typeof options.publickey === 'string', 'Invalid public key was supplied');
         var str = options.publickey.trim();
-        assert(str.length > 64, 'Invalid public key was supplied');
+        assert(str.length <= 128, 'Invalid public key was supplied');
         this.publickey = str;
     }
 

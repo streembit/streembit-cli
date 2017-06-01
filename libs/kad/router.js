@@ -259,7 +259,7 @@ Router.prototype._iterativeFind = function (state, contacts, callback) {
     function queryContact(contact, next) {
         self._queryContact(state, contact, function (err) {
             if (err) {
-                self._log.error("_queryContact error: %j", err.message ? err.message : err);
+                self._log.debug("_queryContact ERROR: %j", err.message ? err.message : err);
                 failures++;
             }
 
@@ -296,10 +296,7 @@ Router.prototype._queryContact = function (state, contactInfo, callback) {
     this._log.debug('querying contact: ' + contact.address + ' nodeID: ' + contact.nodeID + ' message.id: ' + message.id + '  for key ' + state.key);
     this._rpc.send(contact, message, function (err, response) {
         if (err) {
-            self._log.error(
-                'query failed, removing contact from shortlist, reason %s',
-                err.message
-            );
+            self._log.debug('query ERROR, quey failed, removing contact from shortlist, reason %s', err.message);
             self._removeFromShortList(state, contact.nodeID);
             self.removeContact(contact);
             return callback(err);

@@ -72,7 +72,6 @@ module.exports = exports = function (callback) {
                         kadnet.init(options, cb);
                     }
                     catch (e) {
-                        console.dir(e.stack);
                         callback(e.message);
                     }
                 }

@@ -63,7 +63,7 @@ function HTTPTransport(contact, options) {
   // assign the correct agent based on the protocol:
   this._agent = this._sslopts ? httpsagent : httpagent;
 
-  this._queuedResponses = new Map();
+  this._pendingmsgs = new Map();
 
   assert(contact instanceof StreembitContact, 'Invalid contact supplied');
   RPC.call(this, contact, options);
@@ -91,63 +91,48 @@ HTTPTransport.prototype._open = function(done) {
     var message = null;
 
     if (self._cors) {
-      self._addCrossOriginHeaders(req, res);
+        self._addCrossOriginHeaders(req, res);
     }
 
     if (req.method === 'OPTIONS') {
-      return res.end();
-    }
-
-    if (!['POST', 'OPTIONS'].includes(req.method)) {
-        res.statusCode = 405;
+        return res.end();
     }
 
     if (req.method !== 'POST') {
+        res.statusCode = 400;
         return res.end();
     }
 
     req.on('error', function(err) {
-      self._log.warn('remote client terminated early: %s', err.message);
-      self.receive(null);
+        self._log.warn('remote client terminated early: %s', err.message);
+        self.receive(null);
     });
 
     req.on('data', function(chunk) {
-      payload += chunk.toString();
+        payload += chunk.toString();
     });
 
-    req.on('end', function() {
-      var buffer = new Buffer(payload);
+    //request end
+    req.on('end', function () {
 
-      try {
-        message = Message.fromBuffer(buffer);
-      }
-      catch (err) {
-        return self.receive(null);
-      }
+        var buffer = new Buffer(payload);
 
-      if (!req.headers['x-kad-message-id']) {
-          res.statusCode = 400;
-          return res.end();
-      }
+        try {
+            message = Message.fromBuffer(buffer);
+        }
+        catch (err) {
+            return self.receive(null);
+        }
 
-      res.setHeader('X-Kad-Message-ID', req.headers['x-kad-message-id']);
-      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-      res.setHeader('Access-Control-Allow-Methods', '*');
-      res.setHeader('Access-Control-Allow-Headers', '*');
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
+        if (Message.isRequest(message) && message.id) {
+            var pending = {
+                timestamp: Date.now(),
+                response: res
+            };
+            self._pendingmsgs.set(message.id, pending);
+        }
 
-      if (!Message.isRequest(message)) {
-          res.statusCode = 400;
-          return res.end();
-      }
-
-      var pending = {
-          timestamp: Date.now(),
-          response: res
-      };
-      this._queuedResponses.set(req.headers['x-kad-message-id'], pending);
-
-      self.receive(buffer, {});
+        self.receive(buffer, {});
     });
 
   });
@@ -183,20 +168,19 @@ HTTPTransport.prototype._send = function(data, contact) {
       self.receive(null);
     });
 
-    res.on('end', function() {
-      self.receive(new Buffer(payload), {});
+    res.on('end', function () {
+        if (!payload || payload.length == 0) {
+            self._log.debug('HTTP response handler INVALID payload received.');
+            return self.receive(null);
+        }
+
+        self.receive(new Buffer(payload), {});
     });
   }
 
-  //if (this._queuedResponses[parsed.id]) {
-  //  this._queuedResponses[parsed.id].end(data);
-  //  delete this._queuedResponses[parsed.id];
-  //  return;
-  //}
-
-  if (this._queuedResponses.has[parsed.id]) {
-      this._queuedResponses.get(parsed.id).response.end(buffer);
-      this._queuedResponses.delete(parsed.id);
+  if (this._pendingmsgs.has[parsed.id]) {
+      this._pendingmsgs.get(parsed.id).response.end(buffer);
+      this._pendingmsgs.delete(parsed.id);
       return;
   }
 
@@ -205,26 +189,20 @@ HTTPTransport.prototype._send = function(data, contact) {
     return this.receive(null);
   }
 
-  //const request = this._createRequest({
-  //    hostname: contact.hostname,
-  //    port: contact.port,
-  //    protocol: contact.protocol,
-  //    method: 'POST',
-  //    headers: {
-  //        'x-streembit-msg-id': id
-  //    }
-  //});
-
-  var req = self._protocol.request({
-    hostname: contact.host,
-    port: contact.port,
-    method: 'POST',
-    agent: self._agent
-  }, handleResponse);
+  var req = self._protocol.request(
+      {
+        hostname: contact.host,
+        port: contact.port,
+        method: 'POST',
+        agent: self._agent
+      },
+      handleResponse
+  );
 
   req.setNoDelay(true); // disable the tcp nagle algorithm
 
-  req.on('error', function() {
+  req.on('error', function (err) {
+    self._log.error('HTTP request error: %j', err);
     self.receive(null);
   });
 
@@ -260,13 +238,14 @@ HTTPTransport.prototype._handleDroppedMessage = function(buffer) {
 
   try {
     message = Message.fromBuffer(buffer);
-  } catch (err) {
+  }
+  catch (err) {
     return false;
   }
 
-  if (this._queuedResponses[message.id]) {
-    this._queuedResponses.get(message.id).response.end();
-    this._queuedResponses.delete(message.id);
+  if (this._pendingmsgs[message.id]) {
+    this._pendingmsgs.get(message.id).response.end();
+    this._pendingmsgs.delete(message.id);
   }
 
   return true;

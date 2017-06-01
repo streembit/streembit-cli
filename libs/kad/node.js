@@ -80,7 +80,7 @@ function Node(options) {
     this._bindRPCMessageHandlers(options);
     this._startReplicationInterval();
     this._startExpirationInterval();
-    this._log.info('node created with nodeID %s', this._self.nodeID);
+    this._log.info('node created Contact: %s nodeID: %s', this._self.toString(), this._self.nodeID);
 }
 /**
  * Called when a value is retrieved or stored to validate the pair

@@ -72,6 +72,12 @@ const kad = require('libs/kad');
             return valid;
         },
 
+        is_valid_domain: function(v) {
+            if (!v) return false;
+            var re = /^(?!:\/\/)([a-zA-Z0-9-]+\.){0,5}[a-zA-Z0-9-][a-zA-Z0-9-]+\.[a-zA-Z]{2,64}?$/gi;
+            return re.test(v);
+        },
+
         ensure_seeds: function (seeds) {    
             if (!seeds || !Array.isArray(seeds)) {
                 return null;
@@ -84,9 +90,21 @@ const kad = require('libs/kad');
                     item.port = constants.DEFAULT_STREEMBIT_PORT;
                 }
 
+                if (!item.host) {
+                    throw new Error("Invalid seed configuration entry. The host must be defined.")
+                }
+
+                var isip = utils.is_ipaddress(item.host);
+                if (!isip) {
+                    if (!utils.is_valid_domain(item.host)) {
+                        throw new Error("Invalid seed configuration entry. The host must be a valid IP address or domain name.")
+                    }
+                }
+
                 result.push({
                     host: item.host,
-                    port: item.port
+                    port: item.port,
+                    publickey: item.publickey
                 });                        
             });
 

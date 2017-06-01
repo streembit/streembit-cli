@@ -112,7 +112,8 @@ Message.fromBuffer = function (buffer) {
         return value && value.type === 'Buffer' ? new Buffer(value.data) : value;
     }
 
-    var parsed = JSON.parse(buffer.toString('utf8'), _convertByteArrays);
+    var jsonstr = buffer.toString('utf8');
+    var parsed = JSON.parse(jsonstr, _convertByteArrays);
     var message = new Message(parsed);
 
     return message;

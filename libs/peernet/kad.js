@@ -139,7 +139,9 @@ class KadHandler {
 
         kad.create(options, function (err, peer) {
             if (err) {
-                logger.error("peernet start error: %j", err);
+                //  since the seed is the main module and it failed, the whole intialization failed so return the error
+                //  and the async waterflow will be terminated
+                return callback("KAD error " + (err.message || err));
             }
 
             // still set the objects so the very first node on the network is still operational
