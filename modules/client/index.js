@@ -23,14 +23,16 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
-var async = require("async");
-var config = require("libs/config");
-var logger = require("libs/logger");
-var peerutils = require("libs/peernet/peerutils");
+const constants = require("libs/constants");
+const async = require("async");
+const config = require("libs/config");
+const logger = require("libs/logger");
+const peerutils = require("libs/peernet/peerutils");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
 const msghandler = require("libs/peernet/msghandler");
-
+const events = require("libs/events");
+const Contacts = require("libs/contacts");
 
 module.exports = exports = function (callback) {
     try {
@@ -45,11 +47,21 @@ module.exports = exports = function (callback) {
         async.waterfall(
             [
                 function (cb) {
-                    var account = new Account();
-                    account.init(cb)
+                    try {
+                        var account = new Account();
+                        account.init(cb)
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
                 },
                 function (cb) {
-                    peerutils.discovery(config.host, config.seeds, cb)
+                    try {
+                        peerutils.discovery(config.host, config.seeds, cb)
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
                 },
                 function (host, cb) {
                     try {
@@ -73,8 +85,13 @@ module.exports = exports = function (callback) {
                         callback(e.message);
                     }
                 },
+                function (callback) {
+                    var contacts = new Contacts();
+                    contacts.init(cb);
+                },
                 function (cb) {
-
+                    events.taskinit(constants.TASK_PUBLISHACCOUNT, { all: true });
+                    cb();
                 }
             ],
             function (err) {

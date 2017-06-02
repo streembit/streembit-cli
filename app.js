@@ -40,6 +40,7 @@ var db = require("./libs/database");
 var config = require('libs/config');
 var utils = require("libs/utils");
 var Account = require("libs/account");
+var Tasks = require("libs/tasks");
 
 // initialize the logger
 function initialize_logger(callback) {
@@ -50,40 +51,88 @@ function initialize_logger(callback) {
 }
 
 module.exports = exports = function (port, ip, password) {
+    try {
+        async.waterfall(
+            [
+                function (callback) {
+                    try {
+                        config.init(port, ip, password, callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        console.log("config initialized port: " + config.port + ", host: " + config.host)
+                        initialize_logger(callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        db.init_databases(__dirname, callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        var tasks = new Tasks();
+                        tasks.run(callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        seedrunner(callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        clientrunner(callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        bcrunner(callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        iotrunner(callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                }
+            ],
+            function (err, result) {
+                if (err) {
+                    return logger.error("application init error: %j", err);
+                }
 
-    async.waterfall(
-        [
-            function (callback) {
-                config.init(port, ip, password, callback);
-            },
-            function (callback) {
-                console.log("config initialized port: " + config.port + ", host: " + config.host)
-                initialize_logger(callback);
-            },
-            function (callback) {
-                db.init_databases(__dirname, callback);
-            },    
-            function (callback) {
-                seedrunner(callback);
-            },
-            function (callback) {
-                clientrunner( callback);
-            },
-            function (callback) {
-                bcrunner(callback);
-            },
-            function (callback) {
-                iotrunner(callback);
+                logger.info("The application has been initialized.")
             }
-        ],
-        function (err, result) {
-            if (err) {
-                return logger.error("application init error: %j", err);
-            }
-
-            logger.info("The application has been initialized.")
-        }
-    );
+        );
+    }
+    catch (e) {
+        console.log("app error: " + e.message);
+    }
 };
 
 module.exports.display_data = function () {

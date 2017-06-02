@@ -478,21 +478,6 @@ Node.prototype._ensureTransportState = function (callback) {
 
 
 
-Node.prototype._handleDiscovery = function (msg, callback) {
-    var contact = this._rpc._createContact(incomingMsg.params.contact);
-    var message = new Message({
-        id: incomingMsg.id,
-        result: { contact: this._self }
-    });
-
-    this._log.info(
-        'received PING from %s, sending PONG',
-        incomingMsg.params.contact.nodeID
-    );
-    this._rpc.send(contact, message);
-};
-
-
 /**
  * Setup event listeners for rpc messages
  * @private

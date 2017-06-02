@@ -56,6 +56,7 @@ function AppEvents() {
     this.UINAVIGATE = "ui-navigate";
     this.APPLOG = "app-log";
     this.CONFIG_UPDATE = "config-update";
+    this.TASK_INIT = "task-init";
 
     events.EventEmitter.call(this);
 }
@@ -63,6 +64,10 @@ function AppEvents() {
 
 AppEvents.prototype.appinit = function (route) {
     this.emit(this.APP_INIT);
+}
+
+AppEvents.prototype.taskinit = function (task, payload) {
+    this.emit(this.TASK_INIT, task, payload);
 }
 
 

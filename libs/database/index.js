@@ -34,6 +34,7 @@ streembit.database = (function (db, logger) {
     var _streembitdb = null;
     var _appdb = null;
     var _blockchaindb = null;
+    var _contactsdb = null;
 
     function initialize_db_rootpath(dirname) {
 
@@ -115,6 +116,16 @@ streembit.database = (function (db, logger) {
         }
     });
 
+    Object.defineProperty(db, "contactsdb", {
+        get: function () {
+            return _contactsdb;
+        },
+
+        set: function (value) {
+            _contactsdb = value;
+        }
+    });
+
     db.init_databases = function (dirname, callback) {
         try {
             initialize_db_rootpath(dirname);
@@ -130,6 +141,12 @@ streembit.database = (function (db, logger) {
             var app_dbobj = levelup(appdb_path);
             db.appdb = app_dbobj;
             logger.debug("appdb database initialized");
+
+            initialize_db_dir('contactsdb', dirname);
+            var contactsdb_path = path.join(dirname, 'db', 'contactsdb');
+            var contacts_dbobj = levelup(contactsdb_path);
+            db.contactsdb = contacts_dbobj;
+            logger.debug("contactsdb database initialized");
 
             initialize_db_dir('blockchaindb', dirname);
             var bcdb_path = path.join(dirname, 'db', 'blockchaindb');

@@ -1,5 +1,5 @@
 ﻿/*
-
+ 
 This file is part of Streembit application. 
 Streembit is an open source project to create a real time communication system for humans and machines. 
 
@@ -14,21 +14,54 @@ If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
 Author: Tibor Zsolt Pardi 
-Copyright (C) 2016 The Streembit software development team
+Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
 */
 
+
 'use strict';
 
+var streembit = streembit || {};
 
-var constants = {
-    DEFAULT_STREEMBIT_PORT: 32320,
-    DEFAULT_TRANSPORT: "http",
-    USERTYPE_HUMAN: "human",
-    USERTYPE_DEVICE: "device",
 
-    TASK_PUBLISHACCOUNT: "publish_account"
-};
+var logger = require("libs/logger");
+var events = require("libs/events");
+var constants = require("libs/constants");
 
-module.exports = constants;
+class TaskManager {
+
+    constructor() {
+    }
+
+    publish_account() {
+        logger.debug("start publish account");
+    }
+
+    run(callback) {
+        try {
+
+            // initialize the task event handler
+            events.on(events.TASK_INIT, (task, payload) => {
+                switch (task) {
+                    case constants.TASK_PUBLISHACCOUNT:
+                        this.publish_account();
+                        break;
+                    default:
+                        break;
+                }
+            });
+
+            callback();
+        }
+        catch (err) {
+            logger.error("task manager error: " + err.message);
+        }
+    }
+}
+
+module.exports = TaskManager;
+
+
+
+
