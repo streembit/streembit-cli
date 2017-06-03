@@ -14,27 +14,39 @@ If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
 Author: Tibor Zsolt Pardi 
-Copyright (C) 2016 The Streembit software development team
+Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
 */
 
 'use strict';
 
-var streembit = streembit || {};
+const seedrunner = require("./seed");
+const clientrunner = require("./client");
+const config = require('libs/config');
 
-var config = require("libs/config");
-var logger = require("libs/logger");
-var merkle = require("./merkle");
+class AppRunner {
+    constructor() {
 
-module.exports = exports = function (callback) {
-
-    var conf = config.blockchain_config;
-    if (!conf.run) {
-        logger.debug("Don't run blockchain handler");
-        return callback();
     }
 
-    logger.info("Run blockchain handler");
-    callback();
-};
+    run(callback) {
+        var seedconf = config.seed_config;
+        var clientconf = config.client_config;
+        if (!seedconf.run && !clientconf.run) {
+            return callback("Invalid configuration. Seed or Client must run");
+        }
+
+        // either run the application as a seed or as a client
+        if (seedconf.run) {
+            seedrunner(callback);
+        }
+        else if (clientconf.run) {
+            clientrunner(callback);
+        }
+    }
+}
+
+
+module.exports = AppRunner;
+

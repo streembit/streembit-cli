@@ -40,6 +40,7 @@ streembit.config = (function (cnfobj) {
     var m_seeds = null;
     var m_usertype = null;
     var m_account_name = null;
+    var m_net = null;
 
     Object.defineProperty(cnfobj, "password", {
         get: function () {
@@ -151,6 +152,16 @@ streembit.config = (function (cnfobj) {
         }
     });
 
+    Object.defineProperty(cnfobj, "net", {
+        get: function () {
+            return m_net;
+        },
+
+        set: function (value) {
+            m_net = value;
+        }
+    });
+
     cnfobj.init = function (argv_port, argv_ip, argv_password, callback) {
         try {
 
@@ -192,8 +203,8 @@ streembit.config = (function (cnfobj) {
             });
             var iotconf = iot_confarr && iot_confarr.length ? iot_confarr[0] : 0;
             cnfobj.iot_config = iotconf;
-            //throw an exception if the IoT config entry is missing
-            assert(cnfobj.iot_config && cnfobj.iot_config.hasOwnProperty("run"), "Invalid seed configuration section");
+            //throw an exception if the IoT run config entry is missing
+            assert(cnfobj.iot_config && cnfobj.iot_config.hasOwnProperty("run"), "Invalid IoT configuration section");
             if (isseed && cnfobj.iot_config.run) {
                 throw new Error("Invalid configuration. IoT handler cannot run when the seed is configured to run");
             }
@@ -203,7 +214,7 @@ streembit.config = (function (cnfobj) {
             });
             var clientconf = clientcfarr && clientcfarr.length ? clientcfarr[0] : 0;
             cnfobj.client_config = clientconf;
-            //throw an exception if the IoT config entry is missing
+            //throw an exception if the Client run config entry is missing
             assert(cnfobj.client_config && cnfobj.client_config.hasOwnProperty("run"), "Invalid client configuration section");
             if (isseed && cnfobj.client_config.run) {
                 throw new Error("Invalid configuration. Client handler cannot run when the seed is configured to run");
@@ -214,7 +225,7 @@ streembit.config = (function (cnfobj) {
             });
             var bcconf = blockchain_confarr && blockchain_confarr.length ? blockchain_confarr[0] : 0;
             cnfobj.blockchain_config = bcconf;
-            //throw an exception if the IoT config entry is missing
+            //throw an exception if the BC run config entry is missing
             assert(cnfobj.blockchain_config && cnfobj.blockchain_config.hasOwnProperty("run"), "Invalid blockchain configuration section");
 
             var password = argv_password;

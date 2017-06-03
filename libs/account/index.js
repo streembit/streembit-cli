@@ -149,6 +149,7 @@ class Account {
             this.connsymmkey = skhash;           
 
             this.addToDB(this.accountid, cipher_context, (err) => {
+                logger.info("created pkhash: " + this.public_key_hash);
                 logger.info("created bs58pk: " + this.bs58pk);
                 callback(err);
             });
@@ -207,7 +208,9 @@ class Account {
             var skhash = createHash("sha256").update(skrnd).digest("hex");
             this.connsymmkey = skhash;
 
+            logger.info("loaded pkhash: " + this.public_key_hash);
             logger.info("loaded bs58pk: " + this.bs58pk);
+            
 
             // the account exists and the encrypted entropy is correct!
             callback();

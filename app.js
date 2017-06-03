@@ -31,16 +31,13 @@ var async = require('async');
 var util = require('util');
 var assert = require('assert');
 var logger = require("./libs/logger");
-var seedrunner = require("./modules/seed");
-var clientrunner = require("./modules/client");
-var bcrunner = require("./modules/blockchain");
-var iotrunner = require("./modules/iot");
-var iotrunner = require("./modules/iot");
+var AppRunner = require("./modules");
 var db = require("./libs/database");
 var config = require('libs/config');
 var utils = require("libs/utils");
 var Account = require("libs/account");
 var Tasks = require("libs/tasks");
+var events = require("libs/events");
 
 // initialize the logger
 function initialize_logger(callback) {
@@ -90,43 +87,23 @@ module.exports = exports = function (port, ip, password) {
                 },
                 function (callback) {
                     try {
-                        seedrunner(callback);
-                    }
-                    catch (e) {
-                        callback(e);
-                    }
-                },
-                function (callback) {
-                    try {
-                        clientrunner(callback);
-                    }
-                    catch (e) {
-                        callback(e);
-                    }
-                },
-                function (callback) {
-                    try {
-                        bcrunner(callback);
-                    }
-                    catch (e) {
-                        callback(e);
-                    }
-                },
-                function (callback) {
-                    try {
-                        iotrunner(callback);
+                        var apprunner = new AppRunner();
+                        apprunner.run(callback);
                     }
                     catch (e) {
                         callback(e);
                     }
                 }
             ],
-            function (err, result) {
+            function (err) {
                 if (err) {
                     return logger.error("application init error: %j", err);
                 }
 
-                logger.info("The application has been initialized.")
+                logger.info("The application has been initialized.");
+
+                // app init event
+                events.appinit();
             }
         );
     }

@@ -374,7 +374,8 @@ Node.prototype._putValidatedKeyValue = function (item, callback) {
                         callback(errmsg);
                     }
 
-                    node._storage.put(item.key, JSON.stringify(item), function (err) {
+                    var value = JSON.stringify(item);
+                    node._storage.put(item.key, value, function (err) {
                         if (err) {
                             node._log.error('storage.put for ' + item.key + ' error: %j', err);
                         }

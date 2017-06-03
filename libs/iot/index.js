@@ -21,23 +21,28 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var streembit = streembit || {};
-
 var config = require("libs/config");
 var logger = require("libs/logger");
 
-module.exports = exports = function (callback) {
-    try {
-        var conf = config.iot_config;
-        if (!conf.run) {
-            logger.debug("Don't run IoT handler");
-            return callback();
-        }
+class IoTHandler {
+    constructor() {
 
-        logger.info("Run IoT handler");
-        callback();
     }
-    catch (err) {
-        callback(err.message);
+
+    init() {
+        try {
+            var conf = config.iot_config;
+            if (!conf.run) {
+                return logger.debug("Don't run IoT handler");
+            }
+
+            logger.info("Run IoT handler");
+        }
+        catch (err) {
+            logger.error("IoT handler error: " + err.message);
+        }
     }
-};
+}
+
+module.exports = IoTHandler; 
+

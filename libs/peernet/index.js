@@ -21,12 +21,39 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
+const config = require("libs/config");
 const constants = require("libs/constants");
 const peermsg = require("libs/message");
 const bs58check = require('bs58check');
 const createHash = require("create-hash");
 const secrand = require('secure-random');
 const kad = require("./kad");
+const PeerClient = require("./peerclient");
+
+//
+// Net Factory
+//
+class NetFactory {
+
+    static get net() {
+        return NetFactory.create_net();
+    }
+
+    static create_net() {
+        var netlib; 
+        switch (config.net) {
+            case constants.CLIENTNET:
+                var clientnet = new PeerClient();
+                netlib = clientnet;
+                break;
+            default:
+                var kadnet = new kad.KadHandler();
+                netlib = kadnet;
+                break;
+        }
+        return netlib;
+    }
+}
 
 class PeerNet {
     constructor() {
@@ -136,8 +163,7 @@ class PeerNet {
             var key = user_pkhash + "/" + contact_pkhash;
 
             // put the message to the network
-            var kadnet = new kad.KadHandler();
-            kadnet.put(key, value, (err) => cbfunc(err));
+            NetFactory.net.put(key, value, (err) => cbfunc(err));
 
             //
         }

@@ -1,5 +1,5 @@
 ﻿/*
-
+ 
 This file is part of Streembit application. 
 Streembit is an open source project to create a real time communication system for humans and machines. 
 
@@ -22,18 +22,34 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-var constants = {
-    DEFAULT_STREEMBIT_PORT: 32320,
-    DEFAULT_TRANSPORT: "http",
-    USERTYPE_HUMAN: "human",
-    USERTYPE_DEVICE: "device",
-    KADNET: "kadnet",
-    CLIENTNET: "clientnet",
 
-    TASK_PUBLISHACCOUNT: "publish_account",
-    TASK_INFORM_CONTACTS: "inform_contacts",
+var config = require("libs/config");
+var logger = require("libs/logger");
+var merkle = require("./merkle");
 
-    RESPONSETIMEOUT: 10000
+module.exports = exports = function (callback) {
+
+    
 };
 
-module.exports = constants;
+class BlockchainHandler {
+    constructor() {
+
+    }
+
+    init() {
+        try {
+            var conf = config.blockchain_config;
+            if (!conf.run) {
+                return logger.debug("Don't run blockchain handler");
+            }
+
+            logger.info("Run blockchain handler");
+        }
+        catch (err) {
+            logger.error("Blockchain handler error: " + err.message);
+        }
+    }
+}
+
+module.exports = BlockchainHandler; 

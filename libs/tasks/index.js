@@ -30,6 +30,8 @@ const Contacts = require("libs/contacts");
 const async = require("async");
 const Account = require("libs/account");
 const config = require("libs/config");
+const IoTHandler = require('libs/iot');
+const BlockchainHandler = require('libs/blockchain');
 
 class TaskManager {
 
@@ -57,12 +59,9 @@ class TaskManager {
             function send_to_contact(contact, next) {
                 try {
                     peernet.inform_contact(crypto_key, account_name, pubkey_hash, public_key, contact.public_key, symcryptkey, transport, address, port, type, function (err) {
-                        //if (err) {
-                        //    logger.error("send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err));                            
-                        //}
-                        //else {
-                        //    logger.debug("peer key for contact " + contact.public_key  + " published");
-                        //}      
+                        if (err) {
+                            logger.error("send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err));                            
+                        }    
                         next();
                     }); 
                 }
@@ -101,6 +100,16 @@ class TaskManager {
         peernet.publish_account(symcryptkey, pubkeyhash, public_key, transport, address, port, type, account_name, callback);
     }
 
+    on_application_init() {
+        logger.debug("on_application_init");
+
+        var iot = new IoTHandler();
+        iot.init();
+
+        var blockchain = new BlockchainHandler();
+        blockchain.init();
+    }
+
     run(callback) {
         try {
 
@@ -116,6 +125,10 @@ class TaskManager {
                     default:
                         break;
                 }
+            });
+
+            events.on(events.APP_INIT, () => {
+                this.on_application_init();
             });
 
             callback();

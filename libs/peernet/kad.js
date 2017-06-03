@@ -52,10 +52,15 @@ class KadHandler {
 
     put(key, value, callback) {
         try {
+            if (!this.node) {
+                throw new Error("the KAD node is not initialized")
+            }
+
             this.node.put(key, value, callback);
         }
         catch (err) {
-            logger.debug("put error: %j", err)
+            //logger.error("put error: %s", err.message)
+            callback(err.message || err);
         }
     }
 

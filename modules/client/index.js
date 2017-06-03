@@ -21,7 +21,6 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var streembit = streembit || {};
 
 const constants = require("libs/constants");
 const async = require("async");
@@ -45,13 +44,16 @@ function process_tasks() {
 
 module.exports = exports = function (callback) {
     try {
+
+        config.net = constants.CLIENTNET;
+
         var conf = config.client_config;
         if (!conf.run) {
             logger.debug("Don't run streembit client handler");
             return callback();
         }
 
-        logger.info("Run streembit client handler");
+        logger.info("Run streembit client handler, net: " + config.net );
 
         async.waterfall(
             [
@@ -74,29 +76,13 @@ module.exports = exports = function (callback) {
                 },
                 function (host, cb) {
                     try {
-
-                        if (config.host != host) {
-                            config.host = host;
-                        }
-
-                        var options = {
-                            seeds: config.seeds,
-                            onKadMessage: msghandler.on_kad_message,
-                            onPeerMessage: msghandler.on_peer_message,
-                            onTransportError: msghandler.on_transport_error,
-                            isseed: false
-                        };
-
-                        var kadnet = new kad.KadHandler();
-                        kadnet.init(options, cb);
+                        config.host = host;
+                        var contacts = new Contacts();
+                        contacts.init(cb);
                     }
                     catch (e) {
                         cb(e.message);
                     }
-                },
-                function (cb) {
-                    var contacts = new Contacts();
-                    contacts.init(cb);
                 }
             ],
             function (err) {

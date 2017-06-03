@@ -30,9 +30,13 @@ const db = require("libs/database");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
 const msghandler = require("libs/peernet/msg");
+var constants = require("libs/constants");
 
 module.exports = exports = function (callback) {
     try {
+
+        config.net = constants.KADNET;
+
         var conf = config.seed_config;
         if (!conf.run) {
             logger.debug("Don't run seed handler");
