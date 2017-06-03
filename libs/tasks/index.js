@@ -22,20 +22,83 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-var streembit = streembit || {};
-
-
-var logger = require("libs/logger");
-var events = require("libs/events");
-var constants = require("libs/constants");
+const logger = require("libs/logger");
+const events = require("libs/events");
+const constants = require("libs/constants");
+const PeerNet = require("libs/peernet");
+const Contacts = require("libs/contacts");
+const async = require("async");
+const Account = require("libs/account");
+const config = require("libs/config");
 
 class TaskManager {
 
     constructor() {
     }
 
+    inform_contacts(payload) {
+        try {
+            logger.debug("start inform_contacts");
+
+            var account = new Account();
+            var pubkey_hash = account.public_key_hash;
+            var public_key = account.bs58pk;
+            var address = config.host;
+            var port = config.port;
+            var transport = constants.DEFAULT_TRANSPORT;
+            var type = config.usertype;
+            var pubkeyhash = account.public_key_hash;
+            var symcryptkey = account.connsymmkey;
+            var account_name = config.account;
+            var crypto_key = account.cryptokey;
+
+            var peernet = new PeerNet();
+
+            function send_to_contact(contact, next) {
+                try {
+                    peernet.inform_contact(crypto_key, account_name, pubkey_hash, public_key, contact.public_key, symcryptkey, transport, address, port, type, function (err) {
+                        //if (err) {
+                        //    logger.error("send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err));                            
+                        //}
+                        //else {
+                        //    logger.debug("peer key for contact " + contact.public_key  + " published");
+                        //}      
+                        next();
+                    }); 
+                }
+                catch (err) {
+                    logger.error("send_to_contact error, contact: " + contact.public_key + " error: " + err.message);
+                    next();
+                }
+            }
+
+            var contacts = new Contacts();
+            var list = contacts.list();
+
+            async.eachSeries(list, send_to_contact, function () {
+                logger.debug("inform_contacts ended, errors are reported");
+            });
+        }
+        catch (err) {
+            logger.error("inform_contacts error: " + err.message);
+        }
+    }
+
     publish_account() {
         logger.debug("start publish account");
+
+        var account = new Account();
+        var public_key = account.bs58pk;
+        var address = config.host;
+        var port = config.port;
+        var transport = constants.DEFAULT_TRANSPORT;
+        var type = config.usertype;
+        var pubkeyhash = account.public_key_hash;
+        var symcryptkey = account.connsymmkey;
+        var account_name = config.account;
+
+        var peernet = new PeerNet();
+        peernet.publish_account(symcryptkey, pubkeyhash, public_key, transport, address, port, type, account_name, callback);
     }
 
     run(callback) {
@@ -46,6 +109,9 @@ class TaskManager {
                 switch (task) {
                     case constants.TASK_PUBLISHACCOUNT:
                         this.publish_account();
+                        break;
+                    case constants.TASK_INFORM_CONTACTS:
+                        this.inform_contacts(payload);
                         break;
                     default:
                         break;

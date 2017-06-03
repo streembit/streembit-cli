@@ -29,11 +29,17 @@ const Account = require("libs/account");
 const utils = require("libs/utils");
 const async = require("async");
 const constants = require("libs/constants");
-const PeerNet = require("libs/peernet");
+
+let instance = null;
 
 class KadHandler {
     constructor() {
-        this.m_node = 0;
+        if (!instance) {
+            instance = this;
+            this.m_node = 0;
+        }
+
+        return instance;        
     }
 
     get node(){
@@ -44,19 +50,13 @@ class KadHandler {
         this.m_node = n;
     }
 
-    publish_account(callback) {
-        var account = new Account();
-        var public_key = account.bs58pk;
-        var address = config.host;
-        var port = config.port;
-        var transport = constants.DEFAULT_TRANSPORT;
-        var type = config.usertype;
-        var pubkeyhash = account.public_key_hash;
-        var symcryptkey = account.connsymmkey;
-        var account_name = config.account;
-
-        var peernet = new PeerNet();
-        peernet.publish_account(symcryptkey, pubkeyhash, public_key, transport, address, port, type, account_name, callback);
+    put(key, value, callback) {
+        try {
+            this.node.put(key, value, callback);
+        }
+        catch (err) {
+            logger.debug("put error: %j", err)
+        }
     }
 
     join(seeds, callback) {
@@ -153,10 +153,7 @@ class KadHandler {
             isseed: options.isseed
         };
 
-
-        let node = this.node;
-
-        kad.create(options, function (err, peer) {
+        kad.create(options, (err, peer) => {
             if (err) {
                 //  since the seed is the main module and it failed, the whole intialization failed so return the error
                 //  and the async waterflow will be terminated
@@ -164,7 +161,7 @@ class KadHandler {
             }
 
             // still set the objects so the very first node on the network is still operational
-            node = peer;
+            this.node = peer;
             callback();
         });
 

@@ -29,8 +29,7 @@ const logger = require("libs/logger");
 const db = require("libs/database");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
-const msghandler = require("libs/peernet/msghandler");
-
+const msghandler = require("libs/peernet/msg");
 
 module.exports = exports = function (callback) {
     try {

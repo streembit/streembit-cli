@@ -30,9 +30,18 @@ const logger = require("libs/logger");
 const peerutils = require("libs/peernet/peerutils");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
-const msghandler = require("libs/peernet/msghandler");
+const msghandler = require("libs/peernet/msg");
 const events = require("libs/events");
 const Contacts = require("libs/contacts");
+
+function process_tasks() {
+    try {
+        events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
+    }
+    catch (err) {
+        logger.error("process_tasks error: %j", err);
+    }
+}
 
 module.exports = exports = function (callback) {
     try {
@@ -52,7 +61,7 @@ module.exports = exports = function (callback) {
                         account.init(cb)
                     }
                     catch (e) {
-                        callback(e);
+                        cb(e);
                     }
                 },
                 function (cb) {
@@ -60,7 +69,7 @@ module.exports = exports = function (callback) {
                         peerutils.discovery(config.host, config.seeds, cb)
                     }
                     catch (e) {
-                        callback(e);
+                        cb(e);
                     }
                 },
                 function (host, cb) {
@@ -82,16 +91,12 @@ module.exports = exports = function (callback) {
                         kadnet.init(options, cb);
                     }
                     catch (e) {
-                        callback(e.message);
+                        cb(e.message);
                     }
                 },
-                function (callback) {
+                function (cb) {
                     var contacts = new Contacts();
                     contacts.init(cb);
-                },
-                function (cb) {
-                    events.taskinit(constants.TASK_PUBLISHACCOUNT, { all: true });
-                    cb();
                 }
             ],
             function (err) {
@@ -101,6 +106,9 @@ module.exports = exports = function (callback) {
 
                 logger.info("Client handler started");
                 callback();
+
+                // process the tasks following init
+                process_tasks();
             }
         );
 

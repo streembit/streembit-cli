@@ -22,6 +22,7 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 const logger = require("libs/logger");
+const async = require("async");
 
 
 function verify_signature(params, contact, callback) {
@@ -121,46 +122,15 @@ function validate_msg(message, contact) {
     });
 }
 
-function validate_contact() {
-    return new Promise((resolve, reject) => {
-        logger.debug('validate_contact' );
-        resolve();
-    });
-}
 
-module.exports.on_transport_error = function (err) {
-    logger.error('KAD transport error: %j', err);
-}
 
-module.exports.on_kad_message = function (message, contact, next){
-
-    logger.debug("on_kad_message");
-
+module.exports = (message, contact, callback) => {
     try {
-        validate_contact().then(
-            function () {
-                // contact is allowed, validate the message
-                return validate_msg(message, contact);
-            }
-        ).then(
-            function () {
-                // the message is valid             
-                next();
-            }
-        ).catch(function (err) {
-            // failed
-            next(err);
-        });
+        logger.debug("handle STORE message");
 
+        callback();
     }
     catch (err) {
-        logger.error("on_kad_message error: " + (err.message || err));
-        next("on_kad_message error: " + (err.message || err));
+        callback(err);
     }
-}
-
-module.exports.on_peer_message = function (message, info) {
-
-    logger.debug("on_peer_message");
-
-}
+};

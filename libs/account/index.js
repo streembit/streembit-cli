@@ -25,7 +25,7 @@ Copyright (C) 2016 The Streembit software development team
 
 const crypto = require('crypto');
 const ecckey = require('libs/crypto');
-var createHash = require('create-hash');
+const createHash = require('create-hash');
 const secrand = require('secure-random');
 const config = require("libs/config");
 const Database = require("libs/database/accountdb");
@@ -46,16 +46,20 @@ class Account {
         return instance;
     }
 
-    get crypto_key() {
+    get ppkikey() {
         return this.m_key;
     }
 
-    set crypto_key (value) {
+    set ppkikey (value) {
         this.m_key = value;
     }
 
+    get cryptokey() {
+        return this.m_key ? this.m_key.cryptoKey : '';
+    }
+
     get private_key () {
-        return this.m_key ? key.privateKey : '';
+        return this.m_key ? this.m_key.privateKey : '';
     }
 
     get public_key () {
@@ -138,7 +142,7 @@ class Account {
             };
             var cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
 
-            this.crypto_key = key;
+            this.ppkikey = key;
 
             var skrnd = secrand.randomBuffer(32).toString("hex");
             var skhash = createHash("sha256").update(skrnd).digest("hex");
@@ -197,7 +201,7 @@ class Account {
                 return callback("Error in initializing the account, most likely an incorrect password");
             }
 
-            this.crypto_key = key;
+            this.ppkikey = key;
 
             var skrnd = secrand.randomBuffer(32).toString("hex");
             var skhash = createHash("sha256").update(skrnd).digest("hex");
@@ -270,7 +274,7 @@ class Account {
 
             var cipher_context = peermsg.aes256encrypt(pbkdf2, JSON.stringify(user_context));
 
-            this.crypto_key = key;
+            this.ppkikey = key;
             this.connsymmkey = accountobj.connsymmkey;
 
             this.addToDB(this.accountid, cipher_context, function () {               
@@ -291,7 +295,7 @@ class Account {
 
             var symcrypt_key = this.getCryptPassword(password, account);
             var user_context = {
-                "privatekey": this.crypto_key.privateKeyHex,
+                "privatekey": this.ppkikey.privateKeyHex,
                 "connsymmkey": this.connsymmkey,
                 "timestamp": Date.now()
             };
@@ -307,8 +311,7 @@ class Account {
     };
 
     clear() {
-        usrobj.crypto_key = null;
-        usrobj.name = null;
+        this.ppkikey = null;
     }
 
     init(callback) {

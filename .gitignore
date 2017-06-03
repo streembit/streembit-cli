@@ -46,6 +46,7 @@ logs/*.log
 /db/appdb/
 /db/blockchaindb/
 /db/streembitdb/
+/db/contactsdb/
 /build
 
 /.vs/config/applicationhost.config

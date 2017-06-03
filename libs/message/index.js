@@ -135,7 +135,7 @@ function decode(payload, public_key) {
     return message;
 }
 
-function create(private_key, jti, payload, algorithm, expires, issuer, subject, audience) {
+function create_jwt_token(private_key, jti, payload, algorithm, expires, issuer, subject, audience) {
     if (!private_key) {
         throw new Error("WoTMessage private_key parameter is missing");
     }
@@ -309,7 +309,7 @@ module.exports = {
     getpayload: get_message_payload,
     decode: decode,
     base64decode: base64decode,
-    create: create,
+    create_jwt_token: create_jwt_token,
     create_typedmsg: create_typedmsg,
     create_symm_msg: create_symm_msg,
     get_msg_array: get_msg_array,

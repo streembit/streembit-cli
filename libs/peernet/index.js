@@ -23,9 +23,17 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const peermsg = require("libs/message");
+const bs58check = require('bs58check');
+const createHash = require("create-hash");
+const secrand = require('secure-random');
+const kad = require("./kad");
 
 class PeerNet {
     constructor() {
+    }
+
+    create_id() {
+        return secrand.randomBuffer(8).toString("hex");
     }
 
     publish_account(symcryptkey, key, public_key, transport, address, port, type, account_name, callback) {
@@ -78,6 +86,63 @@ class PeerNet {
         }
         catch (e) {
             callback("Publish peer user error: " + e.message);
+        }
+    }
+
+    inform_contact(crypto_key, account, user_pkhash, user_public_key, contact_bs58public_key, connsymmkey, transport, address, port, type, cbfunc) {
+        try {
+            if (!cbfunc || typeof cbfunc != "function") {
+                throw new Error("publish_contact error: invalid callback parameter")
+            }
+
+            if (!user_pkhash || !user_public_key || !address || !contact_bs58public_key || !connsymmkey || !transport || !type ) {
+                return cbfunc("publish_contact error: invalid parameters");
+            }
+
+            // decode the contact's rmd160 key
+            var buffer = bs58check.decode(contact_bs58public_key);
+            var contact_public_key = buffer.toString("hex");
+
+            var hexbuffer = new Buffer(contact_public_key, 'hex');
+            var rmd160buffer = createHash('rmd160').update(hexbuffer).digest();
+            var contact_pkhash = bs58check.encode(rmd160buffer);
+
+            //  publish the public keys so this client can communicate with the devices
+            //  via direct peer to peer messaging as well
+            // create the WoT message 
+
+            var payload = {};
+            payload.type = peermsg.MSGTYPE.CAMSG;
+
+            var plain = {};
+            plain[peermsg.MSGFIELD.ACCOUNT] = account || "";
+            plain[peermsg.MSGFIELD.PUBKEY] = user_public_key;
+            plain[peermsg.MSGFIELD.PROTOCOL] = transport;
+            plain[peermsg.MSGFIELD.HOST] = address;
+            plain[peermsg.MSGFIELD.PORT] = port;
+            plain[peermsg.MSGFIELD.UTYPE] = type;
+            plain[peermsg.MSGFIELD.SYMKEY] = connsymmkey;
+
+            var plaindata = JSON.stringify(plain);
+            var cipher = peermsg.ecdh_encypt(crypto_key, contact_public_key, plaindata);
+
+            var payload = {};
+            payload.type = peermsg.MSGTYPE.CAMSG;
+            payload[peermsg.MSGFIELD.CIPHER] = cipher;
+
+            var id = this.create_id();
+
+            var value = peermsg.create_jwt_token(crypto_key, id, payload, null, null, user_public_key, null, contact_bs58public_key);
+            var key = user_pkhash + "/" + contact_pkhash;
+
+            // put the message to the network
+            var kadnet = new kad.KadHandler();
+            kadnet.put(key, value, (err) => cbfunc(err));
+
+            //
+        }
+        catch (e) {
+            cbfunc(e);
         }
     }
 }

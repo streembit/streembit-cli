@@ -28,7 +28,8 @@ var constants = {
     USERTYPE_HUMAN: "human",
     USERTYPE_DEVICE: "device",
 
-    TASK_PUBLISHACCOUNT: "publish_account"
+    TASK_PUBLISHACCOUNT: "publish_account",
+    TASK_INFORM_CONTACTS: "inform_contacts"
 };
 
 module.exports = constants;

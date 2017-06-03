@@ -81,6 +81,16 @@ class Contacts {
         });
     }
 
+    list() {
+        var list = [];
+        this.contacts.forEach(function (value, key) {
+            var v = JSON.parse(value);
+            v.public_key = key;
+            list.push(v);
+        });
+        return list;
+    }
+
     init_from_db() {
         return new Promise((resolve, reject) => {
             var db = new Database();

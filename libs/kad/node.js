@@ -306,7 +306,7 @@ Node.prototype._putValidatedKeyValue = function (item, callback) {
                 });
             }
 
-            node._log.debug('STORE operation target contacts count: %d', contacts.length);
+            node._log.debug('STORE operation target contacts count: %d', contact_list.length);
 
             var cbreturned = false;
 
@@ -389,26 +389,6 @@ Node.prototype._putValidatedKeyValue = function (item, callback) {
             cbfunc(operr);
         }
 
-        node._log.debug('found %d contacts for STORE operation', contacts.length);
-
-        async.each(contacts, function (contact, done) {
-            var message = new Message({
-                method: 'STORE',
-                params: { item: item, contact: node._self }
-            });
-            node._log.debug('sending STORE message to %j', contact);
-            node._rpc.send(contact, message, done);
-        }, function (err) {
-            if (err) {
-                node._log.error(
-                    'Failed to store value at one or more nodes, reason:',
-                    err.message
-                );
-            }
-
-            // NB: Always store a local copy so we can republish later
-            node._storage.put(item.key, JSON.stringify(item), callback);
-        });
     });
 };
 

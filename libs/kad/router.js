@@ -296,7 +296,7 @@ Router.prototype._queryContact = function (state, contactInfo, callback) {
     this._log.debug('querying contact: ' + contact.address + ' nodeID: ' + contact.nodeID + ' message.id: ' + message.id + '  for key ' + state.key);
     this._rpc.send(contact, message, function (err, response) {
         if (err) {
-            self._log.debug('query ERROR, quey failed, removing contact from shortlist, reason %s', err.message);
+            self._log.debug('querying contact ERROR, removing contact from shortlist, reason %s', err.message);
             self._removeFromShortList(state, contact.nodeID);
             self.removeContact(contact);
             return callback(err);
