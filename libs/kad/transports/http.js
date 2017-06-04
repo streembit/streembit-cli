@@ -132,9 +132,11 @@ HTTPTransport.prototype._open = function(done) {
               case "TXN":
                   this.peer_msg_receive(message, complete);
                   retval = true;
+                  break;
+
               default:
                   // bad request
-                  res.statusCode = 400;
+                  res.statusCode = 405;
                   res.end();
                   retval = true;
           }

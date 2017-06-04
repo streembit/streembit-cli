@@ -22,9 +22,11 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 const config = require("libs/config");
+const logger = require("libs/logger");
 const constants = require("libs/constants");
 const async = require("async");
 const PeerTransport = require("./transport");
+const utils = require("libs/utils");
 
 let instance = null;
 
@@ -42,7 +44,7 @@ class PeerClient{
 
     put(key, value, callback) {
 
-        var seeds = config.seeds;
+        var seeds = utils.shuffle(config.seeds.slice(0));
 
         var data = {
             type: "PUT",
@@ -76,11 +78,10 @@ class PeerClient{
                 callback(errormsg);
             }
             else {
-                //console.log("put succeeded %j", result);
-                //console.log(response);
+                logger.debug("PUT succeeded at %j", result);
                 callback(null, response);
             }
-        });
+        });       
         
     }
 }
