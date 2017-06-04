@@ -54,8 +54,8 @@ module.exports = exports = function (callback) {
                         var options = {
                             seeds: config.seeds,
                             onKadMessage: msghandler.on_kad_message,
-                            onPeerMessage: msghandler.on_peer_message,
-                            onTransportError: msghandler.on_transport_error
+                            onTransportError: msghandler.on_transport_error,
+                            peermsgrcv: msghandler.on_peer_message
                         };
 
                         var kadnet = new kad.KadHandler();

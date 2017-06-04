@@ -23,6 +23,10 @@ Copyright (C) 2017 The Streembit software development team
 
 const config = require("libs/config");
 const constants = require("libs/constants");
+const async = require("async");
+const PeerTransport = require("./transport");
+
+let instance = null;
 
 class PeerClient{
     constructor() {
@@ -37,8 +41,47 @@ class PeerClient{
     }
 
     put(key, value, callback) {
-        console.log("PeerClient put")
-        callback();
+
+        var seeds = config.seeds;
+
+        var data = {
+            type: "PUT",
+            key: key,
+            value: value
+        };
+        var message = JSON.stringify(data);
+
+        var transport = new PeerTransport();
+
+        var response = null;
+        var errormsg = null;
+
+        function write(seed, cb) {
+            transport.write(message, seed, function (err, msg) {
+                var complete = false;
+                if (err) {
+                    errormsg = err;
+                }
+                else {
+                    response = msg;
+                    complete = true;
+                }
+                cb(null, complete);
+            });
+        }
+
+        async.detectSeries(seeds, write, function (err, result) {
+            // result now equals the first file in the list that exists
+            if (!result && errormsg) {
+                callback(errormsg);
+            }
+            else {
+                //console.log("put succeeded %j", result);
+                //console.log(response);
+                callback(null, response);
+            }
+        });
+        
     }
 }
 

@@ -99,7 +99,7 @@ module.exports.on_kad_message = function (message, contact, next){
 
 }
 
-module.exports.on_peer_message = function (message) {
+module.exports.on_peer_message = function (msg, req, res, callback) {
     logger.debug("on_peer_message");
-    peermsg(message);
+    peermsg(msg, req, res, callback);
 }

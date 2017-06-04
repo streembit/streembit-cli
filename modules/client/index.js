@@ -29,7 +29,7 @@ const logger = require("libs/logger");
 const peerutils = require("libs/peernet/peerutils");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
-const msghandler = require("libs/peernet/msg");
+const PeerTransport = require("libs/peernet/transport");
 const events = require("libs/events");
 const Contacts = require("libs/contacts");
 
@@ -79,6 +79,15 @@ module.exports = exports = function (callback) {
                         config.host = host;
                         var contacts = new Contacts();
                         contacts.init(cb);
+                    }
+                    catch (e) {
+                        cb(e.message);
+                    }
+                },
+                function (cb) {
+                    try {
+                        var transport = new PeerTransport();
+                        transport.open(cb)
                     }
                     catch (e) {
                         cb(e.message);

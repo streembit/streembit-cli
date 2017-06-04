@@ -55,7 +55,7 @@ module.exports.discovery = function (host, seeds, callback) {
             method: 'POST'
         };
 
-        var cbfn  = function (response) {
+        var cbfn = function (response) {
             var result = ''
             response.on('data', function (chunk) {
                 result += chunk;

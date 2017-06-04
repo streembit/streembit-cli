@@ -57,6 +57,7 @@ function AppEvents() {
     this.APPLOG = "app-log";
     this.CONFIG_UPDATE = "config-update";
     this.TASK_INIT = "task-init";
+    this.PEER_WRITE = "peer_write";
 
     events.EventEmitter.call(this);
 }
@@ -80,6 +81,11 @@ AppEvents.prototype.onLog = function (callback) {
         callback(payload);
     });
 }
+
+AppEvents.prototype.peer_write = function (id, buffer, callback) {
+    this.emit(this.PEER_WRITE, id, buffer, callback);
+}
+
 
 var instance;
 if (!instance) {

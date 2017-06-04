@@ -21,8 +21,10 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
+const logger = require("libs/logger");
 
-module.exports = (message) => {
+module.exports = (msg, callback) => {
 
+    callback(null, {data: 1});
 };
 

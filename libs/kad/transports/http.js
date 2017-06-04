@@ -65,6 +65,8 @@ function HTTPTransport(contact, options) {
 
   this._pendingmsgs = new Map();
 
+  this.peer_msg_receive = options.peermsgrcv;
+
   assert(contact instanceof StreembitContact, 'Invalid contact supplied');
   RPC.call(this, contact, options);
   this.on('MESSAGE_DROP', this._handleDroppedMessage.bind(this));
@@ -86,16 +88,38 @@ HTTPTransport.prototype._open = function(done) {
            self._protocol.createServer(handler);
   }
 
-  function preProcessor(payload, req, res) {
+  this.peer_processor = function(payload, req, res) {
       try {
+
+          function create_error_buffer(err) {
+              var errmsg = JSON.stringify({ error: err.message ? err.message : err });
+              var buffer = new Buffer(errmsg);
+              return buffer;
+          }
+
+          function complete(err, data) {
+              if (err) {
+                  res.statusCode = 500;
+                  var buffer = create_error_buffer(err);
+                  return res.end(buffer);
+              }
+
+              // make sure it is a buffer
+              if (data && typeof data != "string") {
+                  data = JSON.stringify(data);
+              }
+
+              res.end(data);
+          }
+
           var retval = false;
 
-          var data = JSON.parse(payload);
-          if (!data || !data.type) {
+          var message = JSON.parse(payload);
+          if (!message || !message.type) {
               return false;
           }
 
-          switch (data.type) {
+          switch (message.type) {
               case "DISCOVERY":
                   var ipaddress = req.connection.remoteAddress;
                   var reply = JSON.stringify({ address: ipaddress });
@@ -103,13 +127,20 @@ HTTPTransport.prototype._open = function(done) {
                   retval = true;
                   break;
 
-              case "PEERMSG":
-
-                  break;
+              case "PUT":
+              case "GET":
+              case "TXN":
+                  this.peer_msg_receive(message, complete);
+                  retval = true;
+              default:
+                  // bad request
+                  res.statusCode = 400;
+                  res.end();
+                  retval = true;
           }
       }
       catch (err) {
-          self._log.error('HTTP preProcessor error: %s', err.message);
+          self._log.error('HTTP peer_processor error: %s', err.message);
           res.end();
           return true;
       }
@@ -146,7 +177,7 @@ HTTPTransport.prototype._open = function(done) {
     //request end
     req.on('end', function () {
 
-        var processed = preProcessor(payload, req, res);
+        var processed = self.peer_processor(payload, req, res);
         if (processed) {
             return;
         }
@@ -196,12 +227,12 @@ HTTPTransport.prototype._send = function(data, contact) {
     var payload = '';
 
     res.on('data', function(chunk) {
-      payload += chunk.toString();
+        payload += chunk.toString();
     });
 
     res.on('error', function(err) {
-      self._log.error(err.message, 'No data received after request.');
-      self.receive(null);
+        self._log.error("HTTP handleResponse error: ", err.message);
+        self.receive(null);
     });
 
     res.on('end', function () {

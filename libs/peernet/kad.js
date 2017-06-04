@@ -130,8 +130,7 @@ class KadHandler {
         var contact = kad.contacts.StreembitContact(contact_param);
         logger.info('this contact object: ' + contact.toString());
 
-
-        var transport = kad.transports.HTTP(contact, { logger: logger});
+        var transport = kad.transports.HTTP(contact, { logger: logger, peermsgrcv: options.peermsgrcv});
         transport.after('open', function (next) {
             // exit middleware stack if contact is blacklisted
             logger.info('TCP peer connection is opened');
@@ -153,8 +152,6 @@ class KadHandler {
             logger: logger,
             storage: db.streembitdb,
             seeds: seeds,
-            onPeerMessage: options.onPeerMessage,
-            onTransaction: options.onTransaction,
             isseed: options.isseed
         };
 

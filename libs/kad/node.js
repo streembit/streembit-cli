@@ -473,19 +473,6 @@ Node.prototype._bindRPCMessageHandlers = function (options) {
     this._rpc.on('CONTACT_SEEN', this._router.updateContact.bind(this._router));
     this._rpc.on('TIMEOUT', this._router.removeContact.bind(this._router));
 
-    if (options.onPeerMessage && (typeof options.onPeerMessage == "function")) {
-        this._rpc.on('PEERMSG', options.onPeerMessage.bind(this));
-    }
-
-    if (options.onTransaction && (typeof options.onTransaction == "function")) {
-        this._rpc.on('TXN', options.onTransaction.bind(this));
-    }
-    else {
-        this._rpc.on('TXN', function (message) {
-            self._log.debug('default TXN handler');
-        });
-    }
-
     this._rpc.on('ready', function () {
         self._log.debug('node listening on %j', self._self.toString());
     });
