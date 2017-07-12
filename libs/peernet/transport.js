@@ -43,7 +43,6 @@ class PeerTransport{
         }
 
         return instance;
-        //events.on(events.TASK_INIT, (id, buffer, callback) => this.write(id, buffer, callback));
     }
 
     create_server() {

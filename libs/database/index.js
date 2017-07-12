@@ -165,7 +165,6 @@ streembit.database = (function (db, logger) {
 
 }(streembit.database || {}, log));
 
-
 module.exports = streembit.database;
 
 
