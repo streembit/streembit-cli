@@ -21,6 +21,8 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
+const version = "1.0.1";
+
 var streembit = streembit || {};
 
 require('app-module-path').addPath(__dirname);
@@ -40,6 +42,7 @@ program
     .option('-d, --data', 'Print node ID')
     .option('-b, --backup', 'Backup node data')
     .option('-c, --changepwd', 'Change password')
+    .option('-v, --version', 'Version')
     .parse(process.argv);
 
 var cmd;
@@ -52,6 +55,9 @@ else if (program.backup) {
 else if (program.changepwd) {
     cmd = "changepwd";
 }
+else if (program.version) {
+    cmd = "version";
+}
 
 try {
     switch (cmd) {
@@ -63,6 +69,9 @@ try {
             break
         case "changepwd":
             app.changepwd();
+            break;
+        case "version":
+            console.log(version);
             break;
         default:
             app(program.port, program.ip, program.password);;

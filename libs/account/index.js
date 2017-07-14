@@ -62,6 +62,10 @@ class Account {
         return this.m_key ? this.m_key.privateKey : '';
     }
 
+    get private_key_hex() {
+        return this.m_key ? this.m_key.privateKeyHex : '';
+    }
+
     get public_key () {
         return this.m_key ? this.m_key.publicKeyHex : '';
     }

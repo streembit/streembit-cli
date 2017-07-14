@@ -117,14 +117,18 @@ module.exports.display_data = function () {
     async.waterfall(
         [
             function (callback) {
+                config.init_password(callback);
+            },
+            function (callback) {
+                if (!config.password) {
+                    return callback("Invalid password");
+                }
+
                 db.init_databases(__dirname, callback);
             },
             function (callback) {
-                utils.prompt_for_password(callback);
-            },
-            function (password, callback) {
                 var account = new Account();
-                account.load(password, callback);
+                account.load(config.password, callback);
             }
         ],
         function (err, result) {
@@ -135,6 +139,9 @@ module.exports.display_data = function () {
             var account = new Account();
             //print the node ID
             console.log("node ID: %s", account.accountid);
+            console.log("publickey hex: %s", account.public_key);
+            console.log("publickey encoded hash: %s", account.public_key_hash);
+            console.log("publickey bs58pk: %s", account.bs58pk);
         }
     ); 
 
@@ -146,4 +153,65 @@ module.exports.changepwd = function() {
 
 module.exports.backup = function() {
     console.log("app backup account data");
+
+    async.waterfall(
+        [
+            function (callback) {
+                config.init_password(callback);
+            },
+            function (callback) {
+                if (!config.password) {
+                    return callback("Invalid password");
+                }
+
+                db.init_databases(__dirname, callback);
+            },
+            function (callback) {
+                var account = new Account();
+                account.load(config.password, function (err) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    var data = {
+                        nodeid: account.accountid,
+                        pkhex: account.public_key,
+                        encoded_pkhash: account.public_key_hash,
+                        bs58pk: account.bs58pk,
+                        private_key: account.private_key_hex
+                    };
+
+                    callback(null, data);
+                });
+            },
+            function (data, callback) {
+                try {
+                    // write to file
+                    data.timestamp = Date.now();
+                    var str = JSON.stringify(data, null, 4);  
+                    var wdir = process.cwd();
+                    var datadir = path.join(wdir, 'data');
+                    var backupfile = path.join(datadir, 'account.json');
+                    fs.writeFile(backupfile, str, function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
+
+                        callback();
+                    });
+
+                }
+                catch (err) {
+                    callback(err);
+                }
+            }
+        ],
+        function (err) {
+            if (err) {
+                return console.log("Error: %j", err.message || err);
+            }
+
+            console.log("Backup file account.json was created in the data directory",);
+        }
+    ); 
 }

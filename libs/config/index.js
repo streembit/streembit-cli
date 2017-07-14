@@ -251,6 +251,29 @@ streembit.config = (function (cnfobj) {
         }
     };
 
+    cnfobj.init_password = function (callback) {
+        try {
+            if (config.password) {
+                //  check the config file
+                cnfobj.password = config.password;
+                return callback();
+            }
+
+            // get the password from the command prompt
+            utils.prompt_for_password(function (err, pwd) {
+                if (err) {
+                    return callback(err);
+                }
+
+                cnfobj.password = pwd;
+                callback();
+            });
+
+        }
+        catch (err) {
+            callback(err.message);
+        }
+    };
 
     return cnfobj;
 

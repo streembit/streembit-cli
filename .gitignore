@@ -41,6 +41,8 @@ obj/
 *.sln
 logs/*.log
 
+data/*.json
+
 *.ldb
 *.dat
 /db/appdb/
@@ -54,3 +56,4 @@ logs/*.log
 config.json
 /typings
 /.idea/
+/data/account.json

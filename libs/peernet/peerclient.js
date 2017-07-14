@@ -44,7 +44,8 @@ class PeerClient{
 
     put(key, value, callback) {
 
-        var seeds = utils.shuffle(config.seeds.slice(0));
+        var transport = new PeerTransport();
+        var seeds = utils.shuffle(config.seeds);
 
         var data = {
             type: "PUT",
@@ -52,8 +53,6 @@ class PeerClient{
             value: value
         };
         var message = JSON.stringify(data);
-
-        var transport = new PeerTransport();
 
         var response = null;
         var errormsg = null;
