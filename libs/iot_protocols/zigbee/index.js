@@ -27,23 +27,26 @@ const logger = require("libs/logger");
 const events = require("libs/events");
 const constants = require("libs/constants");
 const async = require("async");
-var util = require('util');
-var SerialPort = require('serialport');
-var xbeeapi = require('libs/iot_protocols/zigbee/xbee');
+const util = require('util');
+const SerialPort = require('serialport');
+const xbeeapi = require('libs/iot_protocols/zigbee/xbee');
 
 
 class Handler {
 
     constructor(mcu) {
         this.mcu = mcu;
+        this.mcuhandler = 0;
     }
 
     init(callback) {
         try {
             logger.info("zigbee init mcu: " +  this.mcu);
             
-            var mcuhandler = require('libs/iot_protocols/zigbee/' + this.mcu);
-            mcuhandler();
+            var mcu_handler = require('libs/iot_protocols/zigbee/' + this.mcu);
+            mcu_handler();
+
+            this.mcuhandler = mcu_handler;
 
             //// initialize the task event handler
             //events.on(events.TASK_INIT, (task, payload) => {

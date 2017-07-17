@@ -38,7 +38,7 @@ var devicelist = (function (instance) {
 
     instance.update = function (id, active) {
         if (map.has(id)) {
-            console.log("active device detected: " + id);
+            logger.debug("active device detected: " + id);
             var item = map.get(id);
             item.active = active;
         }

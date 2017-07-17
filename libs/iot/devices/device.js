@@ -1,6 +1,7 @@
 ﻿'use strict';
 
 const events = require("libs/events");
+const logger = require('libs/logger');
 
 class Device {
 
@@ -15,21 +16,21 @@ class Device {
     }
 
     get_report() {
-        events.emit(events.TYPES.ONIOTCMD, "report", function (err, data) {
-            if (err) {
-                //TODO
-                return 0;
-            }
+        //events.emit(events.TYPES.ONIOTCMD, "report", function (err, data) {
+        //    if (err) {
+        //        //TODO
+        //        return 0;
+        //    }
 
-            events.emit(events.TYPES.ONIOTSEND, "report", function () {
+        //    events.emit(events.TYPES.ONIOTSEND, "report", function () {
 
-            });
-        });
+        //    });
+        //});
     }
 
     on_device_active() {
-        console.log("on_device_active");
-        events.emit(events.TYPES.ONDEVICECMD);
+        logger.debug("on_device_active");
+        //events.emit(events.TYPES.ONDEVICECMD);
     }
 
     get active() {

@@ -49,7 +49,8 @@ function AppEvents() {
         ONFILECANCEL: "onFileCancel",
         ONINITPROGRESS: "onInitProgress",
         ONIOTCMD: "onIotCmd",                                   //  sends command to device handlers
-        ONIOTSEND: "onIoTSend"                                  //  sends back to client IoT related data
+        ONIOTSEND: "onIoTSend",                                 //  sends back to client IoT related data
+        ONIOTEVENT: "onIoTEvent"                                //  sends back to client IoT related data
     };
     
     this.CONTACT_ONLINE = "contact-online";

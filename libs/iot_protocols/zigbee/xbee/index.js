@@ -27,6 +27,7 @@ const util = require('util');
 const SerialPort = require('serialport');
 const logger = require('libs/logger');
 const config = require('libs/config');
+const events = require("libs/events");
 
 var C = xbeeapi.constants;
 
@@ -34,13 +35,47 @@ var xbee = new xbeeapi.XBeeAPI({
     api_mode: 1
 });
 
-var port = config.iot_config.serialport;
+var serialport = 0;
+
+function toggle(remote64) {
+    logger.debug("toggle " + remote64);
+    var txframe = { 
+        type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
+        destination64: remote64,
+        destination16: 'fffe', //'e429',
+        sourceEndpoint: 0x00,
+        destinationEndpoint: 0x01,
+        clusterId: 0x0006,
+        profileId: 0x0104,
+        data: [0x01, 0x01, 0x02]
+    };
+
+    serialport.write(xbee.buildFrame(txframe));
+}
+
+function event_handler() {
+
+    events.on(events.TYPES.ONIOTCMD, (cmd, payload) => {
+        switch (cmd) {
+            case "toggle":
+                toggle(payload.remote64);
+                break;
+            default:
+                break;
+        }
+    });
+
+}
 
 function init() {
 
+    // create event handler
+    event_handler();
+
+    var port = config.iot_config.serialport;
     logger.debug("xbee init(), try open serial port: " + port);
 
-    var serialport = new SerialPort(
+    serialport = new SerialPort(
         port,
         {
             baudrate: 9600
@@ -59,6 +94,7 @@ function init() {
         }
 
         logger.debug('serial port ON open');
+        
 
         // get the NI
         var txframe = { // AT Request to be sent to 
@@ -68,6 +104,23 @@ function init() {
         };
 
         serialport.write(xbee.buildFrame(txframe));
+
+        //
+        // send "Management Rtg (Routing Table) Request" 0x0032
+        //
+        setTimeout(
+            function() {
+                txframe = { // AT Request to be sent to 
+                    type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
+                    clusterId: 0x0032,
+                    profileId: 0x0000,
+                    data: [0x12, 0x01]
+                };
+
+                serialport.write(xbee.buildFrame(txframe));
+            },
+            1000
+        );
 
     });
 
@@ -115,12 +168,20 @@ xbee.on("frame_object", function(frame) {
 
             //console.log(util.inspect(frame));
 
-            //if (frame.clusterId == "8032") {
-            //    if (frame.remote64 && typeof frame.remote64 == 'string') {
-            //        var mac = frame.remote64.toLowerCase();
-            //        devicelist.update(mac, true);
-            //    }
-            //}
+            if (frame.clusterId == "8032") {
+                //console.log(util.inspect(frame));
+                if (frame.remote64 && typeof frame.remote64 == 'string') {
+                    //var mac = frame.remote64.toLowerCase();
+                    //devicelist.update(mac, true);
+                    events.emit(
+                        events.TYPES.ONIOTEVENT,
+                        "active_device_found",
+                        {
+                            id: frame.remote64
+                        }
+                    );
+                }
+            }
         }
     }
     catch (err) {

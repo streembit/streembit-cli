@@ -24,6 +24,7 @@ Copyright (C) 2016 The Streembit software development team
 var config = require("libs/config");
 var logger = require("libs/logger");
 var devicelist = require('libs/iot/devicelist');
+const events = require("libs/events");
 
 class IoTHandler {
     constructor() {
@@ -52,7 +53,19 @@ class IoTHandler {
                 handler.init();
             });
 
-            // ping
+            events.on(events.TYPES.ONIOTEVENT, (event, payload) => {
+                switch (event) {
+                    case "active_device_found":
+                        var id = payload.id;
+                        devicelist.update(id, true);
+                        break;
+                    case "device_command":
+
+                        break;
+                    default:
+                        break;
+                }
+            });
 
         }
         catch (err) {
