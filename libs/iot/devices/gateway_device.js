@@ -5,7 +5,7 @@ const Device = require("./device");
 const events = require("libs/events");
 const logger = require("libs/logger");
 
-class SwitchDevice extends Device {
+class GatewayDevice extends Device {
 
     constructor(id, device) {
         super(id, device);      
@@ -13,16 +13,13 @@ class SwitchDevice extends Device {
         this.last_switch_time = 0;
         this.last_switch_type = 0;
 
-        logger.debug("initializing a switch device id: " + id);
+        logger.debug("initializing a gateway device id: " + id);
     }
 
     on_device_active() {
-        super.on_device_active();       
-
-        // we want to receive notification about turning off/on the device
-
+        super.on_device_active();        
     }
 
 }
 
-module.exports = SwitchDevice;
+module.exports = GatewayDevice;

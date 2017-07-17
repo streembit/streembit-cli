@@ -109,7 +109,7 @@ module.exports.init = function init() {
                     type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
                     clusterId: 0x0032,
                     profileId: 0x0000,
-                    data: [0x12, 0x01]
+                    data: [0x01, 0x00]
                 };
 
                 serialport.write(xbee.buildFrame(txframe));
@@ -128,54 +128,17 @@ module.exports.init = function init() {
 xbee.on("frame_object", function(frame) {
     try {
         if (frame) {
-            ////console.log("OBJ " + util.inspect(frame));
-            //console.log("type: " + frame.type);
 
-            if (frame.command == "NI" && frame.commandData && Buffer.isBuffer(frame.commandData)) {
-                logger.debug("Zigbee NI: " + frame.commandData.toString());
-            }
-
-            //if (frame.clusterId == "8032") {
+            if (frame.clusterId == "8032" && frame.remote64 && typeof frame.remote64 == 'string') {
                 //console.log(util.inspect(frame));
-                //console.log("long_address: %s short_address: %s source_endpoint: %s destionation_endpoint: %s", frame.remote64, frame.remote16, frame.sourceEndpoint, frame.destinationEndpoint);
-                //if (frame.remote64 && frame.remote64.toUpperCase() == "000D6F000BBC50B6") {
-                //configure_report(frame.remote64, frame.remote16, frame.sourceEndpoint, frame.destinationEndpoint);
-                //}
-
-                //conf.iot.devices.forEach(function (item) {
-                //if (frame.remote64 && frame.remote64.toLowerCase() == item.mac.toLowerCase()) {
-                //    devicemap.set(item.mac.toLowerCase(),
-                //        {
-                //        }
-                //    );
-                //}
-                //console.log("device found");
-                //});
-            //}
-
-            ////if (frame.type == 139) {
-            ////    console.log(util.inspect(frame));
-            ////}
-
-            //if (frame.type == 145) {
-            //    console.log(util.inspect(frame));
-            //}
-
-            //console.log(util.inspect(frame));
-
-            if (frame.clusterId == "8032") {
-                //console.log(util.inspect(frame));
-                if (frame.remote64 && typeof frame.remote64 == 'string') {
-                    //var mac = frame.remote64.toLowerCase();
-                    //devicelist.update(mac, true);
-                    events.emit(
-                        events.TYPES.ONIOTEVENT,
-                        constants.ACTIVE_DEVICE_FOUND,
-                        {
-                            id: frame.remote64
-                        }
-                    );
-                }
+                events.emit(
+                    events.TYPES.ONIOTEVENT,
+                    constants.IOTACTIVITY,
+                    {
+                        type: constants.ACTIVE_DEVICE_FOUND,
+                        id: frame.remote64
+                    }
+                );                
             }
         }
     }

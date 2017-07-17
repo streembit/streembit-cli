@@ -26,10 +26,47 @@ const config = require("libs/config");
 const logger = require("libs/logger");
 const devicelist = require('libs/iot/devicelist');
 const events = require("libs/events");
+const WebSocket = require("libs/websocket");
 
 class IoTHandler {
     constructor() {
-        this.protocol_handlers = new Map();;
+        this.protocol_handlers = 0;
+        this.event_handler_map = new Map();
+
+        // map the functions
+        this.event_handler_map.set(constants.ACTIVE_DEVICE_FOUND, this.on_active_device_found);
+    }
+
+    on_active_device_found(payload) {
+        var id = payload.id;
+
+        // get the device
+        var device = devicelist.get(id);
+        if (!device) {
+            return logger.error("device " + id + " is not handled");
+        }
+        logger.debug("on_active_device_found " + id + " device type: " + device.type);
+
+        //  report back to the UI, users
+
+
+         // TODO remove this from here
+        /*
+        if (device.type == constants.IOT_DEVICE_SWITCH) {
+            function toggle() {
+                events.emit(
+                    events.TYPES.ONIOTEVENT,
+                    constants.IOTCMD,
+                    {
+                        protocol: device.protocol,
+                        cmd: "toggle", remote64: id
+                    }
+                );
+            }
+           
+            setInterval(toggle, 3000);            
+        }
+       */
     }
 
     init() {
@@ -41,10 +78,12 @@ class IoTHandler {
 
             logger.info("Run IoT handler");
 
+            this.protocol_handlers = new Map();
+
             devicelist.init();
 
             // initialize the IoT device handlers Zigbee, Z-Wave, 6LowPan, etc.
-            var protocols = config.iot_config.protocols;
+            var protocols = conf.protocols;
             protocols.forEach( (item) => {
                 logger.info("create protocol " + item.name + " handler");
                 var ProtocolHandler = require("libs/iot_protocols/" + item.name);
@@ -58,19 +97,27 @@ class IoTHandler {
 
             events.on(events.TYPES.ONIOTEVENT, (event, payload) => {
                 switch (event) {
-                    case constants.ACTIVE_DEVICE_FOUND:
-                        var id = payload.id;
-                        devicelist.update(id, true);
-                        break;
                     case constants.IOTCMD:
                         var protocol = payload.protocol;
                         var handler = this.protocol_handlers.get(protocol);
                         handler.executecmd(payload);
                         break;
+                    case constants.IOTACTIVITY:                           
+                        var type = payload.type;                        
+                        var handler = this.event_handler_map.get(type);
+                        if (handler) {
+                            handler(payload);
+                        }
+                        break;
                     default:
                         break;
                 }
             });
+
+            // start the websocket server
+            var port = conf.wsport ? conf.wsport : 32318;
+            var wsserver = new WebSocket(port);
+            wsserver.init();
 
         }
         catch (err) {

@@ -14,51 +14,60 @@ If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
 Author: Tibor Zsolt Pardi 
-Copyright (C) 2017 The Streembit software development team
+Copyright (C) 2016 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
 */
 
-
 'use strict';
 
-
+const constants = require("libs/constants");
 const logger = require("libs/logger");
 const events = require("libs/events");
-const constants = require("libs/constants");
-const async = require("async");
-const util = require('util');
-const SerialPort = require('serialport');
+const WebSocket = require('ws');
 
-class Handler {
-
-    constructor(mcu) {
-        this.mcu = mcu;
-        this.mcuhandler = 0;
+class WsServer {
+    constructor(port) {
+        this.port = port;
     }
-
-    executecmd(payload){
-        this.mcuhandler.executecmd(payload );
-    }
-
-    init(callback) {
+ 
+    on_connection(ws) {
         try {
-            logger.info("zigbee init mcu: " +  this.mcu);
-            
-            var mcu_handler = require('libs/iot_protocols/zigbee/' + this.mcu);
-            mcu_handler.init();
-
-            this.mcuhandler = mcu_handler;
-
-            //         
+            ws.on('message', function incoming(message) {
+                console.log('received: %s', message);
+            });
         }
         catch (err) {
-            logger.error("zigbee handler init error: " + err.message);
+            logger.error("ws on_connection error: " + err.message);
         }
     }
 
-    
+    init() {
+        try {
+
+            logger.info("starting ws server");  
+            
+            const wsserver = new WebSocket.Server({ port: this.port });
+
+            // set the connection handler
+            wsserver.on('connection', this.on_connection);
+
+            wsserver.on('close', function() {
+                //cursor.goto(1, 4 + thisId).eraseLine();
+                //console.log('Client #%d disconnected. %d files received.', thisId, filesReceived);
+            });
+
+            wsserver.on('error', function(e) {
+                logger.error('ws error: %s', e.message);
+            });
+
+            //
+        }
+        catch (err) {
+            logger.error("ws server init error: " + err.message);
+        }
+    }
 }
 
-module.exports = Handler;
+module.exports = WsServer;
 

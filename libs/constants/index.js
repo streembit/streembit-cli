@@ -36,8 +36,16 @@ var constants = {
     RESPONSETIMEOUT: 10000,
 
     // IOT constants
-    ACTIVE_DEVICE_FOUND: "active_device_found",
-    IOTCMD: "iotcmd"
+    // device types
+    IOT_DEVICE_GATEWAY: 1,
+    IOT_DEVICE_SWITCH: 2,
+    IOT_DEVICE_SOCKET: 3,
+    IOT_DEVICE_MOTIONSENSOR: 4,
+
+    IOTCMD: "iotcmd",
+    IOTACTIVITY: "iotactivity",
+    // activity types
+    ACTIVE_DEVICE_FOUND: "active_device_found"
 
 };
 
