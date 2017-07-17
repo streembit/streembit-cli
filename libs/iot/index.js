@@ -21,13 +21,15 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var config = require("libs/config");
-var logger = require("libs/logger");
-var devicelist = require('libs/iot/devicelist');
+const constants = require("libs/constants");
+const config = require("libs/config");
+const logger = require("libs/logger");
+const devicelist = require('libs/iot/devicelist');
 const events = require("libs/events");
 
 class IoTHandler {
     constructor() {
+        this.protocol_handlers = new Map();;
     }
 
     init() {
@@ -43,7 +45,7 @@ class IoTHandler {
 
             // initialize the IoT device handlers Zigbee, Z-Wave, 6LowPan, etc.
             var protocols = config.iot_config.protocols;
-            protocols.forEach(function (item) {
+            protocols.forEach( (item) => {
                 logger.info("create protocol " + item.name + " handler");
                 var ProtocolHandler = require("libs/iot_protocols/" + item.name);
                 var handler = new ProtocolHandler(item.chipset);
@@ -51,16 +53,19 @@ class IoTHandler {
                     logger.error("handler for " + item + " not exists");
                 }
                 handler.init();
+                this.protocol_handlers.set(item.name, handler);
             });
 
             events.on(events.TYPES.ONIOTEVENT, (event, payload) => {
                 switch (event) {
-                    case "active_device_found":
+                    case constants.ACTIVE_DEVICE_FOUND:
                         var id = payload.id;
                         devicelist.update(id, true);
                         break;
-                    case "device_command":
-
+                    case constants.IOTCMD:
+                        var protocol = payload.protocol;
+                        var handler = this.protocol_handlers.get(protocol);
+                        handler.executecmd(payload);
                         break;
                     default:
                         break;

@@ -29,8 +29,6 @@ const constants = require("libs/constants");
 const async = require("async");
 const util = require('util');
 const SerialPort = require('serialport');
-const xbeeapi = require('libs/iot_protocols/zigbee/xbee');
-
 
 class Handler {
 
@@ -39,12 +37,16 @@ class Handler {
         this.mcuhandler = 0;
     }
 
+    executecmd(payload){
+        this.mcuhandler.executecmd(payload );
+    }
+
     init(callback) {
         try {
             logger.info("zigbee init mcu: " +  this.mcu);
             
             var mcu_handler = require('libs/iot_protocols/zigbee/' + this.mcu);
-            mcu_handler();
+            mcu_handler.init();
 
             this.mcuhandler = mcu_handler;
 
@@ -71,6 +73,9 @@ class Handler {
             logger.error("zigbee handler init error: " + err.message);
         }
     }
+
+    
 }
 
 module.exports = Handler;
+

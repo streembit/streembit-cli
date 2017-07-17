@@ -28,12 +28,14 @@ const SerialPort = require('serialport');
 const logger = require('libs/logger');
 const config = require('libs/config');
 const events = require("libs/events");
+const constants = require("libs/constants");
 
 var C = xbeeapi.constants;
 
 var xbee = new xbeeapi.XBeeAPI({
     api_mode: 1
 });
+
 
 var serialport = 0;
 
@@ -53,24 +55,18 @@ function toggle(remote64) {
     serialport.write(xbee.buildFrame(txframe));
 }
 
-function event_handler() {
-
-    events.on(events.TYPES.ONIOTCMD, (cmd, payload) => {
-        switch (cmd) {
-            case "toggle":
-                toggle(payload.remote64);
-                break;
-            default:
-                break;
-        }
-    });
-
+module.exports.executecmd = function(payload) {
+    var cmd = payload.cmd;
+    switch (cmd) {
+        case "toggle":
+            toggle(payload.remote64);
+            break;
+        default:
+            break;
+    }
 }
 
-function init() {
-
-    // create event handler
-    event_handler();
+module.exports.init = function init() {
 
     var port = config.iot_config.serialport;
     logger.debug("xbee init(), try open serial port: " + port);
@@ -86,7 +82,6 @@ function init() {
             }
         }
     );
-
 
     serialport.on("open", function(err) {
         if (err) {
@@ -175,7 +170,7 @@ xbee.on("frame_object", function(frame) {
                     //devicelist.update(mac, true);
                     events.emit(
                         events.TYPES.ONIOTEVENT,
-                        "active_device_found",
+                        constants.ACTIVE_DEVICE_FOUND,
                         {
                             id: frame.remote64
                         }
@@ -189,4 +184,4 @@ xbee.on("frame_object", function(frame) {
     }
 });
 
-module.exports = init;
+

@@ -1,5 +1,6 @@
 ﻿'use strict';
 
+const constants = require("libs/constants");
 const Device = require("./device");
 const events = require("libs/events");
 
@@ -16,7 +17,14 @@ class SwitchDevice extends Device {
 
     on_device_active() {
         super.on_device_active();
-        events.emit(events.TYPES.ONIOTCMD, "toggle", { remote64: this.id });
+        events.emit(
+            events.TYPES.ONIOTEVENT,
+            constants.IOTCMD,
+            {
+                protocol: this.protocol,
+                cmd: "toggle", remote64: this.id
+            }
+        );
     }
 
 }

@@ -33,7 +33,12 @@ var constants = {
     TASK_PUBLISHACCOUNT: "publish_account",
     TASK_INFORM_CONTACTS: "inform_contacts",
 
-    RESPONSETIMEOUT: 10000
+    RESPONSETIMEOUT: 10000,
+
+    // IOT constants
+    ACTIVE_DEVICE_FOUND: "active_device_found",
+    IOTCMD: "iotcmd"
+
 };
 
 module.exports = constants;
