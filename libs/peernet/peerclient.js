@@ -77,7 +77,7 @@ class PeerClient{
                 callback(errormsg);
             }
             else {
-                logger.debug("PUT succeeded at %j", result);
+                logger.debug("PUT for key " + key + " succeeded at %j", result);
                 callback(null, response);
             }
         });       

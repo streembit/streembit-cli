@@ -42,40 +42,20 @@ program
     .option('-d, --data', 'Print node ID')
     .option('-b, --backup', 'Backup node data')
     .option('-c, --changepwd', 'Change password')
-    .option('-v, --version', 'Version')
     .parse(process.argv);
 
-var cmd;
-if (program.data) {
-    cmd = "data";
-}
-else if (program.backup) {
-    cmd = "backup";
-}
-else if (program.changepwd) {
-    cmd = "changepwd";
-}
-else if (program.version) {
-    cmd = "version";
-}
-
 try {
-    switch (cmd) {
-        case "data":
-            app.display_data();
-            break;
-        case "backup":
-            app.backup();
-            break
-        case "changepwd":
-            app.changepwd();
-            break;
-        case "version":
-            console.log(version);
-            break;
-        default:
-            app(program.port, program.ip, program.password);;
-            break;
+    if (program.data) {
+        app.display_data();
+    }
+    else if (program.backup) {
+        app.backup();
+    }
+    else if (program.changepwd) {
+        app.changepwd();
+    }
+    else {
+        app(program.port, program.ip, program.password);;
     }
 }
 catch (e) {

@@ -14,52 +14,51 @@ If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
 Author: Tibor Zsolt Pardi 
-Copyright (C) 2016 The Streembit software development team
+Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
 */
 
+
 'use strict';
 
-var config = require("libs/config");
-var logger = require("libs/logger");
-var devicelist = require('libs/iot/devicelist');
 
-class IoTHandler {
+const logger = require("libs/logger");
+const events = require("libs/events");
+const constants = require("libs/constants");
+const async = require("async");
+
+class Handler {
+
     constructor() {
     }
 
-    init() {
+    init(callback) {
         try {
-            var conf = config.iot_config;
-            if (!conf.run) {
-                return logger.debug("Don't run IoT handler");
-            }
+            logger.info("6lowpan init")
+            //// initialize the task event handler
+            //events.on(events.TASK_INIT, (task, payload) => {
+            //    switch (task) {
+            //        case constants.TASK_PUBLISHACCOUNT:
+            //            this.publish_account();
+            //            break;
+            //        case constants.TASK_INFORM_CONTACTS:
+            //            this.inform_contacts(payload);
+            //            break;
+            //        default:
+            //            break;
+            //    }
+            //});
 
-            logger.info("Run IoT handler");
-
-            devicelist.init();
-
-            // initialize the IoT device handlers Zigbee, Z-Wave, 6LowPan, etc.
-            var protocols = config.iot_config.protocols;
-            protocols.forEach(function (item) {
-                logger.info("create protocol " + item.name + " handler");
-                var ProtocolHandler = require("libs/iot_protocols/" + item.name);
-                var handler = new ProtocolHandler(item.chipset);
-                if ( !handler.init) {
-                    logger.error("handler for " + item + " not exists");
-                }
-                handler.init();
-            });
-
-            // ping
+            //events.on(events.APP_INIT, () => {
+            //    this.on_application_init();
+            //});
 
         }
         catch (err) {
-            logger.error("IoT handler error: " + err.message);
+            logger.error("6lowpan handler init error: " + err.message);
         }
     }
 }
 
-module.exports = IoTHandler; 
-
+module.exports = Handler;

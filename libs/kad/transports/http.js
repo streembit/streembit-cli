@@ -130,6 +130,7 @@ HTTPTransport.prototype._open = function(done) {
               case "PUT":
               case "GET":
               case "TXN":
+              case "PING":
                   this.peer_msg_receive(message, complete);
                   retval = true;
                   break;

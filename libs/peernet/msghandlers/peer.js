@@ -23,24 +23,36 @@ Copyright (C) 2017 The Streembit software development team
 
 const logger = require("libs/logger");
 const kad = require("libs/peernet/kad");
+const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
 
 function put(message, callback) {
     logger.debug("PUT for peer");
-    var key = message.key;
-    var value = message.value;
-    var kadnet = new kad.KadHandler();
-    kadnet.put(key, value, (err) => callback(err));
+
+    msgvalidator.validate(message, function (e) {
+        if (e) {
+            return callback(e);
+        }
+
+        var key = message.key;
+        var value = message.value;
+        var kadnet = new kad.KadHandler();
+        kadnet.put(key, value, (err) => callback(err));
+    });    
 }
 
 module.exports = (msg, callback) => {
 
-    switch (msg.type) {
-        case "PUT":
-            put(msg, callback);
-            break;
-        default:
-            return callback("Invalid msg type");
-    }  
-    
+    try {
+        switch (msg.type) {
+            case "PUT":
+                put(msg, callback);
+                break;
+            default:
+                return callback("Invalid message type");
+        }
+    }
+    catch (err) {
+        callback("peer msg handler error, " + err.message);
+    }
 };
 

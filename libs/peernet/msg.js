@@ -39,7 +39,7 @@ function validate_contact(callback) {
     callback();
 }
 
-function handle_msg(message, contact, callback) {
+function handle_msg(message, callback) {
     try {
         if (!message || !message.method) {
             return callback();
@@ -48,16 +48,16 @@ function handle_msg(message, contact, callback) {
         var method = message.method.toLowerCase(message.method);
         switch (method) {
             case "store":
-                storemsg(message, contact, callback);
+                storemsg(message, callback);
                 break;
             case "txn":
-                txnmsg(message, contact, callback);
+                txnmsg(message, callback);
                 break;
             case "bch":
-                bchmsg(message, contact, callback);
+                bchmsg(message, callback);
                 break;
             case "find_node":
-                fnodemsg(message, contact, callback);
+                fnodemsg(message, callback);
                 break;
             default:
                 return callback();
@@ -85,7 +85,7 @@ module.exports.on_kad_message = function (message, contact, next){
             },
             function (cb) {
                 try {
-                    handle_msg(message, contact, cb);
+                    handle_msg(message, cb);
                 }
                 catch (e) {
                     cb(e);
@@ -99,7 +99,7 @@ module.exports.on_kad_message = function (message, contact, next){
 
 }
 
-module.exports.on_peer_message = function (msg, req, res, callback) {
+module.exports.on_peer_message = function (msg, callback) {
     logger.debug("on_peer_message");
-    peermsg(msg, req, res, callback);
+    peermsg(msg, callback);
 }

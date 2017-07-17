@@ -47,7 +47,9 @@ function AppEvents() {
         ONPEERERROR: "onPeerError",
         ONFCHUNKSEND: "onFileChunkSend",
         ONFILECANCEL: "onFileCancel",
-        ONINITPROGRESS: "onInitProgress"
+        ONINITPROGRESS: "onInitProgress",
+        ONIOTCMD: "onIotCmd",                                   //  sends command to device handlers
+        ONIOTSEND: "onIoTSend"                                  //  sends back to client IoT related data
     };
     
     this.CONTACT_ONLINE = "contact-online";

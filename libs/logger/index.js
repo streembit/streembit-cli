@@ -54,11 +54,22 @@ function log_error(err, param) {
             else {
                 msg = err;
             }
-            logger.error(msg);
+            if (logger) {
+                logger.error(msg);
+            }
+            else {
+                console.log(msg);
+            }
             return msg;
         }
         else {
-            logger.error(err);
+            if (logger) {
+                logger.error(err);
+            }
+            else {
+                console.log(err);
+            }
+            
             return err;
         }
     }

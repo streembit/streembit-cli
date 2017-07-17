@@ -54,13 +54,17 @@ class TaskManager {
             var account_name = config.account;
             var crypto_key = account.cryptokey;
 
+            var error_count = 0;
+
             var peernet = new PeerNet();
 
             function send_to_contact(contact, next) {
                 try {
                     peernet.inform_contact(crypto_key, account_name, pubkey_hash, public_key, contact.public_key, symcryptkey, transport, address, port, type, function (err) {
                         if (err) {
-                            logger.error("send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err));                            
+                            var msg = "send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err);
+                            logger.error(msg);                            
+                            error_count++;
                         }    
                         next();
                     }); 
@@ -75,7 +79,7 @@ class TaskManager {
             var list = contacts.list();
 
             async.eachSeries(list, send_to_contact, function () {
-                logger.debug("inform_contacts ended, errors are reported");
+                logger.debug("inform_contacts ended. error count: " + error_count );
             });
         }
         catch (err) {
