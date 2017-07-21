@@ -146,7 +146,8 @@ module.exports.handle_request = function(payload, callback) {
             return callback("invalid request data");
         }
 
-        if (payload.cmd) {
+        if (payload.cmd) {    
+            // execute the command
             cmd_handler(payload, callback);
         }
         else {
@@ -171,14 +172,14 @@ module.exports.init = function init() {
         },
         function(err) {
             if (err) {
-                console.log('Serial port error: ', err.message);
+                logger.error('Serial port error: ', err.message);
             }
         }
     );
 
     serialport.on("open", function(err) {
         if (err) {
-            return console.log('Error opening port: ', err.message);
+            return logger.error('Error opening port: ', err.message);
         }
 
         logger.debug('serial port ON open');
