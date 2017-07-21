@@ -37,6 +37,20 @@ class IoTHandler {
         this.event_handler_map.set(constants.ACTIVE_DEVICE_FOUND, this.on_active_device_found);
     }
 
+    get_handler_by_id(id) {
+        var device = devicelist.get(id);
+        if (!device) {
+            throw new Error("device for id " + id + " does not exists");
+        }
+
+        var handler = this.protocol_handlers.get(device.protocol);
+        if (!handler) {
+            throw new Error("handler for protocol " + device.protocol + " does not exists");
+        }
+
+        return handler;
+    }
+
     on_active_device_found(payload) {
         var id = payload.id;
 
@@ -95,22 +109,32 @@ class IoTHandler {
                 this.protocol_handlers.set(item.name, handler);
             });
 
-            events.on(events.TYPES.ONIOTEVENT, (event, payload) => {
-                switch (event) {
-                    case constants.IOTCMD:
-                        var protocol = payload.protocol;
-                        var handler = this.protocol_handlers.get(protocol);
-                        handler.executecmd(payload);
-                        break;
-                    case constants.IOTACTIVITY:                           
-                        var type = payload.type;                        
-                        var handler = this.event_handler_map.get(type);
-                        if (handler) {
-                            handler(payload);
-                        }
-                        break;
-                    default:
-                        break;
+            events.on(events.TYPES.ONIOTEVENT, (event, payload, callback) => {
+                try {
+                    switch (event) {
+                        case constants.IOTREQUEST:
+                            var handler = this.get_handler_by_id(payload.id);
+                            handler.handle_request(payload, callback);
+                            break;
+                        case constants.IOTCMD:
+                            var protocol = payload.protocol;
+                            var handler = this.protocol_handlers.get(protocol);
+                            handler.executecmd(payload);
+                            break;
+                        case constants.IOTACTIVITY:
+                            var type = payload.type;
+                            var handler = this.event_handler_map.get(type);
+                            if (handler) {
+                                handler(payload);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                catch (err) {
+                    callback(err.message);
+                    logger.error("ONIOTEVENT error: " + err.message);                    
                 }
             });
 

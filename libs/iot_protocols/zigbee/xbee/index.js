@@ -38,13 +38,72 @@ var xbee = new xbeeapi.XBeeAPI({
 
 
 var serialport = 0;
+var pending_task = {};
+
+function add_pending_task(txid, callback) {
+    pending_task[txid] = callback;
+}
+
+function delete_pending_task(txid) {
+    delete pending_task[txid];
+}
+
+
+function read_switchstatus(remote64, callback) {
+    logger.debug("read_switchstatus");
+
+    var txid = 0xab;
+    var txframe = { 
+        type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
+        destination64: remote64,
+        destination16: 'fffe', 
+        sourceEndpoint: 0x00, 
+        destinationEndpoint: 0x01, 
+        clusterId: 0x0006,
+        profileId: 0x0104,
+        data: [0x00, txid, 0x00, 0x00, 0x00]
+    };
+
+    var result = {
+        payload: {
+            switch_status: -1  // -1 = unknown, default
+        }
+    }; 
+    var timer = 0
+    var current = 0;
+    // create a pending task for it
+    add_pending_task(
+        txid,
+        function (data) {
+            clearTimeout(timer);
+            delete_pending_task(txid);
+
+            if (data && data.length && (data[data.length-1] == 0x00 || data[data.length-1] == 0x01)) {
+                result.payload.switch_status = data[data.length-1]; // the last byte is the switch status
+            }
+
+            callback(null, result);
+        }
+    );
+
+    timer = setTimeout(
+        function () {
+            delete_pending_task(txid);
+            result.payload.switch_status = -2; // -2 = timed out
+            callback(null, result);
+        },
+        2000
+    );    
+
+    serialport.write(xbee.buildFrame(txframe));
+}
 
 function toggle(remote64) {
     logger.debug("toggle " + remote64);
     var txframe = { 
         type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
         destination64: remote64,
-        destination16: 'fffe', //'e429',
+        destination16: 'fffe',
         sourceEndpoint: 0x00,
         destinationEndpoint: 0x01,
         clusterId: 0x0006,
@@ -55,16 +114,50 @@ function toggle(remote64) {
     serialport.write(xbee.buildFrame(txframe));
 }
 
-module.exports.executecmd = function(payload) {
-    var cmd = payload.cmd;
-    switch (cmd) {
-        case "toggle":
-            toggle(payload.remote64);
+function toggle_handler(id, callback) {
+    // toggle the switch 
+    toggle(id);
+
+    // get the switch status
+    read_switchstatus(id, function (err, result) {
+        //console.log(result);
+        callback(err, result);
+    }); 
+}
+
+function cmd_handler(payload, callback) {
+    switch (payload.cmd) {
+        case 0x02:
+            toggle_handler(payload.id, callback);
+            break;
+        case 0x04:
+            read_switchstatus(payload.id, callback);
             break;
         default:
+            callback("invalid command");
             break;
     }
 }
+
+
+module.exports.handle_request = function(payload, callback) {
+    try {
+        if (!payload) {
+            return callback("invalid request data");
+        }
+
+        if (payload.cmd) {
+            cmd_handler(payload, callback);
+        }
+        else {
+            callback("invalid request data, command is required");
+        }
+    }
+    catch (err) {
+        callback(err);
+    }
+}
+
 
 module.exports.init = function init() {
 
@@ -140,6 +233,14 @@ xbee.on("frame_object", function(frame) {
                     }
                 );                
             }
+            else if (frame.data && frame.clusterId == "0006" ) {
+                var txid = frame.data[1];
+                var callback = pending_task[txid];
+                if (callback) {
+                    // the callback will parse it
+                    callback(frame.data);
+                }
+            }
         }
     }
     catch (err) {
@@ -148,3 +249,4 @@ xbee.on("frame_object", function(frame) {
 });
 
 
+module.exports.executecmd = cmd_handler;

@@ -42,6 +42,7 @@ var constants = {
     IOT_DEVICE_SOCKET: 3,
     IOT_DEVICE_MOTIONSENSOR: 4,
 
+    IOTREQUEST: "iotrequest",
     IOTCMD: "iotcmd",
     IOTACTIVITY: "iotactivity",
     // activity types

@@ -21,14 +21,12 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var streembit = streembit || {};
-
 var assert = require('assert');
 var config = require('config');
 var utils = require("libs/utils");
 var constants = require("libs/constants");
 
-streembit.config = (function (cnfobj) {
+var streembit_config = (function (cnfobj) {
     var m_seed_config = null;
     var m_client_config = null;
     var m_iot_config = null;
@@ -277,6 +275,6 @@ streembit.config = (function (cnfobj) {
 
     return cnfobj;
 
-}(streembit.config || {}));
+}({}));
 
-module.exports = streembit.config;
+module.exports = streembit_config;

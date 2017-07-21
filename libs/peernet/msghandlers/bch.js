@@ -21,7 +21,7 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-module.exports = (message, contact, callback) => {
+module.exports = (message, callback) => {
 
 
     callback();

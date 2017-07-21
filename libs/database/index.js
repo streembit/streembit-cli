@@ -22,14 +22,13 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var streembit = streembit || {};
 
 var fs = require('fs');
 var path = require('path');
 var log = require("libs/logger");
 var levelup = require('levelup');
 
-streembit.database = (function (db, logger) {
+var database = (function(db, logger) {
 
     var _streembitdb = null;
     var _appdb = null;
@@ -163,9 +162,9 @@ streembit.database = (function (db, logger) {
 
     return db;
 
-}(streembit.database || {}, log));
+}({}, log));
 
-module.exports = streembit.database;
+module.exports = database;
 
 
 

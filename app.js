@@ -173,12 +173,12 @@ module.exports.backup = function() {
                         return callback(err);
                     }
 
-                    var data = {
-                        nodeid: account.accountid,
-                        pkhex: account.public_key,
-                        encoded_pkhash: account.public_key_hash,
+                    var data = {        
                         bs58pk: account.bs58pk,
-                        private_key: account.private_key_hex
+                        pkhex: account.public_key,
+                        encoded_pkhash: account.public_key_hash,                        
+                        private_key: account.private_key_hex,
+                        nodeid: account.accountid
                     };
 
                     callback(null, data);

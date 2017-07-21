@@ -21,9 +21,8 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-const version = "1.0.1";
-
-var streembit = streembit || {};
+const pinfo = require('./package.json');
+const version = pinfo.version;
 
 require('app-module-path').addPath(__dirname);
 
@@ -35,7 +34,7 @@ const utils = require("libs/utils");
 // show the command prompt when the user type --help
 // and get the configuration values from the command prompt
 program
-    .version('1.0.1')
+    .version(version)
     .option('-s, --password [value]', 'Password (secret) to protect the private key')
     .option('-i, --ip [value]', 'IP address for the Streembit seed')
     .option('-p, --port <num>', 'Port for the Streembit client', utils.parse_ipport)

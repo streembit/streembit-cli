@@ -25,17 +25,91 @@ const constants = require("libs/constants");
 const logger = require("libs/logger");
 const events = require("libs/events");
 const WebSocket = require('ws');
+const util = require("util");
 
 class WsServer {
     constructor(port) {
         this.port = port;
     }
+
+    format_error(txn, err) {
+        var errobj = { txn: txn, error: "" };
+        if (!err) {
+            errobj.error = "ws error";
+        }
+        else {
+            var msg = err.message ? err.message : (typeof err == "string" ? err : "ws error");
+            errobj.error = msg;
+        }
+        return JSON.stringify(errobj);
+    }
+
+    authorize(message) {
+
+        return true;
+    }
+
+    send(ws, msg) {
+        try {
+            ws.send(msg)
+        }
+        catch (err) {
+            logger.error("ws send error: %j", err)
+        }
+    }
+
+    processmsg(ws, request) {
+        try {
+            var message = JSON.parse(request);
+            if (!message) {
+                throw new Error("invalid payload");
+            }
+
+            events.emit(events.TYPES.ONIOTEVENT, constants.IOTREQUEST, message, (err, data) => {
+                try {
+                    if (err) {
+                        throw new Error(err.message || err);
+                    }
+
+                    if (!data){
+                        throw new Error("the device IOTREQUEST handler returned an invalid data"); 
+                    }
+
+                    data.txn = message.txn;
+                    var response = JSON.stringify(data);
+                    ws.send(response)
+                }
+                catch (err) {
+                    try {
+                        var errmsg = this.format_error(message.txn, err);
+                        ws.send(errmsg);
+                        logger.error("IOTREQUEST return handling error %j", errmsg)
+                    }
+                    catch (e) {
+                    }
+                }
+            });
+        }
+        catch (err) {
+            try {
+                var errmsg = this.format_error(err);
+                ws.send(errmsg);
+                logger.error("sent to client ws error %j", errmsg)
+            }
+            catch (e) {
+            }           
+        }
+    }
  
     on_connection(ws) {
         try {
-            ws.on('message', function incoming(message) {
-                console.log('received: %s', message);
+            console.log("ws client connected");
+
+            ws.on('message', (message) => {
+                this.processmsg(ws, message);
             });
+
+            //
         }
         catch (err) {
             logger.error("ws on_connection error: " + err.message);
@@ -50,11 +124,25 @@ class WsServer {
             const wsserver = new WebSocket.Server({ port: this.port });
 
             // set the connection handler
-            wsserver.on('connection', this.on_connection);
+            wsserver.on('connection', (ws) => {
+                try {
+                    //var $self = this;
+
+                    console.log("ws client connected");
+
+                    ws.on('message', (message) => {
+                        this.processmsg(ws, message);
+                    });
+
+                    //
+                }
+                catch (err) {
+                    logger.error("ws on_connection error: " + err.message);
+                }
+            });
 
             wsserver.on('close', function() {
-                //cursor.goto(1, 4 + thisId).eraseLine();
-                //console.log('Client #%d disconnected. %d files received.', thisId, filesReceived);
+
             });
 
             wsserver.on('error', function(e) {

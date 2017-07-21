@@ -24,7 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const logger = require("libs/logger");
 
-module.exports = (message, contact, callback) => {
+module.exports = (message, callback) => {
     logger.debug("handle FIND_NODE message");
 
     callback();

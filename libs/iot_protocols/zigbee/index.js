@@ -41,6 +41,10 @@ class Handler {
         this.mcuhandler.executecmd(payload );
     }
 
+    handle_request(message, callback) {
+        this.mcuhandler.handle_request(message, callback );
+    }
+
     init(callback) {
         try {
             logger.info("zigbee init mcu: " +  this.mcu);
