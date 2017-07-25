@@ -28,7 +28,6 @@ const events = require("libs/events");
 const constants = require("libs/constants");
 const async = require("async");
 const util = require('util');
-const SerialPort = require('serialport');
 
 class Handler {
 
@@ -51,6 +50,7 @@ class Handler {
             
             var mcu_handler = require('libs/iot_protocols/zigbee/' + this.mcu);
             mcu_handler.init();
+            mcu_handler.monitor();
 
             this.mcuhandler = mcu_handler;
 

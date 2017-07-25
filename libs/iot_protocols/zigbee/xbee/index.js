@@ -36,7 +36,7 @@ var xbee = new xbeeapi.XBeeAPI({
     api_mode: 1
 });
 
-
+var is_portopened = false;
 var serialport = 0;
 var pending_task = {};
 
@@ -160,8 +160,9 @@ module.exports.handle_request = function(payload, callback) {
 }
 
 
-module.exports.init = function init() {
+function init() {
 
+    is_portopened = false;
     var port = config.iot_config.serialport;
     logger.debug("xbee init(), try open serial port: " + port);
 
@@ -183,7 +184,8 @@ module.exports.init = function init() {
         }
 
         logger.debug('serial port ON open');
-        
+
+        is_portopened = true;
 
         // get the NI
         var txframe = { // AT Request to be sent to 
@@ -208,15 +210,24 @@ module.exports.init = function init() {
 
                 serialport.write(xbee.buildFrame(txframe));
             },
-            1000
+            500
         );
 
+        //
     });
 
 
     serialport.on("data", function(data) {
         xbee.parseRaw(data);
     });
+
+    serialport.on("close", function (err) {
+        if (err && err.disconnected == true) {
+            logger.info('serial port is disconnected');
+        }
+        is_portopened = false;
+    });
+
 }
 
 xbee.on("frame_object", function(frame) {
@@ -250,4 +261,19 @@ xbee.on("frame_object", function(frame) {
 });
 
 
+module.exports.monitor = function() {
+
+    setInterval(
+        function () {
+            if (!is_portopened) {
+                console.log("try to init");
+                init();
+            }
+        },
+        10000
+    );
+}
+
+
+module.exports.init = init;
 module.exports.executecmd = cmd_handler;
