@@ -28,11 +28,11 @@ const devicelist = require('libs/iot/devicelist');
 const events = require("libs/events");
 const WebSocket = require("libs/websocket");
 
+
 class IoTHandler {
     constructor() {
         this.protocol_handlers = 0;
-        this.event_handler_map = new Map();
-        this.user_sessions = new Map();
+        this.event_handler_map = new Map();        
 
         // map the functions
         this.event_handler_map.set(constants.ACTIVE_DEVICE_FOUND, this.on_active_device_found);
@@ -67,80 +67,11 @@ class IoTHandler {
         logger.debug("on_active_device_found " + id + " device type: " + device.type);
     }
 
-    is_valid_user() {
-
-    }
-
-    authenticate(msg) {
-        // parse the message
-        var payload = peermsg.getpayload(msg);
-        if (!payload || !payload.data || !payload.data.type || payload.data.type != peermsg.MSGTYPE.IOTAUTH) {
-            throw new Error("authentication failed, invalid payload");
-        }
-
-        if (!payload.iss) {
-            throw new Error("authentication failed, invalid iss field in the payload");
-        }
-
-        // TODO check if this public key is in the user list;
-        var exist = this.is_valid_user(payload.iss);
-        if (!exist) {
-            throw new Error("authentication failed, user definition doesn't exist ");
-        }
-
-        var bs58buffer = bs58check.decode(payload.iss);
-        var publickey = bs58buffer.toString("hex");
-        var decodedmsg = peermsg.decode(jwtstr, publickey);
-        if (isspkey != param.public_key) {
-            throw new Error("authentication failed, public key mismatch with contact: " + account + ", new contact request is required");
-        }
-
-        if (!decoded || !decoded.data ) {
-            throw new Error("authentication failed, invalid decoded contact payload");
-        }
-
-        var cipher = decoded.data.cipher;
-        if (!cipher) {
-            throw new Error("authentication failed, invalid cipher in the request payload");
-        }
-        
-        var plaintext = 0;
-        try {
-            plaintext = peermsg.ecdh_decrypt(appsrvc.cryptokey, publickey, cipher);
-            var obj = JSON.parse(plaintext);
-            if (!obj) {
-                throw new Error("authentication AES decryption failed");
-            }
-        }
-        catch (err) {
-            throw new Error("authentication AES decryption error " + err.message);
-        }
-
-        var token = obj.session_token;
-        if (!obj) {
-            throw new Error("authentication failed, invalid session token");
-        }
-
-        // add to the session list
-
-
-    }
 
     handle_iot_request(payload, callback) {
-        if (payload.auth) {
-            // create session & authenticate request
-            if (!payload.jwt) {
-                throw new Error("invalid authentication request data");
-            }
-
-            var authenticated = this.authenticate(payload.jwt);
-
-        }
-        else {
-            // must be authenticated already, validate authentication
-            var handler = this.get_handler_by_id(payload.id);
-            handler.handle_request(payload, callback);
-        }
+        // must be authenticated already, validate authentication
+        var handler = this.get_handler_by_id(payload.id);
+        handler.handle_request(payload, callback);        
     }
 
     init() {

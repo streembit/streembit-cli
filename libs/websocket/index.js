@@ -26,10 +26,12 @@ const logger = require("libs/logger");
 const events = require("libs/events");
 const WebSocket = require('ws');
 const util = require("util");
+const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
 
 class WsServer {
     constructor(port) {
         this.port = port;
+        this.user_sessions = new Map();
     }
 
     format_error(txn, err) {
@@ -58,41 +60,98 @@ class WsServer {
         }
     }
 
-    processmsg(ws, request) {
+    auth_client(jwt) {
         try {
-            var message = JSON.parse(request);
+            if (!jwt) {
+                throw new Error("no WS auth jwt presented");
+            }
+
+            var res = msgvalidator.verify_wsjwt(jwt);
+
+            this.user_sessions.set(res.username, res.token);
+            logger.debug("user session created for " + res.username);
+
+            return {
+                payload: {
+                    authenticated: true
+                }
+            };
+        }
+        catch (err) {
+            throw err;
+        }
+    }
+
+    validate_user(message) {
+        if (!message.user || !message.authtoken) {
+            throw new Error("invalid authentication fields");
+        }
+
+        if (!this.user_sessions.has(message.user)) {
+            throw new Error("invalid authentication user data");
+        }
+
+        var token = this.user_sessions.get(message.user);
+        if (!token || (token != message.authtoken)) {
+            throw new Error("invalid authentication token data");
+        }
+
+        //console.log(message.user + " with token " + token + " authenticated");
+    }
+
+    processmsg(ws, request) {
+        var message = 0;
+        try {
+            message = JSON.parse(request);
             if (!message) {
                 throw new Error("invalid payload");
             }
 
-            events.emit(events.TYPES.ONIOTEVENT, constants.IOTREQUEST, message, (err, data) => {
-                try {
-                    if (err) {
-                        throw new Error(err.message || err);
-                    }
-
-                    if (!data){
-                        throw new Error("the device IOTREQUEST handler returned an invalid data"); 
-                    }
-
-                    data.txn = message.txn;
-                    var response = JSON.stringify(data);
-                    ws.send(response)
+            if (message.auth ) {
+                if (!message.jwt) {
+                    throw new Error("invalid auth payload");
                 }
-                catch (err) {
+
+                var resdata = this.auth_client(message.jwt);
+                resdata.txn = message.txn;
+                var response = JSON.stringify(resdata);
+                ws.send(response);
+
+                //
+            }
+            else {
+                // validate the user sent a valid token                
+                this.validate_user(message);
+
+                events.emit(events.TYPES.ONIOTEVENT, constants.IOTREQUEST, message, (err, data) => {
                     try {
-                        var errmsg = this.format_error(message.txn, err);
-                        ws.send(errmsg);
-                        logger.error("IOTREQUEST return handling error %j", errmsg)
+                        if (err) {
+                            throw new Error(err.message || err);
+                        }
+
+                        if (!data) {
+                            throw new Error("the device IOTREQUEST handler returned an invalid data");
+                        }
+
+                        data.txn = message.txn;
+                        var response = JSON.stringify(data);
+                        ws.send(response);
                     }
-                    catch (e) {
+                    catch (err) {
+                        try {
+                            var errmsg = this.format_error(message.txn, err);
+                            ws.send(errmsg);
+                            logger.error("IOTREQUEST return handling error %j", errmsg)
+                        }
+                        catch (e) {
+                        }
                     }
-                }
-            });
+                });
+            }
         }
         catch (err) {
             try {
-                var errmsg = this.format_error(err);
+                var errmsg = this.format_error((message && message.txn ? message.txn : 0), err);
                 ws.send(errmsg);
                 logger.error("sent to client ws error %j", errmsg)
             }
@@ -102,12 +161,14 @@ class WsServer {
     }
  
     on_connection(ws) {
-        try {
-            console.log("ws client connected");
-
+        try {         
             ws.on('message', (message) => {
                 this.processmsg(ws, message);
             });
+
+            // check if the connection was authorized
+
+            //  ws.terminate()
 
             //
         }
@@ -121,7 +182,11 @@ class WsServer {
 
             logger.info("starting ws server");  
             
-            const wsserver = new WebSocket.Server({ port: this.port });
+            const wsserver = new WebSocket.Server(
+                {
+                    port: this.port
+                }
+            );
 
             // set the connection handler
             wsserver.on('connection', (ws) => {

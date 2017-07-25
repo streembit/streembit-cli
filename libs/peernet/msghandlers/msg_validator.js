@@ -26,6 +26,8 @@ const async = require("async");
 const peermsg = require("libs/message");
 const bs58check = require('bs58check');
 const createHash = require('create-hash');
+const config = require("libs/config");
+const Account = require('libs/account');
 
 function verify_signature(params, callback) {
 
@@ -139,4 +141,74 @@ module.exports.validate = function (message, callback) {
     catch (err) {
         callback(err);
     }
+}
+
+function get_user(pubkey) {
+    var user = 0;
+    var users = config.iot_config.users;
+    if (users) {
+        users.forEach((item) => {
+            if (item.publickey == pubkey) {
+                user = item;
+            }
+        });
+    }
+    return user;
+}
+
+module.exports.verify_wsjwt = function (msg, callback) {
+
+    // parse the message
+    var payload = peermsg.getpayload(msg);
+    if (!payload || !payload.data || !payload.data.type || payload.data.type != peermsg.MSGTYPE.IOTAUTH) {
+        throw new Error("authentication failed, invalid payload");
+    }
+
+    if (!payload.iss) {
+        throw new Error("authentication failed, invalid iss field in the payload");
+    }
+
+    // TODO check if this public key is in the user list;
+    var user = get_user(payload.iss);
+    if (!user) {
+        throw new Error("authentication failed, user definition doesn't exist ");
+    }
+
+    var bs58buffer = bs58check.decode(payload.iss);
+    var publickey = bs58buffer.toString("hex");
+    var decoded = peermsg.decode(msg, publickey);
+    if (!decoded || !decoded.data) {
+        throw new Error("authentication failed, invalid encoded payload");
+    }
+
+    var cipher = decoded.data.cipher;
+    if (!cipher) {
+        throw new Error("authentication failed, invalid cipher in the request payload");
+    }
+
+    var plaintext = 0;
+    try {
+        var account = new Account();
+        plaintext = peermsg.ecdh_decrypt(account.cryptokey, publickey, cipher);
+        var obj = JSON.parse(plaintext);
+        if (!obj) {
+            throw new Error("authentication AES decryption failed");
+        }
+    }
+    catch (err) {
+        throw new Error("authentication AES decryption error " + err.message);
+    }
+
+    var token = obj.session_token;
+    if (!token) {
+        throw new Error("authentication failed, invalid session token");
+    }
+
+    if (user.username != obj.username) {
+        throw new Error("authentication failed, invalid username");
+    }
+
+    //
+    return { username: user.username, token: token };
+
 }
