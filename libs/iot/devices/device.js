@@ -1,37 +1,50 @@
-﻿'use strict';
+﻿/*
+ 
+This file is part of Streembit application. 
+Streembit is an open source project to create a real time communication system for humans and machines. 
+
+Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+as published by the Free Software Foundation, either version 3.0 of the License, or (at your option) any later version.
+
+Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with Streembit software.  
+If not, see http://www.gnu.org/licenses/.
+ 
+-------------------------------------------------------------------------------------------------------------------------
+Author: Tibor Zsolt Pardi 
+Copyright (C) 2017 The Streembit software development team
+-------------------------------------------------------------------------------------------------------------------------
+
+*/
+
+
+'use strict';
+
 
 const events = require("libs/events");
 const logger = require('libs/logger');
 
 class Device {
 
-    constructor(id, device) {
+    constructor(id, device, cmdbuilder, transport) {
         this.id = id;
         this.type = device.type;
         this.protocol = device.protocol;
         this.profile = device.profile;
         this.settings = device.settings;
+        this.details = 0;
+
+        this.command_builder = cmdbuilder;
+        this.transport = transport;
 
         this.m_active = false;
     }
 
     get_report() {
-        //events.emit(events.TYPES.ONIOTCMD, "report", function (err, data) {
-        //    if (err) {
-        //        //TODO
-        //        return 0;
-        //    }
-
-        //    events.emit(events.TYPES.ONIOTSEND, "report", function () {
-
-        //    });
-        //});
     }
 
-    on_device_active() {
-        logger.debug("on_device_active");
-        //events.emit(events.TYPES.ONDEVICECMD);
-    }
 
     get active() {
         return this.m_active;
@@ -39,11 +52,24 @@ class Device {
 
     set active(value) {
         this.m_active = value;
-        if (value == true) {
-            this.on_device_active();
-        }
     }
-    
+
+    on_active_device() {
+    }
+
+    set_details(data, isactive) {
+        this.details = data;
+        this.active = isactive;
+        
+        if (isactive) {
+            this.on_active_device();
+        }
+        logger.debug("device " + this.id + " is active");
+    }
+
+    executecmd(payload) {
+
+    }
 }
 
 

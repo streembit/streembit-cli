@@ -46,6 +46,10 @@ function log_error(err, param) {
                         err = err.replace("%j", "%s");
                         msg = util.format(err, param);
                     }
+                    else if (typeof param == 'number') {
+                        err = err.replace("%j", "%d");
+                        msg = util.format(err, param);
+                    }
                 }
                 else {
                     msg = util.format(err, param);

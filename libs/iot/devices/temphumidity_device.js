@@ -27,21 +27,59 @@ const constants = require("libs/constants");
 const Device = require("./device");
 const events = require("libs/events");
 const logger = require("libs/logger");
+const util = require('util');
 
-class GatewayDevice extends Device {
+class TemperatureHumidityDevice extends Device {
 
     constructor(id, device, cmdbuilder, transport) {
         super(id, device, cmdbuilder, transport);      
 
-        this.last_switch_time = 0;
+        this.temperature = 0;
 
-        logger.debug("initializing a gateway device id: " + id);
+        logger.debug("initializing a temperature & humidity sensor device id: " + id);
     }
 
     on_active_device() {
-        super.on_active_device();        
+        super.on_active_device();
+
+        // get the temperature
+        this.get_temperature();
+    }
+
+    read_temperature(timer, cmd) {
+        this.transport.send(cmd, (err, value) => {
+            if (err) {
+                return logger.error("temperature read error %j", err);
+            }
+
+            this.temperature = value;
+
+            var msg = util.format("temperature: %f Celsius", value);
+            logger.debug(msg);
+
+            if (timer) {
+                clearInterval(timer);
+            }
+            //
+        });
+    }
+
+    get_temperature() {
+        var timer = 0;
+        var cmd = this.command_builder.readTemperature(this.id, this.details.address16, 10000);
+
+        timer = setInterval(
+            () => {
+                console.log("try to read temperature again")
+                this.read_temperature(timer, cmd);
+            },
+            12000
+        );
+
+        // read first
+        this.read_temperature(timer, cmd);
     }
 
 }
 
-module.exports = GatewayDevice;
+module.exports = TemperatureHumidityDevice;

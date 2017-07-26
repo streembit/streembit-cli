@@ -59,12 +59,6 @@ class IoTHandler {
     }
 
 
-    handle_iot_request(payload, callback) {
-        // must be authenticated already, validate authentication
-        var handler = this.get_handler_by_id(payload.id);
-        handler.handle_request(payload, callback);        
-    }
-
     init() {
         try {
             var conf = config.iot_config;
@@ -96,14 +90,19 @@ class IoTHandler {
                     switch (event) {
                         case constants.IOTREQUEST:
                             this.handle_iot_request(payload, callback);
+                            var handler = this.get_handler_by_id(payload.id);
+                            if (handler && handler.handle_request) {
+                                handler.handle_request(payload, callback);   
+                            }                           
                             break;
                         case constants.IOTCMD:
                             var protocol = payload.protocol;
                             var handler = this.protocol_handlers.get(protocol);
-                            handler.executecmd(payload);
+                            if (handler && handler.executecmd) {
+                                handler.executecmd(payload);
+                            }                              
                             break;
                         case constants.IOTACTIVITY:
-                            var type = payload.type;
                             var handler = this.get_handler_by_id(payload.id);                           
                             if (handler && handler.on_iot_activity) {
                                 handler.on_iot_activity(payload);

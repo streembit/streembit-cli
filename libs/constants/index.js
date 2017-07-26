@@ -47,7 +47,11 @@ var constants = {
     IOTCMD: "iotcmd",
     IOTACTIVITY: "iotactivity",
     // activity types
-    ACTIVE_DEVICE_FOUND: "active_device_found"
+    ACTIVE_DEVICE_FOUND: "active_device_found",
+
+    IOT_STATUS_UNKOWN: -1,
+
+    IOT_ERROR_TIMEDOUT: -2
 
 };
 
