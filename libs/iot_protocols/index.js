@@ -76,12 +76,15 @@ class IoTProtocolHandler {
     create_handler() {
         var handler = 0;
         try {
-            handler = require('libs/iot_protocols/zigbee/' + this.mcu);
+            var lib = 'libs/iot_protocols/zigbee/' + this.mcu;
+            handler = require(lib);
         }
-        catch (err) { }
+        catch (err) {
+            throw new Error("MCU library " + this.mcu + " error: " + err.message);
+        }
 
         if (!handler) {
-            throw new Error("handler for MCU " + mcu + " is missing");
+            throw new Error("handler for MCU " + this.mcu + " is missing");
         }
         this.mcuhandler = handler;
     }
@@ -100,16 +103,26 @@ class IoTProtocolHandler {
         }
     }
 
-    executecmd(payload) {
-        this.mcuhandler.executecmd(payload);
-    }
 
     handle_request(message, callback) {
-        this.mcuhandler.handle_request(message, callback);
+        //this.mcuhandler.handle_request(message, callback);
+        try {
+            // get the device
+            var device = IoTProtocolHandler.getdevice(message.id);
+            if (!device) {
+                throw new Error("device for id " + id + " does not exists at the gateway");
+            }
+
+            device.executecmd(message, callback);
+
+            //
+        }
+        catch (err) {
+            callback(err);
+        }
     }
 
     device_factory (device) {
-        //debugger;
         // the type must be the correct one in the config.js file
         var device_instance = DeviceTypeMap[device.type];
         if (!device_instance) {

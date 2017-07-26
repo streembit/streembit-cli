@@ -25,6 +25,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const events = require("libs/events");
 const logger = require('libs/logger');
+const constants = require("libs/constants");
 
 class Device {
 
@@ -33,7 +34,7 @@ class Device {
         this.type = device.type;
         this.protocol = device.protocol;
         this.profile = device.profile;
-        this.settings = device.settings;
+        this.settings = device.setting;
         this.details = 0;
 
         this.command_builder = cmdbuilder;
@@ -67,8 +68,18 @@ class Device {
         logger.debug("device " + this.id + " is active");
     }
 
-    executecmd(payload) {
-
+    executecmd(payload, callback) {
+        switch (payload.cmd) {
+            case constants.IOTCMD_TOGGLE:
+                this.toggle(callback);
+                break;
+            case constants.IOTCMD_READSWITCH:
+                this.read(callback);
+                break;
+            default:
+                callback("invalid command");
+                break;
+        }
     }
 }
 

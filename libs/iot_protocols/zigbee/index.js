@@ -44,7 +44,6 @@ class ZigbeeHandler extends IoTProtocolHandler {
             if (err) {
                 return logger.error("neighbor table receive error %j", err);
             }
-            //debugger;
             //console.log("devices length: %d, startindex: %d, count: %d", deviceslength, startindex, count);
             // process the list of devices
             if (list && list.length) {
@@ -61,7 +60,7 @@ class ZigbeeHandler extends IoTProtocolHandler {
                 // read again from the current index
                 var timeout = 5000;
                 var index = (startindex + count);
-                var cmd = this.commandbuilder.getRoutingTable(address64, address16, timeout, 0);
+                var cmd = this.commandbuilder.getNeighborTable(address64, address16, timeout, 0);
                 //console.log(util.inspect(cmd));
                 this.mcuhandler.send(cmd, this.on_neighbortable_receive);
             }
@@ -87,7 +86,7 @@ class ZigbeeHandler extends IoTProtocolHandler {
                 // get the routing table
                 // start at 0 index
                 var timeout = 5000;
-                var cmd = this.commandbuilder.getRoutingTable(address64, payload.address16, timeout, 0);
+                var cmd = this.commandbuilder.getNeighborTable(address64, payload.address16, timeout, 0);
                 //console.log(util.inspect(cmd));
                 this.mcuhandler.send(cmd, this.on_neighbortable_receive);
             }

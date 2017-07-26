@@ -32,6 +32,7 @@ const constants = require("libs/constants");
 const BufferReader = require('buffer-reader');
 const BitStream = require('libs/utils/bitbuffer').BitStream;
 
+
 var C = xbeeapi.constants;
 
 var xbee = new xbeeapi.XBeeAPI({
@@ -40,131 +41,42 @@ var xbee = new xbeeapi.XBeeAPI({
 
 var is_portopened = false;
 var serialport = 0;
-var pending_task = {};
+var pending_tasks = [];
 var clusterfns = {};
 var neighbortable = [];
 
-function add_pending_task(txid, callback) {
-    pending_task[txid] = callback;
+function add_pending_task(task) {
+    pending_tasks.push(task);
 }
 
-function delete_pending_task(txid) {
-    delete pending_task[txid];
-}
-
-
-function read_switchstatus(remote64, callback) {
-    logger.debug("read_switchstatus");
-
-    var txid = 0xab;
-    var txframe = { 
-        type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
-        destination64: remote64,
-        destination16: 'fffe', 
-        sourceEndpoint: 0x00, 
-        destinationEndpoint: 0x01, 
-        clusterId: 0x0006,
-        profileId: 0x0104,
-        data: [0x00, txid, 0x00, 0x00, 0x00]
-    };
-
-    var result = {
-        payload: {
-            switch_status: -1  // -1 = unknown, default
+function delete_pending_task(taskid, address64) {
+    for (var i = 0; i < pending_tasks.length; i++) {
+        if (pending_tasks[i].address64 == address64 && pending_tasks[i].taskid == taskid) {
+            pending_tasks.splice(i, 1);
+            //console.log("removing pending task " + taskid + " " + address64);
+            break;
         }
-    }; 
-    var timer = 0
-    var current = 0;
-    // create a pending task for it
-    add_pending_task(
-        txid,
-        function (data) {
-            clearTimeout(timer);
-            delete_pending_task(txid);
+    }
+}
 
-            if (data && data.length && (data[data.length-1] == 0x00 || data[data.length-1] == 0x01)) {
-                result.payload.switch_status = data[data.length-1]; // the last byte is the switch status
+function get_pending_task(taskid, address64) {
+    var callback = 0;
+    for (var i = 0; i < pending_tasks.length; i++) {
+        if (pending_tasks[i].address64 == address64 && pending_tasks[i].taskid == taskid) {
+            callback = pending_tasks[i].fn;
+            // clear the timer
+            if (pending_tasks[i].timer) {
+                clearTimeout(pending_tasks[i].timer);
             }
-
-            callback(null, result);
-        }
-    );
-
-    timer = setTimeout(
-        function () {
-            delete_pending_task(txid);
-            result.payload.switch_status = -2; // -2 = timed out
-            callback(null, result);
-        },
-        2000
-    );    
-
-    serialport.write(xbee.buildFrame(txframe));
-}
-
-function toggle(remote64) {
-    logger.debug("toggle " + remote64);
-    var txframe = { 
-        type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
-        destination64: remote64,
-        destination16: 'fffe',
-        sourceEndpoint: 0x00,
-        destinationEndpoint: 0x01,
-        clusterId: 0x0006,
-        profileId: 0x0104,
-        data: [0x01, 0x01, 0x02]
-    };
-
-    serialport.write(xbee.buildFrame(txframe));
-}
-
-function toggle_handler(id, callback) {
-    // toggle the switch 
-    toggle(id);
-
-    // get the switch status
-    read_switchstatus(id, function (err, result) {
-        ////console.log(result);
-        callback(err, result);
-    }); 
-}
-
-function cmd_handler(payload, callback) {
-    switch (payload.cmd) {
-        case 0x02:
-            toggle_handler(payload.id, callback);
+            pending_tasks.splice(i, 1);
             break;
-        case 0x04:
-            read_switchstatus(payload.id, callback);
-            break;
-        default:
-            callback("invalid command");
-            break;
-    }
-}
-
-
-module.exports.handle_request = function(payload, callback) {
-    try {
-        if (!payload) {
-            return callback("invalid request data");
-        }
-
-        if (payload.cmd) {    
-            // execute the command
-            cmd_handler(payload, callback);
-        }
-        else {
-            callback("invalid request data, command is required");
         }
     }
-    catch (err) {
-        callback(err);
-    }
+    return callback;
 }
 
 
-module.exports.send = function (cmd, callback) {
+function sendframe (cmd, callback) {
     try {
         if (!cmd) {
             return callback("invalid payload data at XBEE send()");
@@ -189,12 +101,14 @@ module.exports.send = function (cmd, callback) {
 
         if (cmd.txid && callback && ((callback instanceof Function) || (typeof callback === "function"))) {
             var txid = cmd.txid;
+            var taskid = cmd.taskid;
+            var address64 = cmd.destination64;
             var timer = 0
 
             if (cmd.timeout) {
                 timer = setTimeout(
-                    function () {
-                        delete_pending_task(txid);
+                    () => {
+                        delete_pending_task(taskid, address64);
                         callback(constants.IOT_ERROR_TIMEDOUT); //-2 = timed out
                     },
                     cmd.timeout
@@ -203,9 +117,9 @@ module.exports.send = function (cmd, callback) {
 
             // create a pending task for it
             add_pending_task(
-                txid,
                 {
-                    id: cmd.destination64,
+                    taskid: taskid,
+                    address64: cmd.destination64,
                     fn: callback,
                     timer: timer
                 }
@@ -248,6 +162,7 @@ var handle_cluster_neighbortable = function (frame) {
     try {
         //console.log("handle_cluster_neighbortable");
         //console.log(util.inspect(frame));
+        var clusterId = 0x0031;
 
         var bufflen = frame.data.length;
         var reader = new BufferReader(frame.data);
@@ -333,86 +248,171 @@ var handle_cluster_neighbortable = function (frame) {
         };
 
         var txid = frame.data[0];
-        var pending = pending_task[txid];
-        if (pending) {
-            var timer = pending.timer;
-            if (timer) {
-                clearTimeout(timer);                
-            }
-            var callback = pending.fn;
-            if (callback) {
-                callback(null, frame.remote64, frame.remote16, startindex, count, devices_length, neighbortable);
-            }
-            delete_pending_task(txid);
+        var callback = get_pending_task(constants.IOT_CLUSTER_NEIGHBORTABLE, frame.remote64);
+        if (callback) {
+            callback(null, frame.remote64, frame.remote16, startindex, count, devices_length, neighbortable);
         }
       
     }
     catch (err) {
-        logger.error("xhandle_cluster_neighbortable error: %j", err);
+        logger.error("handle_cluster_neighbortable error: %j", err);
     }
 };
 
 var handle_cluster_switch = function (frame) {
-    //console.log("handle_cluster_switch");
+    try {
+        if (!frame.profileId || frame.profileId != "0104" || !frame.data || frame.data[1] != 0xab ) {
+            return;
+        }
 
-    var txid = frame.data[1];
-    var callback = pending_task[txid];
-    if (callback) {
-        // the callback will parse it
-        callback(frame.data);
+        //console.log(util.inspect(frame));
+
+        var callback = get_pending_task(constants.IOT_CLUSTER_SWITCHSTATUS, frame.remote64);
+        if (!callback) {
+            callback = function () { };
+        }
+
+        var reader = new BufferReader(frame.data);
+        reader.seek(1);
+        var txid = reader.nextUInt8();
+        if (txid != 0xab) {
+            // only process the switch status read cluster
+            return;
+        }
+
+        reader.seek(5);
+        var status = reader.nextUInt8();
+        if (status != 0) {
+            return callback("invalid status returned");
+        }
+        var datatype = reader.nextUInt8();
+        if (datatype != 0x10) { // must be boolean 0x10
+            return callback("invalid data type returned");
+        }
+
+        var value = reader.nextUInt8();
+        callback(null, value);
+        
+        //
+    }
+    catch (err) {
+        logger.error("handle_cluster_switch error: %j", err);
     }
 };
 
 var handle_cluster_temperature = function (frame) {
-    //console.log("handle_cluster_switch");
+    //debugger;
+    var callback = get_pending_task(constants.IOT_CLUSTER_TEMPERATURE, frame.remote64);
+    if (!callback) {
+        callback = function () { };
+    }
 
-    var value = constants.IOT_STATUS_UNKOWN;
+    var reader = new BufferReader(frame.data);
+    reader.seek(1);
+    var txid = reader.nextUInt8();
+    reader.seek(5);
+    var status = reader.nextUInt8();
+    //console.log("status: %d", status);
+    if (status != 0) {
+        return callback("invalid status returned");
+    }
+
+    var datatype = reader.nextUInt8();
+    //console.log("datatype: %d", datatype);
+    if (datatype != 0x29) {
+        return callback("invalid data type returned");
+    }
+
+    var valuebuf = reader.nextBuffer(2);
+    valuebuf.swap16();
+    var tempvalue = valuebuf.readUInt16BE(0);
+    var value = tempvalue * 0.01;
+    //console.log("temperature: %f Celsius", value);
+    
+    callback(null, value);
+
+    //
+};
+
+
+var handle_cluster_electricmeasure = function (frame) {
 
     var reader = new BufferReader(frame.data);
     reader.seek(1);
 
     var txid = reader.nextUInt8();
 
+    var callback = 0;
+    if (txid == 0xbe) {
+        callback = get_pending_task(constants.IOT_CLUSTER_POWER, frame.remote64);
+    }
+    else if (txid == 0xbc) {
+        callback = get_pending_task(constants.IOT_CLUSTER_VOLTAGE, frame.remote64);
+    } 
+    else if (txid == 0xbf) {
+        callback = get_pending_task(constants.IOT_CLUSTER_POWERDIVISOR, frame.remote64);
+    } 
+    else if (txid == 0xbb) {
+        callback = get_pending_task(constants.IOT_CLUSTER_POWERMULTIPLIER, frame.remote64);
+    } 
+
+    if (!callback) {
+        callback = function () { };
+    }
+
     reader.seek(5);
 
     var status = reader.nextUInt8();
-    //console.log("status: %d", status);
     if (status != 0) {
-        return;
+        return callback("invalid status returned");
     }
 
+    var value = 0;
     var datatype = reader.nextUInt8();
-    //console.log("datatype: %d", datatype);
-    if (datatype != 0x29) {
-        return;
+    if (txid == 0xbc) {
+        if (datatype != 0x21) {
+            return callback("invalid data type returned");
+        }
+        var valuebuf = reader.nextBuffer(2);
+        valuebuf.swap16();
+        value = valuebuf.readUInt16BE(0);
+    }
+    else if (txid == 0xbe) {
+        if (datatype != 0x29) {
+            return callback("invalid data type returned");
+        }
+        var valuebuf = reader.nextBuffer(2);
+        valuebuf.swap16();
+        value = valuebuf.readInt16BE(0);
+    }
+    else if (txid == 0xbf) {
+        if (datatype != 0x21) {
+            return callback("invalid data type returned");
+        }
+        var valuebuf = reader.nextBuffer(2);
+        valuebuf.swap16();
+        value = valuebuf.readUInt16BE(0);
+    }
+    else if (txid == 0xbb) {
+        if (datatype != 0x21) {
+            return callback("invalid data type returned");
+        }
+        var valuebuf = reader.nextBuffer(2);
+        valuebuf.swap16();
+        value = valuebuf.readUInt16BE(0);
     }
 
-    var valuebuf = reader.nextBuffer(2);
-    valuebuf.swap16();
-    var tempvalue = valuebuf.readUInt16BE(0);
-    value = tempvalue * 0.01;
-    console.log("temperature: %f Celsius", value);
+    callback(null, value);
 
-    //var txid = frame.data[1];
-    var pending = pending_task[txid];
-    if (pending) {
-        var timer = pending.timer;
-        if (timer) {
-            clearTimeout(timer);
-        }
-        var callback = pending.fn;
-        if (callback) {
-            callback(null, value);
-        }
-        delete_pending_task(txid);
-    }
+    //
 };
 
 clusterfns = {
     "8032": handle_cluster_descriptor,
     "8031": handle_cluster_neighbortable,
     "0006": handle_cluster_switch,
-    "0402": handle_cluster_temperature
+    "0402": handle_cluster_temperature,
+    "0b04": handle_cluster_electricmeasure
 };
 
 
@@ -496,37 +496,6 @@ xbee.on("frame_object", function(frame) {
         if (handler) {
             handler(frame);
         }
-        return;
-
-        /*
-        if (frame.clusterId == "8032") { // descriptor response
-            if (!frame.remote64 || typeof frame.remote64 != 'string') {
-                throw new Error("invalid remote64 data for response 8032");
-            }
-            ////console.log(util.inspect(frame));
-            events.emit(
-                events.TYPES.ONIOTEVENT,
-                constants.IOTACTIVITY,
-                {
-                    type: constants.ACTIVE_DEVICE_FOUND,
-                    id: frame.remote64,
-                    address16: frame.remote16
-                }
-            );                
-        }
-        if (frame.clusterId == "8031") {
-
-        }
-        else if (frame.data && frame.clusterId == "0006" ) {
-            var txid = frame.data[1];
-            var callback = pending_task[txid];
-            if (callback) {
-                // the callback will parse it
-                callback(frame.data);
-            }
-        }
-        */
-
     }
     catch (err) {
         logger.error("on XBEE frame error: %j", err);
@@ -549,4 +518,4 @@ module.exports.monitor = function() {
 
 
 module.exports.init = init;
-module.exports.executecmd = cmd_handler;
+module.exports.send = sendframe;

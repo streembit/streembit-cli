@@ -70,10 +70,10 @@ class TemperatureHumidityDevice extends Device {
 
         timer = setInterval(
             () => {
-                console.log("try to read temperature again")
+                //console.log("try to read temperature again")
                 this.read_temperature(timer, cmd);
             },
-            12000
+            30000
         );
 
         // read first
