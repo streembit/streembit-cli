@@ -60,9 +60,43 @@ class IoTProtocolHandler {
 
     constructor(protocol, mcu) {
         this.protocol = protocol;
-        this.mcu = mcu;
-        this.mcuhandler = 0;
+        this.mcu = mcu;        
         this.devices = new Map();
+        this.eventfns = new Map();
+        this.mcuhandler = 0;
+    }
+
+    create_handler() {
+        var handler = 0;
+        try {
+            handler = require('libs/iot_protocols/zigbee/' + this.mcu);
+        }
+        catch (err) { }
+
+        if (!handler) {
+            throw new Error("handler for MCU " + mcu + " is missing");
+        }
+        this.mcuhandler = handler;
+    }
+
+    on_device_active(payload) {
+        var id = payload.id;
+        var device = this.devices.get(id);
+        if (!device) {
+            return logger.error("device " + id + " is not handled");
+        }
+        logger.debug("on_device_active " + id + " device type: " + device.type);
+    }
+
+    on_iot_activity(payload) {
+        var type = payload.type;
+        switch (type) {
+            case constants.ACTIVE_DEVICE_FOUND:
+                this.on_device_active(payload);
+                break;
+            default:
+                break;
+        }
     }
 
     executecmd(payload) {
@@ -84,27 +118,26 @@ class IoTProtocolHandler {
         return new device_instance(device.id, device);
     }
 
-    init(callback) {
-        try {
-            logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);
+    geteventfn(type) {
+        return this.eventfns.get(type);
+    }
 
-            var devices = config.iot_config.devices;
-            devices.forEach((device) => {
-                if (device.protocol == this.protocol) {
-                    console.log("adding " + this.protocol + " device" );
-                    var device_obj = this.device_factory(device);
-                    this.devices.set(device.id, device_obj);
-                }
-            });
+    init() {
+        logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);
 
-            this.mcu_handler.init();
-            this.mcu_handler.monitor();
+        this.create_handler();
 
-            //         
-        }
-        catch (err) {
-            logger.error("IoTProtocolHandler init error: " + err.message);
-        }
+        // set the event handlers 
+        this.eventfns.set(constants.ACTIVE_DEVICE_FOUND, this.on_device_active);
+
+        var devices = config.iot_config.devices;
+        devices.forEach((item) => {
+            if (item.protocol == this.protocol) {
+                console.log("adding " + this.protocol + " device" );
+                var device_obj = this.device_factory(item);
+                this.devices.set(item.id, device_obj);
+            }
+        });
     }
 }
 

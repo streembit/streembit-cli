@@ -13,7 +13,7 @@ class SmartPlugDevice extends Device {
         this.last_switch_time = 0;
         this.last_switch_type = 0;
 
-        logger.debug("initializing a switch device id: " + id);
+        logger.debug("initializing a smart plug device id: " + id);
     }
 
     on_device_active() {

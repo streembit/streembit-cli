@@ -30,18 +30,32 @@ const async = require("async");
 const util = require('util');
 const IoTProtocolHandler = require("libs/iot_protocols");
 
-class Handler extends IoTProtocolHandler {
+class ZigbeeHandler extends IoTProtocolHandler {
 
-    constructor(protocol, mcu) {
+    constructor(protocol, mcu) {        
         super(protocol, mcu);    
     }
 
-    init(callback) {
-        try {
-            this.mcuhandler = require('libs/iot_protocols/zigbee/' + this.mcu);
-            super.init();
+    on_device_active(payload) {
+        var id = payload.id;
+        var device = this.devices.get(id);
+        if (!device) {
+            return logger.error("device " + id + " is not handled");
+        }
 
-            //         
+        if (device.type == constants.IOT_DEVICE_GATEWAY) {
+            // get the routing table
+        }
+
+        super.on_device_active(payload);
+    }
+
+    init() {
+        try {
+            super.init();         
+
+            this.mcuhandler.init();
+            this.mcuhandler.monitor();
         }
         catch (err) {
             logger.error("zigbee handler init error: " + err.message);
@@ -51,5 +65,5 @@ class Handler extends IoTProtocolHandler {
     
 }
 
-module.exports = Handler;
+module.exports = ZigbeeHandler;
 

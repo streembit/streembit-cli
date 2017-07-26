@@ -24,7 +24,6 @@ Copyright (C) 2016 The Streembit software development team
 const constants = require("libs/constants");
 const config = require("libs/config");
 const logger = require("libs/logger");
-//const devicelist = require('libs/iot/devicelist');
 const events = require("libs/events");
 const WebSocket = require("libs/websocket");
 
@@ -32,10 +31,6 @@ const WebSocket = require("libs/websocket");
 class IoTHandler {
     constructor() {
         this.protocol_handlers = 0;
-        this.event_handler_map = new Map();        
-
-        // map the functions
-        this.event_handler_map.set(constants.ACTIVE_DEVICE_FOUND, this.on_active_device_found);
     }
 
     get_handler_by_id(id) {
@@ -61,19 +56,6 @@ class IoTHandler {
         }
 
         return handler;
-    }
-
-    on_active_device_found(payload) {
-        /*
-        var id = payload.id;
-
-        // get the device
-        var device = devicelist.get(id);
-        if (!device) {
-            return logger.error("device " + id + " is not handled");
-        }
-        logger.debug("on_active_device_found " + id + " device type: " + device.type);
-        */
     }
 
 
@@ -102,7 +84,7 @@ class IoTHandler {
                 logger.info("create protocol " + item.name + " handler");
                 var ProtocolHandler = require("libs/iot_protocols/" + item.name);
                 var handler = new ProtocolHandler(item.name, item.chipset);
-                if ( !handler.init) {
+                if (!handler.init) {
                     logger.error("handler for " + item + " not exists");
                 }
                 handler.init();
@@ -122,9 +104,9 @@ class IoTHandler {
                             break;
                         case constants.IOTACTIVITY:
                             var type = payload.type;
-                            var handler = this.event_handler_map.get(type);
-                            if (handler) {
-                                handler(payload);
+                            var handler = this.get_handler_by_id(payload.id);                           
+                            if (handler && handler.on_iot_activity) {
+                                handler.on_iot_activity(payload);
                             }
                             break;
                         default:
