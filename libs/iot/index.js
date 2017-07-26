@@ -24,7 +24,7 @@ Copyright (C) 2016 The Streembit software development team
 const constants = require("libs/constants");
 const config = require("libs/config");
 const logger = require("libs/logger");
-const devicelist = require('libs/iot/devicelist');
+//const devicelist = require('libs/iot/devicelist');
 const events = require("libs/events");
 const WebSocket = require("libs/websocket");
 
@@ -43,20 +43,28 @@ class IoTHandler {
             throw new Error("invalid device ID");
         }
 
-        var device = devicelist.get(id);
-        if (!device) {
-            throw new Error("device for id " + id + " does not exists");
+        var protocol;
+        var devices = config.iot_config.devices;
+        devices.forEach(function (item) {
+            if (item.id == id) {
+                protocol = item.protocol;
+            }
+        });
+
+        if (!protocol) {
+            throw new Error("protocol for id " + id + " does not exists");
         }
 
-        var handler = this.protocol_handlers.get(device.protocol);
+        var handler = this.protocol_handlers.get(protocol);
         if (!handler) {
-            throw new Error("handler for protocol " + device.protocol + " does not exists");
+            throw new Error("handler for protocol " + protocol + " does not exists");
         }
 
         return handler;
     }
 
     on_active_device_found(payload) {
+        /*
         var id = payload.id;
 
         // get the device
@@ -65,6 +73,7 @@ class IoTHandler {
             return logger.error("device " + id + " is not handled");
         }
         logger.debug("on_active_device_found " + id + " device type: " + device.type);
+        */
     }
 
 
@@ -85,14 +94,14 @@ class IoTHandler {
 
             this.protocol_handlers = new Map();
 
-            devicelist.init();
+            //devicelist.init();
 
             // initialize the IoT device handlers Zigbee, Z-Wave, 6LowPan, etc.
             var protocols = conf.protocols;
             protocols.forEach( (item) => {
                 logger.info("create protocol " + item.name + " handler");
                 var ProtocolHandler = require("libs/iot_protocols/" + item.name);
-                var handler = new ProtocolHandler(item.chipset);
+                var handler = new ProtocolHandler(item.name, item.chipset);
                 if ( !handler.init) {
                     logger.error("handler for " + item + " not exists");
                 }

@@ -28,31 +28,18 @@ const events = require("libs/events");
 const constants = require("libs/constants");
 const async = require("async");
 const util = require('util');
+const IoTProtocolHandler = require("libs/iot_protocols");
 
-class Handler {
+class Handler extends IoTProtocolHandler {
 
-    constructor(mcu) {
-        this.mcu = mcu;
-        this.mcuhandler = 0;
-    }
-
-    executecmd(payload){
-        this.mcuhandler.executecmd(payload );
-    }
-
-    handle_request(message, callback) {
-        this.mcuhandler.handle_request(message, callback );
+    constructor(protocol, mcu) {
+        super(protocol, mcu);    
     }
 
     init(callback) {
         try {
-            logger.info("zigbee init mcu: " +  this.mcu);
-            
-            var mcu_handler = require('libs/iot_protocols/zigbee/' + this.mcu);
-            mcu_handler.init();
-            mcu_handler.monitor();
-
-            this.mcuhandler = mcu_handler;
+            this.mcuhandler = require('libs/iot_protocols/zigbee/' + this.mcu);
+            super.init();
 
             //         
         }

@@ -39,8 +39,9 @@ var constants = {
     // device types
     IOT_DEVICE_GATEWAY: 1,
     IOT_DEVICE_SWITCH: 2,
-    IOT_DEVICE_SOCKET: 3,
+    IOT_DEVICE_SMARTPLUG: 3,
     IOT_DEVICE_MOTIONSENSOR: 4,
+    IOT_DEVICE_TEMPHUMSENSOR: 5,
 
     IOTREQUEST: "iotrequest",
     IOTCMD: "iotcmd",

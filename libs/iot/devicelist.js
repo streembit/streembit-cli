@@ -4,6 +4,7 @@ const constants = require('libs/constants');
 const config = require('libs/config');
 const GatewayDevice = require('./devices/gateway_device');
 const SwitchDevice = require('./devices/switch_device');
+const SmartPlug = require('./devices/smartplug_device');
 const logger = require('libs/logger');
 
 const UNDEFINED = 0
@@ -11,7 +12,7 @@ const UNDEFINED = 0
 var DeviceTypeMap = {
     1: GatewayDevice,
     2: SwitchDevice,
-    3: UNDEFINED,
+    3: SmartPlug,
     4: UNDEFINED,
     5: UNDEFINED,
     6: UNDEFINED,
