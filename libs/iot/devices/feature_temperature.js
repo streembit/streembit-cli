@@ -24,62 +24,82 @@ Copyright (C) 2017 The Streembit software development team
 
 
 const constants = require("libs/constants");
-const Device = require("./device");
+const IoTFeature = require("./feature");
 const events = require("libs/events");
 const logger = require("libs/logger");
 const util = require('util');
 
-class TemperatureHumidityDevice extends Device {
+const TEMPSENS_TIMEOUT = 10000; 
+
+class TemperatureFeature extends IoTFeature {
 
     constructor(id, device, cmdbuilder, transport) {
         super(id, device, cmdbuilder, transport);      
 
         this.temperature = 0;
 
-        logger.debug("initializing a temperature & humidity sensor device id: " + id);
+        logger.debug("initialized a temperature sensor feature for device id: " + id);
     }
 
-    on_active_device() {
-        super.on_active_device();
+    on_activated() {
+        try {
+            super.on_activated();
 
-        // get the temperature
-        this.get_temperature();
+            // get the temperature
+            this.read_temperature();
+        }
+        catch (err) {
+            logger.error("TemperatureFeature on_activated error %j", err);
+        }
     }
 
-    read_temperature(timer, cmd) {
+
+    read_temperature(callback) {
+        //debugger;
+        var cmd = this.command_builder.readTemperature(this.address64, this.address16, TEMPSENS_TIMEOUT);
         this.transport.send(cmd, (err, value) => {
             if (err) {
+                // in case of timed out send back the previously read value
+                if (callback && this.temperature != 0 && err == constants.IOT_ERROR_TIMEDOUT) {
+                    console.log("send existing value on timeout");
+                    var result = {
+                        payload: {
+                            temperature: this.temperature
+                        }
+                    };
+                    callback(null, result);
+                }
+
                 return logger.error("temperature read error %j", err);
             }
 
             this.temperature = value;
 
+            if (callback) {
+                var result = {
+                    payload: {
+                        temperature: value
+                    }
+                };
+                callback(null, result);
+            }
+
             var msg = util.format("temperature: %f Celsius", value);
             logger.debug(msg);
 
-            if (timer) {
-                clearInterval(timer);
-            }
             //
         });
     }
 
-    get_temperature() {
-        var timer = 0;
-        var cmd = this.command_builder.readTemperature(this.id, this.details.address16, 10000);
-
-        timer = setInterval(
-            () => {
-                //console.log("try to read temperature again")
-                this.read_temperature(timer, cmd);
-            },
-            30000
-        );
-
-        // read first
-        this.read_temperature(timer, cmd);
+    read(callback) {
+        try {
+            this.read_temperature(callback);
+        }
+        catch (err) {
+            callback(err);
+        }
     }
 
 }
 
-module.exports = TemperatureHumidityDevice;
+module.exports = TemperatureFeature;

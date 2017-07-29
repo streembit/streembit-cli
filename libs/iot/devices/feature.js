@@ -23,26 +23,25 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const Device = require("./device");
 const events = require("libs/events");
-const logger = require("libs/logger");
+const logger = require('libs/logger');
+const constants = require("libs/constants");
 
-class SwitchDevice extends Device {
+class IoTFeature {
+    constructor(deviceid, feature, cmdbuilder, transport) {
+        this.deviceid = deviceid;
+        this.type = feature.type;
+        this.settings = feature.setting;
+        this.address64 = 0;
+        this.address16 = 0;
 
-    constructor(id, device, cmdbuilder, transport) {
-        super(id, device, cmdbuilder, transport);      
-
-        this.last_switch_time = 0;
-        this.last_switch_type = 0;
-
-        logger.debug("initializing a switch device id: " + id);
+        this.command_builder = cmdbuilder;
+        this.transport = transport;        
     }
 
-    on_active_device() {
-        super.on_active_device();       
+    on_activated() {
     }
-
 }
 
-module.exports = SwitchDevice;
+
+module.exports = IoTFeature;

@@ -27,6 +27,31 @@ const events = require("libs/events");
 const logger = require('libs/logger');
 const constants = require("libs/constants");
 
+const UNDEFINED = "undefined";
+
+var FeatureTypeMap = {
+    2: "switch",
+    3: "ecmeasure",
+    4: "temperature",
+    5: "motion",
+    6: UNDEFINED,
+    7: UNDEFINED,
+    8: UNDEFINED,
+    9: UNDEFINED,
+    10: UNDEFINED,
+    11: UNDEFINED,
+    12: UNDEFINED,
+    13: UNDEFINED,
+    14: UNDEFINED,
+    15: UNDEFINED,
+    16: UNDEFINED,
+    17: UNDEFINED,
+    18: UNDEFINED,
+    19: UNDEFINED,
+    20: UNDEFINED
+};
+
+
 class Device {
 
     constructor(id, device, cmdbuilder, transport) {
@@ -41,12 +66,30 @@ class Device {
         this.transport = transport;
 
         this.m_active = false;
+
+        this.features = new Map();
+
+        var array = device.features;
+        if (array && Array.isArray(array) && array.length > 0) {
+            for (var i = 0; i < array.length; i++) {
+                try {
+                    var feature_name = FeatureTypeMap[array[i].function];
+                    var feature_lib = "libs/iot/devices/feature_" + feature_name;
+                    var feature_obj = require(feature_lib);
+                    var feature_handler = new feature_obj(id, array[i], cmdbuilder, transport);
+                    if (feature_handler) {
+                        this.features.set(array[i].function, feature_handler);
+                        logger.debug("feature " + array[i].function + " added to device " + this.id);
+                    }
+                }
+                catch (err) {
+                    logger.error("add feature " + array[i].function + " handler error: %j", err);
+                }               
+            }
+        }
     }
 
-    get_report() {
-    }
-
-
+ 
     get active() {
         return this.m_active;
     }
@@ -56,11 +99,20 @@ class Device {
     }
 
     on_active_device() {
+        // call the features on_activated
+        this.features.forEach((handler, key, map) => {
+            handler.on_activated();
+        });
     }
 
     set_details(data, isactive) {
         this.details = data;
         this.active = isactive;
+
+        this.features.forEach((handler, key, map) => {
+            handler.address64 = data.address64;
+            handler.address16 = data.address16;
+        });
         
         if (isactive) {
             this.on_active_device();
@@ -68,13 +120,36 @@ class Device {
         logger.debug("device " + this.id + " is active");
     }
 
+    get_details(callback) {
+        var result = {
+            payload: {
+                details: this.details || 0
+            }
+        };
+        callback(null, result);
+    }
+
+
     executecmd(payload, callback) {
+        var obj = this;
+        var iotfeature = payload.feature;
+        // get the feature
+        if (iotfeature) {
+            obj = this.features.get(iotfeature);
+            if (!obj) {
+                return callback("The feature handler is not available for the device")
+            }
+        }
+
         switch (payload.cmd) {
-            case constants.IOTCMD_TOGGLE:
-                this.toggle(callback);
+            case constants.IOTCMD_DEVICE_DETAILS:
+                obj.get_details(callback);
                 break;
-            case constants.IOTCMD_READSWITCH:
-                this.read(callback);
+            case constants.IOTCMD_TOGGLE:
+                obj.toggle(callback);
+                break;
+            case constants.IOTCMD_READVALUES:
+                obj.read(callback);
                 break;
             default:
                 callback("invalid command");

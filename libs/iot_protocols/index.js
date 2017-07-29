@@ -26,36 +26,12 @@ const events = require("libs/events");
 const config = require('libs/config');
 const constants = require("libs/constants");
 const GatewayDevice = require('libs/iot/devices/gateway_device');
-const SwitchDevice = require('libs/iot/devices/switch_device');
-const SmartPlug = require('libs/iot/devices/smartplug_device');
-const TempHumidDevice = require('libs/iot/devices/temphumidity_device');
-
-
-const UNDEFINED = 0
+const IoTEndDevice = require('libs/iot/devices/iotend_device');
 
 var DeviceTypeMap = {
     1: GatewayDevice,
-    2: SwitchDevice,
-    3: SmartPlug,
-    4: TempHumidDevice,
-    5: UNDEFINED,
-    6: UNDEFINED,
-    7: UNDEFINED,
-    8: UNDEFINED,
-    9: UNDEFINED,
-    10: UNDEFINED,
-    11: UNDEFINED,
-    12: UNDEFINED,
-    13: UNDEFINED,
-    14: UNDEFINED,
-    15: UNDEFINED,
-    16: UNDEFINED,
-    17: UNDEFINED,
-    18: UNDEFINED,
-    19: UNDEFINED,
-    20: UNDEFINED
+    2: IoTEndDevice
 };
-
 
 let iotdevices = 0;
 
@@ -71,6 +47,16 @@ class IoTProtocolHandler {
 
     static getdevice(id) {
         return iotdevices.get(id);
+    }
+
+    device_factory(device) {
+        // the type must be the correct one in the config.js file
+        var device_instance = DeviceTypeMap[device.type];
+        if (!device_instance) {
+            throw new Error("Device type " + device.type + " is not implemented. Provide the correct configuration settings in the config.js file.");
+        }
+
+        return new device_instance(device.id, device, this.commandbuilder, this.mcuhandler);
     }
 
     create_handler() {
@@ -120,16 +106,6 @@ class IoTProtocolHandler {
         catch (err) {
             callback(err);
         }
-    }
-
-    device_factory (device) {
-        // the type must be the correct one in the config.js file
-        var device_instance = DeviceTypeMap[device.type];
-        if (!device_instance) {
-            throw new Error("Device type " + device.type + " is not implemented. Provide the correct configuration settings in the config.js file.");
-        }
-
-        return new device_instance(device.id, device, this.commandbuilder, this.mcuhandler);
     }
 
     geteventfn(type) {

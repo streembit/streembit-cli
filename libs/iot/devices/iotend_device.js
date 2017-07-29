@@ -28,12 +28,12 @@ const Device = require("./device");
 const events = require("libs/events");
 const logger = require("libs/logger");
 
-class GatewayDevice extends Device {
+class EndDevice extends Device {
 
     constructor(id, device, cmdbuilder, transport) {
         super(id, device, cmdbuilder, transport);      
 
-        logger.debug("initializing a gateway device id: " + id);
+        logger.debug("initializing a iot end device id: " + id);
     }
 
     on_active_device() {
@@ -42,4 +42,4 @@ class GatewayDevice extends Device {
 
 }
 
-module.exports = GatewayDevice;
+module.exports = EndDevice;
