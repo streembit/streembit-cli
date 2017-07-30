@@ -30,16 +30,22 @@ const constants = require("libs/constants");
 class IoTFeature {
     constructor(deviceid, feature, cmdbuilder, transport) {
         this.deviceid = deviceid;
-        this.type = feature.type;
+        this.type = feature.function;
         this.settings = feature.setting;
         this.address64 = 0;
         this.address16 = 0;
 
         this.command_builder = cmdbuilder;
-        this.transport = transport;        
+        this.transport = transport;      
+        this.isactive = false;
     }
 
-    on_activated() {
+    on_activated(payload) {
+        this.address64 = payload.address64;
+        this.address16 = payload.address16;
+        if (payload.address64) {
+            this.isactive = true;
+        }
     }
 }
 

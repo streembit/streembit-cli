@@ -101,6 +101,12 @@ class IoTHandler {
                                 handler.on_iot_activity(payload);
                             }
                             break;
+                        case constants.IOTPROPERTY_UPDATE:
+                            var handler = this.get_handler_by_id(payload.id);
+                            if (handler && handler.on_property_update) {
+                                handler.on_property_update(payload);
+                            }
+                            break;
                         default:
                             break;
                     }

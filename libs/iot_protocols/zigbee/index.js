@@ -39,59 +39,39 @@ class ZigbeeHandler extends IoTProtocolHandler {
         this.commandbuilder = new ZigbeeCommands();
     }
 
-    on_neighbortable_receive(err, address64, address16, startindex, count, deviceslength, list) {
+    on_device_found(payload) {
         try {
-            if (err) {
-                return logger.error("neighbor table receive error %j", err);
-            }
-            //console.log("devices length: %d, startindex: %d, count: %d", deviceslength, startindex, count);
-            // process the list of devices
-            if (list && list.length) {
-                list.forEach((item) => {
-                    var device = IoTProtocolHandler.getdevice(item.address64);  // this.devices.get(item.address64);
-                    if (device) {
-                        device.set_details(item, true);
-                    }
-                });
+            //debugger;
+            if (!payload) {
+                return logger.error("ZigbeeHandler on_device_found error, invalid payload");
             }
 
-            if ((startindex + count) < deviceslength) {
-                console.log("continue to read routing table from index " + (startindex + count));
-                // read again from the current index
-                var timeout = 5000;
-                var index = (startindex + count);
-                var cmd = this.commandbuilder.getNeighborTable(address64, address16, timeout, 0);
-                //console.log(util.inspect(cmd));
-                this.mcuhandler.send(cmd, this.on_neighbortable_receive);
+            if (!payload.id) {
+                return logger.error("ZigbeeHandler on_device_found error, invalid payload ID");
             }
-            else {
-                logger.info("neighbor table was read, device count: " + deviceslength);
-            }
-        }
-        catch (e) {
-            logger.error("neighbor table receive exception %j", e);
-        }
-    }
 
-    on_active_device(payload) {
-        try {
-            var address64 = payload.id;
-            var device = IoTProtocolHandler.getdevice(address64);
+            var device = IoTProtocolHandler.getdevice(payload.id);
             if (!device) {
-                return logger.error("device " + address64 + " is not defined at zigbee handler");
+                return logger.error("device " + payload.id + " is not defined at zigbee handler");
+            }
+
+            if (payload.hasOwnProperty('address64')) {
+                device.update_property("address64", payload.address64);
+            }
+            if (payload.hasOwnProperty('address16')) {
+                device.update_property("address16", payload.address16);
             }
 
             if (device.type == constants.IOT_DEVICE_GATEWAY) {
-                device.set_details({ address16: payload.address16 }, true);
-                // get the routing table
-                // start at 0 index
-                var timeout = 5000;
-                var cmd = this.commandbuilder.getNeighborTable(address64, payload.address16, timeout, 0);
-                //console.log(util.inspect(cmd));
-                this.mcuhandler.send(cmd, this.on_neighbortable_receive);
+                //device.update_property("address16", payload.address16);
+                device.update_active(true);
+            }
+            else {
+                // the simple descriptor response was received -> the device is active
+                device.on_active_device(payload);
             }
 
-            super.on_active_device(payload);
+            // end of procedure, don't call the super, the event is handled here
         }
         catch (e) {
             logger.error("on_active_device exception %j", e);
@@ -100,6 +80,7 @@ class ZigbeeHandler extends IoTProtocolHandler {
 
     init() {
         try {
+            //debugger;
             super.init();         
 
             this.mcuhandler.init();

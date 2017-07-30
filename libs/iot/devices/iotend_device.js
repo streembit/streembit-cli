@@ -31,13 +31,18 @@ const logger = require("libs/logger");
 class EndDevice extends Device {
 
     constructor(id, device, cmdbuilder, transport) {
-        super(id, device, cmdbuilder, transport);      
+        try {
+            super(id, device, cmdbuilder, transport);
 
-        logger.debug("initializing a iot end device id: " + id);
+            logger.debug("initializing a iot end device id: " + id);
+        }
+        catch (err) {
+            throw new Error("EndDevice constructor error: " + err.message);
+        }
     }
 
-    on_active_device() {
-        super.on_active_device();        
+    on_active_device(payload) {
+        super.on_active_device(payload);        
     }
 
 }

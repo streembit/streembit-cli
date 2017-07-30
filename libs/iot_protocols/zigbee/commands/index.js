@@ -51,6 +51,8 @@ class ZigbeeCommands {
             timeout: timeout || 5000,
             destination64: address64,
             destination16: address16, // 'fffe',
+            sourceEndpoint: 0x00,           // for ZDO must be 0
+            destinationEndpoint: 0x00,      // for ZDO must be 0
             clusterId: 0x0031,
             profileId: 0x0000,
             data: [txn, index]             
@@ -70,7 +72,7 @@ class ZigbeeCommands {
             destinationEndpoint: 0x01, 
             clusterId: 0x0402,
             profileId: 0x0104,
-            data: [0x00, txn, 0x00, 0x00, 0x0]
+            data: [0x00, txn, 0x00, 0x00, 0x00]
         };
         return cmd;
     }
@@ -87,7 +89,7 @@ class ZigbeeCommands {
             destinationEndpoint: 0x01,
             clusterId: 0x0006,
             profileId: 0x0104,
-            data: [0x00, txn, 0x00, 0x00, 0x0]
+            data: [0x00, txn, 0x00, 0x00, 0x00]
         };
         return cmd;
     }

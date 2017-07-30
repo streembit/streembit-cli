@@ -39,9 +39,10 @@ class SwitchFeature extends IoTFeature {
         logger.debug("initialized a switch measurement for deviceid: " + id);
     }
 
-    on_activated() {
+    on_activated(payload) {
         try {
-            super.on_activated();
+            //debugger;
+            super.on_activated(payload);
 
             // get the switch status
             this.get_switchstatus();
@@ -85,7 +86,7 @@ class SwitchFeature extends IoTFeature {
     }
 
     get_switchstatus(callback) {
-        //debugger;
+
         var cmd = this.command_builder.readSwitchStatus(this.address64, this.address16, 3000);
         this.transport.send(cmd, (err, value) => {
             if (err) {

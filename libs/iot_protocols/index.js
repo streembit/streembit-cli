@@ -72,17 +72,27 @@ class IoTProtocolHandler {
         if (!handler) {
             throw new Error("handler for MCU " + this.mcu + " is missing");
         }
-        this.mcuhandler = handler;
+        this.mcuhandler = new handler();
     }
 
-    on_active_device(payload) {
+    on_device_found(payload) {
+    }
+
+    on_property_update(payload) {
+        var address64 = payload.id;
+        var device = IoTProtocolHandler.getdevice(address64);
+        if (!device) {
+            return logger.error("device " + address64 + " is not defined at IoTProtocolHandler");
+        }
+
+        device.on_property_update(payload);
     }
 
     on_iot_activity(payload) {
         var type = payload.type;
         switch (type) {
             case constants.ACTIVE_DEVICE_FOUND:
-                this.on_active_device(payload);
+                this.on_device_found(payload);
                 break;
             default:
                 break;
@@ -120,7 +130,6 @@ class IoTProtocolHandler {
         var devices = config.iot_config.devices;
         devices.forEach((item) => {
             if (item.protocol == this.protocol) {
-                console.log("adding " + this.protocol + " device" );
                 var device_obj = this.device_factory(item);
                 iotdevices.set(item.id, device_obj);
             }

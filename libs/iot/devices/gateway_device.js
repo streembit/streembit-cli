@@ -24,6 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 
 
 const constants = require("libs/constants");
+const config = require("libs/config");
 const Device = require("./device");
 const events = require("libs/events");
 const logger = require("libs/logger");
@@ -31,13 +32,22 @@ const logger = require("libs/logger");
 class GatewayDevice extends Device {
 
     constructor(id, device, cmdbuilder, transport) {
-        super(id, device, cmdbuilder, transport);      
+        try {
+            super(id, device, cmdbuilder, transport);
 
-        logger.debug("initializing a gateway device id: " + id);
+            if (device) {
+                this.details = device.details || {};
+            }
+
+            logger.debug("initializing a gateway device id: " + id);
+        }
+        catch (err) {
+            throw new Error("GatewayDevice constructor error: " + err.message);
+        }
     }
 
     on_active_device() {
-        super.on_active_device();        
+        super.on_active_device();     
     }
 
 }

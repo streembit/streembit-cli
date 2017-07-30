@@ -41,9 +41,9 @@ class TemperatureFeature extends IoTFeature {
         logger.debug("initialized a temperature sensor feature for device id: " + id);
     }
 
-    on_activated() {
+    on_activated(payload) {
         try {
-            super.on_activated();
+            super.on_activated(payload);
 
             // get the temperature
             this.read_temperature();
@@ -55,7 +55,6 @@ class TemperatureFeature extends IoTFeature {
 
 
     read_temperature(callback) {
-        //debugger;
         var cmd = this.command_builder.readTemperature(this.address64, this.address16, TEMPSENS_TIMEOUT);
         this.transport.send(cmd, (err, value) => {
             if (err) {

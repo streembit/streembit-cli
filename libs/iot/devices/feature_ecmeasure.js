@@ -42,9 +42,10 @@ class EcMeasureFeature extends IoTFeature {
         logger.debug("initialized a EC measuremenent feature for device id: " + id + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);
     }
 
-    on_activated() {
+    on_activated(payload) {
         try {
-            super.on_activated();
+            //debugger;
+            super.on_activated(payload);
 
             // get voltage
             //setTimeout(() => { this.get_voltage() }, 1000);
@@ -110,7 +111,7 @@ class EcMeasureFeature extends IoTFeature {
     }
 
     get_voltage(callback) {
-        //debugger;
+
         var cmd = this.command_builder.readVoltage(this.address64, this.address16, 5000);
         this.transport.send(cmd, (err, value) => {
             if (err) {

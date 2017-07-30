@@ -60,7 +60,7 @@ class Device {
         this.protocol = device.protocol;
         this.profile = device.profile;
         this.settings = device.setting;
-        this.details = 0;
+        this.details = {};
 
         this.command_builder = cmdbuilder;
         this.transport = transport;
@@ -98,24 +98,68 @@ class Device {
         this.m_active = value;
     }
 
-    on_active_device() {
+    on_property_update(payload) {
+        var prop = payload.property;
+        if (prop && prop.name) {
+            this.details[prop.name] = prop.value;
+        }
+        logger.debug("device details" + this.id + " property " + prop.name + " update to: " + prop.value);
+    }
+
+    on_active_device(payload) {
+        this.active = true;
         // call the features on_activated
-        this.features.forEach((handler, key, map) => {
-            handler.on_activated();
+        this.features.forEach((feature, key, map) => {
+            feature.on_activated(payload);
         });
     }
 
-    set_details(data, isactive) {
-        this.details = data;
-        this.active = isactive;
+    update_property(name, value) {
+        if (name) {
+            this.details[name] = value;
+        }
 
-        this.features.forEach((handler, key, map) => {
-            handler.address64 = data.address64;
-            handler.address16 = data.address16;
-        });
-        
-        if (isactive) {
-            this.on_active_device();
+        if (name == "address64" ){
+            this.features.forEach((feature, key, map) => {
+                feature.address64 = value;
+            });
+        }
+
+        if (name == "address16") {
+            this.features.forEach((feature, key, map) => {
+                feature.address16 = value;
+            });
+        }
+    }
+
+    update_properties(property_set) {
+        if (!property_set) {
+            return;
+        }
+
+        for (var property in property_set) {
+            // propertyName is what you want.
+            // You can get the value like this: myObject[propertyName]
+            this.details[property] = property_set[property];
+
+            if (property == "address64") {
+                this.features.forEach((feature, key, map) => {
+                    feature.address64 = property_set[property];
+                });
+            }
+
+            if (property == "address16") {
+                this.features.forEach((feature, key, map) => {
+                    feature.address16 = property_set[property];
+                });
+            }
+        }
+    }
+
+    update_active(isactive, payload) {
+        this.active = isactive;
+        if (isactive && payload) {
+            this.on_active_device(payload);
         }
         logger.debug("device " + this.id + " is active");
     }
@@ -123,7 +167,7 @@ class Device {
     get_details(callback) {
         var result = {
             payload: {
-                details: this.details || 0
+                details: this.details
             }
         };
         callback(null, result);
@@ -139,6 +183,10 @@ class Device {
             if (!obj) {
                 return callback("The feature handler is not available for the device")
             }
+        }
+
+        if (!this.active) {
+            return callback("The device is inactive")
         }
 
         switch (payload.cmd) {

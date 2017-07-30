@@ -51,6 +51,7 @@ var constants = {
     IOTACTIVITY: "iotactivity",
     // activity types
     ACTIVE_DEVICE_FOUND: "active_device_found",
+    IOTPROPERTY_UPDATE: "iotproperty_update",
 
     IOT_CLUSTER_NEIGHBORTABLE: 0x003177,
     IOT_CLUSTER_TEMPERATURE: 0x0402c1,
