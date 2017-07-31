@@ -25,31 +25,32 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const Device = require("./device");
+const TemperatureFeature = require("../temperature");
 const events = require("libs/events");
 const logger = require("libs/logger");
+const util = require('util');
 
-class IoTEndDevice extends Device {
+const TEMPSENS_TIMEOUT = 10000; 
 
-    constructor(id, device, cmdbuilder, transport) {
-        try {
-            super(id, device, cmdbuilder, transport);            
-            this.create_event_handlers();
-            logger.debug("Initialized a IoT end device id: " + id);
-        }
-        catch (err) {
-            throw new Error("IoTEndDevice constructor error: " + err.message);
-        }
+class SixLowPANTemperatureFeature extends TemperatureFeature {
+
+    constructor(device, feature) {
+        super(device, feature);
     }
 
-    create_event_handlers() {
-        super.create_event_handlers();
+    on_datareceive_event(properties) {
+        super.on_datareceive_event(properties);
     }
 
-    on_active_device(payload) {
-        super.on_active_device(payload);        
+    on_device_contacting(payload) {
+    }
+
+    on_activated(payload) {
+    }
+
+    read(callback) {        
     }
 
 }
 
-module.exports = IoTEndDevice;
+module.exports = SixLowPANTemperatureFeature;

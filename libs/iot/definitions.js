@@ -25,6 +25,7 @@ const UNDEFINED = "undefined";
 
 var definitions = {
     DATA_RECEIVED_EVENT: "_data_received",
+    EVENT_RADIO_ERROR: "radio_error",
     EVENT_DEVICE_CONTACTING: "device_contacting",
     EVENT_DEVICE_ACTIVATED: "device_activated",
     EVENT_DEVICE_PROPERTY_UPDATE: "device_property_update",
@@ -37,7 +38,9 @@ var definitions = {
     PROPERTY_ACTIVEPOWER: "activepower",
     PROPERTY_VOLTAGE: "voltage",
     PROPERTY_TEMPERATURE: "temperature",
-    PROPERTY_RELATIVE_HUMIDITY: "_relative_humidity",
+    PROPERTY_RELATIVE_HUMIDITY: "relative_humidity",
+    PROPERTY_POWERDIVISOR: "power_divisor",
+    PROPERTY_POWERMULTIPLIER: "power_multiplier",
 
     FEATURETYPEMAP: {
         2: "switch",

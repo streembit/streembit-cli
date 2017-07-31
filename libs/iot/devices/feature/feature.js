@@ -39,43 +39,18 @@ class IoTFeature {
         this.deviceid = device.id;  // parent id, in case if Zigbee this is the address64 as well
         this.type = feature.function;
         this.settings = feature.setting;
-
-        //this.get_transportfn = transportfn;
-        //this.get_cmdbuilderfn = cmdbuilderfn;
-        //this.get_devicedetailsfn = detailsfn;
-
-        /*
-        this.address64 = 0;
-        this.address16 = 0;
-
-        this.command_builder = cmdbuilder;
-        this.transport = transport;
-        */
-
         this.isactive = false;
     }
 
-    on_datareceive_event(payload) {
+    on_datareceive_event(properties) {
     }
 
     on_activated(payload) {
-        //this.address64 = payload.address64;
-        //this.address16 = payload.address16;
-        //if (payload.address64) {
-        //    this.isactive = true;
-        //}
     }
 
     on_device_contacting(payload) {
-        //this.address64 = payload.address64;
-        //this.address16 = payload.address16;
-        //if (payload.address64) {
-        //    this.isactive = true;
-        //}
     }
 
-    create_event_handlers() {
-    }
 }
 
 

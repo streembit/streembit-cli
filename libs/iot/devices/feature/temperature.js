@@ -25,31 +25,51 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const Device = require("./device");
+const IoTFeature = require("./feature");
 const events = require("libs/events");
 const logger = require("libs/logger");
+const util = require('util');
 
-class IoTEndDevice extends Device {
 
-    constructor(id, device, cmdbuilder, transport) {
-        try {
-            super(id, device, cmdbuilder, transport);            
-            this.create_event_handlers();
-            logger.debug("Initialized a IoT end device id: " + id);
+class TemperatureFeature extends IoTFeature {
+
+    constructor(device, feature) {
+        super(device, feature); 
+        this.temperature = 0;   
+    }
+
+    on_datareceive_event(properties) {
+        try { 
+            if (!Array.isArray(properties) || !properties.length) {
+                return;
+            }
+
+            properties.forEach(
+                (item) => {
+                    if (item.property == iotdefinitions.PROPERTY_TEMPERATURE) {
+                        this.temperature = item.value;
+                        logger.debug("TemperatureFeature on_datareceive_event " + item.property + ": " + item.value);
+                    }
+                }
+            );
         }
         catch (err) {
-            throw new Error("IoTEndDevice constructor error: " + err.message);
+            logger.error("TemperatureFeature on_datareceive_event() error: %j", err);
         }
     }
 
-    create_event_handlers() {
-        super.create_event_handlers();
+    on_activated(payload) {
     }
 
-    on_active_device(payload) {
-        super.on_active_device(payload);        
+    on_device_contacting(payload) {
+    }
+
+    read_temperature(callback) {
+    }   
+
+    read(callback) {        
     }
 
 }
 
-module.exports = IoTEndDevice;
+module.exports = TemperatureFeature;

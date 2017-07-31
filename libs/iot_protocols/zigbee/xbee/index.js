@@ -43,7 +43,7 @@ let xbee = new xbeeapi.XBeeAPI({
 });
 
 let serialport = 0;
-let pending_tasks = [];
+//let pending_tasks = [];
 let devices = {};
 let neighbortable = [];
 
@@ -69,35 +69,16 @@ class XbeeHandler {
         }
     }
 
-    add_pending_task(task) {
-        pending_tasks.push(task);
-    }
-
-    delete_pending_task(taskid, address64) {
-        for (var i = 0; i < pending_tasks.length; i++) {
-            if (pending_tasks[i].address64 == address64 && pending_tasks[i].taskid == taskid) {
-                pending_tasks.splice(i, 1);
-                //console.log("removing pending task " + taskid + " " + address64);
-                break;
+    dispatch_error_event(address64, error) {
+        this.dispatch_datarcv_event(
+            address64,
+            {
+                "type": iotdefinitions.EVENT_RADIO_ERROR,
+                "error": error
             }
-        }
+        );
     }
-
-    get_pending_task(taskid, address64) {
-        var callback = 0;
-        for (var i = 0; i < pending_tasks.length; i++) {
-            if (pending_tasks[i].address64 == address64 && pending_tasks[i].taskid == taskid) {
-                callback = pending_tasks[i].fn;
-                // clear the timer
-                if (pending_tasks[i].timer) {
-                    clearTimeout(pending_tasks[i].timer);
-                }
-                pending_tasks.splice(i, 1);
-                break;
-            }
-        }
-        return callback;
-    }
+ 
 
     // Command helpers for ZDO & ZCL
 
@@ -326,13 +307,7 @@ class XbeeHandler {
                 neighbortable.push(device);
 
                 parsed++;
-            };
-
-            var txid = frame.data[0];
-            var callback = this.get_pending_task(constants.IOT_CLUSTER_NEIGHBORTABLE, frame.remote64);
-            if (callback) {
-                callback(null, frame.remote64, frame.remote16, startindex, count, devices_length, neighbortable);
-            }
+            };            
 
         }
         catch (err) {
@@ -511,17 +486,6 @@ class XbeeHandler {
                 ////console.log("match descriptor response data: " + util.inspect(response));
                 this.match_descriptor_response(frame.remote64, frame.remote16, response);
 
-                //var device_connecting_event = frame.remote64 + iotdefinitions.DEVICE_CONTACTING;
-                //events.emit(
-                //    device_connecting_event,
-                //    {
-                //        address64: frame.remote64,
-                //        address16: frame.remote16
-                //    }
-                //);       
-
-                //debugger;
-
                 this.dispatch_datarcv_event(
                     frame.remote64,
                     {
@@ -565,10 +529,6 @@ class XbeeHandler {
                     return;
                 }
 
-                var callback = this.get_pending_task(constants.IOT_CLUSTER_SWITCHSTATUS, frame.remote64);
-                if (!callback) {
-                    callback = function () { };
-                }
 
                 var reader = new BufferReader(frame.data);
                 reader.seek(1);
@@ -577,15 +537,14 @@ class XbeeHandler {
                     reader.seek(5);
                     var status = reader.nextUInt8();
                     if (status != 0) {
-                        return callback("invalid status returned for ON/OFF switch status");
+                        return this.dispatch_error_event(frame.remote64, "invalid status returned for ON/OFF switch status");
                     }
                     var datatype = reader.nextUInt8();
                     if (datatype != 0x10) { // must be boolean 0x10
-                        return callback("invalid data type returned");
+                        return this.dispatch_error_event(frame.remote64, "invalid data type returned");
                     }
 
                     var value = reader.nextUInt8();
-                    callback(null, value);
 
                     this.dispatch_datarcv_event(
                         frame.remote64,
@@ -610,7 +569,10 @@ class XbeeHandler {
             //
         }
         catch (err) {
-            logger.error("handle_cluster_mdrhaswitch error: %j", err);
+            try {
+                this.dispatch_error_event(frame.remote64, "handle_cluster_mdrhaswitch error: " + err.message);
+            }
+            catch (e) { }
         }
     }
 
@@ -621,67 +583,65 @@ class XbeeHandler {
 
         var txid = reader.nextUInt8();
 
-        var callback = 0;
-        if (txid == 0xbe) {
-            callback = this.get_pending_task(constants.IOT_CLUSTER_POWER, frame.remote64);
-        }
-        else if (txid == 0xbc) {
-            callback = this.get_pending_task(constants.IOT_CLUSTER_VOLTAGE, frame.remote64);
-        }
-        else if (txid == 0xbf) {
-            callback = this.get_pending_task(constants.IOT_CLUSTER_POWERDIVISOR, frame.remote64);
-        }
-        else if (txid == 0xbb) {
-            callback = this.get_pending_task(constants.IOT_CLUSTER_POWERMULTIPLIER, frame.remote64);
-        }
-
-        if (!callback) {
-            callback = function () { };
-        }
-
         reader.seek(5);
 
         var status = reader.nextUInt8();
         if (status != 0) {
-            return callback("invalid status returned");
+            return this.dispatch_error_event(frame.remote64, "invalid status returned");
         }
 
+        var property_name = 0;
         var value = 0;
         var datatype = reader.nextUInt8();
         if (txid == 0xbc) {
             if (datatype != 0x21) {
-                return callback("invalid data type returned");
+                return this.dispatch_error_event(frame.remote64,"invalid data type returned");
             }
             var valuebuf = reader.nextBuffer(2);
             valuebuf.swap16();
             value = valuebuf.readUInt16BE(0);
+            property_name = iotdefinitions.PROPERTY_VOLTAGE;
         }
         else if (txid == 0xbe) {
             if (datatype != 0x29) {
-                return callback("invalid data type returned");
+                return this.dispatch_error_event(frame.remote64,"invalid data type returned");
             }
             var valuebuf = reader.nextBuffer(2);
             valuebuf.swap16();
             value = valuebuf.readInt16BE(0);
+            property_name = iotdefinitions.PROPERTY_ACTIVEPOWER;
         }
         else if (txid == 0xbf) {
             if (datatype != 0x21) {
-                return callback("invalid data type returned");
+                return this.dispatch_error_event(frame.remote64,"invalid data type returned");
             }
             var valuebuf = reader.nextBuffer(2);
             valuebuf.swap16();
             value = valuebuf.readUInt16BE(0);
+            property_name = iotdefinitions.PROPERTY_POWERDIVISOR;
         }
         else if (txid == 0xbb) {
             if (datatype != 0x21) {
-                return callback("invalid data type returned");
+                return this.dispatch_error_event(frame.remote64,"invalid data type returned");
             }
             var valuebuf = reader.nextBuffer(2);
             valuebuf.swap16();
             value = valuebuf.readUInt16BE(0);
+            property_name = iotdefinitions.PROPERTY_POWERMULTIPLIER;
         }
 
-        callback(null, value);
+        this.dispatch_datarcv_event(
+            frame.remote64,
+            {
+                "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                "properties": [
+                    {
+                        "property": property_name,
+                        "value": value
+                    }
+                ]
+            }
+        );
 
         //
     }
@@ -691,11 +651,6 @@ class XbeeHandler {
         //console.log("handle_cluster_temperature");
         //console.log(util.inspect(frame));
 
-        var callback = this.get_pending_task(constants.IOT_CLUSTER_TEMPERATURE, frame.remote64);
-        if (!callback) {
-            callback = function () { };
-        }
-
         var reader = new BufferReader(frame.data);
         reader.seek(1);
         var txid = reader.nextUInt8();
@@ -703,13 +658,13 @@ class XbeeHandler {
         var status = reader.nextUInt8();
         //console.log("status: %d", status);
         if (status != 0) {
-            return callback("invalid status returned");
+            return this.dispatch_error_event(frame.remote64, "invalid status returned");
         }
 
         var datatype = reader.nextUInt8();
         //console.log("datatype: %d", datatype);
         if (datatype != 0x29) {
-            return callback("invalid data type returned");
+            return this.dispatch_error_event(frame.remote64, "invalid data type returned");
         }
 
         var valuebuf = reader.nextBuffer(2);
@@ -717,10 +672,6 @@ class XbeeHandler {
         var tempvalue = valuebuf.readUInt16BE(0);
         var value = tempvalue * 0.01;
         console.log("temperature: %f Celsius", value);
-
-        //debugger;
-
-        callback(null, value);
 
         this.dispatch_datarcv_event(
             frame.remote64,
@@ -763,28 +714,24 @@ class XbeeHandler {
             var command = reader.nextUInt8();
             //console.log("id: %s command %d", id.toString(16), command);
             if (id != 0x99 || command != 0x01) {
-                logger.error("handle_cluster_basic() invalid id or command");
-                return;
+                return logger.error("handle_cluster_basic() invalid id or command");
             }
 
             var attr1a = reader.nextUInt8();
             var attr1b = reader.nextUInt8();
             var attr1c = reader.nextUInt8();
             if (attr1b != 0x00) {
-                logger.error("handle_cluster_basic() invalid data attribute");
-                return;
+                return logger.error("handle_cluster_basic() invalid data attribute");
             }
 
             if (attr1c != 0x00) {
-                logger.error("handle_cluster_basic() invalid status");
-                return;
+                return logger.error("handle_cluster_basic() invalid status");
             }
 
             if (attr1a == 0x03) {
                 var datatype = reader.nextUInt8();
                 if (datatype != 0x20) {
-                    logger.error("handle_cluster_basic() data type for 0003 is NOT UInt8(0x20)");
-                    return;
+                    return logger.error("handle_cluster_basic() data type for 0003 is NOT UInt8(0x20)");
                 }
 
                 var hardware_version = reader.nextUInt8();
@@ -801,25 +748,12 @@ class XbeeHandler {
                             }
                         ]
                     }
-                );
-
-                //events.emit(
-                //    events.TYPES.ONIOTEVENT,
-                //    constants.IOTPROPERTY_UPDATE,
-                //    {
-                //        id: frame.remote64,
-                //        property: {
-                //            name: "hwversion",
-                //            value: hardware_version
-                //        }
-                //    }
-                //);       
+                );      
             }
             else if (attr1a == 0x04) {
                 var datatype = reader.nextUInt8();
                 if (datatype != 0x42) {
-                    logger.error("handle_cluster_basic() data type for 0004 is NOT string (0x42)");
-                    return;
+                    return logger.error("handle_cluster_basic() data type for 0004 is NOT string (0x42)");
                 }
 
                 reader.nextUInt8();
@@ -838,25 +772,12 @@ class XbeeHandler {
                             }
                         ]
                     }
-                );
-
-                //events.emit(
-                //    events.TYPES.ONIOTEVENT,
-                //    constants.IOTPROPERTY_UPDATE,
-                //    {
-                //        id: frame.remote64,
-                //        property: {
-                //            name: "manufacturername",
-                //            value: manufacturer
-                //        }
-                //    }
-                //);       
+                );      
             }
             else if (attr1a == 0x05) {
                 var datatype = reader.nextUInt8();
                 if (datatype != 0x42) {
-                    logger.error("handle_cluster_basic() data type for 0005 is NOT string (0x42)");
-                    return;
+                    return logger.error("handle_cluster_basic() data type for 0005 is NOT string (0x42)");
                 }
 
                 reader.nextUInt8();
@@ -875,19 +796,7 @@ class XbeeHandler {
                             }
                         ]
                     }
-                );
-
-                //events.emit(
-                //    events.TYPES.ONIOTEVENT,
-                //    constants.IOTPROPERTY_UPDATE,
-                //    {
-                //        id: frame.remote64,
-                //        property: {
-                //            name: "modelidentifier",
-                //            value: modelid
-                //        }
-                //    }
-                //);       
+                );      
             }
 
         }
@@ -902,10 +811,10 @@ class XbeeHandler {
         }
     }
 
-    send(cmd, callback) {
+    send(cmd) {
         try {
             if (!cmd) {
-                return callback("invalid payload data at XBEE send()");
+                throw new Error("cmd paameter is required");
             }
 
             var destinationEndpoint;
@@ -935,39 +844,12 @@ class XbeeHandler {
                 data: cmd.data
             };
 
-            if (cmd.txid && callback && ((callback instanceof Function) || (typeof callback === "function"))) {
-                var txid = cmd.txid;
-                var taskid = cmd.taskid;
-                var address64 = cmd.destination64;
-                var timer = 0
-
-                if (cmd.timeout) {
-                    timer = setTimeout(
-                        () => {
-                            this.delete_pending_task(taskid, address64);
-                            callback(constants.IOT_ERROR_TIMEDOUT); //-2 = timed out
-                        },
-                        cmd.timeout
-                    );
-                }
-
-                // create a pending task for it
-                this.add_pending_task(
-                    {
-                        taskid: taskid,
-                        address64: cmd.destination64,
-                        fn: callback,
-                        timer: timer
-                    }
-                );
-            }
-
             serialport.write(xbee.buildFrame(txframe));
 
             //
         }
         catch (err) {
-            callback(err);
+            logger.error("XBEE send error: %js", err);
         }
     }
 

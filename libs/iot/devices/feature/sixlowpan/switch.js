@@ -25,31 +25,39 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const Device = require("./device");
+const SwitchFeature = require("../switch");
 const events = require("libs/events");
 const logger = require("libs/logger");
 
-class IoTEndDevice extends Device {
+class SixLowPANSwitchFeature extends SwitchFeature {
 
-    constructor(id, device, cmdbuilder, transport) {
-        try {
-            super(id, device, cmdbuilder, transport);            
-            this.create_event_handlers();
-            logger.debug("Initialized a IoT end device id: " + id);
-        }
-        catch (err) {
-            throw new Error("IoTEndDevice constructor error: " + err.message);
-        }
+    constructor(device, feature) {
+        super(device, feature);
     }
 
-    create_event_handlers() {
-        super.create_event_handlers();
+    on_datareceive_event(properties) {
+        super.on_datareceive_event(properties);
     }
 
-    on_active_device(payload) {
-        super.on_active_device(payload);        
+    on_device_contacting(payload) {
+    }
+
+    on_activated(payload) {
+    }
+
+    toggle(callback) {
+    }
+
+    read(callback) {
+    }
+
+    exec_toggle_switch() {
+    }
+
+    get_switchstatus(callback) {
+
     }
 
 }
 
-module.exports = IoTEndDevice;
+module.exports = SixLowPANSwitchFeature;

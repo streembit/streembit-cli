@@ -25,72 +25,32 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const IoTFeature = require("./feature");
+const TemperatureFeature = require("../temperature");
 const events = require("libs/events");
 const logger = require("libs/logger");
 const util = require('util');
 
 const TEMPSENS_TIMEOUT = 10000; 
 
-class TemperatureFeature extends IoTFeature {
+class ZigbeeTemperatureFeature extends TemperatureFeature {
 
     constructor(device, feature) {
-        super(device, feature); 
-        this.temperature = 0;       
+        super(device, feature);     
         this.ispolling = (feature.settings && feature.settings.ispolling) ? feature.settings.ispolling : false;
         this.long_poll_interval = (feature.settings && feature.settings.long_poll_interval) ? feature.settings.long_poll_interval : -1;
         this.polling_timer = 0;
-        logger.debug("initialized a temperature sensor feature for device id: " + this.deviceid + " ispolling: " + this.ispolling + " long_poll_interval: " + this.long_poll_interval);
-        this.create_event_handlers();
+
+        logger.debug("Initialized a Zigbee temperature sensor feature for device id: " + this.deviceid + " ispolling: " + this.ispolling + " long_poll_interval: " + this.long_poll_interval);        
     }
 
-    on_datareceive_event(payload) {
-        if (!Array.isArray(properties) || !properties.length) {
-            return;
-        }
-
-        properties.forEach(
-            (item) => {
-                if (item.property == iotdefinitions.PROPERTY_TEMPERATURE) {
-                    this.temperature = item.value;
-                }
-            }
-        );            
+    on_datareceive_event(properties) {
+        super.on_datareceive_event(properties);
     }
-
-    create_event_handlers() {
-        super.create_event_handlers();
-    }
-
-    //create_event_handlers() {
-    //    //debugger;
-    //    var device_datareceived_event = this.deviceid + iotdefinitions.DATA_RECEIVED_EVENT;
-    //    events.on(
-    //        device_datareceived_event,
-    //        (payload) => {
-    //            //debugger;
-    //            if (payload.type == iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE) {
-    //                if (payload.properties && payload.properties.length) {
-    //                    payload.properties.forEach(
-    //                        (item) => {
-    //                            if (item.property == iotdefinitions.PROPERTY_TEMPERATURE) {
-    //                                this.temperature = item.value;
-    //                            }
-    //                        }
-    //                    );
-    //                }
-    //            }
-    //        }
-    //    );
-    //    console.log("TemperatureFeature listening on event: " + device_datareceived_event);
-    //}
 
     on_activated(payload) {
         try {
             super.on_activated(payload);
-
             this.read_temperature();
-
         }
         catch (err) {
             logger.error("TemperatureFeature on_activated error %j", err);
@@ -99,6 +59,7 @@ class TemperatureFeature extends IoTFeature {
 
     on_device_contacting(payload) {
         console.log("on_device_contacting() try reading temperature");
+        // get the polling 
         this.read_temperature();
     }
 
@@ -120,8 +81,11 @@ class TemperatureFeature extends IoTFeature {
     }
 
     read_temperature(callback) {
-        var cmd = this.command_builder.readTemperature(this.address64, this.address16, TEMPSENS_TIMEOUT);
-        this.transport.send(cmd, (err, value) => {
+        var transport = this.device.transport;
+        var commandbuilder = this.device.command_builder;
+        var device_details = this.device.details;
+        var cmd = commandbuilder.readTemperature(device_details, TEMPSENS_TIMEOUT);
+        transport.send(cmd, (err, value) => {
             if (err) {
                 // in case of timed out send back the previously read value
                 if (callback && this.temperature != 0 && err == constants.IOT_ERROR_TIMEDOUT) {
@@ -155,24 +119,6 @@ class TemperatureFeature extends IoTFeature {
         });
     }
 
-    configure_report() {
-        // data: [0x00, txn, 0x06, 0x00, 0x00, 0x00, 0x29, 0x40, 0x00, 0x80, 0x00]
-        var attr1 = 0x00;
-        var attr2 = 0x00;
-        var datatype = 0x29;
-        var mintime1 = 0x40; // min timeout is 0x0040, but it must be in Little Endian order
-        var mintime2 = 0x00;
-        var maxtime1 = 0x80; // max timeout is 0x0080, but it must be in Little Endian order
-        var maxtime2 = 0x00;
-        var cmd = this.command_builder.configureReport(this.address64, this.address16, attr1, attr2, datatype, mintime1, mintime2, maxtime1, maxtime2, 10000);
-        this.transport.send(cmd, (err, value) => {
-            if (err) {
-                return logger.error("temperature configure report error %j", err);
-            }
-            //
-        });
-    }
-
     read(callback) {
         try {
             this.read_temperature(callback);
@@ -184,4 +130,4 @@ class TemperatureFeature extends IoTFeature {
 
 }
 
-module.exports = TemperatureFeature;
+module.exports = ZigbeeTemperatureFeature;

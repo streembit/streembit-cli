@@ -25,51 +25,65 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const IoTFeature = require("./feature");
+const EcMeasureFeature = require("../ecmeasure");
 const events = require("libs/events");
 const logger = require("libs/logger");
 const async = require("async");
 const util = require('util');
 
-class EcMeasureFeature extends IoTFeature {
+class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
     constructor(device, feature) {
         super(device, feature);  
-        this.voltage = constants.IOT_STATUS_UNKOWN;
-        this.power_consumption = constants.IOT_STATUS_UNKOWN;
         this.power_divisor = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.divisor) ? feature.settings.acformatting.divisor : 0;
         this.power_multiplier = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.multiplier) ? feature.settings.acformatting.multiplier : 1;        
-        logger.debug("initialized a EC measuremenent feature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);
-        this.create_event_handlers();
+
+        logger.debug("Initialized a Zigbee EC measuremenent feature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);        
     }
 
-    on_datareceive_event(payload) {
-    }
+    on_datareceive_event(properties) {
+        try {
+            if (!Array.isArray(properties) || !properties.length) {
+                return;
+            }
 
-    create_event_handlers() {
-        super.create_event_handlers();
-    }
+            properties.forEach(
+                (item) => {
+                    if (item.property == iotdefinitions.PROPERTY_ACTIVEPOWER) {
+                        var value = item.value;
+                        if (this.power_divisor > 0) {
+                            value = value / this.power_divisor;
+                        }
+                        if (this.power_multiplier) {
+                            value = value * this.power_multiplier;
+                        }
+                        this.power_consumption = value;
+                        logger.debug("power_consumption: %d Watt", this.power_consumption);
+                    }
+                    else if (item.property == iotdefinitions.PROPERTY_VOLTAGE) {
+                        this.voltage = item.value;
+                        logger.debug("voltage: %d Volt", this.voltage)
+                    }
+                }
+            );
+        }
+        catch (err) {
+            logger.error("EcMeasureFeature on_datareceive_event() error: %j", err);
+        }
+    }    
 
     on_device_contacting(payload) {
+        super.on_device_contacting(payload);
     }
 
     on_activated(payload) {
         try {
-            //debugger;
-            super.on_activated(payload);
 
-            // get voltage
-            //setTimeout(() => { this.get_voltage() }, 1000);
-
-            /*
             // get the power consumption
             setTimeout(() => { this.get_powerdivisor() }, 1000);
 
             // get the power consumption
             setTimeout(() => { this.get_powermultiplier() }, 2000);
-
-            // get the power consumption
-            //setTimeout(() => { this.get_powerconsumption() }, 2000);
 
             setTimeout(
                 () => {
@@ -78,7 +92,7 @@ class EcMeasureFeature extends IoTFeature {
                 },
                 3000
             );
-            */
+            
         }
         catch (err) {
             logger.error("EcMeasureFeature on_activated error %j", err);
@@ -123,78 +137,45 @@ class EcMeasureFeature extends IoTFeature {
     }
 
     get_voltage(callback) {
-
-        var cmd = this.command_builder.readVoltage(this.address64, this.address16, 5000);
-        this.transport.send(cmd, (err, value) => {
-            if (err) {
-                return logger.error("voltage read error %j", err);
-            }
-
-            this.voltage = value;
-            logger.debug("voltage: " + value);
-            if (callback) {
-                callback()
-            }
-
-            //
-        });
+        this.voltage = 0;
+        var transport = this.device.transport;
+        var commandbuilder = this.device.command_builder;
+        var device_details = this.device.details;
+        var cmd = commandbuilder.readVoltage(device_details, 5000);
+        transport.send(cmd);
+        if (callback) {
+            setTimeout(() => { callback(); }, 1000);
+        }
     }
 
     get_powerconsumption(callback) {
         this.power_consumption = 0;
-        var cmd = this.command_builder.readPower(this.address64, this.address16, 5000);
-        this.transport.send(cmd, (err, value) => {
-            if (err) {
-                return logger.error("power read error %j", err);
-            }
-
-            if (value > 0) {
-                if (this.power_divisor > 0) {
-                    value = value / this.power_divisor;
-                }
-
-                if (this.power_multiplier) {
-                    value = value * this.power_multiplier;
-                }
-            }
-
-            this.power_consumption = value;
-            logger.debug("power consumption: " + this.power_consumption);
-            if (callback) {
-                callback()
-            }
-
-            //
-        });        
+        var transport = this.device.transport;
+        var commandbuilder = this.device.command_builder;
+        var device_details = this.device.details;
+        var cmd = commandbuilder.readPower(device_details, 5000);
+        transport.send(cmd);    
+        if (callback) {
+            setTimeout(() => { callback(); }, 1000);
+        }
     }
 
     get_powermultiplier() {
-        var cmd = this.command_builder.readPowerMultiplier(this.address64, this.address16, 5000);
-        this.transport.send(cmd, (err, value) => {
-            if (err) {
-                return logger.error("power multiplier read error %j", err);
-            }
-
-            this.power_multiplier = value;
-            logger.debug("power multiplier: " + value);
-
-            //
-        });
+        var transport = this.device.transport;
+        var commandbuilder = this.device.command_builder;
+        var device_details = this.device.details;
+        var cmd = commandbuilder.readPowerMultiplier(device_details, 5000);
+        transport.send(cmd);
     }
 
     get_powerdivisor() {
-        var cmd = this.command_builder.readPowerDivisor(this.address64, this.address16, 5000);
-        this.transport.send(cmd, (err, value) => {
-            if (err) {
-                return logger.error("power divisor read error %j", err);
-            }
-
-            this.power_divisor = value;
-            logger.debug("power divisor: " + value);
-
-            //
-        });
+        var transport = this.device.transport;
+        var commandbuilder = this.device.command_builder;
+        var device_details = this.device.details;
+        var cmd = commandbuilder.readPowerDivisor(device_details, 5000);
+        transport.send(cmd);
     }
+
 }
 
-module.exports = EcMeasureFeature;
+module.exports = ZigbeeEcMeasureFeature;

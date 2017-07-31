@@ -25,31 +25,43 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const Device = require("./device");
+const EcMeasureFeature = require("../ecmeasure");
 const events = require("libs/events");
 const logger = require("libs/logger");
+const async = require("async");
+const util = require('util');
 
-class IoTEndDevice extends Device {
+class ZwaveEcMeasureFeature extends EcMeasureFeature {
 
-    constructor(id, device, cmdbuilder, transport) {
-        try {
-            super(id, device, cmdbuilder, transport);            
-            this.create_event_handlers();
-            logger.debug("Initialized a IoT end device id: " + id);
-        }
-        catch (err) {
-            throw new Error("IoTEndDevice constructor error: " + err.message);
-        }
+    constructor(device, feature) {
+        super(device, feature);  
+        this.power_divisor = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.divisor) ? feature.settings.acformatting.divisor : 0;
+        this.power_multiplier = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.multiplier) ? feature.settings.acformatting.multiplier : 1;
+        logger.debug("initialized a Zigbee EC measuremenent feature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);
     }
 
-    create_event_handlers() {
-        super.create_event_handlers();
+    on_datareceive_event(properties) {
+        super.on_datareceive_event(properties);
     }
 
-    on_active_device(payload) {
-        super.on_active_device(payload);        
+    on_device_contacting(payload) {
+    }
+
+    on_activated(payload) {
+    }
+
+    read_power(completefn) {
+    }
+
+    read(callback) {
+    }
+
+    get_voltage(callback) {
+    }
+
+    get_powerconsumption(callback) {
     }
 
 }
 
-module.exports = IoTEndDevice;
+module.exports = ZwaveEcMeasureFeature;
