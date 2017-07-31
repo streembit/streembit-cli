@@ -40,10 +40,16 @@ class GatewayDevice extends Device {
             }
 
             logger.debug("initializing a gateway device id: " + id);
+
+            this.create_event_handlers();
         }
         catch (err) {
             throw new Error("GatewayDevice constructor error: " + err.message);
         }
+    }
+
+    create_event_handlers() {
+        super.create_event_handlers();
     }
 
     on_active_device() {

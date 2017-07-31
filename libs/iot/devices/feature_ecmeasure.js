@@ -24,6 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 
 
 const constants = require("libs/constants");
+const iotdefinitions = require("libs/iot/definitions");
 const IoTFeature = require("./feature");
 const events = require("libs/events");
 const logger = require("libs/logger");
@@ -32,14 +33,24 @@ const util = require('util');
 
 class EcMeasureFeature extends IoTFeature {
 
-    constructor(id, device, cmdbuilder, transport) {
-        super(id, device, cmdbuilder, transport);      
-
+    constructor(device, feature) {
+        super(device, feature);  
         this.voltage = constants.IOT_STATUS_UNKOWN;
         this.power_consumption = constants.IOT_STATUS_UNKOWN;
-        this.power_divisor = (device.settings && device.settings.acformatting && device.settings.acformatting.divisor) ? device.settings.acformatting.divisor : 0;
-        this.power_multiplier = (device.settings && device.settings.acformatting && device.settings.acformatting.multiplier) ? device.settings.acformatting.multiplier : 1;        
-        logger.debug("initialized a EC measuremenent feature for device id: " + id + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);
+        this.power_divisor = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.divisor) ? feature.settings.acformatting.divisor : 0;
+        this.power_multiplier = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.multiplier) ? feature.settings.acformatting.multiplier : 1;        
+        logger.debug("initialized a EC measuremenent feature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);
+        this.create_event_handlers();
+    }
+
+    on_datareceive_event(payload) {
+    }
+
+    create_event_handlers() {
+        super.create_event_handlers();
+    }
+
+    on_device_contacting(payload) {
     }
 
     on_activated(payload) {
@@ -50,6 +61,7 @@ class EcMeasureFeature extends IoTFeature {
             // get voltage
             //setTimeout(() => { this.get_voltage() }, 1000);
 
+            /*
             // get the power consumption
             setTimeout(() => { this.get_powerdivisor() }, 1000);
 
@@ -66,7 +78,7 @@ class EcMeasureFeature extends IoTFeature {
                 },
                 3000
             );
-            
+            */
         }
         catch (err) {
             logger.error("EcMeasureFeature on_activated error %j", err);

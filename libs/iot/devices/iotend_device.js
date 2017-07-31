@@ -24,21 +24,26 @@ Copyright (C) 2017 The Streembit software development team
 
 
 const constants = require("libs/constants");
+const iotdefinitions = require("libs/iot/definitions");
 const Device = require("./device");
 const events = require("libs/events");
 const logger = require("libs/logger");
 
-class EndDevice extends Device {
+class IoTEndDevice extends Device {
 
     constructor(id, device, cmdbuilder, transport) {
         try {
             super(id, device, cmdbuilder, transport);
-
             logger.debug("initializing a iot end device id: " + id);
+            this.create_event_handlers();
         }
         catch (err) {
-            throw new Error("EndDevice constructor error: " + err.message);
+            throw new Error("IoTEndDevice constructor error: " + err.message);
         }
+    }
+
+    create_event_handlers() {
+        super.create_event_handlers();
     }
 
     on_active_device(payload) {
@@ -47,4 +52,4 @@ class EndDevice extends Device {
 
 }
 
-module.exports = EndDevice;
+module.exports = IoTEndDevice;

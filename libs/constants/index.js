@@ -47,11 +47,6 @@ var constants = {
     IOT_FUNCTION_MOTION_SENSING: 6,
 
     IOTREQUEST: "iotrequest",
-    IOTCMD: "iotcmd",
-    IOTACTIVITY: "iotactivity",
-    // activity types
-    ACTIVE_DEVICE_FOUND: "active_device_found",
-    IOTPROPERTY_UPDATE: "iotproperty_update",
 
     IOT_CLUSTER_NEIGHBORTABLE: 0x003177,
     IOT_CLUSTER_TEMPERATURE: 0x0402c1,
@@ -63,6 +58,7 @@ var constants = {
     IOT_CLUSTER_SWITCHOFF: 0x0006ac,
     IOT_CLUSTER_SWITCHON: 0x0006ad,
     IOT_CLUSTER_SWITCHTOGGLE: 0x0006ae,
+    IOT_CLUSTER_CONFIGUREREPORT: 0x0006dd,
 
     IOT_STATUS_UNKOWN: -1,
     IOT_ERROR_TIMEDOUT: -2,

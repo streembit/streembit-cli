@@ -37,6 +37,7 @@ class ZigbeeCommands {
         this.txnmap[constants.IOT_CLUSTER_SWITCHOFF] = 0xac;
         this.txnmap[constants.IOT_CLUSTER_SWITCHON] = 0xad;
         this.txnmap[constants.IOT_CLUSTER_SWITCHTOGGLE] = 0xae;
+        this.txnmap[constants.IOT_CLUSTER_CONFIGUREREPORT] = 0xdd;
     }
 
     static getTxn(clusterId) {
@@ -77,7 +78,9 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    readSwitchStatus(address64, address16, timeout) {
+    //readSwitchStatus(address64, address16, timeout) {
+    readSwitchStatus(device_details, timeout) {
+        var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_SWITCHSTATUS];
         var cmd = {
             taskid: constants.IOT_CLUSTER_SWITCHSTATUS,
@@ -111,7 +114,9 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    readVoltage(address64, address16, timeout) {
+    //readVoltage(address64, address16, timeout) {
+    readVoltage(device_details, timeout) {
+        var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_VOLTAGE];
         var cmd = {
             taskid: constants.IOT_CLUSTER_VOLTAGE,
@@ -128,7 +133,9 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    readPower(address64, address16, timeout) {
+    //readPower(address64, address16, timeout) {
+    readPower(device_details, timeout) {
+        var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_POWER];
         var cmd = {
             taskid: constants.IOT_CLUSTER_POWER,
@@ -145,7 +152,9 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    readPowerDivisor(address64, address16, timeout) {
+    //readPowerDivisor(address64, address16, timeout) {
+    readPowerDivisor(device_details, timeout) {
+        var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_POWERDIVISOR];
         var cmd = {
             taskid: constants.IOT_CLUSTER_POWERDIVISOR,
@@ -162,7 +171,9 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    readPowerMultiplier(address64, address16, timeout) {
+    //readPowerMultiplier(address64, address16, timeout) {
+    readPowerMultiplier(device_details, timeout) {
+        var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_POWERMULTIPLIER];
         var cmd = {
             taskid: constants.IOT_CLUSTER_POWERMULTIPLIER,
@@ -176,6 +187,89 @@ class ZigbeeCommands {
             profileId: 0x0104,
             data: [0x00, txn, 0x00, 0x04, 0x06]
         };
+        return cmd;
+    }
+
+    configureReport(address64, address16, attr1, attr2, datatype, mintime1, mintime2, maxtime1,  maxtime2, timeout) {
+        var txn = this.txnmap[constants.IOT_CLUSTER_CONFIGUREREPORT];
+        var cmd = {
+            taskid: constants.IOT_CLUSTER_CONFIGUREREPORT,
+            txid: txn,
+            timeout: timeout || 10000,
+            destination64: address64,
+            destination16: address16,
+            sourceEndpoint: 0x00,
+            destinationEndpoint: 0x01,
+            clusterId: 0x0006,
+            profileId: 0x0104,
+            data: [0x00, txn, 0x06, 0x00, attr1, attr2, datatype, mintime1, mintime2, maxtime1, maxtime2]
+        };
+
+        //0x00: Frame Control Field
+        //The frame control field is 8-bits in length and contains information defining the
+        //command type and other control flags. The frame control field shall be formatted
+        //as shown in Figure 2.3. Bits 5-7 are reserved for future use and shall be set to 0.
+        //... it seems 0x00 is correct
+
+        //0xdd: Transaction Sequence Number
+        //The transaction sequence number field is 8-bits in length and specifies an
+        //identification number for the transaction so that a response-style command frame
+        //can be related to a request-style command frame. The application object itself
+        //shall maintain an 8-bit counter that is copied into this field and incremented by
+        //one for each command sent. When a value of 0xff is reached, the next command
+        //shall re-start the counter with a value of 0x00.
+        //The transaction sequence number field can be used by a controlling device, which
+        //may have issued multiple commands, so that it can match the incoming responses
+        //to the relevant command.
+
+        //0x06:Command identifier
+        //Configure reporting -> 0x06, Table 2.9 ZCL Command Frames
+
+        //0x00: Direction field
+        //If this value is set to 0x00, then the attribute data type field, the minimum
+        //reporting interval field, the maximum reporting interval field and the reportable
+        //change field are included in the payload, and the timeout period field is omitted.
+        //The record is sent to a cluster server (or client) to configure how it sends reports to
+        //a client (or server) of the same cluster;
+
+        //0x0000: Attribute Identifier Field
+        //Table 3.38 Attributes of the On/Off Server Cluster
+        //Identifier  Name    Type        Range           Access      Default     Mandatory
+        //0x0000      OnOff   Boolean     0x00 – 0x01     Read only   0x00        M
+
+        //0x10: Attribute Data Type Field
+        //The Attribute data type field contains the data type of the attribute that is to be reported.
+        //0x10 for boolean
+
+        //0x00, 0x00: Minimum Reporting Interval Field
+        //The minimum reporting interval field is 16-bits in length and shall contain the
+        //minimum interval, in seconds, between issuing reports of the specified attribute.
+        //If this value is set to 0x0000, then there is no minimum limit, unless one is
+        //imposed by the specification of the cluster using this reporting mechanism or by
+        //the applicable profile.
+
+        //0x00, 0x20: Maximum Reporting Interval Field
+        //The maximum reporting interval field is 16-bits in length and shall contain the
+        //maximum interval, in seconds, between issuing reports of the specified attribute.
+        //If this value is set to 0xffff, then the device shall not issue reports for the specified
+        //attribute, and the configuration information for that attribute need not be
+        //maintained. (Note:- in an implementation using dynamic memory allocation, the
+        //memory space for that information may then be reclaimed).
+
+        //Next is not exists as for boolean which is a "Discrete" data type it is emitted:
+        //The reportable change field shall contain the minimum change to the attribute that
+        //will result in a report being issued. This field is of variable length. For attributes
+        //with 'analog' data type (see Table 2.15) the field has the same data type as the
+        //attribute. The sign (if any) of the reportable change field is ignored.
+        //For attributes of 'discrete' data type (see Table 2.15) this field is omitted.
+
+        //0x00,0x00: Timeout Period Field
+        //The timeout period field is 16-bits in length and shall contain the maximum
+        //expected time, in seconds, between received reports for the attribute specified in
+        //the attribute identifier field. If more time than this elapses between reports, this
+        //may be an indication that there is a problem with reporting.
+        //If this value is set to 0x0000, reports of the attribute are not subject to timeout.        
+
         return cmd;
     }
 

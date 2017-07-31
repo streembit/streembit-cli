@@ -95,20 +95,8 @@ class IoTHandler {
                             }
                             handler.handle_request(payload, callback);                           
                             break;
-                        case constants.IOTACTIVITY:
-                            var handler = this.get_handler_by_id(payload.id);                           
-                            if (handler && handler.on_iot_activity) {
-                                handler.on_iot_activity(payload);
-                            }
-                            break;
-                        case constants.IOTPROPERTY_UPDATE:
-                            var handler = this.get_handler_by_id(payload.id);
-                            if (handler && handler.on_property_update) {
-                                handler.on_property_update(payload);
-                            }
-                            break;
                         default:
-                            break;
+                            throw new Error("IOTREQUEST " + event + " handler is not implemented");
                     }
                 }
                 catch (err) {

@@ -24,26 +24,68 @@ Copyright (C) 2017 The Streembit software development team
 
 
 const constants = require("libs/constants");
+const iotdefinitions = require("libs/iot/definitions");
 const IoTFeature = require("./feature");
 const events = require("libs/events");
 const logger = require("libs/logger");
 
 class SwitchFeature extends IoTFeature {
 
-    constructor(id, device, cmdbuilder, transport) {
-        super(id, device, cmdbuilder, transport);      
-
+    constructor(device, feature) {
+        super(device, feature);  
         this.last_switch_time = 0;
-        this.status = 0;
+        this.switchstatus = 0;
+        logger.debug("initialized a switch measurement for deviceid: " + this.deviceid);
+        this.create_event_handlers();
+    }
 
-        logger.debug("initialized a switch measurement for deviceid: " + id);
+    on_datareceive_event(properties) {
+        if (!Array.isArray(properties) || !properties.length){
+            return;
+        }
+
+        properties.forEach(
+            (item) => {
+                if (item.property == iotdefinitions.PROPERTY_SWITCH_STATUS) {
+                    this.switchstatus = item.value;
+                }
+            }
+        );            
+    }
+
+    create_event_handlers() {
+        super.create_event_handlers();
+        ////debugger;
+        //var device_datareceived_event = this.deviceid + iotdefinitions.DATA_RECEIVED_EVENT;
+        //events.on(
+        //    device_datareceived_event,
+        //    (payload) => {
+        //        //debugger;
+        //        if (payload.type == iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE) {
+        //            if (payload.properties && payload.properties.length) {
+        //                payload.properties.forEach(
+        //                    (item) => {
+        //                        if (item.property == iotdefinitions.PROPERTY_SWITCH_STATUS) {
+        //                            this.switchstatus = item.value;
+        //                        }
+        //                    }
+        //                );
+        //            }
+        //        }
+        //    }
+        //);
+        //console.log("TemperatureFeature listening on event: " + device_datareceived_event);
+    }
+
+    on_device_contacting(payload) {
+        //debugger;
+        console.log("on_device_contacting() call get_switchstatus()");
+        this.get_switchstatus();
     }
 
     on_activated(payload) {
         try {
-            //debugger;
-            super.on_activated(payload);
-
+            debugger;
             // get the switch status
             this.get_switchstatus();
         }
@@ -86,24 +128,31 @@ class SwitchFeature extends IoTFeature {
     }
 
     get_switchstatus(callback) {
-
-        var cmd = this.command_builder.readSwitchStatus(this.address64, this.address16, 3000);
-        this.transport.send(cmd, (err, value) => {
-            if (err) {
-                if (callback) {
-                    callback(err);
+        try {
+            var transport = this.device.transport;
+            var commandbuilder = this.device.command_builder;
+            var device_details = this.device.details;
+            var cmd = commandbuilder.readSwitchStatus(device_details, 3000);
+            transport.send(cmd, (err, value) => {
+                if (err) {
+                    if (callback) {
+                        callback(err);
+                    }
+                    return logger.error("switch status read error %j", err);
                 }
-                return logger.error("switch status read error %j", err);
-            }
 
-            this.status = value;
-            logger.debug("switch status: " + value);
-            if (callback) {
-                callback(null, value);
-            }
+                this.switchstatus = value;
+                logger.debug("switch status: " + value);
+                if (callback) {
+                    callback(null, value);
+                }
 
-            //
-        });
+                //
+            });
+        }
+        catch (err) {
+            logger.error("get_switchstatus() error %j", err);
+        }
     }
 
 }
