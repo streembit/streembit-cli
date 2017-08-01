@@ -26,9 +26,11 @@ Copyright (C) 2017 The Streembit software development team
 const events = require("libs/events");
 const logger = require('libs/logger');
 const constants = require("libs/constants");
+const EventEmitter = require('events');
 
-class IoTFeature {
+class IoTFeature extends EventEmitter  {
     constructor(device, feature) {
+        super();
         if (!device) {
             throw new Error("IoTFeature constructor error: Invalid device ID");
         }
@@ -40,6 +42,10 @@ class IoTFeature {
         this.type = feature.function;
         this.settings = feature.setting;
         this.isactive = false;
+
+        this.waiting_for_data = false;
+        this.waiting_callback = 0;
+        this.waiting_callback_timeout = 0;
     }
 
     on_datareceive_event(properties) {

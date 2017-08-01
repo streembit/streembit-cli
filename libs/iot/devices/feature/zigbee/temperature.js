@@ -38,19 +38,43 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         super(device, feature);     
         this.ispolling = (feature.settings && feature.settings.ispolling) ? feature.settings.ispolling : false;
         this.long_poll_interval = (feature.settings && feature.settings.long_poll_interval) ? feature.settings.long_poll_interval : -1;
+        this.longpolling_enabled = this.ispolling && this.long_poll_interval > 0;
         this.polling_timer = 0;
 
         logger.debug("Initialized a Zigbee temperature sensor feature for device id: " + this.deviceid + " ispolling: " + this.ispolling + " long_poll_interval: " + this.long_poll_interval);        
     }
 
     on_datareceive_event(properties) {
-        super.on_datareceive_event(properties);
+        try {
+            if (!Array.isArray(properties) || !properties.length) {
+                return;
+            }
+
+            properties.forEach(
+                (item) => {
+                    if (item.property == iotdefinitions.PROPERTY_TEMPERATURE) {
+                        this.temperature = item.value;
+                        //logger.debug("TemperatureFeature on_datareceive_event " + item.property + ": " + item.value);
+                        this.emit(iotdefinitions.PROPERTY_TEMPERATURE, item.value);
+                    }
+                }
+            );
+        }
+        catch (err) {
+            logger.error("TemperatureFeature on_datareceive_event() error: %j", err);
+        }
     }
 
     on_activated(payload) {
         try {
             super.on_activated(payload);
-            this.read_temperature();
+
+            if (this.longpolling_enabled) {
+                this.start_polling();
+            }
+            else {
+                this.read_temperature();
+            }
         }
         catch (err) {
             logger.error("TemperatureFeature on_activated error %j", err);
@@ -58,15 +82,17 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
     }
 
     on_device_contacting(payload) {
-        console.log("on_device_contacting() try reading temperature");
-        // get the polling 
-        this.read_temperature();
+        if (this.longpolling_enabled) {
+            this.start_polling();
+        }
+        else {
+            this.read_temperature();
+        }
     }
 
     start_polling() {
-        if (!this.ispolling || this.this.long_poll_interval <= 0) {
-            return;
-        }
+
+        this.read_temperature();
 
         if (this.polling_timer) {
             clearInterval(this.polling_timer);
@@ -74,10 +100,19 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
 
         this.polling_timer = setInterval(
             () => {
-
+                //console.log("poll temperature data");
+                this.read_temperature();
             },
-            this.long_poll_interval
+            ((this.long_poll_interval /4)*1000)
         );
+    }
+
+    checkin(callback) {
+        var transport = this.device.transport;
+        var commandbuilder = this.device.command_builder;
+        var device_details = this.device.details;
+        var cmd = commandbuilder.pollCheckIn(device_details, TEMPSENS_TIMEOUT);
+        transport.send(cmd);
     }
 
     read_temperature(callback) {
@@ -85,43 +120,57 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         var commandbuilder = this.device.command_builder;
         var device_details = this.device.details;
         var cmd = commandbuilder.readTemperature(device_details, TEMPSENS_TIMEOUT);
-        transport.send(cmd, (err, value) => {
-            if (err) {
-                // in case of timed out send back the previously read value
-                if (callback && this.temperature != 0 && err == constants.IOT_ERROR_TIMEDOUT) {
-                    console.log("send existing value on timeout");
-                    var result = {
-                        payload: {
-                            temperature: this.temperature
-                        }
-                    };
-                    callback(null, result);
-                }
-
-                return logger.error("temperature read error %j", err);
-            }
-
-            this.temperature = value;
-
-            if (callback) {
-                var result = {
-                    payload: {
-                        temperature: value
-                    }
-                };
-                callback(null, result);
-            }
-
-            var msg = util.format("temperature: %f Celsius", value);
-            logger.debug(msg);
-
-            //
-        });
+        transport.send(cmd);
     }
 
+
     read(callback) {
-        try {
-            this.read_temperature(callback);
+        try {    
+            if (this.longpolling_enabled) {
+                // just get the latest reading
+                var result = {
+                    payload: {
+                        temperature: this.temperature
+                    }
+                };                
+                callback(null, result);
+
+                //
+            }
+            else {
+                let proctimer = 0;
+                let processed = false;
+                this.read_temperature();
+                this.once(iotdefinitions.PROPERTY_TEMPERATURE, (value) => {
+                    try {
+                        var result = {
+                            payload: {
+                                temperature: value
+                            }
+                        };
+
+                        processed = true;
+                        callback(null, result);                        
+                        if (proctimer) {
+                            clearTimeout(proctimer);
+                        }
+                    }
+                    catch (err) {
+                        logger.error("TemperatureFeature read() 'once' event handler error %j", err);
+                    }
+                });
+
+                proctimer = setTimeout(
+                    () => {
+                        if (!processed) {
+                            callback(constants.IOT_ERROR_TIMEDOUT);
+                        }
+                    },
+                    TEMPSENS_TIMEOUT
+                );
+
+                //
+            }            
         }
         catch (err) {
             callback(err);

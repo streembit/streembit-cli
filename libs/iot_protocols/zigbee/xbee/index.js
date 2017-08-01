@@ -358,7 +358,7 @@ class XbeeHandler {
         // get the manufacturer & device info 
         setTimeout(
             () => {
-                console.log("query device info, hardware version");
+                //console.log("query device info, hardware version");
                 var endpoint = devices[frame.remote64].endpoints[0];
                 var txn = 0x99;
                 var bcrdata = [0x00, txn, 0x00, 0x03, 0x00]
@@ -369,7 +369,7 @@ class XbeeHandler {
 
         setTimeout(
             () => {
-                console.log("query device info, manufacturer");
+                //console.log("query device info, manufacturer");
                 var endpoint = devices[frame.remote64].endpoints[0];
                 var txn = 0x99;
                 var bcrdata = [0x00, txn, 0x00, 0x04, 0x00]
@@ -380,7 +380,7 @@ class XbeeHandler {
 
         setTimeout(
             () => {
-                console.log("query device info, model number");
+                //console.log("query device info, model number");
                 var endpoint = devices[frame.remote64].endpoints[0];
                 var txn = 0x99;
                 var bcrdata = [0x00, txn, 0x00, 0x05, 0x00]
@@ -671,7 +671,7 @@ class XbeeHandler {
         valuebuf.swap16();
         var tempvalue = valuebuf.readUInt16BE(0);
         var value = tempvalue * 0.01;
-        console.log("temperature: %f Celsius", value);
+        //console.log("temperature: %f Celsius", value);
 
         this.dispatch_datarcv_event(
             frame.remote64,
@@ -809,6 +809,10 @@ class XbeeHandler {
                 catch (serr) { }
             }
         }
+    }
+
+    handle_poll_response(frame) {
+        console.log(util.inspect(frame));
     }
 
     send(cmd) {
@@ -950,6 +954,9 @@ class XbeeHandler {
                 break;
             case "8004":
                 this.handle_cluster_simpledesciptor_response(frame);
+                break;
+            case "0020":
+                this.handle_poll_response(frame);
                 break;
             default:
                 break;

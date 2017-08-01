@@ -131,7 +131,8 @@ class ZigbeeCommands {
             destinationEndpoint: 0x01,
             clusterId: 0x0020,
             profileId: 0x0104,
-            data: [0x01, 0x01, 0x00]
+            //data: [0x00, 0x88, 0x00] // send 0x88 as txn number 
+            data: [0x01, 0x88, 0x01] 
         };
         return cmd;
     }

@@ -39,23 +39,6 @@ class TemperatureFeature extends IoTFeature {
     }
 
     on_datareceive_event(properties) {
-        try { 
-            if (!Array.isArray(properties) || !properties.length) {
-                return;
-            }
-
-            properties.forEach(
-                (item) => {
-                    if (item.property == iotdefinitions.PROPERTY_TEMPERATURE) {
-                        this.temperature = item.value;
-                        logger.debug("TemperatureFeature on_datareceive_event " + item.property + ": " + item.value);
-                    }
-                }
-            );
-        }
-        catch (err) {
-            logger.error("TemperatureFeature on_datareceive_event() error: %j", err);
-        }
     }
 
     on_activated(payload) {
