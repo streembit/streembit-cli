@@ -155,60 +155,64 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
     read(callback) {
         try {   
-            let processed_power = false;
-            let processed_voltage = false;
-            let proctimer = 0;
-            let result = {
-                payload: {
-                    power_consumption: -1,
-                    voltage: -1
-                }
-            };
+            if (callback) {
+                let processed_power = false;
+                let processed_voltage = false;
+                let proctimer = 0;
+                let result = {
+                    payload: {
+                        power_consumption: -1,
+                        voltage: -1
+                    }
+                };
 
-            var complete = function() {
-                if (processed_voltage && processed_power) {
-                    callback(null, result);
-                    if (proctimer) {
-                        clearTimeout(proctimer);
+                var complete = function () {
+                    if (processed_voltage && processed_power) {
+                        callback(null, result);
+                        if (proctimer) {
+                            clearTimeout(proctimer);
+                        }
                     }
                 }
+
+                this.once(iotdefinitions.PROPERTY_ACTIVEPOWER, (value) => {
+                    try {
+                        result.payload.power_consumption = value;
+                        processed_power = true;
+                        complete();
+                    }
+                    catch (err) {
+                        logger.error("TemperatureFeature read() 'once' event handler error %j", err);
+                    }
+                });
+
+                this.once(iotdefinitions.PROPERTY_VOLTAGE, (value) => {
+                    try {
+                        result.payload.voltage = value;
+                        processed_voltage = true;
+                        complete();
+                    }
+                    catch (err) {
+                        logger.error("TemperatureFeature read() 'once' event handler error %j", err);
+                    }
+                });
+
+                proctimer = setTimeout(
+                    () => {
+                        if (!processed_voltage || !processed_power) {
+                            this.removeAllListeners(iotdefinitions.PROPERTY_VOLTAGE);
+                            this.removeAllListeners(iotdefinitions.PROPERTY_ACTIVEPOWER);
+                            callback(constants.IOT_ERROR_TIMEDOUT);
+                        }
+                    },
+                    6000
+                );
             }
 
-            this.once(iotdefinitions.PROPERTY_ACTIVEPOWER, (value) => {
-                try {
-                    result.payload.power_consumption = value;
-                    processed_power = true;
-                    complete();
-                }
-                catch (err) {
-                    logger.error("TemperatureFeature read() 'once' event handler error %j", err);
-                }
-            });
-
-            this.once(iotdefinitions.PROPERTY_VOLTAGE, (value) => {
-                try {
-                    result.payload.voltage = value;
-                    processed_voltage = true;
-                    complete();
-                }
-                catch (err) {
-                    logger.error("TemperatureFeature read() 'once' event handler error %j", err);
-                }
-            });
-
-            // read the power values
+            // do the reading
             this.readpower();
 
-            proctimer = setTimeout(
-                () => {
-                    if (!processed_voltage || !processed_power) {
-                        this.removeAllListeners(iotdefinitions.PROPERTY_VOLTAGE);
-                        this.removeAllListeners(iotdefinitions.PROPERTY_ACTIVEPOWER);
-                        callback(constants.IOT_ERROR_TIMEDOUT);
-                    }
-                },
-                6000
-            );
+            //
         }
         catch (err) {
             callback(err);

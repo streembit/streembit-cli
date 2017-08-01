@@ -27,8 +27,10 @@ const events = require("libs/events");
 const logger = require('libs/logger');
 const constants = require("libs/constants");
 const EventEmitter = require('events');
+const IoTReport = require('./iotreport');
+const iotdefinitions = require("libs/iot/definitions");
 
-class IoTFeature extends EventEmitter  {
+class IoTFeature extends EventEmitter {
     constructor(device, feature) {
         super();
         if (!device) {
@@ -44,9 +46,13 @@ class IoTFeature extends EventEmitter  {
         this.isactive = false;
 
         this.datareceived = false;
+
+        this.reports = new Map();
+        this.report_timer = 0;
     }
 
-    on_datareceive_event(properties) {
+    on_datareceive_event(data) {
+        this.sendreport(data);
     }
 
     on_activated(payload) {
@@ -55,6 +61,51 @@ class IoTFeature extends EventEmitter  {
     on_device_contacting(payload) {
     }
 
+    read(callback) {
+    }
+
+    start_reporting() {
+        if (!this.reports.size) {
+            return console.log("start_reporting exit, no reports configured") 
+        }
+
+        if (this.report_timer) {
+            clearInterval(this.report_timer);
+        }
+
+        this.report_timer = setInterval(
+            () => {
+                this.read(
+                    (err, data) => {
+                        if (err) {
+                            return logger.error("read for report error: %j", err);
+                        }
+                        this.sendreport(data);
+                    }
+                );
+            },
+            (iotdefinitions.MIN_REPORTING_INTERVAL + 1000)
+        );
+    }
+
+    configure_report(usersession, report) {
+        var interval = report.interval;
+        var report = new IoTReport(usersession, this.deviceid, interval);
+        this.reports.set(usersession, report);        
+
+        this.start_reporting();
+    }
+
+    sendreport(data) {
+        this.reports.forEach((report, key, map) => {
+            if (data && data.payload) {
+                data.payload.feature = this.type;
+                report.send(data);
+            }
+        });
+    }
+
+    //
 }
 
 

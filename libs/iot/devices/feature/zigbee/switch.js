@@ -106,49 +106,53 @@ class ZigbeeSwitchFeature extends SwitchFeature {
     read(callback) {
 
         try {
-            let status_processed = false;
-            let proctimer = 0;
-            let result = {
-                payload: {
-                    switch_status: -1
-                }
-            };
+            if (callback) {
+                let status_processed = false;
+                let proctimer = 0;
+                let result = {
+                    payload: {
+                        switch_status: -1
+                    }
+                };
 
-            let complete = function () {
-                if (status_processed) {
-                    callback(null, result);
-                    if (proctimer) {
-                        clearTimeout(proctimer);
+                let complete = function () {
+                    if (status_processed) {
+                        callback(null, result);
+                        if (proctimer) {
+                            clearTimeout(proctimer);
+                        }
                     }
                 }
+
+                this.once((iotdefinitions.ZIGBEE + iotdefinitions.PROPERTY_SWITCH_STATUS), (value) => {
+                    try {
+                        result.payload.switch_status = value;
+                        status_processed = true;
+                        callback(null, result);
+                        if (proctimer) {
+                            clearTimeout(proctimer);
+                        }
+                    }
+                    catch (err) {
+                        logger.error("ZigbeeSwitchFeature read() 'once' event handler error %j", err);
+                    }
+                });
+
+                proctimer = setTimeout(
+                    () => {
+                        if (!status_processed) {
+                            this.removeAllListeners((iotdefinitions.ZIGBEE + iotdefinitions.PROPERTY_SWITCH_STATUS));
+                            callback(constants.IOT_ERROR_TIMEDOUT);
+                        }
+                    },
+                    6000
+                );
             }
 
-            this.once((iotdefinitions.ZIGBEE + iotdefinitions.PROPERTY_SWITCH_STATUS), (value) => {
-                try {
-                    result.payload.switch_status = value;
-                    status_processed = true;
-                    callback(null, result);
-                    if (proctimer) {
-                        clearTimeout(proctimer);
-                    }
-                }
-                catch (err) {
-                    logger.error("ZigbeeSwitchFeature read() 'once' event handler error %j", err);
-                }
-            });
-
-            // read the power values
+            // do the reading
             this.get_switchstatus();
 
-            proctimer = setTimeout(
-                () => {
-                    if (!status_processed) {
-                        this.removeAllListeners((iotdefinitions.ZIGBEE + iotdefinitions.PROPERTY_SWITCH_STATUS));
-                        callback(constants.IOT_ERROR_TIMEDOUT);
-                    }
-                },
-                6000
-            );
+            //
         }
         catch (err) {
             callback(err);

@@ -26,12 +26,13 @@ const UNDEFINED = "undefined";
 var definitions = {
     ZIGBEE: "zigbee",
 
-    DATA_RECEIVED_EVENT: "_data_received",
+    DATA_RECEIVED_EVENT: "_iot_data_received",
     EVENT_RADIO_ERROR: "radio_error",
     EVENT_DEVICE_CONTACTING: "device_contacting",
     EVENT_DEVICE_ACTIVATED: "device_activated",
     EVENT_DEVICE_PROPERTY_UPDATE: "device_property_update",
-    EVENT_FEATURE_PROPERTY_UPDATE: "property_update",
+    EVENT_FEATURE_PROPERTY_UPDATE: "iot_property_update",
+    EVENT_PROPERTY_REPORT: "iot_property_report",
 
     PROPERTY_HWVERSION: "hwversion",
     PROPERTY_MANUFACTURERNAME: "manufacturername",
@@ -43,6 +44,9 @@ var definitions = {
     PROPERTY_RELATIVE_HUMIDITY: "relative_humidity",
     PROPERTY_POWERDIVISOR: "power_divisor",
     PROPERTY_POWERMULTIPLIER: "power_multiplier",
+
+    MIN_REPORTING_INTERVAL: 60000,
+    MAX_REPORTING_INTERVAL: (60000 * 60),
 
     FEATURETYPEMAP: {
         2: "switch",

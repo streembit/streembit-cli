@@ -154,7 +154,9 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
             else {
                 let proctimer = 0;
                 let processed = false;
+
                 this.read_temperature();
+
                 this.once(iotdefinitions.PROPERTY_TEMPERATURE, (value) => {
                     try {
                         processed = true;

@@ -227,6 +227,35 @@ class Device {
         callback(null, result);
     }
 
+    configure_reports(payload, callback) {
+        var reports = payload.reports;
+        // must be an array
+        if (!reports || !Array.isArray(reports)) {
+            return callback("nvalid reports collection at configure reports")
+        }
+
+        reports.forEach(
+            (report) => {
+                var iotfeature = report.feature;
+                var feature = this.features.get(iotfeature);
+                if (!feature) {
+                    return callback("the feature handler is not available at configure reports")
+                }
+
+                feature.configure_report(payload.pkhash, report);
+            }
+        );
+
+        callback(
+            null,
+            {
+                payload: {
+                    report_created: true
+                }
+            }
+        );
+    }
+
 
     executecmd(payload, callback) {
         var obj = this;
@@ -247,12 +276,15 @@ class Device {
             case constants.IOTCMD_DEVICE_DETAILS:
                 this.send_device_details(callback);
                 break;
+            case constants.IOTCMD_CONFIGURE_REPORT:
+                this.configure_reports(payload, callback);
+                break;
             case constants.IOTCMD_TOGGLE:
                 obj.toggle(callback);
                 break;
             case constants.IOTCMD_READVALUES:
                 obj.read(callback);
-                break;
+                break;            
             default:
                 callback("invalid command");
                 break;

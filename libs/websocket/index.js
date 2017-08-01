@@ -22,6 +22,7 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 const constants = require("libs/constants");
+const iotdefinitions = require("libs/iot/definitions");
 const logger = require("libs/logger");
 const events = require("libs/events");
 const WebSocket = require('ws');
@@ -188,6 +189,36 @@ class WsServer {
         }
     }
 
+    handle_server_messages() {
+        try {
+            events.on(
+                iotdefinitions.EVENT_PROPERTY_REPORT,
+                (usersession, data) => {
+                    try {
+                        var session = this.user_sessions.get(usersession);
+                        if (!session) {
+                            throw new Error("invalid user session");
+                        }
+                        var ws = session.ws;
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            var response = JSON.stringify(data);
+                            ws.send(response);
+                        }
+                        else {
+                            // TODO report this closed connection
+                        }                        
+                    }
+                    catch (err) {
+                        logger.error("ws shandle_server_messages() event handler error: " + err.message);
+                    }
+                }
+            );
+        }
+        catch (err) {
+            logger.error("ws shandle_server_messages() error: " + err.message);
+        }
+    }
+
     init() {
         try {
 
@@ -224,6 +255,9 @@ class WsServer {
             wsserver.on('error', function(e) {
                 logger.error('ws error: %s', e.message);
             });
+
+            // listen to messages from the devices, etc. to the client
+            this.handle_server_messages();
 
             //
         }
