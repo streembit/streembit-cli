@@ -43,9 +43,7 @@ class IoTFeature extends EventEmitter  {
         this.settings = feature.setting;
         this.isactive = false;
 
-        this.waiting_for_data = false;
-        this.waiting_callback = 0;
-        this.waiting_callback_timeout = 0;
+        this.datareceived = false;
     }
 
     on_datareceive_event(properties) {

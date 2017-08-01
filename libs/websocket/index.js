@@ -27,11 +27,13 @@ const events = require("libs/events");
 const WebSocket = require('ws');
 const util = require("util");
 const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
+const createHmac = require('create-hmac');
 
 class WsServer {
     constructor(port) {
         this.port = port;
         this.user_sessions = new Map();
+        this.list_of_reports = new Map();
     }
 
     format_error(txn, err) {
@@ -60,7 +62,7 @@ class WsServer {
         }
     }
 
-    auth_client(jwt) {
+    auth_client(jwt, ws) {
         try {
             if (!jwt) {
                 throw new Error("no WS auth jwt presented");
@@ -68,8 +70,8 @@ class WsServer {
 
             var res = msgvalidator.verify_wsjwt(jwt);
 
-            this.user_sessions.set(res.username, res.token);
-            logger.debug("user session created for " + res.username);
+            this.user_sessions.set(res.pkhash, { token: res.token, ws: ws });
+            logger.debug("user session created for pkhash: " + res.pkhash);
 
             return {
                 payload: {
@@ -82,21 +84,30 @@ class WsServer {
         }
     }
 
-    validate_user(message) {
-        if (!message.user || !message.authtoken) {
+    validate_user(message) {     
+        if (!message.pkhash || !message.hmacdigest || !message.txn) {
             throw new Error("invalid authentication fields");
         }
 
-        if (!this.user_sessions.has(message.user)) {
-            throw new Error("invalid authentication user data");
+        var usersession = this.user_sessions.get(message.pkhash);
+        if (!usersession) {
+            throw new Error("invalid user WS session");
         }
-
-        var token = this.user_sessions.get(message.user);
-        if (!token || (token != message.authtoken)) {
+        var token = usersession.token;
+        if ( !token ) {
             throw new Error("invalid authentication token data");
         }
 
-        //console.log(message.user + " with token " + token + " authenticated");
+        // validate the hmac
+        var hmac = createHmac('sha256', token);
+        hmac.update(message.txn);
+        var hmacdigest = hmac.digest('hex');
+
+        if (hmacdigest != message.hmacdigest) {
+            throw new Error("invalid authentication secret");
+        }
+
+        //console.log("message.hmacdigest: " + message.hmacdigest + " computed hmacdigest: " + hmacdigest);    
     }
 
     processmsg(ws, request) {
@@ -112,7 +123,7 @@ class WsServer {
                     throw new Error("invalid auth payload");
                 }
 
-                var resdata = this.auth_client(message.jwt);
+                var resdata = this.auth_client(message.jwt, ws);
                 resdata.txn = message.txn;
                 var response = JSON.stringify(resdata);
                 ws.send(response);

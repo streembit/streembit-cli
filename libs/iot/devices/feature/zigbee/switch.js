@@ -38,18 +38,32 @@ class ZigbeeSwitchFeature extends SwitchFeature {
     }
 
     on_datareceive_event(properties) {
-        super.on_datareceive_event(properties);
+        try {
+            if (!Array.isArray(properties) || !properties.length) {
+                return;
+            }
+
+            properties.forEach(
+                (item) => {
+                    if (item.property == iotdefinitions.PROPERTY_SWITCH_STATUS) {
+                        this.switchstatus = item.value;
+                        //logger.debug("switch status: " + item.value);
+                        this.emit((iotdefinitions.ZIGBEE + iotdefinitions.PROPERTY_SWITCH_STATUS), item.value);
+                    }
+                }
+            );
+        }
+        catch (err) {
+            logger.error("SwitchFeature on_datareceive_event() error: %j", err);
+        }
     }
 
     on_device_contacting(payload) {
-        console.log("on_device_contacting() call get_switchstatus()");
         this.get_switchstatus();
     }
 
     on_activated(payload) {
         try {
-            debugger;
-            // get the switch status
             this.get_switchstatus();
         }
         catch (err) {
@@ -66,58 +80,80 @@ class ZigbeeSwitchFeature extends SwitchFeature {
             },
             500
         );
-    }
-
-    read(callback) {
-        this.get_switchstatus((err, value) => {
-            if (err) {
-                return callback(err);
-            }
-
-            var result = {
-                payload: {
-                    switch_status: value
-                }
-            };
-            callback(null, result);
-
-            //
-        });
-    }
+    }    
 
     exec_toggle_switch() {
-        var cmd = this.command_builder.execToggleSwitch(this.address64, this.address16);
-        this.transport.send(cmd);
+        var transport = this.device.transport;
+        var commandbuilder = this.device.command_builder;
+        var device_details = this.device.details;
+        var cmd = commandbuilder.execToggleSwitch(device_details, 3000);
+        transport.send(cmd);
     }
 
-    get_switchstatus(callback) {
+    get_switchstatus() {
         try {
             var transport = this.device.transport;
             var commandbuilder = this.device.command_builder;
             var device_details = this.device.details;
             var cmd = commandbuilder.readSwitchStatus(device_details, 3000);
-            transport.send(cmd, (err, value) => {
-                if (err) {
-                    if (callback) {
-                        callback(err);
-                    }
-                    return logger.error("switch status read error %j", err);
-                }
-
-                this.switchstatus = value;
-                logger.debug("switch status: " + value);
-                if (callback) {
-                    callback(null, value);
-                }
-
-                //
-            });
+            transport.send(cmd);
         }
         catch (err) {
             logger.error("get_switchstatus() error %j", err);
         }
     }
 
+    read(callback) {
+
+        try {
+            let status_processed = false;
+            let proctimer = 0;
+            let result = {
+                payload: {
+                    switch_status: -1
+                }
+            };
+
+            let complete = function () {
+                if (status_processed) {
+                    callback(null, result);
+                    if (proctimer) {
+                        clearTimeout(proctimer);
+                    }
+                }
+            }
+
+            this.once((iotdefinitions.ZIGBEE + iotdefinitions.PROPERTY_SWITCH_STATUS), (value) => {
+                try {
+                    result.payload.switch_status = value;
+                    status_processed = true;
+                    callback(null, result);
+                    if (proctimer) {
+                        clearTimeout(proctimer);
+                    }
+                }
+                catch (err) {
+                    logger.error("ZigbeeSwitchFeature read() 'once' event handler error %j", err);
+                }
+            });
+
+            // read the power values
+            this.get_switchstatus();
+
+            proctimer = setTimeout(
+                () => {
+                    if (!status_processed) {
+                        this.removeAllListeners((iotdefinitions.ZIGBEE + iotdefinitions.PROPERTY_SWITCH_STATUS));
+                        callback(constants.IOT_ERROR_TIMEDOUT);
+                    }
+                },
+                6000
+            );
+        }
+        catch (err) {
+            callback(err);
+        }
+    }
 }
 
 module.exports = ZigbeeSwitchFeature;

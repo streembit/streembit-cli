@@ -204,11 +204,11 @@ module.exports.verify_wsjwt = function (msg, callback) {
         throw new Error("authentication failed, invalid session token");
     }
 
-    if (user.username != obj.username) {
-        throw new Error("authentication failed, invalid username");
+    if (user.pkhash != obj.pkhash) {
+        throw new Error("authentication failed, invalid pkhash");
     }
 
     //
-    return { username: user.username, token: token };
+    return { pkhash: user.pkhash, token: token };
 
 }

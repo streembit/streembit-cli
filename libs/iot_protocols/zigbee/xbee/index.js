@@ -109,7 +109,7 @@ class XbeeHandler {
     }
 
     simple_descriptor_request(address64, address16, data) {
-        console.log("simple_descriptor_request to " + address64);
+        //console.log("simple_descriptor_request to " + address64);
         var txframe = { // AT Request to be sent to 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
             destination64: address64,
@@ -125,7 +125,7 @@ class XbeeHandler {
     }
 
     active_endpoint_request(address64, address16, data) {
-        console.log("active_endpoint_request to " + address64);
+        //console.log("active_endpoint_request to " + address64);
         var txframe = { 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
             destination64: address64,
@@ -325,7 +325,7 @@ class XbeeHandler {
 
         reader.seek(11);
         var count = reader.nextUInt8();
-        console.log("count of clusters: " + count);
+        //console.log("count of clusters: " + count);
         var clusters = [];
         for (var i = 0; i < count; i++) {
             var cluster = reader.nextUInt16LE();
@@ -422,7 +422,7 @@ class XbeeHandler {
         if (endpoints.length) {
             devices[frame.remote64].endpoints = endpoints;
         }
-        console.log(frame.remote64 + " ednpoints: " + util.inspect(devices[frame.remote64]));
+        //console.log(frame.remote64 + " ednpoints: " + util.inspect(devices[frame.remote64]));
 
         // reply with 0004 Simple Descriptor Request
         var addressbuf = Buffer.from(frame.remote16, 'hex');
@@ -700,7 +700,7 @@ class XbeeHandler {
         aerbuf.writeUInt8(0x12, 0); // transaction sequence number (arbitrarily chosen)                        
         addressbuf.copy(aerbuf, 1);
         var aerdata = [...aerbuf];
-        console.log("handle_cluster_deviceannounce() Active Endpoint Request data: " + util.inspect(aerdata));
+        //console.log("handle_cluster_deviceannounce() Active Endpoint Request data: " + util.inspect(aerdata));
         this.active_endpoint_request(frame.remote64, frame.remote16, aerdata);
     }
 

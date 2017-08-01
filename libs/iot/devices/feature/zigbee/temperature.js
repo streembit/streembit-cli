@@ -38,8 +38,8 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         super(device, feature);     
         this.ispolling = (feature.settings && feature.settings.ispolling) ? feature.settings.ispolling : false;
         this.long_poll_interval = (feature.settings && feature.settings.long_poll_interval) ? feature.settings.long_poll_interval : -1;
-        this.longpolling_enabled = this.ispolling && this.long_poll_interval > 0;
-        this.polling_timer = 0;
+        this.longpolling_enabled = this.ispolling && this.long_poll_interval > 0;    
+        this.polling_timer = 0;        
 
         logger.debug("Initialized a Zigbee temperature sensor feature for device id: " + this.deviceid + " ispolling: " + this.ispolling + " long_poll_interval: " + this.long_poll_interval);        
     }
@@ -53,9 +53,18 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
             properties.forEach(
                 (item) => {
                     if (item.property == iotdefinitions.PROPERTY_TEMPERATURE) {
-                        this.temperature = item.value;
-                        //logger.debug("TemperatureFeature on_datareceive_event " + item.property + ": " + item.value);
-                        this.emit(iotdefinitions.PROPERTY_TEMPERATURE, item.value);
+                        try {
+                            var val = new Number(item.value);
+                            this.temperature = val.toFixed(2);
+                            //logger.debug("TemperatureFeature on_datareceive_event " + item.property + ": " + this.temperature);
+                            this.emit(iotdefinitions.PROPERTY_TEMPERATURE, this.temperature);
+                            if (!this.datareceived) {
+                                this.datareceived = true;
+                            }
+                        }
+                        catch (err) {
+                            logger.error("TemperatureFeature on_datareceive_event() property iotdefinitions.PROPERTY_TEMPERATURE error: %j", err);
+                        }
                     }
                 }
             );
@@ -127,6 +136,11 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
     read(callback) {
         try {    
             if (this.longpolling_enabled) {
+
+                if (!this.datareceived) {
+                    return callback(constants.IOT_ERROR_NODATA);
+                }
+
                 // just get the latest reading
                 var result = {
                     payload: {

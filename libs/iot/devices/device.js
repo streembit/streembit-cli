@@ -239,9 +239,9 @@ class Device {
             }
         }
 
-        if (!this.active) {
-            return callback("The device is inactive")
-        }
+        //if (!this.active) {
+        //    return callback("The device is inactive")
+        //}
 
         switch (payload.cmd) {
             case constants.IOTCMD_DEVICE_DETAILS:
