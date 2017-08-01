@@ -59,10 +59,14 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                         }
                         this.power_consumption = value;
                         logger.debug("power_consumption: %d Watt", this.power_consumption);
+                        //
+                        this.emit(iotdefinitions.PROPERTY_ACTIVEPOWER, this.power_consumption);
                     }
                     else if (item.property == iotdefinitions.PROPERTY_VOLTAGE) {
                         this.voltage = item.value;
-                        logger.debug("voltage: %d Volt", this.voltage)
+                        logger.debug("voltage: %d Volt", this.voltage);
+                        //
+                        this.emit(iotdefinitions.PROPERTY_VOLTAGE, this.voltage);
                     }
                 }
             );
@@ -99,37 +103,73 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         }
     }
 
-    read_power(completefn) {
-        async.waterfall(
-            [
-                (callback) => {
-                    this.get_voltage(callback)
-                },
-                (callback) => {
-                    this.get_powerconsumption(callback);
-                }                
-            ],
-            (err) => {
-                if (err) {
-                    completefn(err);
-                    logger.error("read power error: %j", err);
-                }
-                else {
-                    var result = {
-                        payload: {
-                            power_consumption: this.power_consumption,
-                            voltage: this.voltage
-                        }
-                    };
-                    completefn(null, result);
-                }                
-            }
+    read_power() {
+        this.get_voltage(callback);
+
+        setTimeout(
+            () => {
+                this.get_powerconsumption(callback);
+            },
+            500
         );
     }
 
     read(callback) {
         try {
-            this.read_power(callback);
+            this.read_power();
+
+            let processed_power = false;
+            let processed_voltage = false;
+            let proctimer = 0;
+            let result = {
+                payload: {
+                    power_consumption: -1,
+                    voltage: -1
+                }
+            };
+
+            let complete = function() {
+                if (processed_voltage && processed_power) {
+                    callback(null, result);
+                    if (proctimer) {
+                        clearTimeout(proctimer);
+                    }
+                }
+            }
+
+
+            this.once(iotdefinitions.PROPERTY_ACTIVEPOWER, (value) => {
+                try {
+                    result.payload.power_consumption = value;
+                    processed_power = true;
+                    complete();
+                }
+                catch (err) {
+                    logger.error("TemperatureFeature read() 'once' event handler error %j", err);
+                }
+            });
+
+            this.once(iotdefinitions.PROPERTY_VOLTAGE, (value) => {
+                try {
+                    result.payload.voltage = value;
+                    processed_voltage = true;
+                    complete();
+                }
+                catch (err) {
+                    logger.error("TemperatureFeature read() 'once' event handler error %j", err);
+                }
+            });
+
+            proctimer = setTimeout(
+                () => {
+                    if (!processed_voltage || !processed_power) {
+                        this.removeAllListeners(iotdefinitions.PROPERTY_VOLTAGE);
+                        this.removeAllListeners(iotdefinitions.PROPERTY_ACTIVEPOWER);
+                        callback(constants.IOT_ERROR_TIMEDOUT);
+                    }
+                },
+                6000
+            );
         }
         catch (err) {
             callback(err);
