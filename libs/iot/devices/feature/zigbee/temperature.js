@@ -193,6 +193,9 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         }
     }
 
+    configure() {
+    }
+
 }
 
 module.exports = ZigbeeTemperatureFeature;

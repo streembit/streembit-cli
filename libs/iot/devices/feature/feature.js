@@ -105,6 +105,9 @@ class IoTFeature extends EventEmitter {
         });
     }
 
+    configure() {
+    }
+
     //
 }
 

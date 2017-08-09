@@ -61,6 +61,8 @@ class EcMeasureFeature extends IoTFeature {
     get_powerconsumption(callback) {      
     }
 
+    configure() {
+    }
 }
 
 module.exports = EcMeasureFeature;

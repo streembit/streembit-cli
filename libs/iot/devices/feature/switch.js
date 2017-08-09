@@ -57,6 +57,8 @@ class SwitchFeature extends IoTFeature {
     get_switchstatus(callback) {        
     }
 
+    configure() {
+    }
 }
 
 module.exports = SwitchFeature;

@@ -39,45 +39,6 @@ class ZigbeeHandler extends IoTProtocolHandler {
         this.commandbuilder = new ZigbeeCommands();
     }
 
-    //on_device_found(payload) {
-    //    try {
-    //        //debugger;
-    //        if (!payload) {
-    //            return logger.error("ZigbeeHandler on_device_found error, invalid payload");
-    //        }
-
-    //        if (!payload.id) {
-    //            return logger.error("ZigbeeHandler on_device_found error, invalid payload ID");
-    //        }
-
-    //        var device = IoTProtocolHandler.getdevice(payload.id);
-    //        if (!device) {
-    //            return logger.error("device " + payload.id + " is not defined at zigbee handler");
-    //        }
-
-    //        if (payload.hasOwnProperty('address64')) {
-    //            device.update_property("address64", payload.address64);
-    //        }
-    //        if (payload.hasOwnProperty('address16')) {
-    //            device.update_property("address16", payload.address16);
-    //        }
-
-    //        if (device.type == constants.IOT_DEVICE_GATEWAY) {
-    //            //device.update_property("address16", payload.address16);
-    //            device.update_active(true);
-    //        }
-    //        else {
-    //            // the simple descriptor response was received -> the device is active
-    //            device.on_active_device(payload);
-    //        }
-
-    //        // end of procedure, don't call the super, the event is handled here
-    //    }
-    //    catch (e) {
-    //        logger.error("on_active_device exception %j", e);
-    //    }
-    //}
-
     init() {
         try {
             //debugger;

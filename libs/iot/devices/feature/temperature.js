@@ -53,6 +53,8 @@ class TemperatureFeature extends IoTFeature {
     read(callback) {        
     }
 
+    configure() {
+    }
 }
 
 module.exports = TemperatureFeature;

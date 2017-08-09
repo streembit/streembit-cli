@@ -174,7 +174,7 @@ class XbeeHandler {
 
     // end Command helpers mainly for ZDO & ZCL
 
-    handle_cluster_routingtable(frame) {
+    handle_cluster_8032(frame) {
         //debugger;
         //console.log("handle_cluster_descriptor");
         if (!frame.remote64 || typeof frame.remote64 != 'string') {
@@ -220,9 +220,9 @@ class XbeeHandler {
         //
     }
 
-    handle_cluster_neighbortable (frame) {
+    handle_cluster_8031 (frame) {
         try {
-            //console.log("handle_cluster_neighbortable");
+            //console.log("handle_cluster_8031");
             //console.log(util.inspect(frame));
             var clusterId = 0x0031;
 
@@ -311,11 +311,11 @@ class XbeeHandler {
 
         }
         catch (err) {
-            logger.error("handle_cluster_neighbortable error: %j", err);
+            logger.error("handle_cluster_8031 error: %j", err);
         }
     };
 
-    handle_cluster_simpledesciptor_response(frame) {
+    handle_cluster_8004(frame) {
         var reader = new BufferReader(frame.data);
         var id = reader.nextUInt8();
         var status = reader.nextUInt8();
@@ -390,7 +390,7 @@ class XbeeHandler {
         );
     }
 
-    handle_cluster_activeendpoint_response(frame) {
+    handle_cluster_8005(frame) {
         if (frame.profileId != "0000") {
             return logger.debug("INVALID profileID for clusterId 0x8005")
         }
@@ -443,7 +443,7 @@ class XbeeHandler {
     //
     //   clusterID 0x0006 is for both ZDO Match Descriptor Request and HA profile switch so the name is mdrhaswitch
     //
-    handle_cluster_mdrhaswitch(frame) {
+    handle_cluster_0006(frame) {
         try {
             if (!frame.profileId) {
                 return;
@@ -570,13 +570,13 @@ class XbeeHandler {
         }
         catch (err) {
             try {
-                this.dispatch_error_event(frame.remote64, "handle_cluster_mdrhaswitch error: " + err.message);
+                this.dispatch_error_event(frame.remote64, "handle_cluster_0006 error: " + err.message);
             }
             catch (e) { }
         }
     }
 
-    handle_cluster_electricmeasure (frame) {
+    handle_cluster_0b04 (frame) {
 
         var reader = new BufferReader(frame.data);
         reader.seek(1);
@@ -646,7 +646,7 @@ class XbeeHandler {
         //
     }
 
-    handle_cluster_temperature (frame) {
+    handle_cluster_0402(frame) {
         //debugger;
         //console.log("handle_cluster_temperature");
         //console.log(util.inspect(frame));
@@ -690,7 +690,7 @@ class XbeeHandler {
     }
 
 
-    handle_cluster_deviceannounce(frame) {
+    handle_cluster_0013(frame) {
         //console.log(util.inspect(frame));
 
         // reply with 0x0005 Active Endpoint Request
@@ -700,11 +700,11 @@ class XbeeHandler {
         aerbuf.writeUInt8(0x12, 0); // transaction sequence number (arbitrarily chosen)                        
         addressbuf.copy(aerbuf, 1);
         var aerdata = [...aerbuf];
-        //console.log("handle_cluster_deviceannounce() Active Endpoint Request data: " + util.inspect(aerdata));
+        //console.log("handle_cluster_0013() Active Endpoint Request data: " + util.inspect(aerdata));
         this.active_endpoint_request(frame.remote64, frame.remote16, aerdata);
     }
 
-    handle_cluster_basic(frame) {
+    handle_cluster_0000(frame) {
         try {
             //console.log(util.inspect(frame));
 
@@ -714,24 +714,24 @@ class XbeeHandler {
             var command = reader.nextUInt8();
             //console.log("id: %s command %d", id.toString(16), command);
             if (id != 0x99 || command != 0x01) {
-                return logger.error("handle_cluster_basic() invalid id or command");
+                return logger.error("handle_cluster_0000() invalid id or command");
             }
 
             var attr1a = reader.nextUInt8();
             var attr1b = reader.nextUInt8();
             var attr1c = reader.nextUInt8();
             if (attr1b != 0x00) {
-                return logger.error("handle_cluster_basic() invalid data attribute");
+                return logger.error("handle_cluster_0000() invalid data attribute");
             }
 
             if (attr1c != 0x00) {
-                return logger.error("handle_cluster_basic() invalid status");
+                return logger.error("handle_cluster_0000() invalid status");
             }
 
             if (attr1a == 0x03) {
                 var datatype = reader.nextUInt8();
                 if (datatype != 0x20) {
-                    return logger.error("handle_cluster_basic() data type for 0003 is NOT UInt8(0x20)");
+                    return logger.error("handle_cluster_0000() data type for 0003 is NOT UInt8(0x20)");
                 }
 
                 var hardware_version = reader.nextUInt8();
@@ -753,7 +753,7 @@ class XbeeHandler {
             else if (attr1a == 0x04) {
                 var datatype = reader.nextUInt8();
                 if (datatype != 0x42) {
-                    return logger.error("handle_cluster_basic() data type for 0004 is NOT string (0x42)");
+                    return logger.error("handle_cluster_0000() data type for 0004 is NOT string (0x42)");
                 }
 
                 reader.nextUInt8();
@@ -777,7 +777,7 @@ class XbeeHandler {
             else if (attr1a == 0x05) {
                 var datatype = reader.nextUInt8();
                 if (datatype != 0x42) {
-                    return logger.error("handle_cluster_basic() data type for 0005 is NOT string (0x42)");
+                    return logger.error("handle_cluster_0000() data type for 0005 is NOT string (0x42)");
                 }
 
                 reader.nextUInt8();
@@ -801,7 +801,7 @@ class XbeeHandler {
 
         }
         catch (err) {
-            logger.error("handle_cluster_basic error: %j", err);
+            logger.error("handle_cluster_0000 error: %j", err);
             if (frame && frame.data) {
                 try {
                     console.log(util.inspect(frame.data));
@@ -811,7 +811,7 @@ class XbeeHandler {
         }
     }
 
-    handle_poll_response(frame) {
+    handle_cluster_0020(frame) {
         console.log(util.inspect(frame));
     }
 
@@ -926,37 +926,20 @@ class XbeeHandler {
         //
     }
 
-    handle_frame(frame) {        
+    handle_frame(frame) {                
         switch (frame.clusterId) {
             case "0000":
-                this.handle_cluster_basic(frame);
-                break;
             case "0013":
-                this.handle_cluster_deviceannounce(frame);
-                break;
             case "8032":
-                this.handle_cluster_routingtable(frame);
-                break;
             case "8031":
-                this.handle_cluster_neighbortable(frame);
-                break;
             case "0006":
-                this.handle_cluster_mdrhaswitch(frame);  
-                break;
             case "0402":
-                this.handle_cluster_temperature(frame);
-                break;
             case "0b04":
-                this.handle_cluster_electricmeasure(frame);
-                break;
             case "8005":
-                this.handle_cluster_activeendpoint_response(frame);
-                break;
             case "8004":
-                this.handle_cluster_simpledesciptor_response(frame);
-                break;
             case "0020":
-                this.handle_poll_response(frame);
+                var clusterfn = "handle_cluster_" + frame.clusterId;
+                this[clusterfn](frame);
                 break;
             default:
                 break;

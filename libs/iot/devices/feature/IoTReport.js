@@ -56,7 +56,7 @@ class IoTReport {
             if (diff > this.interval) {
                 data.payload.deviceid = this.deviceid;
                 events.emit(iotdefinitions.EVENT_PROPERTY_REPORT, this.usersession, data);
-                console.log("send report to " + this.deviceid);
+                //console.log("send report to " + this.deviceid);
             }
             this.last_report_time = time;
         }

@@ -158,6 +158,9 @@ class ZigbeeSwitchFeature extends SwitchFeature {
             callback(err);
         }
     }
+
+    configure() {
+    }
 }
 
 module.exports = ZigbeeSwitchFeature;

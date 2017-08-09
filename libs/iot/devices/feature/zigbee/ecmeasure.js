@@ -103,14 +103,21 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
     }
 
     readpower() {
-        this.get_voltage();
-
+        
         setTimeout(
             () => {
                 this.get_powerconsumption();
             },
-            500
+            1000
         );
+
+        setTimeout(
+            () => {
+                this.get_voltage();
+            },
+            2000
+        );
+        
     }
 
     get_voltage(callback) {
@@ -205,7 +212,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                             callback(constants.IOT_ERROR_TIMEDOUT);
                         }
                     },
-                    6000
+                    7000
                 );
             }
 
@@ -219,6 +226,10 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         }
     }   
 
+    configure() {
+    }
+
+    //
 }
 
 module.exports = ZigbeeEcMeasureFeature;
