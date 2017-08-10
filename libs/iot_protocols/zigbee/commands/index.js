@@ -72,7 +72,7 @@ class ZigbeeCommands {
             timeout: timeout || 10000,
             destination64: address64,
             destination16: address16, 
-            sourceEndpoint: 0x00, 
+            sourceEndpoint: device_details.endpoint, 
             destinationEndpoint: 0x01, 
             clusterId: 0x0402,
             profileId: 0x0104,
@@ -91,7 +91,7 @@ class ZigbeeCommands {
             timeout: timeout || 5000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: 0x00,
+            sourceEndpoint: device_details.endpoint,
             destinationEndpoint: 0x01,
             clusterId: 0x0006,
             profileId: 0x0104,
@@ -109,7 +109,7 @@ class ZigbeeCommands {
             timeout: 0,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: 0x00,
+            sourceEndpoint: device_details.endpoint,
             destinationEndpoint: 0x01,
             clusterId: 0x0006,
             profileId: 0x0104,
@@ -127,7 +127,7 @@ class ZigbeeCommands {
             timeout: timeout || 5000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: 0x00,
+            sourceEndpoint: device_details.endpoint,
             destinationEndpoint: 0x01,
             clusterId: 0x0020,
             profileId: 0x0104,
@@ -147,7 +147,7 @@ class ZigbeeCommands {
             timeout: timeout || 10000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: 0x00,
+            sourceEndpoint: device_details.endpoint,
             destinationEndpoint: 0x01,
             clusterId: 0x0b04,
             profileId: 0x0104,
@@ -166,7 +166,7 @@ class ZigbeeCommands {
             timeout: timeout || 10000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: 0x00,
+            sourceEndpoint: device_details.endpoint,
             destinationEndpoint: 0x01,
             clusterId: 0x0b04,
             profileId: 0x0104,
@@ -185,7 +185,7 @@ class ZigbeeCommands {
             timeout: timeout || 10000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: 0x00,
+            sourceEndpoint: device_details.endpoint,
             destinationEndpoint: 0x01,
             clusterId: 0x0b04,
             profileId: 0x0104,
@@ -204,7 +204,7 @@ class ZigbeeCommands {
             timeout: timeout || 10000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: 0x00,
+            sourceEndpoint: device_details.endpoint,
             destinationEndpoint: 0x01,
             clusterId: 0x0b04,
             profileId: 0x0104,
@@ -213,20 +213,42 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    configureReport(device_details, attr1, attr2, datatype, mintime1, mintime2, maxtime1, maxtime2, timeout) {
+    configureReport(device_details, attribute, datatype, mintime1, mintime2, maxtime1, maxtime2, reportable_change, timeout) {
         var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_CONFIGUREREPORT];
+
+        var command = 0x06;
+
+        var reportbuf = Buffer.alloc(11);
+        reportbuf.writeUInt8(0x00, 0);              // frame control
+        reportbuf.writeUInt8(txn, 1);               // txn
+        reportbuf.writeUInt8(command, 2);           // command 0x06 for Configure report   
+        reportbuf.writeUInt8(0x00, 3);              // direction 0x00
+        reportbuf.writeUIntLE(attribute, 4, 2);     // attribute
+        reportbuf.writeUInt8(datatype, 6);          // data type e.g 0x10 boolean
+        reportbuf.writeUIntLE(mininterval, 7, 2);
+        reportbuf.writeUIntLE(maxinterval, 9, 2);
+        if (reportable_change) {
+            if (datatype == 0x21 || datatype == 0x29) {
+                var newbuf = Buffer.alloc(13);
+                reportbuf.copy(newbuf);
+                newbuf.writeUInt16LE(reportable_change, 11, 2);
+                reportbuf = newbuf;
+            }
+        }
+        console.log("configure reporting at " + address64 + " buffer: " + util.inspect(reportbuf));
+
         var cmd = {
             taskid: constants.IOT_CLUSTER_CONFIGUREREPORT,
             txid: txn,
             timeout: timeout || 10000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: 0x00,
+            sourceEndpoint: device_details.endpoint,
             destinationEndpoint: 0x01,
             clusterId: 0x0006,
             profileId: 0x0104,
-            data: [0x00, txn, 0x06, 0x00, attr1, attr2, datatype, mintime1, mintime2, maxtime1, maxtime2]
+            data: reportbuf
         };
 
         /*

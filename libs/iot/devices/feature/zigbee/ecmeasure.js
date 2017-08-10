@@ -31,13 +31,13 @@ const logger = require("libs/logger");
 const async = require("async");
 const util = require('util');
 
+
 class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
     constructor(device, feature) {
         super(device, feature);  
         this.power_divisor = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.divisor) ? feature.settings.acformatting.divisor : 0;
         this.power_multiplier = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.multiplier) ? feature.settings.acformatting.multiplier : 1;        
-
         logger.debug("Initialized a Zigbee EC measuremenent feature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);        
     }
 
@@ -78,6 +78,10 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
     on_device_contacting(payload) {
         super.on_device_contacting(payload);
+    }
+
+    on_device_contacting(payload) {
+        // must send the report
     }
 
     on_activated(payload) {

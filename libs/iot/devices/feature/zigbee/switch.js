@@ -34,7 +34,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
     constructor(device, feature) {
         super(device, feature);  
 
-        logger.debug("Initialized a Zigbee switch measurement for deviceid: " + this.deviceid);        
+        logger.debug("Initialized a Zigbee switch measurement for deviceid: " + this.deviceid );        
     }
 
     on_datareceive_event(properties) {

@@ -61,6 +61,9 @@ class IoTFeature extends EventEmitter {
     on_device_contacting(payload) {
     }
 
+    on_bind_complete(payload) {
+    }
+
     read(callback) {
     }
 

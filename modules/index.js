@@ -21,13 +21,25 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
+const logger = require("libs/logger");
 const seedrunner = require("./seed");
 const clientrunner = require("./client");
 const config = require('libs/config');
+const IoTHandler = require('libs/iot');
 
 class AppRunner {
     constructor() {
 
+    }
+
+    start_iot() {
+        try {
+            var iot = new IoTHandler();
+            iot.init();
+        }
+        catch (err) {
+            logger.error("IoT handler start error: %j", err);
+        }
     }
 
     run(callback) {
@@ -37,13 +49,30 @@ class AppRunner {
             return callback("Invalid configuration. Seed or Client must run");
         }
 
+        var runner = 0;
+        var task = "";
+
         // either run the application as a seed or as a client
         if (seedconf.run) {
-            seedrunner(callback);
+            runner = seedrunner;
+            task = "Start Streembit seed";
         }
         else if (clientconf.run) {
-            clientrunner(callback);
+            runner = clientrunner;
+            task = "Start Streembit client";
         }
+
+        runner(
+            (err) => {
+                if (err) {
+                    logger.error(task + " error");
+                }
+                callback(err);
+
+                // start the IoT handler regardless of the error
+                this.start_iot();
+            }
+        );
     }
 }
 

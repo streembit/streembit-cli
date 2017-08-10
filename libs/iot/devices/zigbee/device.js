@@ -19,32 +19,35 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-
 'use strict';
 
-
 const constants = require("libs/constants");
-const config = require("libs/config");
-const Device = require("./device");
+const iotdefinitions = require("libs/iot/definitions");
+const EndDevice = require("libs/iot/devices/enddevice/device");
 const events = require("libs/events");
 const logger = require("libs/logger");
+const config = require("libs/config");
 
-class GatewayDevice extends Device {
+class ZigbeeDevice extends EndDevice {
 
     constructor(id, device, cmdbuilder, transport) {
         try {
             super(id, device, cmdbuilder, transport);
 
-            if (device) {
-                this.details = device.details || {};
-            }
+            // zigbee coordinator endpoint
+            this.endpoint = 0;
+            var devices = config.iot_config.devices;
+            devices.forEach(
+                (item) => {
+                    if (item.type == constants.IOT_DEVICE_GATEWAY) {
+                        this.details.endpoint = (item.details && item.details.endpoint) ? item.details.endpoint : 0;
+                    }
+                });
 
-            logger.debug("initializing a gateway device id: " + id);
-
-            this.create_event_handlers();
+            logger.debug("Initialized Zigbee device id: " + id + ", endpoint: " + this.details.endpoint);
         }
         catch (err) {
-            throw new Error("GatewayDevice constructor error: " + err.message);
+            throw new Error("IoTEndDevice constructor error: " + err.message);
         }
     }
 
@@ -52,10 +55,10 @@ class GatewayDevice extends Device {
         super.create_event_handlers();
     }
 
-    on_active_device() {
-        super.on_active_device();     
+    on_active_device(payload) {
+        super.on_active_device(payload);
     }
 
 }
 
-module.exports = GatewayDevice;
+module.exports = ZigbeeDevice;

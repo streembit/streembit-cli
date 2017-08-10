@@ -106,10 +106,7 @@ class TaskManager {
 
     on_application_init() {
         logger.debug("on_application_init");
-
-        var iot = new IoTHandler();
-        iot.init();
-
+        
         var blockchain = new BlockchainHandler();
         blockchain.init();
     }

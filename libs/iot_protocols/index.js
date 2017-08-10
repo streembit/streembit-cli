@@ -25,13 +25,8 @@ const logger = require("libs/logger");
 const events = require("libs/events");
 const config = require('libs/config');
 const constants = require("libs/constants");
-const GatewayDevice = require('libs/iot/devices/gateway_device');
-const IoTEndDevice = require('libs/iot/devices/iotend_device');
-
-var DeviceTypeMap = {
-    1: GatewayDevice,
-    2: IoTEndDevice
-};
+const GatewayDevice = require('libs/iot/devices/gateway/device');
+const ZigbeeDevice = require('libs/iot/devices/zigbee/device');
 
 let iotdevices = 0;
 
@@ -49,9 +44,20 @@ class IoTProtocolHandler {
         return iotdevices.get(id);
     }
 
+    getdeviceobj(type, protocol) {
+        if (type == constants.IOT_DEVICE_GATEWAY) {
+            return GatewayDevice;
+        }
+        else if (type == constants.IOT_DEVICE_ENDDEVICE) {
+            if (protocol == constants.IOT_PROTOCOL_ZIGBEE) {
+                return ZigbeeDevice;
+            }
+        }
+    }
+
     device_factory(device) {
         // the type must be the correct one in the config.js file
-        var device_instance = DeviceTypeMap[device.type];
+        var device_instance = this.getdeviceobj(device.type, device.protocol);
         if (!device_instance) {
             throw new Error("Device type " + device.type + " is not implemented. Provide the correct configuration settings in the config.js file.");
         }

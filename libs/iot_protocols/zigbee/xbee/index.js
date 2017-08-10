@@ -36,6 +36,10 @@ const sprintf = require('sprintf-js').sprintf;
 
 const MYENDPOINT = 0x02; // TODO review this to set it dynamcally
 
+const BIND_ID_ONOFFSWITCH = 0x50;
+const BIND_ID_ELECTRICAL_MEASUREMENT = 0x51;
+const BIND_ID_TEMPERATURE = 0x52;
+
 let C = xbeeapi.constants;
 
 let xbee = new xbeeapi.XBeeAPI({
@@ -212,9 +216,8 @@ class XbeeHandler {
             const aerbuf = Buffer.alloc(3);
             aerbuf.writeUInt8(0x12, 0); // 0x12 transaction sequence number (arbitrarily chosen)                        
             addressbuf.copy(aerbuf, 1);
-            var aerdata = [...aerbuf];
-            //console.log("Active Endpoint Request data: " + util.inspect(aerdata));
-            this.active_endpoint_request(frame.remote64, frame.remote16, aerdata);
+            //console.log("Active Endpoint Request data: " + util.inspect(aerbuf));
+            this.active_endpoint_request(frame.remote64, frame.remote16, aerbuf);
         }
 
         //
@@ -440,142 +443,6 @@ class XbeeHandler {
         //
     }
 
-    //
-    //   clusterID 0x0006 is for both ZDO Match Descriptor Request and HA profile switch so the name is mdrhaswitch
-    //
-    handle_cluster_0006(frame) {
-        try {
-            if (!frame.profileId) {
-                return;
-            }
-
-            if (frame.profileId == "0000") {
-                // handle ZDO 0x0006 Match Descriptor Request
-                logger.debug("Match Descriptor Request from " + frame.remote64);
-
-                // create the device
-                if (!devices[frame.remote64]) {
-                    devices[frame.remote64] = { address16: frame.remote16, endpoints: 0, clusters: 0 };
-                }
-
-                var reader = new BufferReader(frame.data);
-                var id = reader.nextUInt8();
-
-                var valuebuf = reader.nextBuffer(2);
-                valuebuf.swap16();
-                var destaddress = valuebuf.readUInt16BE(0);
-
-                //console.log("Match Descriptor Request id: %s, dest: %s", id.toString(16), destaddress.toString(16));
-
-                valuebuf = reader.nextBuffer(2);
-                valuebuf.swap16();
-                var requested_profile = valuebuf.readUInt16BE(0);
-                //console.log("requested profile: %s", requested_profile.toString(16));
-
-                var number_of_input_clusters = reader.nextUInt8();
-                //console.log("number_of_input_clusters: %d", number_of_input_clusters);
-
-                // reply with 8006
-                const respbuf = Buffer.alloc(6);
-                respbuf.writeUInt8(0x11, 0); // transaction sequence number (arbitrarily chosen)
-                respbuf.writeUInt8(0x00, 1); // status
-                respbuf.writeUInt16LE(0x0000, 2); // Indicates the 16-bit address of the responding device, this is the coordinator with address 0x0000
-                respbuf.writeUInt8(0x01, 4); // 1 endpoint
-                respbuf.writeUInt8(MYENDPOINT, 5); // set endpoint tp 0x02
-                var response = [...respbuf];
-                ////console.log("match descriptor response data: " + util.inspect(response));
-                this.match_descriptor_response(frame.remote64, frame.remote16, response);
-
-                this.dispatch_datarcv_event(
-                    frame.remote64,
-                    {
-                        "type": iotdefinitions.EVENT_DEVICE_CONTACTING,
-                        "devicedetails": [
-                            {
-                                "name": "address64",
-                                "value": frame.remote64,
-                            },
-                            {
-                                "name": "address16",
-                                "value": frame.remote16
-                            }                 
-                        ]
-                    }
-                );
-
-
-                if (devices[frame.remote64] && devices[frame.remote64].endpoints && devices[frame.remote64].endpoints.length) {
-                    //console.log("- - - - active endpoint is known for device " + frame.remote64 + " endpoints: " + util.inspect(devices[frame.remote64].endpoints))
-                    return;
-                }
-
-                // send Active Endpoint Request 0x0005
-                var addressbuf = Buffer.from(frame.remote16, 'hex');
-                addressbuf.swap16();
-                const aerbuf = Buffer.alloc(3);
-                aerbuf.writeUInt8(0x12, 0); // 0x12 transaction sequence number (arbitrarily chosen)                        
-                addressbuf.copy(aerbuf, 1);
-                var aerdata = [...aerbuf];
-                //console.log("Active Endpoint Request data: " + util.inspect(aerdata));
-                this.active_endpoint_request(frame.remote64, frame.remote16, aerdata);
-
-                //
-            }
-            else if (frame.profileId == "0104") {
-                // handle HA profile 0104
-                //debugger;
-                //console.log(util.inspect(frame));
-                if (!frame.data) {
-                    return;
-                }
-
-
-                var reader = new BufferReader(frame.data);
-                reader.seek(1);
-                var txid = reader.nextUInt8();
-                if (txid == 0xab) { // we use 0xab for the switch status attribute query, though it could be anything 
-                    reader.seek(5);
-                    var status = reader.nextUInt8();
-                    if (status != 0) {
-                        return this.dispatch_error_event(frame.remote64, "invalid status returned for ON/OFF switch status");
-                    }
-                    var datatype = reader.nextUInt8();
-                    if (datatype != 0x10) { // must be boolean 0x10
-                        return this.dispatch_error_event(frame.remote64, "invalid data type returned");
-                    }
-
-                    var value = reader.nextUInt8();
-
-                    this.dispatch_datarcv_event(
-                        frame.remote64,
-                        {
-                            "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
-                            "properties": [
-                                {
-                                    "property": iotdefinitions.PROPERTY_SWITCH_STATUS,
-                                    "value": value
-                                }
-                            ]
-                        }
-                    );
-
-                    //
-                }
-                else if (txid == 0xdd) {  // configure report response
-                    console.log(util.inspect(frame));
-                }
-            }
-
-            //
-        }
-        catch (err) {
-            try {
-                this.dispatch_error_event(frame.remote64, "handle_cluster_0006 error: " + err.message);
-            }
-            catch (e) { }
-        }
-    }
-
     handle_cluster_0b04 (frame) {
 
         var reader = new BufferReader(frame.data);
@@ -688,7 +555,6 @@ class XbeeHandler {
 
         //
     }
-
 
     handle_cluster_0013(frame) {
         //console.log(util.inspect(frame));
@@ -815,14 +681,207 @@ class XbeeHandler {
         console.log(util.inspect(frame));
     }
 
+    handle_cluster_8021(frame) {
+        console.log(util.inspect(frame));
+        if (frame.profileId == "0000") {
+            // ZDO bind response
+            var reader = new BufferReader(frame.data);
+            var id = reader.nextUInt8();
+            var status = reader.nextUInt8();
+            if (status != 0) {
+                var errmsg = "binding failed, error code: %s" + sprintf("0x%02x", status);
+                return this.dispatch_error_event(frame.remote64, errmsg);
+            }
+
+            var cluster;
+            switch (id) {
+                case BIND_ID_ONOFFSWITCH:
+                    cluster = 0x0006;
+                    break;
+                case BIND_ID_ELECTRICAL_MEASUREMENT:
+                    cluster = 0x0B04;
+                    break;
+                case BIND_ID_TEMPERATURE:
+                    cluster = 0x0402;
+                    break;
+            }
+
+            // binding was successful notify the device
+            this.dispatch_datarcv_event(
+                frame.remote64,
+                {
+                    "type": iotdefinitions.EVENT_DEVICE_BINDSUCCESS,
+                    "cluster": cluster
+                }
+            );
+        }
+    }
+
+    handle_ZDO_match_descriptor_request(frame) {
+        // handle ZDO 0x0006 Match Descriptor Request
+        logger.debug("Match Descriptor Request from " + frame.remote64);
+
+        // create the device
+        if (!devices[frame.remote64]) {
+            devices[frame.remote64] = { address16: frame.remote16, endpoints: 0, clusters: 0 };
+        }
+
+        var reader = new BufferReader(frame.data);
+        var id = reader.nextUInt8();
+
+        var valuebuf = reader.nextBuffer(2);
+        valuebuf.swap16();
+        var destaddress = valuebuf.readUInt16BE(0);
+
+        //console.log("Match Descriptor Request id: %s, dest: %s", id.toString(16), destaddress.toString(16));
+
+        valuebuf = reader.nextBuffer(2);
+        valuebuf.swap16();
+        var requested_profile = valuebuf.readUInt16BE(0);
+        //console.log("requested profile: %s", requested_profile.toString(16));
+
+        var number_of_input_clusters = reader.nextUInt8();
+        //console.log("number_of_input_clusters: %d", number_of_input_clusters);
+
+        // reply with 8006
+        const respbuf = Buffer.alloc(6);
+        respbuf.writeUInt8(0x11, 0); // transaction sequence number (arbitrarily chosen)
+        respbuf.writeUInt8(0x00, 1); // status
+        respbuf.writeUInt16LE(0x0000, 2); // Indicates the 16-bit address of the responding device, this is the coordinator with address 0x0000
+        respbuf.writeUInt8(0x01, 4); // 1 endpoint
+        respbuf.writeUInt8(MYENDPOINT, 5); // set endpoint tp 0x02
+        var response = [...respbuf];
+        ////console.log("match descriptor response data: " + util.inspect(response));
+        this.match_descriptor_response(frame.remote64, frame.remote16, response);
+
+        this.dispatch_datarcv_event(
+            frame.remote64,
+            {
+                "type": iotdefinitions.EVENT_DEVICE_CONTACTING,
+                "devicedetails": [
+                    {
+                        "name": "address64",
+                        "value": frame.remote64,
+                    },
+                    {
+                        "name": "address16",
+                        "value": frame.remote16
+                    }
+                ]
+            }
+        );
+
+
+        if (devices[frame.remote64] && devices[frame.remote64].endpoints && devices[frame.remote64].endpoints.length) {
+            //console.log("- - - - active endpoint is known for device " + frame.remote64 + " endpoints: " + util.inspect(devices[frame.remote64].endpoints))
+            return;
+        }
+
+        // send Active Endpoint Request 0x0005
+        var addressbuf = Buffer.from(frame.remote16, 'hex');
+        addressbuf.swap16();
+        const aerbuf = Buffer.alloc(3);
+        aerbuf.writeUInt8(0x12, 0); // 0x12 transaction sequence number (arbitrarily chosen)                        
+        addressbuf.copy(aerbuf, 1);
+        var aerdata = [...aerbuf];
+        //console.log("Active Endpoint Request data: " + util.inspect(aerdata));
+        this.active_endpoint_request(frame.remote64, frame.remote16, aerdata);
+    }
+
+    handle_HA_switchcluster_response(frame) {
+        var reader = new BufferReader(frame.data);
+        reader.seek(2);
+        var zcl_command = reader.nextUInt8();
+        console.log("zcl_command: %s", sprintf("0x%02x", zcl_command));
+
+        if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11
+            // get the attributes
+            var attribute = reader.nextUInt16LE();
+            console.log("attribute: %s", sprintf("0x%04x", attribute));
+
+            if (attribute == 0x0000) { // active power 
+                var datatype = reader.nextUInt8();
+
+                if (datatype != 0x10) {
+                    return;
+                }
+
+                var value = reader.nextUInt8();
+                console.log("switch status: %s", value == 0 ? "OFF" : "ON");
+            }
+
+        }
+        else if (zcl_command == 0x07) {  // ZCL 0x07 Configure reporting response 7.8
+
+        }
+        else {
+            reader.seek(1);
+            var txid = reader.nextUInt8();
+            if (txid == 0xab) { // we use 0xab for the switch status attribute query, though it could be anything 
+                reader.seek(5);
+                var status = reader.nextUInt8();
+                if (status != 0) {
+                    return this.dispatch_error_event(frame.remote64, "invalid status returned for ON/OFF switch status");
+                }
+                var datatype = reader.nextUInt8();
+                if (datatype != 0x10) { // must be boolean 0x10
+                    return this.dispatch_error_event(frame.remote64, "invalid data type returned");
+                }
+
+                var value = reader.nextUInt8();
+
+                this.dispatch_datarcv_event(
+                    frame.remote64,
+                    {
+                        "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                        "properties": [
+                            {
+                                "property": iotdefinitions.PROPERTY_SWITCH_STATUS,
+                                "value": value
+                            }
+                        ]
+                    }
+                );
+            }
+        }
+    }
+
+    handle_cluster_0006(frame) {
+        console.log(util.inspect(frame));
+        if (frame.profileId == "0000") {
+            // this is a ZDO Match Descriptor Request
+            handle_ZDO_match_descriptor_request(frame);
+        }
+        else if (frame.profileId == "0104") {
+            // this is a HA profile Swich cluster
+            handle_HA_switchcluster_response(frame);
+        }
+    }
+
+    send_rtg_request() {
+        var txframe = { // AT Request to be sent to 
+            type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
+            clusterId: 0x0032,
+            profileId: 0x0000,
+            sourceEndpoint: 0x00,
+            destinationEndpoint: 0x00,
+            data: [0x01, 0x00]
+        };
+
+        serialport.write(xbee.buildFrame(txframe));
+    }
+
+
     send(cmd) {
         try {
             if (!cmd) {
                 throw new Error("cmd paameter is required");
             }
 
-            var destinationEndpoint;
-            var sourceEndpoint;
+            // endpoints must set from the command handler
+            var sourceEndpoint = cmd.sourceEndpoint;
+            var destinationEndpoint = cmd.destinationEndpoint;
+            
             if (cmd.profileId == 0x0000) {
                 destinationEndpoint = 0x00;
                 sourceEndpoint = 0x00;
@@ -855,6 +914,13 @@ class XbeeHandler {
         catch (err) {
             logger.error("XBEE send error: %js", err);
         }
+    }
+
+    configure() {
+        // enumerate the devices using the device settings of the configuration file
+        // first send a ZDO 0x0032 to get all connected devices
+        // there must be at last a gateway operational and we try to find that first
+        send_rtg_request()
     }
 
     init() {
@@ -900,13 +966,13 @@ class XbeeHandler {
 
             this.is_portopened = true;
 
-            // get the neighbor table
             setTimeout(
                 () => {
-                    this.get_routing_table();
+                    this.configure();
                 },
-                1000
+                500
             );
+
 
             //
         });
@@ -938,6 +1004,7 @@ class XbeeHandler {
             case "8005":
             case "8004":
             case "0020":
+            case "8021":
                 var clusterfn = "handle_cluster_" + frame.clusterId;
                 this[clusterfn](frame);
                 break;
@@ -949,13 +1016,10 @@ class XbeeHandler {
     init_xbee_framehandler() {
         xbee.on("frame_object", (frame) => {
             try {
-                if (!frame || !frame.clusterId) {
-                    return;
-                }
-
-                console.log("frame type: " + frame.type + " clusterid: " + frame.clusterId);
-
-                this.handle_frame(frame);
+                if (frame && frame.clusterId) {
+                    console.log("frame type: " + frame.type + " clusterid: " + frame.clusterId);
+                    this.handle_frame(frame);
+                }               
 
                 //
             }

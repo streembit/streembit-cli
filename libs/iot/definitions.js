@@ -29,6 +29,7 @@ var definitions = {
     DATA_RECEIVED_EVENT: "_iot_data_received",
     EVENT_RADIO_ERROR: "radio_error",
     EVENT_DEVICE_CONTACTING: "device_contacting",
+    EVENT_DEVICE_BINDSUCCESS: "binding_success",
     EVENT_DEVICE_ACTIVATED: "device_activated",
     EVENT_DEVICE_PROPERTY_UPDATE: "device_property_update",
     EVENT_FEATURE_PROPERTY_UPDATE: "iot_property_update",

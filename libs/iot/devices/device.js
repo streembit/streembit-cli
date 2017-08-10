@@ -83,6 +83,18 @@ class Device {
         this.m_details = value;
     }
 
+    set_property_item(properties) {
+        if (properties && Array.isArray(properties) && properties.length) {
+            properties.forEach(
+                (item) => {
+                    if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
+                        this.details[item.name] = item.value;
+                    }
+                }
+            );
+        }       
+    }
+
     create_event_handlers() {
         var device_datareceived_event = this.id + iotdefinitions.DATA_RECEIVED_EVENT;
         events.on(
@@ -94,51 +106,36 @@ class Device {
                             this.errors.push(payload.error)
                         }
                     }
+                    else if (payload.type == iotdefinitions.EVENT_DEVICE_BINDSUCCESS) {
+                        this.set_property_item(payload.devicedetails);
+                        // call the features on_device_contacting method
+                        this.features.forEach((feature, key, map) => {
+                            feature.on_bind_complete(payload);
+                        });
+                    }
                     else if (payload.type == iotdefinitions.EVENT_DEVICE_CONTACTING) {
-                        if (payload.devicedetails && Array.isArray(payload.devicedetails) && payload.devicedetails.length) {
-                            payload.devicedetails.forEach(
-                                (item) => {
-                                    if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
-                                        this.details[item.name] = item.value;
-                                    }
-                                }
-                            );
-                            // call the features on_device_contacting method
-                            this.features.forEach((feature, key, map) => {
-                                feature.on_device_contacting(payload);
-                            });
-                        }
+                        this.set_property_item(payload.devicedetails);
+                        // call the features on_device_contacting method
+                        this.features.forEach((feature, key, map) => {
+                            feature.on_device_contacting(payload);
+                        });
                     }
                     else if (payload.type == iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE) {
-                        if (payload.properties && Array.isArray(payload.properties) && payload.properties.length) {
-                            payload.properties.forEach(
-                                (item) => {
-                                    if (item.hasOwnProperty("property") && item.hasOwnProperty("value")) {
-                                        this.details[item.property] = item.value;
-                                    }
-                                }
-                            );
-                        }
+                        this.set_property_item(payload.properties);
                     }
                     else if (payload.type == iotdefinitions.EVENT_DEVICE_ACTIVATED) {
                         this.active = true;
-
-                        if (payload.devicedetails && Array.isArray(payload.devicedetails) && payload.devicedetails.length) {
-                            payload.devicedetails.forEach(
-                                (item) => {
-                                    if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
-                                        this.details[item.name] = item.value;
-                                    }
-                                }
-                            );
-                        }
+                        this.set_property_item(payload.devicedetails);
 
                         // call the actived event handler of each features
                         this.features.forEach((feature, key, map) => {
                             feature.on_activated(payload);
                         });
                     }
-                    else if (payload.type == iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE && payload.properties && Array.isArray(payload.properties) && payload.properties.length) {
+                    else if (
+                        payload.type == iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE &&
+                        payload.properties && Array.isArray(payload.properties) &&
+                        payload.properties.length) {
                         this.features.forEach((feature, key, map) => {
                             feature.on_datareceive_event(payload.properties);
                         });

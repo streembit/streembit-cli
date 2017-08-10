@@ -24,21 +24,26 @@ Copyright (C) 2017 The Streembit software development team
 
 
 const constants = require("libs/constants");
-const iotdefinitions = require("libs/iot/definitions");
-const Device = require("./device");
+const Device = require("libs/iot/devices/device");
 const events = require("libs/events");
 const logger = require("libs/logger");
 
-class IoTEndDevice extends Device {
+class GatewayDevice extends Device {
 
     constructor(id, device, cmdbuilder, transport) {
         try {
-            super(id, device, cmdbuilder, transport);            
+            super(id, device, cmdbuilder, transport);
+
+            if (device) {
+                this.details = device.details || {};
+            }
+
+            logger.debug("initializing a gateway device id: " + id);
+
             this.create_event_handlers();
-            logger.debug("Initialized a IoT end device id: " + id);
         }
         catch (err) {
-            throw new Error("IoTEndDevice constructor error: " + err.message);
+            throw new Error("GatewayDevice constructor error: " + err.message);
         }
     }
 
@@ -46,10 +51,10 @@ class IoTEndDevice extends Device {
         super.create_event_handlers();
     }
 
-    on_active_device(payload) {
-        super.on_active_device(payload);        
+    on_active_device() {
+        super.on_active_device();     
     }
 
 }
 
-module.exports = IoTEndDevice;
+module.exports = GatewayDevice;

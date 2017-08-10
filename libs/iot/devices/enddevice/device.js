@@ -25,43 +25,30 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const IoTFeature = require("./feature");
+const Device = require("libs/iot/devices/device");
 const events = require("libs/events");
 const logger = require("libs/logger");
 
-class SwitchFeature extends IoTFeature {
+class IoTEndDevice extends Device {
 
-    constructor(device, feature) {
-        super(device, feature);  
-        this.switchstatus = 0;        
+    constructor(id, device, cmdbuilder, transport) {
+        try {
+            super(id, device, cmdbuilder, transport);            
+            this.create_event_handlers();
+        }
+        catch (err) {
+            throw new Error("IoTEndDevice constructor error: " + err.message);
+        }
     }
 
-    on_datareceive_event(properties) {        
+    create_event_handlers() {
+        super.create_event_handlers();
     }
 
-    on_device_contacting(payload) {
+    on_active_device(payload) {
+        super.on_active_device(payload);        
     }
 
-    on_device_contacting(payload) {
-    }
-
-    on_activated(payload) {
-    }
-
-    toggle(callback) {
-    }
-
-    read(callback) {
-    }
-
-    exec_toggle_switch() {
-    }
-
-    get_switchstatus(callback) {        
-    }
-
-    configure() {
-    }
 }
 
-module.exports = SwitchFeature;
+module.exports = IoTEndDevice;
