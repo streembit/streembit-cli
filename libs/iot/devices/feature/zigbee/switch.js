@@ -33,7 +33,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
 
     constructor(device, feature) {
         super(device, feature);  
-
+        this.clusters = feature.clusters;
         logger.debug("Initialized a Zigbee switch measurement for deviceid: " + this.deviceid );        
     }
 
@@ -47,7 +47,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
                 (item) => {
                     if (item.property == iotdefinitions.PROPERTY_SWITCH_STATUS) {
                         this.switchstatus = item.value;
-                        //logger.debug("switch status: " + item.value);
+                        logger.debug("ZigbeeSwitchFeature switch status: " + item.value);
                         this.emit((iotdefinitions.ZIGBEE + iotdefinitions.PROPERTY_SWITCH_STATUS), item.value);
                     }
                 }
@@ -58,17 +58,83 @@ class ZigbeeSwitchFeature extends SwitchFeature {
         }
     }
 
+    iscluster(cluster) {
+        var exists = this.clusters.indexOf(cluster);
+        return (exists > -1 ) ? true : false;
+    }
+
+    on_bind_complete(payload) {
+        try {
+            var cluster = 0x0006;
+            var attribute = 0x0000, datatype = 0x10, mininterval = 0x02, maxinterval = 0x0040;
+            var reports = [];
+            reports.push(
+                {
+                    attribute: attribute,
+                    datatype: datatype,
+                    mininterval: mininterval,
+                    maxinterval: maxinterval
+                }
+            );
+            var transport = this.device.transport;
+            var commandbuilder = this.device.command_builder;
+            var device_details = this.device.details;
+            var cmd = commandbuilder.configureReport(device_details, cluster, reports);
+            transport.send(cmd);            
+        }
+        catch (err) {
+            logger.error("SwitchFeature on_bind_complete() error: %j", err);
+        }
+    }
+
     on_device_contacting(payload) {
         this.get_switchstatus();
     }
 
-    on_activated(payload) {
+    on_activated(payload) {        
+    }
+
+    on_clusterlist_receive() {
+        try {
+            if (!this.device.details || !this.device.details.clusters || !Array.isArray(this.device.details.clusters) || !this.device.details.clusters.length) {
+                return logger.error("Zigbee cluster list is empty");
+            }
+
+            var exists = false;
+            this.device.details.clusters.forEach(
+                (item) => {
+                    if (item == "0006") {
+                        exists = true;
+                    }
+                }
+            );
+
+            if (exists) {
+                logger.debug("SwitchFeature cluster 0006 exists");
+
+                // bind
+                var transport = this.device.transport;
+                var commandbuilder = this.device.command_builder;
+                var device_details = this.device.details;
+                var clusterid = 0x0006;
+                var cmd = commandbuilder.bind(0x50, device_details, clusterid);
+                transport.send(cmd);
+            }
+        }
+        catch (err) {
+            logger.error("SwitchFeature on_clusterlist_receive() error: %j", err);
+        }
+    }
+
+    on_report_configured() {
+        /*
         try {
             this.get_switchstatus();
         }
         catch (err) {
             logger.error("SwitchFeature on_activated error %j", err);
         }
+        */
     }
 
     toggle(callback) {
@@ -86,7 +152,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
         var transport = this.device.transport;
         var commandbuilder = this.device.command_builder;
         var device_details = this.device.details;
-        var cmd = commandbuilder.execToggleSwitch(device_details, 3000);
+        var cmd = commandbuilder.execToggleSwitch(device_details);
         transport.send(cmd);
     }
 
@@ -95,7 +161,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
             var transport = this.device.transport;
             var commandbuilder = this.device.command_builder;
             var device_details = this.device.details;
-            var cmd = commandbuilder.readSwitchStatus(device_details, 3000);
+            var cmd = commandbuilder.readSwitchStatus(device_details);
             transport.send(cmd);
         }
         catch (err) {

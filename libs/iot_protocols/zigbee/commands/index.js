@@ -23,10 +23,14 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 const constants = require("libs/constants");
+const util = require('util');
+const gateway = require('libs/iot/devices/zigbee/gateway');
+
 
 class ZigbeeCommands {
     constructor() {
         this.txnmap = {};
+        this.txnmap[constants.IOT_CLUSTER_BIND] = 0x75;
         this.txnmap[constants.IOT_CLUSTER_POLLCHECKIN] = 0x76;
         this.txnmap[constants.IOT_CLUSTER_NEIGHBORTABLE] = 0x77;
         this.txnmap[constants.IOT_CLUSTER_TEMPERATURE] = 0xc1;
@@ -45,13 +49,12 @@ class ZigbeeCommands {
         return this.txnmap[clusterId];
     }
 
-    getNeighborTable(device_details, timeout, index) {
+    getNeighborTable(device_details, index) {
         var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_NEIGHBORTABLE]; // use 0x77 for the clusterID 0x0031, but it could be anything ...
         var cmd = {
             taskid: constants.IOT_CLUSTER_NEIGHBORTABLE,
             txid: txn,
-            timeout: timeout || 5000,
             destination64: address64,
             destination16: address16, // 'fffe',
             sourceEndpoint: 0x00,           // for ZDO must be 0
@@ -63,17 +66,74 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    readTemperature(device_details, timeout) {
+    swapEUI64toLittleEndian(eui64) {
+        if (!eui64 || eui64.length != 16) {
+            throw new Error("Invalid EUI64 data. EUI64 must be an 16 charecter long string");
+        }
+
+        var buffer = Buffer.from(eui64, "hex");
+        var final = Buffer.alloc(8);
+        var index = 0;
+        for (let i = buffer.length - 1; i >= 0; i--) {
+            final[index++] = buffer[i];
+        }
+
+        return final;
+    }
+
+    bind(txn, device_details, clusterid, deviceendpoint) {
+        var address64 = device_details.address64, address16 = device_details.address16;
+
+        var source64 = this.swapEUI64toLittleEndian(address64);
+        var srcendpoint = deviceendpoint || device_details.endpoints[0];
+
+        var destaddress16 = gateway.address16;
+        var destendpoint = gateway.endpoint;
+        var gateway64 = gateway.address64;
+        var dest64buf = this.swapEUI64toLittleEndian(gateway64);
+
+        const bindingbuf = Buffer.alloc(22);
+        // werite txn
+        bindingbuf.writeUInt8(txn, 0); 
+        // write the source address 
+        source64.copy(bindingbuf, 1);
+        // write the source endpoint
+        bindingbuf.writeUInt8(srcendpoint, 9); // 
+        // write the cluster id
+        bindingbuf.writeUInt16LE(clusterid, 10, 2);
+        // write the DstAddrMode
+        bindingbuf.writeUInt8(0x03, 12); // 0x01 = 16-bit group address for DstAddress and DstEndp not present; 0x03 64-bit extended address for DstAddress and DstEndp present
+        // write the DstAddress
+        dest64buf.copy(bindingbuf, 13);
+        bindingbuf.writeUInt8(destendpoint, 21); // 
+
+        var cmd = {
+            taskid: constants.IOT_CLUSTER_NEIGHBORTABLE,
+            txid: txn,
+            destination64: address64,
+            destination16: address16, // 'fffe',
+            sourceEndpoint: 0x00,           // for ZDO must be 0
+            destinationEndpoint: 0x00,      // for ZDO must be 0
+            clusterId: 0x0021,
+            profileId: 0x0000,
+            data: bindingbuf
+        };
+        return cmd;
+    }
+
+    readTemperature(device_details, destination_endpoint) {
         var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_TEMPERATURE]; 
+
+        var destendpoint = destination_endpoint || device_details.endpoints[0];
+
         var cmd = {
             taskid: constants.IOT_CLUSTER_TEMPERATURE,
             txid: txn,
-            timeout: timeout || 10000,
             destination64: address64,
             destination16: address16, 
-            sourceEndpoint: device_details.endpoint, 
-            destinationEndpoint: 0x01, 
+            sourceEndpoint: device_details.sourceendpoint, 
+            destinationEndpoint: destendpoint, 
             clusterId: 0x0402,
             profileId: 0x0104,
             data: [0x00, txn, 0x00, 0x00, 0x00]
@@ -81,18 +141,19 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    //readSwitchStatus(address64, address16, timeout) {
-    readSwitchStatus(device_details, timeout) {
+    readSwitchStatus(device_details, destination_endpoint) {
         var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_SWITCHSTATUS];
+
+        var destendpoint = destination_endpoint || device_details.endpoints[0];
+
         var cmd = {
             taskid: constants.IOT_CLUSTER_SWITCHSTATUS,
             txid: txn,
-            timeout: timeout || 5000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: device_details.endpoint,
-            destinationEndpoint: 0x01,
+            sourceEndpoint: device_details.sourceendpoint,
+            destinationEndpoint: destendpoint,
             clusterId: 0x0006,
             profileId: 0x0104,
             data: [0x00, txn, 0x00, 0x00, 0x00]
@@ -100,17 +161,19 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    execToggleSwitch(device_details, address16) {
+    execToggleSwitch(device_details, address16, destination_endpoint) {
         var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_SWITCHTOGGLE];
+
+        var destendpoint = destination_endpoint || device_details.endpoints[0];
+
         var cmd = {
             taskid: constants.IOT_CLUSTER_SWITCHTOGGLE,
             txid: txn,
-            timeout: 0,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: device_details.endpoint,
-            destinationEndpoint: 0x01,
+            sourceEndpoint: device_details.sourceendpoint,
+            destinationEndpoint: destendpoint,
             clusterId: 0x0006,
             profileId: 0x0104,
             data: [0x01, 0x01, 0x02]
@@ -118,37 +181,39 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    pollCheckIn(device_details, timeout) {
+    pollCheckIn(device_details, destination_endpoint) {
         var address64 = device_details.address64, address16 = device_details.address16;
         var txn = this.txnmap[constants.IOT_CLUSTER_POLLCHECKIN];
+
+        var destendpoint = destination_endpoint || device_details.endpoints[0];
+
         var cmd = {
             taskid: constants.IOT_CLUSTER_POLLCHECKIN,
             txid: txn,
-            timeout: timeout || 5000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: device_details.endpoint,
-            destinationEndpoint: 0x01,
+            sourceEndpoint: device_details.sourceendpoint,
+            destinationEndpoint: destendpoint,
             clusterId: 0x0020,
             profileId: 0x0104,
-            //data: [0x00, 0x88, 0x00] // send 0x88 as txn number 
             data: [0x01, 0x88, 0x01] 
         };
         return cmd;
     }
 
-    //readVoltage(address64, address16, timeout) {
-    readVoltage(device_details, timeout) {
+    readVoltage(device_details, destination_endpoint) {
         var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_VOLTAGE];
+
+        var destendpoint = destination_endpoint || device_details.endpoints[0];
+
         var cmd = {
             taskid: constants.IOT_CLUSTER_VOLTAGE,
             txid: txn,
-            timeout: timeout || 10000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: device_details.endpoint,
-            destinationEndpoint: 0x01,
+            sourceEndpoint: device_details.sourceendpoint,
+            destinationEndpoint: destendpoint,
             clusterId: 0x0b04,
             profileId: 0x0104,
             data: [0x00, txn, 0x00, 0x05, 0x05]
@@ -156,18 +221,20 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    //readPower(address64, address16, timeout) {
-    readPower(device_details, timeout) {
+
+    readPower(device_details, destination_endpoint) {
         var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_POWER];
+
+        var destendpoint = destination_endpoint || device_details.endpoints[0];
+
         var cmd = {
             taskid: constants.IOT_CLUSTER_POWER,
             txid: txn,
-            timeout: timeout || 10000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: device_details.endpoint,
-            destinationEndpoint: 0x01,
+            sourceEndpoint: device_details.sourceendpoint,
+            destinationEndpoint: destendpoint,
             clusterId: 0x0b04,
             profileId: 0x0104,
             data: [0x00, txn, 0x00, 0x0b, 0x05]
@@ -175,18 +242,19 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    //readPowerDivisor(address64, address16, timeout) {
-    readPowerDivisor(device_details, timeout) {
+    readPowerDivisor(device_details, destination_endpoint) {
         var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_POWERDIVISOR];
+
+        var destendpoint = destination_endpoint || device_details.endpoints[0];
+
         var cmd = {
             taskid: constants.IOT_CLUSTER_POWERDIVISOR,
             txid: txn,
-            timeout: timeout || 10000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: device_details.endpoint,
-            destinationEndpoint: 0x01,
+            sourceEndpoint: device_details.sourceendpoint,
+            destinationEndpoint: destendpoint,
             clusterId: 0x0b04,
             profileId: 0x0104,
             data: [0x00, txn, 0x00, 0x05, 0x06]
@@ -194,18 +262,20 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    //readPowerMultiplier(address64, address16, timeout) {
-    readPowerMultiplier(device_details, timeout) {
+
+    readPowerMultiplier(device_details, destination_endpoint) {
         var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_POWERMULTIPLIER];
+
+        var destendpoint = destination_endpoint || device_details.endpoints[0];
+
         var cmd = {
             taskid: constants.IOT_CLUSTER_POWERMULTIPLIER,
             txid: txn,
-            timeout: timeout || 10000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: device_details.endpoint,
-            destinationEndpoint: 0x01,
+            sourceEndpoint: device_details.sourceendpoint,
+            destinationEndpoint: destendpoint,
             clusterId: 0x0b04,
             profileId: 0x0104,
             data: [0x00, txn, 0x00, 0x04, 0x06]
@@ -213,40 +283,68 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    configureReport(device_details, attribute, datatype, mintime1, mintime2, maxtime1, maxtime2, reportable_change, timeout) {
+    configureReport(device_details, cluster, reports, destination_endpoint) {
         var address64 = device_details.address64, address16 = device_details.address16;    
         var txn = this.txnmap[constants.IOT_CLUSTER_CONFIGUREREPORT];
 
-        var command = 0x06;
+        var len = 3; // frame control, txn and command -> 3 bytes
+        var report_buffers = [];
 
-        var reportbuf = Buffer.alloc(11);
+        function add_report_item(report) {
+            var attribute = report.attribute,
+                datatype = report.datatype,
+                mininterval = report.mininterval,
+                maxinterval = report.maxinterval,
+                reportable_change = report.reportable_change;
+
+            var reportbuf = Buffer.alloc(8);
+            reportbuf.writeUInt8(0x00, 0);              // direction 0x00
+            reportbuf.writeUIntLE(attribute, 1, 2);     // attribute
+            reportbuf.writeUInt8(datatype, 3);          // data type e.g 0x10 boolean
+            reportbuf.writeUIntLE(mininterval, 4, 2);
+            reportbuf.writeUIntLE(maxinterval, 6, 2);
+            if (reportable_change) {
+                if (datatype == 0x21 || datatype == 0x29) {
+                    var newbuf = Buffer.alloc(10);
+                    reportbuf.copy(newbuf);
+                    newbuf.writeUInt16LE(reportable_change, 8, 2);
+                    reportbuf = newbuf;
+                }
+            }
+            len += reportbuf.length;
+            report_buffers.push(reportbuf);
+        }
+
+        reports.forEach(
+            (report) => {
+                add_report_item(report);
+            }
+        );
+
+        var reportbuf = Buffer.alloc(len);
         reportbuf.writeUInt8(0x00, 0);              // frame control
         reportbuf.writeUInt8(txn, 1);               // txn
-        reportbuf.writeUInt8(command, 2);           // command 0x06 for Configure report   
-        reportbuf.writeUInt8(0x00, 3);              // direction 0x00
-        reportbuf.writeUIntLE(attribute, 4, 2);     // attribute
-        reportbuf.writeUInt8(datatype, 6);          // data type e.g 0x10 boolean
-        reportbuf.writeUIntLE(mininterval, 7, 2);
-        reportbuf.writeUIntLE(maxinterval, 9, 2);
-        if (reportable_change) {
-            if (datatype == 0x21 || datatype == 0x29) {
-                var newbuf = Buffer.alloc(13);
-                reportbuf.copy(newbuf);
-                newbuf.writeUInt16LE(reportable_change, 11, 2);
-                reportbuf = newbuf;
-            }
+        reportbuf.writeUInt8(0x06, 2);           // command 0x06 for Configure report   
+
+        var offset = 3;
+        for (let i = 0; i < report_buffers.length; i++) {
+            let size = report_buffers[i].length
+            report_buffers[i].copy(reportbuf, offset);
+            offset += size;
         }
+
         console.log("configure reporting at " + address64 + " buffer: " + util.inspect(reportbuf));
+
+        var destendpoint = destination_endpoint || device_details.endpoints[0];
 
         var cmd = {
             taskid: constants.IOT_CLUSTER_CONFIGUREREPORT,
             txid: txn,
-            timeout: timeout || 10000,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: device_details.endpoint,
-            destinationEndpoint: 0x01,
-            clusterId: 0x0006,
+            sourceEndpoint: device_details.sourceendpoint,
+            destinationEndpoint: destendpoint,
+            clusterId: cluster,
             profileId: 0x0104,
             data: reportbuf
         };

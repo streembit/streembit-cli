@@ -51,6 +51,12 @@ class IoTFeature extends EventEmitter {
         this.report_timer = 0;
     }
 
+    on_bind_complete() {
+    }
+
+    on_clusterlist_receive() {
+    }
+
     on_datareceive_event(data) {
         this.sendreport(data);
     }

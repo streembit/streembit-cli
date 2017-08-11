@@ -36,6 +36,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
 
     constructor(device, feature) {
         super(device, feature);     
+        this.clusters = feature.clusters;
         this.ispolling = (feature.settings && feature.settings.ispolling) ? feature.settings.ispolling : false;
         this.long_poll_interval = (feature.settings && feature.settings.long_poll_interval) ? feature.settings.long_poll_interval : -1;
         this.longpolling_enabled = this.ispolling && this.long_poll_interval > 0;    
@@ -74,7 +75,33 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         }
     }
 
-    on_activated(payload) {
+    iscluster(cluster) {
+        var exists = this.clusters.indexOf(cluster);
+        return (exists > -1) ? true : false;
+    }
+
+    on_bind_complete() {
+        var cluster = 0x0402;
+        var attribute = 0x0000, datatype = 0x29, mininterval = 0x05, maxinterval = 0x005a;
+        var reports = [];
+        reports.push(
+            {
+                attribute: attribute,
+                datatype: datatype,
+                mininterval: mininterval,
+                maxinterval: maxinterval
+            }
+        );
+        var cmd = commandbuilder.configureReport(device_details, cluster, reports);
+        transport.send(cmd);
+    }
+
+    on_clusterlist_receive(payload) {
+        var txn = 0x52;
+    }
+
+    on_report_configured() {
+        /*
         try {
             super.on_activated(payload);
 
@@ -88,6 +115,10 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         catch (err) {
             logger.error("TemperatureFeature on_activated error %j", err);
         }
+        */
+    }
+
+    on_activated(payload) {        
     }
 
     on_device_contacting(payload) {

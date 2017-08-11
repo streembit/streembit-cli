@@ -96,68 +96,7 @@ class Device {
     }
 
     create_event_handlers() {
-        var device_datareceived_event = this.id + iotdefinitions.DATA_RECEIVED_EVENT;
-        events.on(
-            device_datareceived_event,
-            (payload) => {
-                try {
-                    if (payload.type == iotdefinitions.EVENT_RADIO_ERROR) {
-                        if (payload.error) {
-                            this.errors.push(payload.error)
-                        }
-                    }
-                    else if (payload.type == iotdefinitions.EVENT_DEVICE_BINDSUCCESS) {
-                        this.set_property_item(payload.devicedetails);
-                        // call the features on_device_contacting method
-                        this.features.forEach((feature, key, map) => {
-                            feature.on_bind_complete(payload);
-                        });
-                    }
-                    else if (payload.type == iotdefinitions.EVENT_DEVICE_CONTACTING) {
-                        this.set_property_item(payload.devicedetails);
-                        // call the features on_device_contacting method
-                        this.features.forEach((feature, key, map) => {
-                            feature.on_device_contacting(payload);
-                        });
-                    }
-                    else if (payload.type == iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE) {
-                        this.set_property_item(payload.properties);
-                    }
-                    else if (payload.type == iotdefinitions.EVENT_DEVICE_ACTIVATED) {
-                        this.active = true;
-                        this.set_property_item(payload.devicedetails);
-
-                        // call the actived event handler of each features
-                        this.features.forEach((feature, key, map) => {
-                            feature.on_activated(payload);
-                        });
-                    }
-                    else if (
-                        payload.type == iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE &&
-                        payload.properties && Array.isArray(payload.properties) &&
-                        payload.properties.length) {
-                        this.features.forEach((feature, key, map) => {
-                            feature.on_datareceive_event(payload.properties);
-                        });
-                    }
-                }
-                catch (err) {
-                    logger.error("Device " + device_datareceived_event + " event error: %j", err);
-                }
-                //
-            }
-        );
-        
     }
-
-
-    //on_property_update(payload) {
-    //    var prop = payload.property;
-    //    if (prop && prop.name) {
-    //        this.details[prop.name] = prop.value;
-    //    }
-    //    logger.debug("device details" + this.id + " property " + prop.name + " update to: " + prop.value);
-    //}
 
     on_active_device(payload) {
         this.active = true;
@@ -171,17 +110,8 @@ class Device {
         if (name) {
             this.details[name] = value;
         }
-
-        //this.features.forEach((feature, key, map) => {
-        //    feature[name] = value;
-        //});
     }
 
-    //on_contacting(payload) {
-    //    this.features.forEach((feature, key, map) => {
-    //        feature.on_contacting(payload);
-    //    });
-    //}
 
     update_properties(property_set) {
         if (!property_set) {
@@ -192,18 +122,6 @@ class Device {
             // propertyName is what you want.
             // You can get the value like this: myObject[propertyName]
             this.details[property] = property_set[property];
-
-            if (property == "address64") {
-                this.features.forEach((feature, key, map) => {
-                    feature.address64 = property_set[property];
-                });
-            }
-
-            if (property == "address16") {
-                this.features.forEach((feature, key, map) => {
-                    feature.address16 = property_set[property];
-                });
-            }
         }
     }
 
@@ -264,10 +182,6 @@ class Device {
                 return callback("The feature handler is not available for the device")
             }
         }
-
-        //if (!this.active) {
-        //    return callback("The device is inactive")
-        //}
 
         switch (payload.cmd) {
             case constants.IOTCMD_DEVICE_DETAILS:

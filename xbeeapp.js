@@ -2,8 +2,7 @@
 
 var util = require('util');
 var SerialPort = require('serialport');
-var sleep = require('system-sleep');
-var xbeeapi = require('./xbeeapi');
+var xbeeapi = require('libs/iot/iot_protocols/zigbee/xbee/xbeeapi');
 var devicelist = require('./devicelist');
 var events = require("./events");
 var BufferReader = require('buffer-reader');
@@ -464,6 +463,75 @@ function iaszone_enroll_response(address64, address16, sourceend, destend) {
         clusterId: 0x0500,
         profileId: 0x0104,
         data: [0x01, 0x34, 0x00, 0x00, 0x00] //  0x00 = Zone Id
+    };
+
+    serialport.write(xbee.buildFrame(txframe));
+}
+
+function configure_reports(txn, address64, address16, sourceend, destend, cluster, reports) {    
+
+    var len = 3; // frame control, txn and command -> 3 bytes
+    var report_buffers = [];
+
+    function add_report_item(report) {
+        var attribute = report.attribute,
+            datatype = report.datatype,
+            mininterval = report.mininterval,
+            maxinterval = report.maxinterval,
+            reportable_change = report.reportable_change;
+
+        var reportbuf = Buffer.alloc(8);
+        reportbuf.writeUInt8(0x00, 0);              // direction 0x00
+        reportbuf.writeUIntLE(attribute, 1, 2);     // attribute
+        reportbuf.writeUInt8(datatype, 3);          // data type e.g 0x10 boolean
+        reportbuf.writeUIntLE(mininterval, 4, 2);
+        reportbuf.writeUIntLE(maxinterval, 6, 2);
+        if (reportable_change) {
+            if (datatype == 0x21 || datatype == 0x29) {
+                var newbuf = Buffer.alloc(10);
+                reportbuf.copy(newbuf);
+                newbuf.writeUInt16LE(reportable_change, 8, 2);
+                reportbuf = newbuf;
+            }
+        }
+        len += reportbuf.length;
+        report_buffers.push(reportbuf);
+    }
+
+    reports.forEach(
+        (report) => {
+            add_report_item(report);
+        }
+    );
+
+    var command = 0x06;
+
+    var reportbuf = Buffer.alloc(len);
+    reportbuf.writeUInt8(0x00, 0);              // frame control
+    reportbuf.writeUInt8(txn, 1);               // txn
+    reportbuf.writeUInt8(command, 2);           // command 0x06 for Configure report   
+
+    var offset = 3;
+    for (let i = 0; i < report_buffers.length; i++) {
+        let size = report_buffers[i].length
+        report_buffers[i].copy(reportbuf, offset);
+        offset += size;
+    }
+    
+    console.log("configure reporting at " + address64 + " buffer: " + util.inspect(reportbuf));
+
+    //var data = [0x00, 0xdd, 0x06, 0x00, 0x00, 0x00, 0x10, 0x10, 0x00, 0x80, 0x00];
+    //console.log(util.inspect(data));
+
+    var txframe = { // AT Request to be sent to     
+        type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
+        destination64: address64,
+        destination16: address16,
+        sourceEndpoint: sourceend,
+        destinationEndpoint: destend,
+        clusterId: cluster, //0x0006,
+        profileId: 0x0104,
+        data: reportbuf
     };
 
     serialport.write(xbee.buildFrame(txframe));
@@ -1121,10 +1189,21 @@ xbee.on("frame_object", function (frame) {
                         1000
                     );
 
+                    
                     setTimeout(
                         () => {
-                            var cluster = 0x0006, attribute = 0x0000, datatype = 0x10, mininterval = 0x02, maxinterval = 0x001e;
-                            configure_report(0xd1, frame.remote64, frame.remote16, MYENDPOINT, device_endpoint, cluster, attribute, datatype, mininterval, maxinterval);
+                            var cluster = 0x0006;
+                            var attribute = 0x0000, datatype = 0x10, mininterval = 0x02, maxinterval = 0x001e;
+                            var reports = [];
+                            reports.push(
+                                {
+                                    attribute: attribute,
+                                    datatype: datatype,
+                                    mininterval: mininterval,
+                                    maxinterval: maxinterval
+                                }
+                            );
+                            configure_reports(0xd1, frame.remote64, frame.remote16, MYENDPOINT, device_endpoint, reports);
                         },
                         3000
                     );
@@ -1132,6 +1211,7 @@ xbee.on("frame_object", function (frame) {
                     // 0b04 data type 0x29 power attr 0x050B
                     // 0b04 data type 0x21 voltage attr 0x0505 
 
+                    /*
                     setTimeout(
                         () => {
                             var cluster = 0x0b04, attribute = 0x050b, datatype = 0x29, mininterval = 0x03, maxinterval = 0x0030, reportable_change = 0x0002;
@@ -1147,7 +1227,7 @@ xbee.on("frame_object", function (frame) {
                         },
                         5000
                     );
-
+                    */
                 }
             }
             else if (frame.clusterId == "8000") {

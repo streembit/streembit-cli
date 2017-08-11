@@ -181,35 +181,28 @@ class XbeeHandler {
     handle_cluster_8032(frame) {
         //debugger;
         //console.log("handle_cluster_descriptor");
-        if (!frame.remote64 || typeof frame.remote64 != 'string') {
-            return logger.error("Invalid remote64 data for cluster 8032 response");
-        }
-
-        // console.log("8032 response " + util.inspect(frame));
-
         // clear the routetable so it will be populated with clusterID 0x31
         neighbortable = [];
 
+        this.dispatch_datarcv_event(
+            frame.remote64,
+            {
+                "type": iotdefinitions.EVENT_DEVICE_ONLINE,
+                "devicedetails": [
+                    {
+                        "name": "address64",
+                        "value": frame.remote64,
+                    },
+                    {
+                        "name": "address16",
+                        "value": frame.remote16
+                    }
+                ]
+            }
+        );
 
-        if (frame.remote64.toLowerCase() == this.gateway) {
-            this.dispatch_datarcv_event(
-                frame.remote64,
-                {
-                    "type": iotdefinitions.EVENT_DEVICE_ACTIVATED,
-                    "devicedetails": [
-                        {
-                            "name": "address64",
-                            "value": frame.remote64,
-                        },
-                        {
-                            "name": "address16",
-                            "value": frame.remote16
-                        }
-                    ]
-                }
-            );
-        }
-        else {
+
+        if (frame.remote64.toLowerCase() != this.gateway) {
             // send an Active Endpoint Request 0x0005 to the end device
             var addressbuf = Buffer.from(frame.remote16, 'hex');
             addressbuf.swap16();
@@ -338,21 +331,14 @@ class XbeeHandler {
 
         logger.debug(frame.remote64 + " clusters: " + util.inspect(clusters));
 
-        // store the cluster list of the device
-        devices[frame.remote64].clusters = clusters;
-
         this.dispatch_datarcv_event(
             frame.remote64,
             {
-                "type": iotdefinitions.EVENT_DEVICE_ACTIVATED,
+                "type": iotdefinitions.EVENT_DEVICE_CLUSTERSRCV,
                 "devicedetails": [
                     {
-                        "name": "address64",
-                        "value": frame.remote64,
-                    },
-                    {
-                        "name": "address16",
-                        "value": frame.remote16
+                        "name": "clusters",
+                        "value": clusters,
                     }
                 ]
             }
@@ -423,7 +409,18 @@ class XbeeHandler {
         //console.log("endpoints: " + util.inspect(endpoints));
 
         if (endpoints.length) {
-            devices[frame.remote64].endpoints = endpoints;
+            this.dispatch_datarcv_event(
+                frame.remote64,
+                {
+                    "type": iotdefinitions.EVENT_DEVICE_ENDPOINTSRCV,
+                    "devicedetails": [
+                        {
+                            "name": "endpoints",
+                            "value": endpoints,
+                        }
+                    ]
+                }
+            );
         }
         //console.log(frame.remote64 + " ednpoints: " + util.inspect(devices[frame.remote64]));
 
@@ -436,14 +433,67 @@ class XbeeHandler {
         // send to the first endpoint
         var endp = endpoints[0];
         sdrbuf.writeUInt8(endp, 3);
-        var sdrdata = [...sdrbuf];
-        //console.log("Simple Descriptor Request data: " + util.inspect(sdrdata));
-        this.simple_descriptor_request(frame.remote64, frame.remote16, sdrdata);       
+        //console.log("Simple Descriptor Request data: " + util.inspect(sdrbuf));
+        this.simple_descriptor_request(frame.remote64, frame.remote16, sdrbuf);       
         
         //
     }
 
     handle_cluster_0b04 (frame) {
+
+        var reader = new BufferReader(frame.data);
+        reader.seek(2);
+        var zcl_command = reader.nextUInt8();
+        console.log("zcl_command: %s", sprintf("0x%02x", zcl_command));
+
+        if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11
+
+            var property_name = 0;
+            var value = 0;
+
+            // get the attributes
+            var attribute = reader.nextUInt16LE();
+            console.log("attribute: %s", sprintf("0x%04x", attribute));
+
+            if (attribute == 0x050b) { // active power 
+                var datatype = reader.nextUInt8();
+
+                if (datatype != 0x29) {
+                    return;
+                }
+
+                value = reader.nextInt16LE();
+                property_name = iotdefinitions.PROPERTY_ACTIVEPOWER;
+                console.log("power: %d Watts", value);
+            }
+
+            if (attribute == 0x0505) { // active power 
+                var datatype = reader.nextUInt8();
+
+                if (datatype != 0x21) {
+                    return;
+                }
+
+                value = reader.nextInt16LE();
+                property_name = iotdefinitions.PROPERTY_VOLTAGE;
+                console.log("voltage: %d Volt", value);
+            }
+
+            this.dispatch_datarcv_event(
+                frame.remote64,
+                {
+                    "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                    "properties": [
+                        {
+                            "property": property_name,
+                            "value": value
+                        }
+                    ]
+                }
+            );
+        }
+
+        /*
 
         var reader = new BufferReader(frame.data);
         reader.seek(1);
@@ -510,6 +560,7 @@ class XbeeHandler {
             }
         );
 
+        */
         //
     }
 
@@ -696,13 +747,13 @@ class XbeeHandler {
             var cluster;
             switch (id) {
                 case BIND_ID_ONOFFSWITCH:
-                    cluster = 0x0006;
+                    cluster = "0006";
                     break;
                 case BIND_ID_ELECTRICAL_MEASUREMENT:
-                    cluster = 0x0B04;
+                    cluster = "0B04";
                     break;
                 case BIND_ID_TEMPERATURE:
-                    cluster = 0x0402;
+                    cluster = "0402";
                     break;
             }
 
@@ -794,7 +845,7 @@ class XbeeHandler {
         var zcl_command = reader.nextUInt8();
         console.log("zcl_command: %s", sprintf("0x%02x", zcl_command));
 
-        if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11
+        if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11 
             // get the attributes
             var attribute = reader.nextUInt16LE();
             console.log("attribute: %s", sprintf("0x%04x", attribute));
@@ -807,29 +858,6 @@ class XbeeHandler {
                 }
 
                 var value = reader.nextUInt8();
-                console.log("switch status: %s", value == 0 ? "OFF" : "ON");
-            }
-
-        }
-        else if (zcl_command == 0x07) {  // ZCL 0x07 Configure reporting response 7.8
-
-        }
-        else {
-            reader.seek(1);
-            var txid = reader.nextUInt8();
-            if (txid == 0xab) { // we use 0xab for the switch status attribute query, though it could be anything 
-                reader.seek(5);
-                var status = reader.nextUInt8();
-                if (status != 0) {
-                    return this.dispatch_error_event(frame.remote64, "invalid status returned for ON/OFF switch status");
-                }
-                var datatype = reader.nextUInt8();
-                if (datatype != 0x10) { // must be boolean 0x10
-                    return this.dispatch_error_event(frame.remote64, "invalid data type returned");
-                }
-
-                var value = reader.nextUInt8();
-
                 this.dispatch_datarcv_event(
                     frame.remote64,
                     {
@@ -843,18 +871,54 @@ class XbeeHandler {
                     }
                 );
             }
+
         }
+        else if (zcl_command == 0x01) {  // ZCL 0x01 Read attributes response 7.2
+            var attribute = reader.nextUInt16LE();
+            console.log("attribute: %s", sprintf("0x%04x", attribute));
+
+            if (attribute == 0x0000) { // active power 
+                var status = reader.nextUInt8();
+                if (status != 0x00) {
+                    return logger.error('Switch cluster read attribute response error status: ' + status);;
+                }
+
+                var datatype = reader.nextUInt8();
+
+                if (datatype != 0x10) {
+                    return;
+                }
+
+                var value = reader.nextUInt8();
+                this.dispatch_datarcv_event(
+                    frame.remote64,
+                    {
+                        "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                        "properties": [
+                            {
+                                "property": iotdefinitions.PROPERTY_SWITCH_STATUS,
+                                "value": value
+                            }
+                        ]
+                    }
+                );
+            }
+        }       
+        else if (zcl_command == 0x07) {  // ZCL 0x07 Configure reporting response 7.8
+
+        }       
+        
     }
 
     handle_cluster_0006(frame) {
         console.log(util.inspect(frame));
         if (frame.profileId == "0000") {
             // this is a ZDO Match Descriptor Request
-            handle_ZDO_match_descriptor_request(frame);
+            this.handle_ZDO_match_descriptor_request(frame);
         }
         else if (frame.profileId == "0104") {
             // this is a HA profile Swich cluster
-            handle_HA_switchcluster_response(frame);
+            this.handle_HA_switchcluster_response(frame);
         }
     }
 
@@ -880,21 +944,7 @@ class XbeeHandler {
 
             // endpoints must set from the command handler
             var sourceEndpoint = cmd.sourceEndpoint;
-            var destinationEndpoint = cmd.destinationEndpoint;
-            
-            if (cmd.profileId == 0x0000) {
-                destinationEndpoint = 0x00;
-                sourceEndpoint = 0x00;
-            }
-            else {
-                sourceEndpoint = MYENDPOINT;
-                if (devices[cmd.destination64] && devices[cmd.destination64].endpoints && devices[cmd.destination64].endpoints.length > 0) {
-                    destinationEndpoint = devices[cmd.destination64].endpoints[0];
-                }
-                else {
-                    destinationEndpoint = 0x01;
-                }
-            }
+            var destinationEndpoint = cmd.destinationEndpoint;            
 
             var txframe = { // AT Request to be sent to 
                 type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
@@ -920,7 +970,7 @@ class XbeeHandler {
         // enumerate the devices using the device settings of the configuration file
         // first send a ZDO 0x0032 to get all connected devices
         // there must be at last a gateway operational and we try to find that first
-        send_rtg_request()
+        this.send_rtg_request()
     }
 
     init() {

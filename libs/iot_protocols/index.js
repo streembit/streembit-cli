@@ -25,7 +25,7 @@ const logger = require("libs/logger");
 const events = require("libs/events");
 const config = require('libs/config');
 const constants = require("libs/constants");
-const GatewayDevice = require('libs/iot/devices/gateway/device');
+const ZigbeeGateway = require('libs/iot/devices/zigbee/gateway');
 const ZigbeeDevice = require('libs/iot/devices/zigbee/device');
 
 let iotdevices = 0;
@@ -46,7 +46,9 @@ class IoTProtocolHandler {
 
     getdeviceobj(type, protocol) {
         if (type == constants.IOT_DEVICE_GATEWAY) {
-            return GatewayDevice;
+            if (protocol == constants.IOT_PROTOCOL_ZIGBEE) {
+                return ZigbeeGateway;
+            }
         }
         else if (type == constants.IOT_DEVICE_ENDDEVICE) {
             if (protocol == constants.IOT_PROTOCOL_ZIGBEE) {

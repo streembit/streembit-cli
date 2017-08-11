@@ -36,6 +36,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
     constructor(device, feature) {
         super(device, feature);  
+        this.clusters = feature.clusters;
         this.power_divisor = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.divisor) ? feature.settings.acformatting.divisor : 0;
         this.power_multiplier = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.multiplier) ? feature.settings.acformatting.multiplier : 1;        
         logger.debug("Initialized a Zigbee EC measuremenent feature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);        
@@ -76,6 +77,50 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         }
     }    
 
+    iscluster(cluster) {
+        var exists = this.clusters.indexOf(cluster);
+        return (exists > -1) ? true : false;
+    }
+
+    on_bind_complete() {
+        try {
+            var cluster = 0x0b04;
+            var reports = [];
+            // power
+            var attribute = 0x050b, datatype = 0x29, mininterval = 0x03, maxinterval = 0x003c, reportable_change = 0x0002;
+            reports.push(
+                {
+                    attribute: attribute,
+                    datatype: datatype,
+                    mininterval: mininterval,
+                    maxinterval: maxinterval,
+                    reportable_change: reportable_change
+                }
+            );
+
+            // voltage
+            attribute = 0x0505, datatype = 0x21, mininterval = 0x03, maxinterval = 0x003e, reportable_change = 0x0003;
+            reports.push(
+                {
+                    attribute: attribute,
+                    datatype: datatype,
+                    mininterval: mininterval,
+                    maxinterval: maxinterval,
+                    reportable_change: reportable_change
+                }
+            );
+
+            var transport = this.device.transport;
+            var commandbuilder = this.device.command_builder;
+            var device_details = this.device.details;
+            var cmd = commandbuilder.configureReport(device_details, cluster, reports);
+            transport.send(cmd);
+        }
+        catch (err) {
+            logger.error("EcMeasureFeature on_bind_complete() error: %j", err);
+        }
+    }
+
     on_device_contacting(payload) {
         super.on_device_contacting(payload);
     }
@@ -84,7 +129,41 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         // must send the report
     }
 
-    on_activated(payload) {
+    on_activated(payload) {        
+    }
+
+    on_clusterlist_receive(payload) {
+        if (!this.device.details || !this.device.details.clusters || !Array.isArray(this.device.details.clusters) || !this.device.details.clusters.length) {
+            return logger.error("Zigbee cluster list is empty");
+        }
+
+        var exists = false;
+        this.device.details.clusters.forEach(
+            (item) => {
+                if (item == "0b04") {
+                    exists = true;
+                }
+            }
+        );
+
+        if (exists) {
+            logger.debug("ZigbeeEcMeasureFeature cluster 0B04 exists");
+
+            // bind
+            var txn = 0x51;
+            var transport = this.device.transport;
+            var commandbuilder = this.device.command_builder;
+            var device_details = this.device.details;
+            var clusterid = 0x0b04;
+            var cmd = commandbuilder.bind(txn, device_details, clusterid);
+            transport.send(cmd);
+        }
+    }
+
+    on_report_configured() {
+    }
+
+    get_settings_attributes() {
         try {
 
             // get the power consumption
@@ -95,11 +174,10 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
             setTimeout(
                 () => {
-                    this.readpower();
+                    //this.readpower();
                 },
                 3000
             );
-            
         }
         catch (err) {
             logger.error("EcMeasureFeature on_activated error %j", err);
@@ -129,7 +207,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         var transport = this.device.transport;
         var commandbuilder = this.device.command_builder;
         var device_details = this.device.details;
-        var cmd = commandbuilder.readVoltage(device_details, 5000);
+        var cmd = commandbuilder.readVoltage(device_details);
         transport.send(cmd);
         if (callback) {
             setTimeout(() => { callback(); }, 1000);
@@ -141,7 +219,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         var transport = this.device.transport;
         var commandbuilder = this.device.command_builder;
         var device_details = this.device.details;
-        var cmd = commandbuilder.readPower(device_details, 5000);
+        var cmd = commandbuilder.readPower(device_details);
         transport.send(cmd);
         if (callback) {
             setTimeout(() => { callback(); }, 1000);
@@ -152,7 +230,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         var transport = this.device.transport;
         var commandbuilder = this.device.command_builder;
         var device_details = this.device.details;
-        var cmd = commandbuilder.readPowerMultiplier(device_details, 5000);
+        var cmd = commandbuilder.readPowerMultiplier(device_details);
         transport.send(cmd);
     }
 
@@ -160,7 +238,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         var transport = this.device.transport;
         var commandbuilder = this.device.command_builder;
         var device_details = this.device.details;
-        var cmd = commandbuilder.readPowerDivisor(device_details, 5000);
+        var cmd = commandbuilder.readPowerDivisor(device_details);
         transport.send(cmd);
     }
 
