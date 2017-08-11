@@ -45,10 +45,8 @@ data/*.json
 
 *.ldb
 *.dat
-/db/appdb/
-/db/blockchaindb/
 /db/streembitdb/
-/db/contactsdb/
+/db/sqldb/
 /build
 
 /.vs/config/applicationhost.config
