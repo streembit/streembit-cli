@@ -140,7 +140,7 @@ var streembit_config = (function (cnfobj) {
         }
     });
 
-    Object.defineProperty(cnfobj, "account_name", {
+    Object.defineProperty(cnfobj, "account", {
         get: function () {
             return m_account_name;
         },
@@ -184,7 +184,7 @@ var streembit_config = (function (cnfobj) {
 
             cnfobj.usertype = config.usertype || constants.USERTYPE_HUMAN;
 
-            cnfobj.account_name = config.account;
+            cnfobj.account = config.account;
 
             // Validate the configuration file. There are some configurations disallowed. Throw an exception here if we detect such invalid configuration
             var seedcfarr = config.modules.filter(function (item) {

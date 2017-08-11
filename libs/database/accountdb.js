@@ -19,7 +19,7 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-const db = require("libs/database");
+const dbinstance = require("libs/database").instance;
 
 'use strict';
 
@@ -30,46 +30,48 @@ class AccountsDb {
 
     get database () {
         if (!this.m_database) {
-            this.m_database = db.appdb;
+            this.m_database = dbinstance.sqldb;
         }
         return this.m_database;
     }
 
-    data(cb) {
-        this.database.get("account", function (err, data) {
-            if (err) {
-                if (err.type == "NotFoundError") {
-                    //  not exists, not an error
-                    cb(null);
+    data(account, cb) {
+        this.database.get(
+            "SELECT * FROM accounts WHERE account=?",
+            [account],
+            (err, row) => {
+                if (err) {
+                    return cb(err);
                 }
-                else {
-                    cb(err);
-                }
+
+                cb(null, row);            
             }
-            else {
-                var obj = 0;
-                if (data) {
-                    try {
-                        obj = JSON.parse(data);
-                    }
-                    catch (e) {
-                        obj = 0;
-                    }
-                }
-                cb(null, obj);
-            }
-        });
+        );
     }
 
-    put(data, cb) {
-        // must be string
-        if ( !(typeof data === 'string') && !(data instanceof String)) {
-            return cb("Invalid account data. The account data must be a string.");
+    add(account, accountpk, cipher, cb) {
+        if (!account) {
+            return cb("Invalid account data.");
+        }
+        if (!accountpk) {
+            return cb("Invalid account accountpk data.");
+        }
+        // cipher must be string
+        if (!(typeof cipher === 'string') && !(cipher instanceof String)) {
+            return cb("Invalid account cipher data. The account cipher data must be a string.");
         }
 
-        this.database.put("account", data, function (err) {
-            cb(err);
-        });
+        this.database.run(
+            "INSERT INTO accounts (account,accountpk,cipher) VALUES (?,?,?)",
+            [account, accountpk, cipher],
+            (err) => {
+                if (err) {
+                    return cb(err);
+                }
+
+                cb();
+            }
+        );
     }
 
 }

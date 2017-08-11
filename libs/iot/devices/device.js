@@ -27,6 +27,7 @@ const events = require("libs/events");
 const logger = require('libs/logger');
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
+const Database = require("libs/database/devicesdb");
 
 class Device {
 
@@ -47,6 +48,7 @@ class Device {
 
         this.errors = [];
 
+        var database = new Database();
         var array = device.features;
         if (array && Array.isArray(array) && array.length > 0) {
             for (var i = 0; i < array.length; i++) {

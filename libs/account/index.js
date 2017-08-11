@@ -41,9 +41,18 @@ class Account {
             instance = this;
             this.m_key = null;
             this.m_connsymmkey = null;
+            this.m_accountname = null;
         }
 
         return instance;
+    }
+
+    get accountname() {
+        return this.m_accountname;
+    }
+
+    set accountname(value) {
+        this.m_accountname = value;
     }
 
     get ppkikey() {
@@ -78,7 +87,7 @@ class Account {
         return this.m_key ? this.m_key.pubkeyhash : '';
     }
 
-    get accountid() {
+    get accountpk() {
         return this.m_key ? this.m_key.pkrmd160hash : '';
     }
 
@@ -101,33 +110,33 @@ class Account {
         return pwdhex;
     }
 
-    addToDB(accountid, cipher_context, callback) {
-        var data = {
-            "accountid": accountid,
-            "cipher": cipher_context
-        };
+    addToDB(cipher, callback) {
+        var database = new Database()
+        database.add(
+            this.accountname,
+            this.accountpk,
+            cipher,
+            (err) => {
+                if (err) {
+                    return callback("Database update error: " + ( err.message || err));
+                }
 
-        var strdata = JSON.stringify(data);
+                logger.debug("Account was added to database");
 
-        var appdb = new Database()
-
-        appdb.put(strdata, function (err) {
-            if (err) {
-                return callback("Database update error: " + ( err.message || err));
+                if (callback) {
+                    callback();
+                }
             }
-
-            logger.debug("Account was added to database");
-
-            if (callback) {
-                callback();
-            }
-        });
+        );
     }
 
-   create_account (password, callback) {
+    create_account(account, password, callback) {
         try {
             if (!password)
                 throw new Error("create_account invalid password parameter");
+
+            if (!account)
+                throw new Error("create_account invalid account parameter");
 
             var symcrypt_key = this.getCryptPassword(password);
 
@@ -150,9 +159,11 @@ class Account {
 
             var skrnd = secrand.randomBuffer(32).toString("hex");
             var skhash = createHash("sha256").update(skrnd).digest("hex");
-            this.connsymmkey = skhash;           
+            this.connsymmkey = skhash;    
 
-            this.addToDB(this.accountid, cipher_context, (err) => {
+            this.accountname = account;
+
+            this.addToDB(cipher_context, (err) => {
                 logger.info("created pkhash: " + this.public_key_hash);
                 logger.info("created bs58pk: " + this.bs58pk);
                 callback(err);
@@ -164,7 +175,7 @@ class Account {
         }
     };
 
-    load_account(data, password, callback) {
+    load_account(account, data, password, callback) {
         try {
             if (!data || !password) {
                 return callback("Invalid parameters, the data and password parameterss are required");
@@ -202,7 +213,7 @@ class Account {
             var key = new ecckey();
             key.keyFromPrivate(hexPrivatekey, 'hex');
 
-            if (key.pkrmd160hash != data.accountid) {
+            if (key.pkrmd160hash != data.accountpk) {
                 return callback("Error in initializing the account, most likely an incorrect password");
             }
 
@@ -214,7 +225,8 @@ class Account {
 
             logger.info("loaded pkhash: " + this.public_key_hash);
             logger.info("loaded bs58pk: " + this.bs58pk);
-            
+
+            this.accountname = account;
 
             // the account exists and the encrypted entropy is correct!
             callback();
@@ -224,7 +236,7 @@ class Account {
         }
     };
 
-    restore (password, data, callback) {
+    restore (account, password, data, callback) {
         try {
             if (!user || !user.account) {
                 throw new Error("invalid user data");
@@ -264,7 +276,7 @@ class Account {
             // create ECC key
             var key = new ecckey();
             key.keyFromPrivate(hexPrivatekey, 'hex');
-            if (key.pkrmd160hash != accountobj.accountid) {
+            if (key.pkrmd160hash != accountobj.accountpk) {
                 return callback("Error in restoring the account, incorrect password or invalid backup data");
             }
 
@@ -284,7 +296,9 @@ class Account {
             this.ppkikey = key;
             this.connsymmkey = accountobj.connsymmkey;
 
-            this.addToDB(this.accountid, cipher_context, function () {               
+            this.accountname = account;
+
+            this.addToDB(cipher_context, function () {               
                 callback();
             });
         }
@@ -308,7 +322,7 @@ class Account {
             };
 
             var cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
-            this.addToDB(this.accountid, cipher_context, function () {
+            this.addToDB(this.accountpk, cipher_context, function () {
                 callback();
             });
         }
@@ -323,21 +337,29 @@ class Account {
 
     init(callback) {
         // get the account details from the database
-        var db = new Database();
-        db.data((err, data) => {
-            if (err) {
-                return callback("Account database error: " + (err.message || err));
-            }
+        var account = config.account;
+        if (!account) {
+            return callback("Invalid account config data. The account field must exists in the configuration file.");
+        }
 
-            var password = config.password;
-            if (!data) {
-                // the account does not exists -> set it up
-                this.create_account(password, callback);
+        var db = new Database();
+        db.data(
+            account,
+            (err, data) => {
+                if (err) {
+                    return callback("Account database error: " + (err.message || err));
+                }
+
+                var password = config.password;
+                if (!data) {
+                    // the account does not exists -> set it up
+                    this.create_account(account, password, callback);
+                }
+                else {
+                    this.load_account(account, data, password, callback);
+                }
             }
-            else {
-                this.load_account(data, password, callback);
-            }
-        });
+        );
     }
 
     load(password, callback) {

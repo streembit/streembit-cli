@@ -23,13 +23,13 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const EndDevice = require("libs/iot/devices/enddevice/device");
+const Device = require("libs/iot/devices/device");
 const events = require("libs/events");
 const logger = require("libs/logger");
 const config = require("libs/config");
 const util = require('util');
 
-class ZigbeeDevice extends EndDevice {
+class ZigbeeDevice extends Device {
 
     constructor(id, device, cmdbuilder, transport) {
         try {

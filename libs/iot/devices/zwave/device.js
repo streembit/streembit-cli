@@ -19,36 +19,34 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-
 'use strict';
-
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const Device = require("libs/iot/devices/device");
+const EndDevice = require("libs/iot/devices/enddevice/device");
 const events = require("libs/events");
 const logger = require("libs/logger");
+const config = require("libs/config");
+const util = require('util');
 
-class IoTEndDevice extends Device {
-
+class ZwaveDevice extends EndDevice {
     constructor(id, device, cmdbuilder, transport) {
         try {
-            super(id, device, cmdbuilder, transport);            
-            this.create_event_handlers();
+            super(id, device, cmdbuilder, transport);
+            logger.debug("Initialized ZwaveDevice device");
         }
         catch (err) {
-            throw new Error("IoTEndDevice constructor error: " + err.message);
+            throw new Error("ZwaveDevice constructor error: " + err.message);
         }
     }
 
-    create_event_handlers() {
-        super.create_event_handlers();
+    create_event_handlers() {      
     }
 
     on_active_device(payload) {
-        super.on_active_device(payload);        
+        super.on_active_device(payload);
     }
 
 }
 
-module.exports = IoTEndDevice;
+module.exports = ZwaveDevice;

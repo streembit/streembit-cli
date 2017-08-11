@@ -32,7 +32,7 @@ var util = require('util');
 var assert = require('assert');
 var logger = require("./libs/logger");
 var AppRunner = require("./modules");
-var db = require("./libs/database");
+var database = require("./libs/database").instance;
 var config = require('libs/config');
 var utils = require("libs/utils");
 var Account = require("libs/account");
@@ -70,7 +70,7 @@ module.exports = exports = function (port, ip, password) {
                 },
                 function (callback) {
                     try {
-                        db.init_databases(__dirname, callback);
+                        database.init(__dirname, callback);
                     }
                     catch (e) {
                         callback(e);
@@ -80,6 +80,15 @@ module.exports = exports = function (port, ip, password) {
                     try {
                         var tasks = new Tasks();
                         tasks.run(callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        var account = new Account();
+                        account.init(callback)
                     }
                     catch (e) {
                         callback(e);
@@ -138,7 +147,8 @@ module.exports.display_data = function () {
 
             var account = new Account();
             //print the node ID
-            console.log("node ID: %s", account.accountid);
+            console.log("accountname: %s", account.accountname);
+            console.log("node ID: %s", account.accountpk);
             console.log("publickey hex: %s", account.public_key);
             console.log("publickey encoded hash: %s", account.public_key_hash);
             console.log("publickey bs58pk: %s", account.bs58pk);
@@ -178,7 +188,7 @@ module.exports.backup = function() {
                         pkhex: account.public_key,
                         encoded_pkhash: account.public_key_hash,                        
                         private_key: account.private_key_hex,
-                        nodeid: account.accountid
+                        nodeid: account.accountpk
                     };
 
                     callback(null, data);

@@ -33,7 +33,7 @@ let m_address64;
 let m_address16;
 let m_endpoint;
 
-class ZigbeeGatewayDevice extends Device {
+class ZigbeeGateway extends Device {
 
     constructor(id, device, cmdbuilder, transport) {
         try {
@@ -42,12 +42,12 @@ class ZigbeeGatewayDevice extends Device {
             this.details = device.details || {};
             m_endpoint = (device.details && device.details.endpoint) ? device.details.endpoint : 0;
 
-            logger.debug("initializing a gateway device id: " + id);
+            logger.debug("Initialized ZigbeeGateway device id: " + id);
 
             this.create_event_handlers();
         }
         catch (err) {
-            throw new Error("GatewayDevice constructor error: " + err.message);
+            throw new Error("ZigbeeGateway constructor error: " + err.message);
         }
     }
 
@@ -105,4 +105,4 @@ class ZigbeeGatewayDevice extends Device {
 
 }
 
-module.exports = ZigbeeGatewayDevice;
+module.exports = ZigbeeGateway;

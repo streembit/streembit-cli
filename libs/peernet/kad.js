@@ -23,7 +23,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const config = require("libs/config");
 const logger = require("libs/logger");
-const db = require("libs/database");
+const database = require("libs/database");
 const kad = require('libs/kad');
 const Account = require("libs/account");
 const utils = require("libs/utils");
@@ -150,7 +150,7 @@ class KadHandler {
         var options = {
             transport: transport,
             logger: logger,
-            storage: db.streembitdb,
+            storage: database.streembitdb,
             seeds: seeds,
             isseed: options.isseed
         };

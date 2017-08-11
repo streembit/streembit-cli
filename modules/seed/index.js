@@ -46,10 +46,6 @@ module.exports = exports = function (callback) {
         async.waterfall(
             [
                 function (cb) {
-                    var account = new Account();
-                    account.init(cb)
-                },
-                function (cb) {
                     try {
                         var options = {
                             seeds: config.seeds,

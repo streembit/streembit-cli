@@ -26,11 +26,12 @@ const config = require("libs/config");
 const logger = require("libs/logger");
 const events = require("libs/events");
 const WebSocket = require("libs/websocket");
-
+const Database = require("libs/database/devicesdb");
+const util = require("util");
 
 class IoTHandler {
     constructor() {
-        this.protocol_handlers = 0;
+        this.protocol_handlers = new Map();
     }
 
     get_handler_by_id(id) {
@@ -58,9 +59,76 @@ class IoTHandler {
         return handler;
     }
 
+    async device_to_db(database, device) {
 
-    init() {
+        function feature_indb(dbfeatures, conf) {
+            if (!dbfeatures) {
+                return false;
+            }
+
+            var exists = false;
+            dbfeatures.forEach(
+                (item) => {
+                    if (conf.type == item.type) {
+                        exists = true;
+                    }
+                }
+            );
+            return exists;
+        }
+
         try {
+            let dbrow = await database.get_device(device.id);
+            if (!dbrow) {
+                // add to database
+                let deviceid = device.id,
+                    type = device.type,
+                    protocol = device.protocol,
+                    mcu = device.mcu,
+                    details = device.details ? JSON.stringify(device.details) : null;
+                await database.add_device(deviceid, type, protocol, mcu, details);
+                dbrow = await database.get_device(device.id);
+            }
+
+            // get all features
+            let conf_features = device.features;
+            if (conf_features) {
+                let devrowid = dbrow.devrowid;
+                let features = await database.get_features_by_devicerowid(devrowid);
+                for (let i = 0; i < conf_features.length; i++) {
+                    var isadded = feature_indb(features, conf_features[i]);
+                    if (!isadded) {
+                        let type = conf_features[i].type,
+                            clusters = conf_features[i].clusters ? JSON.stringify(conf_features[i].clusters) : null,
+                            settings = conf_features[i].settings ? JSON.stringify(conf_features[i].settings) : null;
+                        await database.add_feature(devrowid, type, clusters, settings);
+                        //console.log("feature added to DB: " + util.inspect(conf_features[i]));
+                    }
+                }
+            }
+        }
+        catch (err) {
+            logger.error("Device to DB error: " + err.message);
+        }
+    }
+
+    async populate_db(conf) {       
+        try {
+            var database = new Database();
+            var devices = conf.devices;
+            for (let i = 0; i < devices.length; i++) {
+                await this.device_to_db(database, devices[i]);
+            }
+            return Promise.resolve();
+        }
+        catch (err) {
+            return Promise.reject(new Error(err.message));
+        }
+    }
+
+    async init() {
+        try {
+            //debugger;
             var conf = config.iot_config;
             if (!conf.run) {
                 return logger.debug("Don't run IoT handler");
@@ -68,10 +136,14 @@ class IoTHandler {
 
             logger.info("Run IoT handler");
 
-            this.protocol_handlers = new Map();
-
-            //devicelist.init();
-
+            // make sure the database is operational and all devices are in the database 
+            try {
+                const dbresult = await this.populate_db(conf);
+            }
+            catch (err) {
+                throw new Error("IOT handler init populate_db() error: " + err.message);
+            }
+            
             // initialize the IoT device handlers Zigbee, Z-Wave, 6LowPan, etc.
             var protocols = conf.protocols;
             protocols.forEach( (item) => {

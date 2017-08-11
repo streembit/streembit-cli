@@ -54,7 +54,7 @@ try {
         app.changepwd();
     }
     else {
-        app(program.port, program.ip, program.password);;
+        app(program.port, program.ip, program.password);
     }
 }
 catch (e) {

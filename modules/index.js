@@ -29,7 +29,6 @@ const IoTHandler = require('libs/iot');
 
 class AppRunner {
     constructor() {
-
     }
 
     start_iot() {

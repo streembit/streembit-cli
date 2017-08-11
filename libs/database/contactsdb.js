@@ -19,7 +19,7 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-const db = require("libs/database");
+const db = require("libs/database").instance;
 
 'use strict';
 
@@ -30,28 +30,23 @@ class ContactsDb {
 
     get database() {
         if (!this.m_database) {
-            this.m_database = db.contactsdb;
+            this.m_database = db.sqldb;
         }
         return this.m_database;
     }
 
     getall(callback) {
+        this.database.all(
+            "SELECT * FROM contacts",
+            [],
+            (err, rows) => {
+                if (err) {
+                    return callback(err);
+                }
 
-        var stream = this.database.createReadStream();
-
-        var contacts = [];
-
-        stream.on('data', function (data) {
-            contacts.push(data);
-        });
-
-        stream.on('error', function (err) {
-            callback(err.message ? err.message : err);
-        });
-
-        stream.on('end', function () {
-            callback(null, contacts);
-        });
+                callback(null, rows);
+            }
+        );
     }
 
     data(contact_pkey, cb) {

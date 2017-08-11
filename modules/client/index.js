@@ -56,27 +56,9 @@ module.exports = exports = function (callback) {
         logger.info("Run streembit client handler, net: " + config.net );
 
         async.waterfall(
-            [
+            [        
                 function (cb) {
                     try {
-                        var account = new Account();
-                        account.init(cb)
-                    }
-                    catch (e) {
-                        cb(e);
-                    }
-                },
-                function (cb) {
-                    try {
-                        peerutils.discovery(config.host, config.seeds, cb)
-                    }
-                    catch (e) {
-                        cb(e);
-                    }
-                },
-                function (host, cb) {
-                    try {
-                        config.host = host;
                         var contacts = new Contacts();
                         contacts.init(cb);
                     }
@@ -86,6 +68,15 @@ module.exports = exports = function (callback) {
                 },
                 function (cb) {
                     try {
+                        peerutils.discovery(config.host, config.seeds, cb)
+                    }
+                    catch (e) {
+                        cb(e.message);
+                    }
+                },
+                function (host, cb) {
+                    try {
+                        config.host = host;
                         var transport = new PeerTransport();
                         transport.open(cb)
                     }
