@@ -33,27 +33,10 @@ class Handler {
     constructor() {
     }
 
-    init(callback) {
+    async init() {
         try {
             logger.info("6lowpan init")
-            //// initialize the task event handler
-            //events.on(events.TASK_INIT, (task, payload) => {
-            //    switch (task) {
-            //        case constants.TASK_PUBLISHACCOUNT:
-            //            this.publish_account();
-            //            break;
-            //        case constants.TASK_INFORM_CONTACTS:
-            //            this.inform_contacts(payload);
-            //            break;
-            //        default:
-            //            break;
-            //    }
-            //});
-
-            //events.on(events.APP_INIT, () => {
-            //    this.on_application_init();
-            //});
-
+            this.initialized = true;
         }
         catch (err) {
             logger.error("6lowpan handler init error: " + err.message);

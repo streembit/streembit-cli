@@ -184,6 +184,9 @@ var streembit_config = (function (cnfobj) {
 
             cnfobj.usertype = config.usertype || constants.USERTYPE_HUMAN;
 
+            if (!config.account) {
+                return callback("account is missing from the configuration file.");
+            }
             cnfobj.account = config.account;
 
             // Validate the configuration file. There are some configurations disallowed. Throw an exception here if we detect such invalid configuration
@@ -249,8 +252,14 @@ var streembit_config = (function (cnfobj) {
         }
     };
 
-    cnfobj.init_password = function (callback) {
+    cnfobj.init_account_params = function (callback) {
         try {
+            if (!config.account) {
+                return callback("account is missing from the configuration file.");
+            }
+
+            cnfobj.account = config.account;
+
             if (config.password) {
                 //  check the config file
                 cnfobj.password = config.password;

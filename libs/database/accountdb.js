@@ -35,16 +35,12 @@ class AccountsDb {
         return this.m_database;
     }
 
-    data(account, cb) {
+    data(account, cbfn) {
         this.database.get(
             "SELECT * FROM accounts WHERE account=?",
             [account],
-            (err, row) => {
-                if (err) {
-                    return cb(err);
-                }
-
-                cb(null, row);            
+            function (err, row) {
+                cbfn(err, row);            
             }
         );
     }

@@ -35,7 +35,21 @@ class IoTDevicesDb {
         return this.m_database;
     }
 
-    get_device(deviceid, cb) {
+    get_devices() {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM iotdevices";
+                this.database.all(query, [], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
+            }
+        );
+    }
+
+    get_device(deviceid) {
         return new Promise(
             (resolve, reject) => {
                 var query = "SELECT * FROM iotdevices WHERE deviceid=?";
@@ -49,7 +63,21 @@ class IoTDevicesDb {
         );        
     }
 
-    get_features_by_devicerowid(devrowid, cb) {
+    get_devices_by_protocol(protocol) {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM iotdevices WHERE protocol=?";
+                this.database.all(query, [protocol], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
+            }
+        );
+    }
+
+    get_features_by_devicerowid(devrowid) {
         return new Promise(
             (resolve, reject) => {
                 var query = "SELECT * FROM iotfeatures WHERE devrowid=?";
@@ -63,7 +91,7 @@ class IoTDevicesDb {
         );
     }
 
-    get_features_by_deviceid(deviceid, cb) {
+    get_features_by_deviceid(deviceid) {
         return new Promise(
             (resolve, reject) => {
                 var query = "SELECT * FROM vw_get_features WHERE deviceid=?";

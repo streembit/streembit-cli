@@ -43,6 +43,7 @@ program
     .option('-c, --changepwd', 'Change password')
     .parse(process.argv);
 
+
 try {
     if (program.data) {
         app.display_data();

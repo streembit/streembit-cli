@@ -59,13 +59,13 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                             value = value * this.power_multiplier;
                         }
                         this.power_consumption = value;
-                        //logger.debug("power_consumption: %d Watt", this.power_consumption);
+                        logger.debug("ZigbeeEcMeasureFeature power: %d Watt", this.power_consumption);
                         //
                         this.emit(iotdefinitions.PROPERTY_ACTIVEPOWER, this.power_consumption);
                     }
                     else if (item.property == iotdefinitions.PROPERTY_VOLTAGE) {
                         this.voltage = item.value;
-                        //logger.debug("voltage: %d Volt", this.voltage);
+                        logger.debug("ZigbeeEcMeasureFeature voltage: %d Volt", this.voltage);
                         //
                         this.emit(iotdefinitions.PROPERTY_VOLTAGE, this.voltage);
                     }

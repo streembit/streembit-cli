@@ -126,18 +126,18 @@ module.exports.display_data = function () {
     async.waterfall(
         [
             function (callback) {
-                config.init_password(callback);
+                config.init_account_params(callback);
             },
             function (callback) {
                 if (!config.password) {
                     return callback("Invalid password");
                 }
 
-                db.init_databases(__dirname, callback);
+                database.init(__dirname, callback);
             },
             function (callback) {
                 var account = new Account();
-                account.load(config.password, callback);
+                account.load(config.password, config.account, callback);
             }
         ],
         function (err, result) {
@@ -167,7 +167,7 @@ module.exports.backup = function() {
     async.waterfall(
         [
             function (callback) {
-                config.init_password(callback);
+                config.init_account_params(callback);
             },
             function (callback) {
                 if (!config.password) {

@@ -34,18 +34,7 @@ class ZigbeeDevice extends Device {
     constructor(id, device, cmdbuilder, transport) {
         try {
             super(id, device, cmdbuilder, transport);
-
-            // zigbee coordinator endpoint
-            this.sourceendpoint = 0;
-            var devices = config.iot_config.devices;
-            devices.forEach(
-                (item) => {
-                    if (item.type == constants.IOT_DEVICE_GATEWAY) {
-                        this.details.sourceendpoint = (item.details && item.details.endpoint) ? item.details.endpoint : 0;
-                    }
-                });
-
-            logger.debug("Initialized Zigbee device id: " + id + ", endpoint: " + this.details.sourceendpoint);
+            logger.debug("Initialized Zigbee device id: " + id );
         }
         catch (err) {
             throw new Error("IoTEndDevice constructor error: " + err.message);

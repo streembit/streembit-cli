@@ -38,6 +38,13 @@ class Device {
         this.profile = device.profile;
         this.settings = device.setting;
         this.m_details = {};
+        try {
+            let deteailsobj = JSON.parse(device.details);
+            if (deteailsobj) {
+                this.m_details = deteailsobj;
+            }
+        }
+        catch (err) { }
 
         this.command_builder = cmdbuilder;
         this.transport = transport;
@@ -46,27 +53,45 @@ class Device {
 
         this.features = new Map();
 
-        this.errors = [];
+        this.errors = [];        
+    }
 
-        var database = new Database();
-        var array = device.features;
+    async addfeatures(database) {        
+        let array = await database.get_features_by_deviceid(this.id);
         if (array && Array.isArray(array) && array.length > 0) {
-            for (var i = 0; i < array.length; i++) {
-                try {
-                    var feature_name = iotdefinitions.FEATURETYPEMAP[array[i].function];
-                    var feature_lib = "libs/iot/devices/feature/" + this.protocol + "/" + feature_name;
-                    var feature_obj = require(feature_lib);
-                    var feature_handler = new feature_obj(this, array[i]); 
+            //debugger;
+            for (let i = 0; i < array.length; i++) {
+                try {             
+                    let feature_type = array[i].type;
+                    let feature_name = iotdefinitions.FEATURETYPEMAP[feature_type];
+                    let feature_lib = "libs/iot/devices/feature/" + this.protocol + "/" + feature_name;
+                    let feature_obj = require(feature_lib);
+                    let feature_handler = new feature_obj(this, array[i]);
                     if (feature_handler) {
-                        this.features.set(array[i].function, feature_handler);
-                        logger.debug("feature " + array[i].function + " added to device " + this.id);
+                        this.features.set(feature_type, feature_handler);
+                        logger.debug("feature " + feature_type + " added to device " + this.id);
                     }
                 }
                 catch (err) {
                     logger.error("add feature " + array[i].function + " handler error: %j", err);
-                }               
+                }
             }
         }
+    }
+
+    init(database) {
+        return new Promise(
+            (resolve, reject) => {
+                try {
+                    this.addfeatures(database);
+                    this.create_event_handlers();
+                    resolve();
+                }
+                catch (err) {
+                    reject(err);
+                }
+            }
+        );
     }
 
     get active() {

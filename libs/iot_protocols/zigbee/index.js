@@ -30,7 +30,7 @@ const async = require("async");
 const util = require('util');
 const IoTProtocolHandler = require("libs/iot_protocols");
 const ZigbeeCommands = require("libs/iot_protocols/zigbee/commands");
-
+const Database = require("libs/database/devicesdb");
 
 class ZigbeeHandler extends IoTProtocolHandler {
 
@@ -39,16 +39,29 @@ class ZigbeeHandler extends IoTProtocolHandler {
         this.commandbuilder = new ZigbeeCommands();
     }
 
-    init() {
+    async init() {
         try {
             //debugger;
-            super.init();         
+            logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);
+         
+            this.create_handler();
+            var database = new Database();
+            var devices = await database.get_devices_by_protocol(this.protocol);
+            for (let i = 0; i < devices.length; i++) {
+                let device = this.device_factory(devices[i]);
+                device.init(database);
+                let map_of_devices = IoTProtocolHandler.devices;
+                map_of_devices.set(devices[i].deviceid, device);
+            }
 
             this.mcuhandler.init();
             this.mcuhandler.monitor();
+
+            this.initialized = true;
+            return Promise.resolve();
         }
         catch (err) {
-            logger.error("zigbee handler init error: " + err.message);
+            return Promise.reject(new Error("Zigbee protocol handler init error: " + err.message));
         }
     }
 

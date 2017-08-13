@@ -34,14 +34,19 @@ class IoTProtocolHandler {
 
     constructor(protocol, mcu) {
         this.protocol = protocol;
-        this.mcu = mcu;      
+        this.mcu = mcu;
         this.mcuhandler = 0;
         this.commandbuilder = 0;
+        this.initialized = false;
         iotdevices = new Map();
     }
 
     static getdevice(id) {
         return iotdevices.get(id);
+    }
+
+    static get devices() {
+        return iotdevices;
     }
 
     getdeviceobj(type, protocol) {
@@ -64,7 +69,7 @@ class IoTProtocolHandler {
             throw new Error("Device type " + device.type + " is not implemented. Provide the correct configuration settings in the config.js file.");
         }
 
-        return new device_instance(device.id, device, this.commandbuilder, this.mcuhandler);
+        return new device_instance(device.deviceid, device, this.commandbuilder, this.mcuhandler);
     }
 
     create_handler() {
@@ -104,18 +109,7 @@ class IoTProtocolHandler {
         return this.eventfns.get(type);
     }
 
-    init() {
-        logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);
-
-        this.create_handler();
-
-        var devices = config.iot_config.devices;
-        devices.forEach((item) => {
-            if (item.protocol == this.protocol) {
-                var device_obj = this.device_factory(item);
-                iotdevices.set(item.id, device_obj);
-            }
-        });
+    async init() {        
     }
 }
 

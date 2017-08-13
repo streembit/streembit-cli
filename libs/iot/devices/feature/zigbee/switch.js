@@ -33,7 +33,15 @@ class ZigbeeSwitchFeature extends SwitchFeature {
 
     constructor(device, feature) {
         super(device, feature);  
-        this.clusters = feature.clusters;
+        this.clusters = [];
+        try {
+            let clusterobj = JSON.parse(feature.clusters);
+            if (clusterobj) {
+                this.clusters = clusterobj;
+            }
+        }
+        catch (err) { }
+
         logger.debug("Initialized a Zigbee switch measurement for deviceid: " + this.deviceid );        
     }
 

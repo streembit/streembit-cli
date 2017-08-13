@@ -38,12 +38,8 @@ class ZigbeeGateway extends Device {
     constructor(id, device, cmdbuilder, transport) {
         try {
             super(id, device, cmdbuilder, transport);
-
-            this.details = device.details || {};
-            m_endpoint = (device.details && device.details.endpoint) ? device.details.endpoint : 0;
-
+            m_endpoint = (this.details && this.details.endpoint) ? this.details.endpoint : 0;
             logger.debug("Initialized ZigbeeGateway device id: " + id);
-
             this.create_event_handlers();
         }
         catch (err) {

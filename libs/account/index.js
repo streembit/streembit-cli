@@ -362,20 +362,23 @@ class Account {
         );
     }
 
-    load(password, callback) {
+    load(password, account, callback) {
         // get the account details from the database
         var db = new Database();
-        db.data((err, data) => {
-            if (err) {
-                return callback("Account database error: " + (err.message || err));
-            }
+        db.data(
+            account,
+            (err, data) => {
+                if (err) {
+                    return callback("Account database error: " + (err.message || err));
+                }
 
-            if (!data) {
-                return callback("Data doesn't exists in the account database");
-            }
+                if (!data) {
+                    return callback("Data for account " + account + " doesn't exists in the account database");
+                }
      
-            this.load_account(data, password, callback);            
-        });
+                this.load_account(account, data, password, callback);            
+            }
+        );
     }
 }
 
