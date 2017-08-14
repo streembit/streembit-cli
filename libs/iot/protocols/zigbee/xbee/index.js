@@ -65,7 +65,7 @@ class XbeeHandler {
                 throw new Error("dispatch_datarcv_event() invalid address64");
             }
             
-            var eventname = address64 + iotdefinitions.DATA_RECEIVED_EVENT;
+            var eventname = iotdefinitions.IOT_DATA_RECEIVED_EVENT;
             events.emit(eventname, payload);            
         }
         catch (err) {
@@ -78,6 +78,7 @@ class XbeeHandler {
             address64,
             {
                 "type": iotdefinitions.EVENT_RADIO_ERROR,
+                "deviceid": address64,
                 "error": error
             }
         );
@@ -188,6 +189,7 @@ class XbeeHandler {
             frame.remote64,
             {
                 "type": iotdefinitions.EVENT_DEVICE_ONLINE,
+                "deviceid": frame.remote64,
                 "devicedetails": [
                     {
                         "name": "address64",
@@ -321,7 +323,6 @@ class XbeeHandler {
 
         reader.seek(11);
         var count = reader.nextUInt8();
-        //console.log("count of clusters: " + count);
         var clusters = [];
         for (var i = 0; i < count; i++) {
             var cluster = reader.nextUInt16LE();
@@ -329,12 +330,13 @@ class XbeeHandler {
             clusters.push(txtcluster);
         }
 
-        logger.debug(frame.remote64 + " clusters: " + util.inspect(clusters));
+        //logger.debug(frame.remote64 + " clusters: " + util.inspect(clusters));
 
         this.dispatch_datarcv_event(
             frame.remote64,
             {
                 "type": iotdefinitions.EVENT_DEVICE_CLUSTERSRCV,
+                "deviceid": frame.remote64,
                 "devicedetails": [
                     {
                         "name": "clusters",
@@ -413,6 +415,7 @@ class XbeeHandler {
                 frame.remote64,
                 {
                     "type": iotdefinitions.EVENT_DEVICE_ENDPOINTSRCV,
+                    "deviceid": frame.remote64,
                     "devicedetails": [
                         {
                             "name": "endpoints",
@@ -454,28 +457,28 @@ class XbeeHandler {
                 }
                 let datatype = reader.nextUInt8();
 
-                if (attribute == 0x050b) { // active power 
+                if (attribute == 0x050b) { 
                     if (datatype != 0x29) {
                         return null;
                     }
                     value = reader.nextInt16LE();
                     property_name = iotdefinitions.PROPERTY_ACTIVEPOWER;
                 }
-                else if (attribute == 0x0505) { // active power 
+                else if (attribute == 0x0505) { 
                     if (datatype != 0x21) {
                         return null;
                     }
-                    value = reader.nextInt16LE();
+                    value = reader.nextUInt16LE();
                     property_name = iotdefinitions.PROPERTY_VOLTAGE;
                 }
-                else if (attribute == 0x0605) { // active power 
+                else if (attribute == 0x0605) { 
                     if (datatype != 0x21) {
                         return null;
                     }
                     value = reader.nextInt16LE();
                     property_name = iotdefinitions.PROPERTY_POWERDIVISOR;
                 }
-                else if (attribute == 0x0604) { // active power 
+                else if (attribute == 0x0604) { 
                     if (datatype != 0x21) {
                         return null;
                     }
@@ -522,9 +525,51 @@ class XbeeHandler {
             frame.remote64,
             {
                 "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                "deviceid": frame.remote64,
                 "properties": properties
             }
         );
+    }
+
+    handle_cluster_0b04_0a(frame, reader) {
+        var property_name = 0;
+        var value = 0;
+
+        // get the attributes
+        var attribute = reader.nextUInt16LE();
+        console.log("attribute: %s", sprintf("0x%04x", attribute));
+        var datatype = reader.nextUInt8();
+
+        if (attribute == 0x050b) {             
+            if (datatype != 0x29) {
+                return;
+            }
+            value = reader.nextInt16LE();
+            property_name = iotdefinitions.PROPERTY_ACTIVEPOWER;
+        }
+        else if (attribute == 0x0505) {
+            if (datatype != 0x21) {
+                return;
+            }
+            value = reader.nextUInt16LE();
+            property_name = iotdefinitions.PROPERTY_VOLTAGE;
+        }
+
+        if (property_name) {
+            this.dispatch_datarcv_event(
+                frame.remote64,
+                {
+                    "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                    "deviceid": frame.remote64,
+                    "properties": [
+                        {
+                            "property": property_name,
+                            "value": value
+                        }
+                    ]
+                }
+            );
+        }
     }
 
     handle_cluster_0b04 (frame) {
@@ -536,47 +581,7 @@ class XbeeHandler {
 
         if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11
             //console.log(util.inspect(frame));
-            var property_name = 0;
-            var value = 0;
-
-            // get the attributes
-            var attribute = reader.nextUInt16LE();
-            //console.log("attribute: %s", sprintf("0x%04x", attribute));
-
-            if (attribute == 0x050b) { // active power 
-                var datatype = reader.nextUInt8();
-
-                if (datatype != 0x29) {
-                    return;
-                }
-
-                value = reader.nextInt16LE();
-                property_name = iotdefinitions.PROPERTY_ACTIVEPOWER;
-            }
-
-            if (attribute == 0x0505) { // active power 
-                var datatype = reader.nextUInt8();
-
-                if (datatype != 0x21) {
-                    return;
-                }
-
-                value = reader.nextInt16LE();
-                property_name = iotdefinitions.PROPERTY_VOLTAGE;
-            }
-
-            this.dispatch_datarcv_event(
-                frame.remote64,
-                {
-                    "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
-                    "properties": [
-                        {
-                            "property": property_name,
-                            "value": value
-                        }
-                    ]
-                }
-            );
+            this.handle_cluster_0b04_0a(frame, reader);
         }
         else if (zcl_command == 0x01) {  // ZCL 0x01 Read attributes response 7.2
             this.handle_cluster_0b04_01(frame, reader);
@@ -616,6 +621,7 @@ class XbeeHandler {
             frame.remote64,
             {
                 "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                "deviceid": frame.remote64,
                 "properties": [
                     {
                         "property": iotdefinitions.PROPERTY_TEMPERATURE,
@@ -679,6 +685,7 @@ class XbeeHandler {
                     frame.remote64,
                     {
                         "type": iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE,
+                        "deviceid": frame.remote64,
                         "properties": [
                             {
                                 "property": iotdefinitions.PROPERTY_HWVERSION,
@@ -703,6 +710,7 @@ class XbeeHandler {
                     frame.remote64,
                     {
                         "type": iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE,
+                        "deviceid": frame.remote64,
                         "properties": [
                             {
                                 "property": iotdefinitions.PROPERTY_MANUFACTURERNAME,
@@ -727,6 +735,7 @@ class XbeeHandler {
                     frame.remote64,
                     {
                         "type": iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE,
+                        "deviceid": frame.remote64,
                         "properties": [
                             {
                                 "property": iotdefinitions.PROPERTY_MODELIDENTIFIER,
@@ -783,6 +792,7 @@ class XbeeHandler {
                 frame.remote64,
                 {
                     "type": iotdefinitions.EVENT_DEVICE_BINDSUCCESS,
+                    "deviceid": frame.remote64,
                     "cluster": cluster
                 }
             );
@@ -822,14 +832,14 @@ class XbeeHandler {
         respbuf.writeUInt16LE(0x0000, 2); // Indicates the 16-bit address of the responding device, this is the coordinator with address 0x0000
         respbuf.writeUInt8(0x01, 4); // 1 endpoint
         respbuf.writeUInt8(MYENDPOINT, 5); // set endpoint tp 0x02
-        var response = [...respbuf];
-        ////console.log("match descriptor response data: " + util.inspect(response));
-        this.match_descriptor_response(frame.remote64, frame.remote16, response);
+        ////console.log("match descriptor response data: " + util.inspect(respbuf));
+        this.match_descriptor_response(frame.remote64, frame.remote16, respbuf);
 
         this.dispatch_datarcv_event(
             frame.remote64,
             {
                 "type": iotdefinitions.EVENT_DEVICE_CONTACTING,
+                "deviceid": frame.remote64,
                 "devicedetails": [
                     {
                         "name": "address64",
@@ -883,6 +893,7 @@ class XbeeHandler {
                     frame.remote64,
                     {
                         "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                        "deviceid": frame.remote64,
                         "properties": [
                             {
                                 "property": iotdefinitions.PROPERTY_SWITCH_STATUS,
@@ -915,6 +926,7 @@ class XbeeHandler {
                     frame.remote64,
                     {
                         "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                        "deviceid": frame.remote64,
                         "properties": [
                             {
                                 "property": iotdefinitions.PROPERTY_SWITCH_STATUS,

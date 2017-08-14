@@ -24,7 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 
 
 const constants = require("libs/constants");
-const Device = require("libs/iot/devices/device");
+const Device = require("libs/iot/device/device");
 const events = require("libs/events");
 const logger = require("libs/logger");
 const iotdefinitions = require("libs/iot/definitions");
@@ -60,40 +60,36 @@ class ZigbeeGateway extends Device {
     }
 
     create_event_handlers() {
-        var device_datareceived_event = this.id + iotdefinitions.DATA_RECEIVED_EVENT;
-        events.on(
-            device_datareceived_event,
-            (payload) => {
-                try {
-                    if (payload.type == iotdefinitions.EVENT_DEVICE_ONLINE) {
-                        this.active = true;
-                        var properties = payload.devicedetails;  
-                        if (properties && Array.isArray(properties) && properties.length) {
-                            this.set_property_item(properties);
-                            properties.forEach(
-                                (item) => {
-                                    if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
-                                        if (item.name == "address64") {
-                                            m_address64 = item.value;
-                                            console.log("ZigbeeGatewayDevice address64: " + m_address64)
-                                        }
-                                        else if (item.name == "address16") {
-                                            m_address16 = item.value;
-                                            console.log("ZigbeeGatewayDevice address16: " + m_address16)
-                                        }
-                                    }
-                                }
-                            );
-                        }       
+        super.create_event_handlers();      
+    }
 
-                    }
+    on_data_received(payload) {
+        try {
+            if (payload.type == iotdefinitions.EVENT_DEVICE_ONLINE) {
+                this.active = true;
+                var properties = payload.devicedetails;
+                if (properties && Array.isArray(properties) && properties.length) {
+                    this.set_property_item(properties);
+                    properties.forEach(
+                        (item) => {
+                            if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
+                                if (item.name == "address64") {
+                                    m_address64 = item.value;
+                                    console.log("ZigbeeGatewayDevice address64: " + m_address64)
+                                }
+                                else if (item.name == "address16") {
+                                    m_address16 = item.value;
+                                    console.log("ZigbeeGatewayDevice address16: " + m_address16)
+                                }
+                            }
+                        }
+                    );
                 }
-                catch (err) {
-                    logger.error("ZigbeeGatewayDevice " + device_datareceived_event + " event error: %j", err);
-                }
-                //
             }
-        );
+        }
+        catch (err) {
+            logger.error("ZigbeeGatewayDevice " + device_datareceived_event + " event error: %j", err);
+        }
     }
 
     on_active_device() {    

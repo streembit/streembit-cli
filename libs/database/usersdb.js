@@ -23,7 +23,7 @@ const db = require("libs/database").instance;
 
 'use strict';
 
-class ContactsDb {
+class UsersDb {
     constructor() {
         this.m_database = 0;
     }
@@ -36,60 +36,32 @@ class ContactsDb {
     }
 
     getall(callback) {
-        this.database.all(
-            "SELECT * FROM contacts",
-            [],
-            (err, rows) => {
-                if (err) {
-                    return callback(err);
-                }
-
-                callback(null, rows);
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM users";
+                this.database.all(query, [], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
             }
         );
     }
 
-    data(contact_pkey, cb) {
-        this.database.get(contact_pkey, function (err, data) {
-            if (err) {
-                if (err.type == "NotFoundError") {
-                    //  not exists, not an error
-                    cb(null);
-                }
-                else {
-                    cb(err);
-                }
-            }
-            else {
-                var obj = 0;
-                if (data) {
-                    try {
-                        obj = JSON.parse(data);
+    get_user(pkhash) {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM users WHERE pkhash=?";
+                this.database.get(query, [pkhash], (err, row) => {
+                    if (err) {
+                        return reject(err.message);
                     }
-                    catch (e) {
-                        obj = 0;
-                    }
-                }
-                cb(null, obj);
+                    resolve(row);
+                });
             }
-        });
+        );
     }
-
-    put(contact_pkey, data, cb) {
-        // must be string
-        if (!(typeof contact_pkey === 'string') && !(data instanceof String)) {
-            return cb("Invalid contact key. The contact key must be a string.");
-        }
-
-        if (!(typeof data === 'string') && !(data instanceof String)) {
-            data = JSON.stringify(data);
-        }
-
-        this.database.put(contact_pkey, data, function (err) {
-            cb(err);
-        });
-    }
-
 }
 
-module.exports = ContactsDb;
+module.exports = UsersDb;

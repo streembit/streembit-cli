@@ -25,20 +25,9 @@ const logger = require("libs/logger");
 const seedrunner = require("./seed");
 const clientrunner = require("./client");
 const config = require('libs/config');
-const IoTHandler = require('libs/iot');
 
 class AppRunner {
     constructor() {
-    }
-
-    start_iot() {
-        try {
-            var iot = new IoTHandler();
-            iot.init();
-        }
-        catch (err) {
-            logger.error("IoT handler start error: %j", err);
-        }
     }
 
     run(callback) {
@@ -67,9 +56,6 @@ class AppRunner {
                     logger.error(task + " error");
                 }
                 callback(err);
-
-                // start the IoT handler regardless of the error
-                this.start_iot();
             }
         );
     }

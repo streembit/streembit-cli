@@ -26,7 +26,7 @@ const logger = require("libs/logger");
 const events = require("libs/events");
 const constants = require("libs/constants");
 const PeerNet = require("libs/peernet");
-const Contacts = require("libs/contacts");
+const Users = require("libs/users");
 const async = require("async");
 const Account = require("libs/account");
 const config = require("libs/config");
@@ -75,8 +75,8 @@ class TaskManager {
                 }
             }
 
-            var contacts = new Contacts();
-            var list = contacts.list();
+            var users = new Users();
+            var list = users.list();
 
             async.eachSeries(list, send_to_contact, function () {
                 logger.debug("inform_contacts ended. error count: " + error_count );

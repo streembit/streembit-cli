@@ -39,6 +39,12 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         this.clusters = feature.clusters;
         this.power_divisor = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.divisor) ? feature.settings.acformatting.divisor : 0;
         this.power_multiplier = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.multiplier) ? feature.settings.acformatting.multiplier : 1;        
+
+        this.property_names.push(iotdefinitions.PROPERTY_ACTIVEPOWER);
+        this.property_names.push(iotdefinitions.PROPERTY_VOLTAGE);
+        this.property_names.push(iotdefinitions.PROPERTY_POWERMULTIPLIER);
+        this.property_names.push(iotdefinitions.PROPERTY_POWERDIVISOR);
+
         logger.debug("Initialized a Zigbee EC measuremenent feature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);        
     }
 
@@ -105,7 +111,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
             var cluster = 0x0b04;
             var reports = [];
             // power
-            var attribute = 0x050b, datatype = 0x29, mininterval = 0x03, maxinterval = 0x003c, reportable_change = 0x0002;
+            var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 0x0001;
             reports.push(
                 {
                     attribute: attribute,
@@ -117,7 +123,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
             );
 
             // voltage
-            attribute = 0x0505, datatype = 0x21, mininterval = 0x03, maxinterval = 0x003e, reportable_change = 0x0003;
+            attribute = 0x0505, datatype = 0x21, mininterval = 0x02, maxinterval = 0x0031, reportable_change = 0x0005;
             reports.push(
                 {
                     attribute: attribute,

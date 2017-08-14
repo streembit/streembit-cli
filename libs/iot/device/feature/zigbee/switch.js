@@ -42,6 +42,8 @@ class ZigbeeSwitchFeature extends SwitchFeature {
         }
         catch (err) { }
 
+        this.property_names.push(iotdefinitions.PROPERTY_SWITCH_STATUS);
+
         logger.debug("Initialized a Zigbee switch measurement for deviceid: " + this.deviceid );        
     }
 

@@ -28,9 +28,11 @@ const events = require("libs/events");
 const constants = require("libs/constants");
 const async = require("async");
 const util = require('util');
-const IoTProtocolHandler = require("libs/iot_protocols");
-const ZigbeeCommands = require("libs/iot_protocols/zigbee/commands");
-const Database = require("libs/database/devicesdb");
+const IoTProtocolHandler = require("libs/iot/protocols");
+const ZigbeeCommands = require("libs/iot/protocols/zigbee/commands");
+const Devices = require("libs/devices");
+const iotdefinitions = require("libs/iot/definitions");
+
 
 class ZigbeeHandler extends IoTProtocolHandler {
 
@@ -39,29 +41,44 @@ class ZigbeeHandler extends IoTProtocolHandler {
         this.commandbuilder = new ZigbeeCommands();
     }
 
-    async init() {
+    create_event_handlers() {
+        var device_datareceived_event = iotdefinitions.IOT_DATA_RECEIVED_EVENT;
+        events.on(
+            device_datareceived_event,
+            (payload) => {
+                var device = IoTProtocolHandler.getdevice(payload.deviceid);
+                if (device) {
+                    device.on_data_received(payload);
+                }               
+            }
+        );
+    }
+
+    init() {
         try {
             //debugger;
             logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);
          
             this.create_handler();
-            var database = new Database();
-            var devices = await database.get_devices_by_protocol(this.protocol);
+
+            var devices = Devices.get_devices_by_protocol(this.protocol);
             for (let i = 0; i < devices.length; i++) {
                 let device = this.device_factory(devices[i]);
-                device.init(database);
+                device.init();
                 let map_of_devices = IoTProtocolHandler.devices;
                 map_of_devices.set(devices[i].deviceid, device);
             }
 
+            // event handlers
+            this.create_event_handlers();
+
             this.mcuhandler.init();
             this.mcuhandler.monitor();
 
-            this.initialized = true;
-            return Promise.resolve();
+            this.initialized = true;            
         }
         catch (err) {
-            return Promise.reject(new Error("Zigbee protocol handler init error: " + err.message));
+            throw new Error("Zigbee protocol handler init error: " + err.message);
         }
     }
 

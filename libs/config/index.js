@@ -39,6 +39,7 @@ var streembit_config = (function (cnfobj) {
     var m_usertype = null;
     var m_account_name = null;
     var m_net = null;
+    var m_users = null;
 
     Object.defineProperty(cnfobj, "password", {
         get: function () {
@@ -160,6 +161,16 @@ var streembit_config = (function (cnfobj) {
         }
     });
 
+    Object.defineProperty(cnfobj, "users", {
+        get: function () {
+            return m_users;
+        },
+
+        set: function (value) {
+            m_users = value;
+        }
+    });
+
     cnfobj.init = function (argv_port, argv_ip, argv_password, callback) {
         try {
 
@@ -188,6 +199,8 @@ var streembit_config = (function (cnfobj) {
                 return callback("account is missing from the configuration file.");
             }
             cnfobj.account = config.account;
+
+            cnfobj.users = config.users;
 
             // Validate the configuration file. There are some configurations disallowed. Throw an exception here if we detect such invalid configuration
             var seedcfarr = config.modules.filter(function (item) {
@@ -259,6 +272,12 @@ var streembit_config = (function (cnfobj) {
             }
 
             cnfobj.account = config.account;
+            cnfobj.users = config.users;
+            var iot_confarr = config.modules.filter(function (item) {
+                return item.name == "iot";
+            });
+            var iotconf = iot_confarr && iot_confarr.length ? iot_confarr[0] : 0;
+            cnfobj.iot_config = iotconf;
 
             if (config.password) {
                 //  check the config file

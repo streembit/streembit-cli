@@ -28,142 +28,8 @@ const path = require('path');
 const logger = require("libs/logger");
 const levelup = require('levelup');
 const sqlite3 = require('sqlite3').verbose();
-
-//var database = (function(db, logger) {
-
-//    var _streembitdb = null;
-//    var _appdb = null;
-//    var _blockchaindb = null;
-//    var _contactsdb = null;
-
-//    function initialize_db_rootpath(dirname) {
-
-//        if (!dirname) {
-//            throw new Error("the directory for databases is invalid");
-//        }
-
-//        var dbdir_path = path.join(dirname, 'db');
-//        var exists = fs.existsSync(dbdir_path);
-//        if (exists) {
-//            logger.debug("DB directory exists");   
-//            return;
-//        }
-
-//        /* the DB directory doesn't exist */
-//        logger.info("Creating " + dirname + " database directory ...");        
-//        try {
-//            fs.mkdirSync(dbdir_path);
-//        }
-//        catch (e) {
-//            if (e.message.indexOf("EEXIST") < 0) {
-//                throw new Error("creating " + dbname + " database error: " + e.message);
-//            }
-//        }
-//    }
-
-//    function initialize_db_dir(dbname, dirname) {
-//        // create the db directory
-//        var db_path = path.join(dirname, 'db', dbname);
-//        var exists = fs.existsSync(db_path);
-//        if (exists) {
-//            return;
-//        }
-
-//        try {
-//            logger.info("creating database, path: %s", db_path);
-//            fs.mkdirSync(db_path);
-//        }
-//        catch (e) {
-//            throw new Error("creating " + dbname + " database error: " + e.message);
-//        }
-
-//        exists = fs.existsSync(db_path);
-//        if (!exists) {
-//            throw new Error("Unable to create " + dbname + " data directory");
-//        }
-//        else {
-//            logger.info(dbname + " database directory created");
-//        }
-//    }
-
-//    Object.defineProperty(db, "streembitdb", {
-//        get: function () {
-//            return _streembitdb;
-//        },
-
-//        set: function (value) {
-//            _streembitdb = value;
-//        }
-//    });
-
-//    Object.defineProperty(db, "appdb", {
-//        get: function () {
-//            return _appdb;
-//        },
-
-//        set: function (value) {
-//            _appdb = value;
-//        }
-//    });
-
-//    Object.defineProperty(db, "blockchaindb", {
-//        get: function () {
-//            return _blockchaindb;
-//        },
-
-//        set: function (value) {
-//            _blockchaindb = value;
-//        }
-//    });
-
-//    Object.defineProperty(db, "contactsdb", {
-//        get: function () {
-//            return _contactsdb;
-//        },
-
-//        set: function (value) {
-//            _contactsdb = value;
-//        }
-//    });
-
-//    db.init_databases = function (dirname, callback) {
-//        try {
-//            initialize_db_rootpath(dirname);
-
-//            initialize_db_dir('streembitdb', dirname);
-//            var maindb_path = path.join(dirname, 'db', 'streembitdb');
-//            var main_dbobj = levelup(maindb_path);
-//            db.streembitdb = main_dbobj;
-//            logger.debug("streembitdb database initialized");
-
-//            initialize_db_dir('appdb', dirname);
-//            var appdb_path = path.join(dirname, 'db', 'appdb');
-//            var app_dbobj = levelup(appdb_path);
-//            db.appdb = app_dbobj;
-//            logger.debug("appdb database initialized");
-
-//            initialize_db_dir('contactsdb', dirname);
-//            var contactsdb_path = path.join(dirname, 'db', 'contactsdb');
-//            var contacts_dbobj = levelup(contactsdb_path);
-//            db.contactsdb = contacts_dbobj;
-//            logger.debug("contactsdb database initialized");
-
-//            initialize_db_dir('blockchaindb', dirname);
-//            var bcdb_path = path.join(dirname, 'db', 'blockchaindb');
-//            var bc_dbobj = levelup(bcdb_path);
-//            db.blockchaindb = bc_dbobj;
-//            logger.debug("blockchaindb database initialized");
-
-//            callback();
-//        }
-//        catch (e) {
-//            callback(e.message);
-//        }
-//    };
-
-//    return db;
-
-//}({}, log));
+const config = require("libs/config");
+const util = require('util');
 
 const singleton = Symbol();
 const singleton_verifier = Symbol()
@@ -266,6 +132,20 @@ class Database {
         );        
     }
 
+    get_users() {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM users";
+                this.sqldb.all(query, [], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
+            }
+        );
+    }
+
     create_table(sql) {
         return new Promise(
             (resolve, reject) => {
@@ -277,6 +157,254 @@ class Database {
                 });
             }
         );
+    }
+
+    add_user(pkhash, publickey, username, isadmin, settings) {
+        return new Promise(
+            (resolve, reject) => {
+                let sql = "INSERT INTO users(pkhash, publickey, username, isadmin, settings) VALUES (?,?,?,?,?)"
+                this.sqldb.run(sql, [pkhash, publickey, username, isadmin, settings], (err) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve();
+                });
+            }
+        );
+    }
+
+    get_devices() {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM iotdevices";
+                this.sqldb.all(query, [], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
+            }
+        );
+    }
+
+    get_device(deviceid) {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM iotdevices WHERE deviceid=?";
+                this.sqldb.get(query, [deviceid], (err, row) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(row);
+                });
+            }
+        );
+    }
+
+    get_devices_by_protocol(protocol) {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM iotdevices WHERE protocol=?";
+                this.sqldb.all(query, [protocol], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
+            }
+        );
+    }
+
+    get_features_by_devicerowid(devrowid) {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM iotfeatures WHERE devrowid=?";
+                this.sqldb.all(query, [devrowid], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
+            }
+        );
+    }
+
+    get_features_by_deviceid(deviceid) {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM vw_get_features WHERE deviceid=?";
+                this.sqldb.all(query, [deviceid], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
+            }
+        );
+    }
+
+    add_device(deviceid, type, protocol, mcu, details) {
+        return new Promise(
+            (resolve, reject) => {
+                if (!deviceid || !type || !protocol || !mcu) {
+                    return reject("Invalid device data add database add_device.");
+                }
+
+                this.sqldb.run(
+                    "INSERT INTO iotdevices (deviceid, type, protocol, mcu, details) VALUES (?,?,?,?,?)",
+                    [deviceid, type, protocol, mcu, details],
+                    (err) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve();
+                    }
+                );
+            }
+        );
+    }
+
+    add_feature(deviceid, type, clusters, setting) {
+        return new Promise(
+            (resolve, reject) => {
+                if (!deviceid || !type) {
+                    return reject("Invalid feaure data add database add_feature.");
+                }
+
+                this.sqldb.run(
+                    "INSERT INTO iotfeatures (devrowid, type, clusters, settings) VALUES (?,?,?,?)",
+                    [deviceid, type, clusters, setting],
+                    (err) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve();
+                    }
+                );
+            }
+        );
+    }
+
+    async create_users(cnfusers, dbusers) {   
+        try {
+            console.log("creating users in the database");
+            //console.log("cnfusers " + util.inspect(cnfusers));
+
+            if (!cnfusers || !cnfusers.length) {
+                return Promise.resolve();
+            }
+
+            //console.log("dbusers " + util.inspect(dbusers));
+
+            for (let i = 0; i < cnfusers.length; i++) {
+                try {
+                    let user = cnfusers[i];
+                    let pkhash = user.pkhash;
+                    let exists = false;
+                    if (dbusers && dbusers.length) {
+                        dbusers.forEach(
+                            (dbitem) => {
+                                if (dbitem.pkhash == pkhash) {
+                                    exists = true;
+                                }
+                            }
+                        );
+                    }
+
+                    if (!exists) {
+                        let settings = user.settings ? JSON.stringify(user.settings) : null;
+                        console.log("adding user " + user.pkhash + " to database ");
+                        try {
+                            await this.add_user(pkhash, user.publickey, user.username, user.isadmin, settings);
+                        }
+                        catch (err) {
+                            return Promise.reject(new Error(err.message));
+                        }
+                    }
+                }
+                catch (err) {
+                    return Promise.reject(new Error(err.message));
+                }
+            }
+
+            return Promise.resolve();
+        }
+        catch (err) {
+            return Promise.reject(new Error(err.message));
+        }
+    }
+
+    async device_to_db(device) {
+
+        function feature_indb(dbfeatures, conf) {
+            if (!dbfeatures) {
+                return false;
+            }
+
+            var exists = false;
+            dbfeatures.forEach(
+                (item) => {
+                    if (conf.type == item.type) {
+                        exists = true;
+                    }
+                }
+            );
+            return exists;
+        }
+
+        try {
+            let dbrow = await this.get_device(device.id);
+            if (!dbrow) {
+                // add to database
+                let deviceid = device.id,
+                    type = device.type,
+                    protocol = device.protocol,
+                    mcu = device.mcu,
+                    details = device.details ? JSON.stringify(device.details) : null;
+                await this.add_device(deviceid, type, protocol, mcu, details);
+                dbrow = await this.get_device(device.id);
+            }
+
+            // get all features
+            let conf_features = device.features;
+            if (conf_features) {
+                let devrowid = dbrow.devrowid;
+                let features = await this.get_features_by_devicerowid(devrowid);
+                for (let i = 0; i < conf_features.length; i++) {
+                    var isadded = feature_indb(features, conf_features[i]);
+                    if (!isadded) {
+                        let type = conf_features[i].type,
+                            clusters = conf_features[i].clusters ? JSON.stringify(conf_features[i].clusters) : null,
+                            settings = conf_features[i].settings ? JSON.stringify(conf_features[i].settings) : null;
+                        await this.add_feature(devrowid, type, clusters, settings);
+                        console.log("feature added to DB: " + util.inspect(conf_features[i]));
+                    }
+                }
+            }
+        }
+        catch (err) {
+            logger.error("Device to DB error: " + err.message);
+        }
+    }
+
+    async create_devices() {
+        try {
+            console.log("creating IoT devices in the database");
+            var conf = config.iot_config;
+            var devices = conf.devices;
+            for (let i = 0; i < devices.length; i++) {
+                try {
+                    await this.device_to_db(devices[i]);
+                }
+                catch (err) {
+                    return Promise.reject(new Error(err.message));
+                }
+            }
+            return Promise.resolve();
+        }
+        catch (err) {
+            return Promise.reject(new Error(err.message));
+        }
     }
 
     async init(dirname, callback) {
@@ -298,7 +426,7 @@ class Database {
             logger.debug("sql database file: " + sqldb_file);
             this.sqldb = new sqlite3.Database(sqldb_file);
             logger.debug("sql database initialized");
-
+            
             try {
                 let exists = await this.is_table_exists("accounts");
                 if (!exists) {
@@ -311,7 +439,7 @@ class Database {
                 }
             }
             catch (e) {
-                return callback('create accounts table error: ' + err.message);
+                return callback('create accounts table error: ' + e.message);
             }
 
             try {
@@ -326,7 +454,7 @@ class Database {
                 }
             }
             catch (e) {
-                return callback('create contacts table error: ' + err.message);
+                return callback('create contacts table error: ' + e.message);
             }
 
             try {
@@ -337,12 +465,13 @@ class Database {
                         pkhash text NOT NULL, \
                         publickey text NOT NULL, \
                         isadmin integer NOT NULL DEFAULT 0, \
-                        username text )";
+                        username text, \
+                        settings text)";
                     await this.create_table(users_table);
                 }
             }
             catch (e) {
-                return callback('create users table error: ' + err.message);
+                return callback('create users table error: ' + e.message);
             }
 
             try {
@@ -359,7 +488,7 @@ class Database {
                 }
             }
             catch (e) {
-                return callback('create iotdevices table error: ' + err.message);
+                return callback('create iotdevices table error: ' + e.message);
             }          
 
             try {
@@ -376,7 +505,7 @@ class Database {
                 }
             }
             catch (e) {
-                return callback('create iotfeatures table error: ' + err.message);
+                return callback('create iotfeatures table error: ' + e.message);
             }          
 
             try {
@@ -386,14 +515,34 @@ class Database {
                 await this.create_table(get_iotfeatures_view);
             }
             catch (e) {
-                return callback('create iotfeatures table error: ' + err.message);
-            }          
+                return callback('create iotfeatures table error: ' + e.message);
+            }  
 
+            // make sure the users table is populated           
+            try {
+                var cnfusers = config.users;
+                const dbusers = await this.get_users();                
+                await this.create_users(cnfusers, dbusers);
+            }
+            catch (e) {
+                return callback('create users table error: ' + e.message);
+            }  
+
+
+            // make sure the devices data is populated           
+            try {
+                await this.create_devices();
+            }
+            catch (e) {
+                return callback('create devices database error: ' + e.message);
+            }  
+
+            
             callback();
             //
         }
         catch (e) {
-            reject(e.message);
+            callback(e.message);
         }        
     }
 }

@@ -42,6 +42,8 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         this.longpolling_enabled = this.ispolling && this.long_poll_interval > 0;    
         this.polling_timer = 0;        
 
+        this.property_names.push(iotdefinitions.PROPERTY_TEMPERATURE);
+
         logger.debug("Initialized a Zigbee temperature sensor feature for device id: " + this.deviceid + ", ispolling: " + this.ispolling + " long_poll_interval: " + this.long_poll_interval);        
     }
 

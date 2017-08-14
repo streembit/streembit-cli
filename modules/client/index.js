@@ -31,7 +31,7 @@ const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
 const PeerTransport = require("libs/peernet/transport");
 const events = require("libs/events");
-const Contacts = require("libs/contacts");
+
 
 function process_tasks() {
     try {
@@ -57,15 +57,6 @@ module.exports = exports = function (callback) {
 
         async.waterfall(
             [        
-                function (cb) {
-                    try {
-                        var contacts = new Contacts();
-                        contacts.init(cb);
-                    }
-                    catch (e) {
-                        cb(e.message);
-                    }
-                },
                 function (cb) {
                     try {
                         peerutils.discovery(config.host, config.seeds, cb)

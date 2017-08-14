@@ -25,8 +25,8 @@ const logger = require("libs/logger");
 const events = require("libs/events");
 const config = require('libs/config');
 const constants = require("libs/constants");
-const ZigbeeGateway = require('libs/iot/devices/zigbee/gateway');
-const ZigbeeDevice = require('libs/iot/devices/zigbee/device');
+const ZigbeeGateway = require('libs/iot/device/zigbee/gateway');
+const ZigbeeDevice = require('libs/iot/device/zigbee/device');
 
 let iotdevices = 0;
 
@@ -75,7 +75,7 @@ class IoTProtocolHandler {
     create_handler() {
         var handler = 0;
         try {
-            var lib = 'libs/iot_protocols/zigbee/' + this.mcu;
+            var lib = 'libs/iot/protocols/zigbee/' + this.mcu;
             handler = require(lib);
         }
         catch (err) {

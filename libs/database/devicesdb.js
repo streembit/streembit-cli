@@ -19,9 +19,9 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-const dbinstance = require("libs/database").instance;
-
 'use strict';
+
+const dbinstance = require("libs/database").instance;
 
 class IoTDevicesDb {
     constructor() {
@@ -147,6 +147,21 @@ class IoTDevicesDb {
         );
     }
 
+    get_features() {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM vw_get_features";
+                this.database.all(query, [], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
+            }
+        );
+    }
+
 }
 
 module.exports = IoTDevicesDb;
+

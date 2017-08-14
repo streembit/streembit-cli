@@ -48,6 +48,7 @@ class IoTFeature {
         this.datareceived = false;
 
         this.callbacks = new Map();
+        this.property_names = [];
     }
 
     on_bind_complete() {
@@ -105,6 +106,19 @@ class IoTFeature {
             },
             timeout
         );      
+    }
+
+    is_property_handled(properties) {
+        if (properties && Array.isArray(properties)) {
+            for (let i = 0; i < this.property_names.length; i++) {
+                if (properties.indexOf(this.property_names[i]) > -1) {
+                    //console.log("property " + this.property_names[i] + " == is_property_handled ");
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     configure() {

@@ -26,7 +26,7 @@ const UNDEFINED = "undefined";
 var definitions = {
     ZIGBEE: "zigbee",
 
-    DATA_RECEIVED_EVENT: "_iot_data_received",
+    IOT_DATA_RECEIVED_EVENT: "_iot_data_received",
     EVENT_RADIO_ERROR: "radio_error",
     EVENT_DEVICE_CONTACTING: "device_contacting",
     EVENT_DEVICE_BINDSUCCESS: "binding_success",

@@ -24,7 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const util = require('util');
-const gateway = require('libs/iot/devices/zigbee/gateway');
+const gateway = require('libs/iot/device/zigbee/gateway');
 
 
 class ZigbeeCommands {

@@ -27,7 +27,7 @@ const events = require("libs/events");
 const logger = require('libs/logger');
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const Database = require("libs/database/devicesdb");
+const Devices = require("libs/devices");
 
 class Device {
 
@@ -56,15 +56,15 @@ class Device {
         this.errors = [];        
     }
 
-    async addfeatures(database) {        
-        let array = await database.get_features_by_deviceid(this.id);
+    addfeatures() {  
+        let array = Devices.get_features_by_deviceid(this.id);
         if (array && Array.isArray(array) && array.length > 0) {
             //debugger;
             for (let i = 0; i < array.length; i++) {
                 try {             
                     let feature_type = array[i].type;
                     let feature_name = iotdefinitions.FEATURETYPEMAP[feature_type];
-                    let feature_lib = "libs/iot/devices/feature/" + this.protocol + "/" + feature_name;
+                    let feature_lib = "libs/iot/device/feature/" + this.protocol + "/" + feature_name;
                     let feature_obj = require(feature_lib);
                     let feature_handler = new feature_obj(this, array[i]);
                     if (feature_handler) {
@@ -79,19 +79,14 @@ class Device {
         }
     }
 
-    init(database) {
-        return new Promise(
-            (resolve, reject) => {
-                try {
-                    this.addfeatures(database);
-                    this.create_event_handlers();
-                    resolve();
-                }
-                catch (err) {
-                    reject(err);
-                }
-            }
-        );
+    init() {
+        try {
+            this.addfeatures();
+            this.create_event_handlers();
+        }
+        catch (err) {
+            throw new Error("Device init error: " + err.message);
+        }
     }
 
     get active() {

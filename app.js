@@ -38,6 +38,9 @@ var utils = require("libs/utils");
 var Account = require("libs/account");
 var Tasks = require("libs/tasks");
 var events = require("libs/events");
+const Users = require("libs/users");
+const Devices = require("libs/devices");
+const IoTHandler = require('libs/iot');
 
 // initialize the logger
 function initialize_logger(callback) {
@@ -89,6 +92,34 @@ module.exports = exports = function (port, ip, password) {
                     try {
                         var account = new Account();
                         account.init(callback)
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        var users = new Users();
+                        users.init(callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        var devices = new Devices();
+                        devices.init(callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        var iot = new IoTHandler();
+                        iot.init();
+                        callback();
                     }
                     catch (e) {
                         callback(e);

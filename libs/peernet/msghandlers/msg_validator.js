@@ -28,6 +28,7 @@ const bs58check = require('bs58check');
 const createHash = require('create-hash');
 const config = require("libs/config");
 const Account = require('libs/account');
+const Users = require('libs/users');
 
 function verify_signature(params, callback) {
 
@@ -144,16 +145,8 @@ module.exports.validate = function (message, callback) {
 }
 
 function get_user(pubkey) {
-    var user = 0;
-    var users = config.iot_config.users;
-    if (users) {
-        users.forEach((item) => {
-            if (item.publickey == pubkey) {
-                user = item;
-            }
-        });
-    }
-    return user;
+    var users = new Users();
+    return users.get_user_bypublickey(pubkey);
 }
 
 module.exports.verify_wsjwt = function (msg, callback) {
