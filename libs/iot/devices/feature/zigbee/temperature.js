@@ -58,7 +58,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
                             var val = new Number(item.value);
                             this.temperature = val.toFixed(2);
                             //logger.debug("TemperatureFeature on_datareceive_event " + item.property + ": " + this.temperature);
-                            this.emit(iotdefinitions.PROPERTY_TEMPERATURE, this.temperature);
+                            //this.emit(iotdefinitions.PROPERTY_TEMPERATURE, this.temperature);
                             if (!this.datareceived) {
                                 this.datareceived = true;
                             }
@@ -164,60 +164,12 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
     }
 
 
-    read(callback) {
+    read(payload, callback) {
         try {    
-            if (this.longpolling_enabled) {
-
-                if (!this.datareceived) {
-                    return callback(constants.IOT_ERROR_NODATA);
-                }
-
-                // just get the latest reading
-                var result = {
-                    payload: {
-                        temperature: this.temperature
-                    }
-                };                
-                callback(null, result);
-
-                //
-            }
-            else {
-                let proctimer = 0;
-                let processed = false;
-
-                this.read_temperature();
-
-                this.once(iotdefinitions.PROPERTY_TEMPERATURE, (value) => {
-                    try {
-                        processed = true;
-                        var result = {
-                            payload: {
-                                temperature: value
-                            }
-                        };                        
-                        callback(null, result);                        
-                        if (proctimer) {
-                            clearTimeout(proctimer);
-                        }
-                    }
-                    catch (err) {
-                        logger.error("ZigbeeTemperatureFeature read() 'once' event handler error %j", err);
-                    }
-                });
-
-                proctimer = setTimeout(
-                    () => {
-                        if (!processed) {
-                            this.removeAllListeners(iotdefinitions.PROPERTY_TEMPERATURE);
-                            callback(constants.IOT_ERROR_TIMEDOUT);
-                        }
-                    },
-                    TEMPSENS_TIMEOUT
-                );
-
-                //
-            }            
+            super.read(payload, callback, TEMPSENS_TIMEOUT);
+            // do the reading
+            this.read_temperature();
+            //
         }
         catch (err) {
             callback(err);

@@ -29,10 +29,10 @@ const constants = require("libs/constants");
 const EventEmitter = require('events');
 const IoTReport = require('./iotreport');
 const iotdefinitions = require("libs/iot/definitions");
+const util = require("util");
 
-class IoTFeature extends EventEmitter {
+class IoTFeature {
     constructor(device, feature) {
-        super();
         if (!device) {
             throw new Error("IoTFeature constructor error: Invalid device ID");
         }
@@ -41,14 +41,13 @@ class IoTFeature extends EventEmitter {
             throw new Error("IoTFeature constructor error: Invalid device ID");
         }
         this.deviceid = device.id;  // parent id, in case if Zigbee this is the address64 as well
-        this.type = feature.function;
+        this.type = feature.type;
         this.settings = feature.setting;
         this.isactive = false;
 
         this.datareceived = false;
 
-        this.reports = new Map();
-        this.report_timer = 0;
+        this.callbacks = new Map();
     }
 
     on_bind_complete() {
@@ -57,8 +56,22 @@ class IoTFeature extends EventEmitter {
     on_clusterlist_receive() {
     }
 
-    on_datareceive_event(data) {
-        this.sendreport(data);
+    on_datareceive_event(data, event) {
+        if (this.callbacks.size > 0) {
+            this.callbacks.forEach(
+                (cbfn, key, map) => {
+                    cbfn(null, data);
+                }
+            );
+            // clear the callbacks
+            this.callbacks.clear();
+        }
+        else {
+            //console.log("sending datarcv event " + util.inspect(frame));
+            data.payload.deviceid = this.deviceid;
+            data.payload.feature = this.type;
+            events.emit(event, this.deviceid, data);
+        }        
     }
 
     on_activated(payload) {
@@ -70,48 +83,28 @@ class IoTFeature extends EventEmitter {
     on_bind_complete(payload) {
     }
 
-    read(callback) {
-    }
-
-    start_reporting() {
-        if (!this.reports.size) {
-            return console.log("start_reporting exit, no reports configured") 
+    read(payload, callback, timeout) {
+        if (!callback && typeof callback != "function") {
+            return;
         }
 
-        if (this.report_timer) {
-            clearInterval(this.report_timer);
+        let txn = payload.txn;
+        if (!txn) {
+            return callback("invalid txn in payload");
         }
 
-        this.report_timer = setInterval(
+        this.callbacks.set(txn, callback);
+
+        setTimeout(
             () => {
-                this.read(
-                    (err, data) => {
-                        if (err) {
-                            return logger.error("read for report error: %j", err);
-                        }
-                        this.sendreport(data);
-                    }
-                );
+                if (this.callbacks.has(txn)) {
+                    let cbfn = this.callbacks.get(txn);
+                    cbfn(constants.IOT_ERROR_TIMEDOUT);
+                    this.callbacks.delete(txn);
+                }
             },
-            (iotdefinitions.MIN_REPORTING_INTERVAL + 1000)
-        );
-    }
-
-    configure_report(usersession, report) {
-        var interval = report.interval;
-        var report = new IoTReport(usersession, this.deviceid, interval);
-        this.reports.set(usersession, report);        
-
-        this.start_reporting();
-    }
-
-    sendreport(data) {
-        this.reports.forEach((report, key, map) => {
-            if (data && data.payload) {
-                data.payload.feature = this.type;
-                report.send(data);
-            }
-        });
+            timeout
+        );      
     }
 
     configure() {

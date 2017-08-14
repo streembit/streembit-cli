@@ -170,6 +170,7 @@ class Device {
     }
 
     configure_reports(payload, callback) {
+        /*
         var reports = payload.reports;
         // must be an array
         if (!reports || !Array.isArray(reports)) {
@@ -196,6 +197,7 @@ class Device {
                 }
             }
         );
+        */
     }
 
 
@@ -215,13 +217,13 @@ class Device {
                 this.send_device_details(callback);
                 break;
             case constants.IOTCMD_CONFIGURE_REPORT:
-                this.configure_reports(payload, callback);
+            //    this.configure_reports(payload, callback);
                 break;
             case constants.IOTCMD_TOGGLE:
                 obj.toggle(callback);
                 break;
             case constants.IOTCMD_READVALUES:
-                obj.read(callback);
+                obj.read(payload, callback);
                 break;            
             default:
                 callback("invalid command");

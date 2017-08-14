@@ -33,8 +33,8 @@ const createHmac = require('create-hmac');
 class WsServer {
     constructor(port) {
         this.port = port;
-        this.user_sessions = new Map();
-        this.list_of_reports = new Map();
+        this.list_of_sessions = new Map();
+        this.list_of_devices = new Map();
     }
 
     format_error(txn, err) {
@@ -71,8 +71,16 @@ class WsServer {
 
             var res = msgvalidator.verify_wsjwt(jwt);
 
-            this.user_sessions.set(res.pkhash, { token: res.token, ws: ws });
+            this.list_of_sessions.set(res.pkhash, { token: res.token, ws: ws });
             logger.debug("user session created for pkhash: " + res.pkhash);
+
+            if (res.devices && Array.isArray(res.devices)) {
+                res.devices.forEach(
+                    (device) => {
+                        this.list_of_devices.set(device, res.pkhash);
+                    }
+                );
+            }
 
             return {
                 payload: {
@@ -90,7 +98,7 @@ class WsServer {
             throw new Error("invalid authentication fields");
         }
 
-        var usersession = this.user_sessions.get(message.pkhash);
+        var usersession = this.list_of_sessions.get(message.pkhash);
         if (!usersession) {
             throw new Error("invalid user WS session");
         }
@@ -193,20 +201,22 @@ class WsServer {
         try {
             events.on(
                 iotdefinitions.EVENT_PROPERTY_REPORT,
-                (usersession, data) => {
+                (id, data) => {
                     try {
-                        var session = this.user_sessions.get(usersession);
-                        if (!session) {
-                            throw new Error("invalid user session");
+                        let pkhash = this.list_of_devices.get(id);
+                        if (pkhash) {
+                            let session = this.list_of_sessions.get(pkhash);
+                            if (session) {
+                                let ws = session.ws;
+                                if (ws && ws.readyState === WebSocket.OPEN) {
+                                    let response = JSON.stringify(data);
+                                    ws.send(response);
+                                }
+                                else {
+                                    // TODO report this closed connection
+                                }
+                            }
                         }
-                        var ws = session.ws;
-                        if (ws && ws.readyState === WebSocket.OPEN) {
-                            var response = JSON.stringify(data);
-                            ws.send(response);
-                        }
-                        else {
-                            // TODO report this closed connection
-                        }                        
                     }
                     catch (err) {
                         logger.error("ws shandle_server_messages() event handler error: " + err.message);

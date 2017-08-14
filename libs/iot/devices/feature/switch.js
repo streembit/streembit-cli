@@ -36,7 +36,8 @@ class SwitchFeature extends IoTFeature {
         this.switchstatus = 0;        
     }
 
-    on_datareceive_event(properties) {        
+    on_datareceive_event(data, event) {   
+        super.on_datareceive_event(data, event);
     }
 
     on_device_contacting(payload) {
@@ -51,13 +52,14 @@ class SwitchFeature extends IoTFeature {
     toggle(callback) {
     }
 
-    read(callback) {
+    read(payload, callback, timeout) {
+        super.read(payload, callback, timeout);
     }
 
     exec_toggle_switch() {
     }
 
-    get_switchstatus(callback) {        
+    get_switchstatus(payload, callback) {        
     }
 
     configure() {

@@ -439,21 +439,109 @@ class XbeeHandler {
         //
     }
 
-    handle_cluster_0b04 (frame) {
+    handle_cluster_0b04_01(frame, reader) {
+        //console.log(util.inspect(frame));
 
+        function read_next_attribute() {
+            try {
+                let property_name, value;
+                let attribute = reader.nextUInt16LE();
+                //console.log("attribute: %s", sprintf("0x%04x", attribute));
+
+                let status = reader.nextUInt8();
+                if (status != 0x00) {
+                    return null;
+                }
+                let datatype = reader.nextUInt8();
+
+                if (attribute == 0x050b) { // active power 
+                    if (datatype != 0x29) {
+                        return null;
+                    }
+                    value = reader.nextInt16LE();
+                    property_name = iotdefinitions.PROPERTY_ACTIVEPOWER;
+                }
+                else if (attribute == 0x0505) { // active power 
+                    if (datatype != 0x21) {
+                        return null;
+                    }
+                    value = reader.nextInt16LE();
+                    property_name = iotdefinitions.PROPERTY_VOLTAGE;
+                }
+                else if (attribute == 0x0605) { // active power 
+                    if (datatype != 0x21) {
+                        return null;
+                    }
+                    value = reader.nextInt16LE();
+                    property_name = iotdefinitions.PROPERTY_POWERDIVISOR;
+                }
+                else if (attribute == 0x0604) { // active power 
+                    if (datatype != 0x21) {
+                        return null;
+                    }
+                    value = reader.nextInt16LE();
+                    property_name = iotdefinitions.PROPERTY_POWERMULTIPLIER;
+                }
+
+                if (property_name) {
+                    return {
+                        "property": property_name,
+                        "value": value
+                    };
+                }
+                else {
+                    return null;
+                }
+            }
+            catch (err) {
+                logger.error('handle_cluster_0b04_01() error: ' + err.message);
+                return null;
+            }
+        }
+
+        var bufferlen = frame.data.length;
+        var properties = [];
+
+        var currpos = reader.tell();
+        if (currpos < bufferlen - 5) {
+            var prop = read_next_attribute();
+            if (prop) {
+                properties.push(prop);
+            }
+        }
+
+        currpos = reader.tell();
+        if (currpos < bufferlen - 5) {
+            var prop = read_next_attribute();
+            if (prop) {
+                properties.push(prop);
+            }
+        }
+
+        this.dispatch_datarcv_event(
+            frame.remote64,
+            {
+                "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                "properties": properties
+            }
+        );
+    }
+
+    handle_cluster_0b04 (frame) {
+        var properties = [];
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
-        console.log("zcl_command: %s", sprintf("0x%02x", zcl_command));
+        //console.log("zcl_command: %s", sprintf("0x%02x", zcl_command));
 
         if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11
-
+            //console.log(util.inspect(frame));
             var property_name = 0;
             var value = 0;
 
             // get the attributes
             var attribute = reader.nextUInt16LE();
-            console.log("attribute: %s", sprintf("0x%04x", attribute));
+            //console.log("attribute: %s", sprintf("0x%04x", attribute));
 
             if (attribute == 0x050b) { // active power 
                 var datatype = reader.nextUInt8();
@@ -464,7 +552,6 @@ class XbeeHandler {
 
                 value = reader.nextInt16LE();
                 property_name = iotdefinitions.PROPERTY_ACTIVEPOWER;
-                console.log("power: %d Watts", value);
             }
 
             if (attribute == 0x0505) { // active power 
@@ -476,7 +563,6 @@ class XbeeHandler {
 
                 value = reader.nextInt16LE();
                 property_name = iotdefinitions.PROPERTY_VOLTAGE;
-                console.log("voltage: %d Volt", value);
             }
 
             this.dispatch_datarcv_event(
@@ -492,75 +578,10 @@ class XbeeHandler {
                 }
             );
         }
-
-        /*
-
-        var reader = new BufferReader(frame.data);
-        reader.seek(1);
-
-        var txid = reader.nextUInt8();
-
-        reader.seek(5);
-
-        var status = reader.nextUInt8();
-        if (status != 0) {
-            return this.dispatch_error_event(frame.remote64, "invalid status returned");
-        }
-
-        var property_name = 0;
-        var value = 0;
-        var datatype = reader.nextUInt8();
-        if (txid == 0xbc) {
-            if (datatype != 0x21) {
-                return this.dispatch_error_event(frame.remote64,"invalid data type returned");
-            }
-            var valuebuf = reader.nextBuffer(2);
-            valuebuf.swap16();
-            value = valuebuf.readUInt16BE(0);
-            property_name = iotdefinitions.PROPERTY_VOLTAGE;
-        }
-        else if (txid == 0xbe) {
-            if (datatype != 0x29) {
-                return this.dispatch_error_event(frame.remote64,"invalid data type returned");
-            }
-            var valuebuf = reader.nextBuffer(2);
-            valuebuf.swap16();
-            value = valuebuf.readInt16BE(0);
-            property_name = iotdefinitions.PROPERTY_ACTIVEPOWER;
-        }
-        else if (txid == 0xbf) {
-            if (datatype != 0x21) {
-                return this.dispatch_error_event(frame.remote64,"invalid data type returned");
-            }
-            var valuebuf = reader.nextBuffer(2);
-            valuebuf.swap16();
-            value = valuebuf.readUInt16BE(0);
-            property_name = iotdefinitions.PROPERTY_POWERDIVISOR;
-        }
-        else if (txid == 0xbb) {
-            if (datatype != 0x21) {
-                return this.dispatch_error_event(frame.remote64,"invalid data type returned");
-            }
-            var valuebuf = reader.nextBuffer(2);
-            valuebuf.swap16();
-            value = valuebuf.readUInt16BE(0);
-            property_name = iotdefinitions.PROPERTY_POWERMULTIPLIER;
-        }
-
-        this.dispatch_datarcv_event(
-            frame.remote64,
-            {
-                "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
-                "properties": [
-                    {
-                        "property": property_name,
-                        "value": value
-                    }
-                ]
-            }
-        );
-
-        */
+        else if (zcl_command == 0x01) {  // ZCL 0x01 Read attributes response 7.2
+            this.handle_cluster_0b04_01(frame, reader);
+        }   
+        
         //
     }
 
@@ -733,7 +754,7 @@ class XbeeHandler {
     }
 
     handle_cluster_8021(frame) {
-        console.log(util.inspect(frame));
+        //console.log(util.inspect(frame));
         if (frame.profileId == "0000") {
             // ZDO bind response
             var reader = new BufferReader(frame.data);
@@ -843,7 +864,7 @@ class XbeeHandler {
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
-        console.log("zcl_command: %s", sprintf("0x%02x", zcl_command));
+        //console.log("zcl_command: %s", sprintf("0x%02x", zcl_command));
 
         if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11 
             // get the attributes
@@ -875,7 +896,7 @@ class XbeeHandler {
         }
         else if (zcl_command == 0x01) {  // ZCL 0x01 Read attributes response 7.2
             var attribute = reader.nextUInt16LE();
-            console.log("attribute: %s", sprintf("0x%04x", attribute));
+            //console.log("attribute: %s", sprintf("0x%04x", attribute));
 
             if (attribute == 0x0000) { // active power 
                 var status = reader.nextUInt8();
@@ -911,7 +932,7 @@ class XbeeHandler {
     }
 
     handle_cluster_0006(frame) {
-        console.log(util.inspect(frame));
+        //console.log(util.inspect(frame));
         if (frame.profileId == "0000") {
             // this is a ZDO Match Descriptor Request
             this.handle_ZDO_match_descriptor_request(frame);

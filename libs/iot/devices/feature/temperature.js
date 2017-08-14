@@ -38,7 +38,8 @@ class TemperatureFeature extends IoTFeature {
         this.temperature = 0;   
     }
 
-    on_datareceive_event(properties) {
+    on_datareceive_event(data, event) {
+        super.on_datareceive_event(data, event);
     }
 
     on_activated(payload) {
@@ -50,7 +51,8 @@ class TemperatureFeature extends IoTFeature {
     read_temperature(callback) {
     }   
 
-    read(callback) {        
+    read(payload, callback, timeout) {   
+        super.read(payload, callback, timeout);
     }
 
     configure() {

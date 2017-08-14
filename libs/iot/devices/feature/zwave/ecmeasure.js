@@ -35,9 +35,7 @@ class ZwaveEcMeasureFeature extends EcMeasureFeature {
 
     constructor(device, feature) {
         super(device, feature);  
-        this.power_divisor = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.divisor) ? feature.settings.acformatting.divisor : 0;
-        this.power_multiplier = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.multiplier) ? feature.settings.acformatting.multiplier : 1;
-        logger.debug("initialized a Zigbee EC measuremenent feature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);
+        logger.debug("initialized a ZwaveEcMeasureFeature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);
     }
 
     on_datareceive_event(properties) {

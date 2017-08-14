@@ -39,7 +39,8 @@ class EcMeasureFeature extends IoTFeature {
         this.power_consumption = constants.IOT_STATUS_UNKOWN;        
     }
 
-    on_datareceive_event(properties) {     
+    on_datareceive_event(data, event) {   
+        super.on_datareceive_event(data, event);
     }
 
     on_device_contacting(payload) {
@@ -52,7 +53,8 @@ class EcMeasureFeature extends IoTFeature {
        
     }
 
-    read(callback) {
+    read(payload, callback, timeout) {
+        super.read(payload, callback, timeout);
     }
 
     get_voltage(callback) {

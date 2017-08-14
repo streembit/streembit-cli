@@ -30,6 +30,8 @@ const gateway = require('libs/iot/devices/zigbee/gateway');
 class ZigbeeCommands {
     constructor() {
         this.txnmap = {};
+        this.txnmap[constants.IOT_CLUSTER_READATTRIBUTE] = 0x74;
+        this.txnmap[constants.IOT_CLUSTER_BIND] = 0x75;
         this.txnmap[constants.IOT_CLUSTER_BIND] = 0x75;
         this.txnmap[constants.IOT_CLUSTER_POLLCHECKIN] = 0x76;
         this.txnmap[constants.IOT_CLUSTER_NEIGHBORTABLE] = 0x77;
@@ -137,6 +139,31 @@ class ZigbeeCommands {
             clusterId: 0x0402,
             profileId: 0x0104,
             data: [0x00, txn, 0x00, 0x00, 0x00]
+        };
+        return cmd;
+    }
+
+    readAttributes(device_details, destination_endpoint, clusterId, attributes) {
+        var address64 = device_details.address64, address16 = device_details.address16;
+        var destendpoint = destination_endpoint || device_details.endpoints[0];
+        var txn = this.txnmap[constants.IOT_CLUSTER_TEMPERATURE]; 
+
+        var data = [0x00, txn, 0x00];
+        attributes.forEach(
+            (attr) => {
+                data.push(attr);
+            }
+        );
+
+        var cmd = {
+            txid: txn,
+            destination64: address64,
+            destination16: address16,
+            sourceEndpoint: gateway.endpoint,
+            destinationEndpoint: destendpoint,
+            clusterId: clusterId,
+            profileId: 0x0104,
+            data: data
         };
         return cmd;
     }

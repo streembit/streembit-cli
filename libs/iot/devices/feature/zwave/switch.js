@@ -55,7 +55,7 @@ class ZwaveSwitchFeature extends SwitchFeature {
     exec_toggle_switch() {
     }
 
-    get_switchstatus(callback) {
+    get_switchstatus(payload, callback) {
     }
 
 }

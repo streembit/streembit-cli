@@ -208,7 +208,9 @@ module.exports.verify_wsjwt = function (msg, callback) {
         throw new Error("authentication failed, invalid pkhash");
     }
 
+    var devices = obj.devices;
+
     //
-    return { pkhash: user.pkhash, token: token };
+    return { pkhash: user.pkhash, token: token, devices: devices };
 
 }

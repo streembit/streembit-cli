@@ -48,29 +48,44 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                 return;
             }
 
+            let data = {};
+            data.payload = {};
+
             properties.forEach(
                 (item) => {
                     if (item.property == iotdefinitions.PROPERTY_ACTIVEPOWER) {
-                        var value = item.value;
+                        let value = item.value;
                         if (this.power_divisor > 0) {
                             value = value / this.power_divisor;
                         }
                         if (this.power_multiplier) {
                             value = value * this.power_multiplier;
                         }
-                        this.power_consumption = value;
+                        this.power_consumption = value;                        
+                        data.payload.power_consumption = value;
                         logger.debug("ZigbeeEcMeasureFeature power: %d Watt", this.power_consumption);
-                        //
-                        this.emit(iotdefinitions.PROPERTY_ACTIVEPOWER, this.power_consumption);
                     }
                     else if (item.property == iotdefinitions.PROPERTY_VOLTAGE) {
-                        this.voltage = item.value;
+                        let voltage = item.value;
+                        this.voltage = voltage;                        
+                        data.payload.voltage = voltage;
                         logger.debug("ZigbeeEcMeasureFeature voltage: %d Volt", this.voltage);
-                        //
-                        this.emit(iotdefinitions.PROPERTY_VOLTAGE, this.voltage);
+                    }
+                    else if (item.property == iotdefinitions.PROPERTY_POWERMULTIPLIER) {
+                        this.power_multiplier = item.value;
+                        logger.debug("PROPERTY_POWERMULTIPLIER: %d", this.power_multiplier);
+                    }
+                    else if (item.property == iotdefinitions.PROPERTY_POWERDIVISOR) {
+                        this.power_divisor = item.value;
+                        logger.debug("PROPERTY_POWERDIVISOR: %d", this.power_divisor);                        
                     }
                 }
             );
+
+            //console.log("ZigbeeEcMeasureFeature on_datareceive_event data: " + util.inspect(data));
+            if (data.payload.hasOwnProperty("voltage") || data.payload.hasOwnProperty("power_consumption")) {
+                super.on_datareceive_event(data, iotdefinitions.EVENT_PROPERTY_REPORT);
+            }
         }
         catch (err) {
             logger.error("EcMeasureFeature on_datareceive_event() error: %j", err);
@@ -84,6 +99,9 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
     on_bind_complete() {
         try {
+
+            this.read_settings();
+        
             var cluster = 0x0b04;
             var reports = [];
             // power
@@ -163,43 +181,13 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
     on_report_configured() {
     }
 
-    get_settings_attributes() {
-        try {
-
-            // get the power consumption
-            setTimeout(() => { this.get_powerdivisor() }, 1000);
-
-            // get the power consumption
-            setTimeout(() => { this.get_powermultiplier() }, 2000);
-
-            setTimeout(
-                () => {
-                    //this.readpower();
-                },
-                3000
-            );
-        }
-        catch (err) {
-            logger.error("EcMeasureFeature on_activated error %j", err);
-        }
-    }
-
     readpower() {
-        
-        setTimeout(
-            () => {
-                this.get_powerconsumption();
-            },
-            1000
-        );
-
-        setTimeout(
-            () => {
-                this.get_voltage();
-            },
-            2000
-        );
-        
+        var transport = this.device.transport;
+        var commandbuilder = this.device.command_builder;
+        var device_details = this.device.details;
+        var attributes = [0x05, 0x05, 0x0b, 0x05];
+        var cmd = commandbuilder.readAttributes(device_details, null, 0x0b04, attributes);
+        transport.send(cmd);        
     }
 
     get_voltage(callback) {
@@ -226,6 +214,15 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         }
     }
 
+    read_settings() {
+        var transport = this.device.transport;
+        var commandbuilder = this.device.command_builder;
+        var device_details = this.device.details;
+        var attributes = [0x05, 0x06, 0x04, 0x06];
+        var cmd = commandbuilder.readAttributes(device_details, null, 0x0b04, attributes);
+        transport.send(cmd);
+    }
+
     get_powermultiplier() {
         var transport = this.device.transport;
         var commandbuilder = this.device.command_builder;
@@ -242,65 +239,11 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         transport.send(cmd);
     }
 
-    read(callback) {
+    read(payload, callback) {
         try {   
-            if (callback) {
-                let processed_power = false;
-                let processed_voltage = false;
-                let proctimer = 0;
-                let result = {
-                    payload: {
-                        power_consumption: -1,
-                        voltage: -1
-                    }
-                };
-
-                var complete = function () {
-                    if (processed_voltage && processed_power) {
-                        callback(null, result);
-                        if (proctimer) {
-                            clearTimeout(proctimer);
-                        }
-                    }
-                }
-
-                this.once(iotdefinitions.PROPERTY_ACTIVEPOWER, (value) => {
-                    try {
-                        result.payload.power_consumption = value;
-                        processed_power = true;
-                        complete();
-                    }
-                    catch (err) {
-                        logger.error("TemperatureFeature read() 'once' event handler error %j", err);
-                    }
-                });
-
-                this.once(iotdefinitions.PROPERTY_VOLTAGE, (value) => {
-                    try {
-                        result.payload.voltage = value;
-                        processed_voltage = true;
-                        complete();
-                    }
-                    catch (err) {
-                        logger.error("TemperatureFeature read() 'once' event handler error %j", err);
-                    }
-                });
-
-                proctimer = setTimeout(
-                    () => {
-                        if (!processed_voltage || !processed_power) {
-                            this.removeAllListeners(iotdefinitions.PROPERTY_VOLTAGE);
-                            this.removeAllListeners(iotdefinitions.PROPERTY_ACTIVEPOWER);
-                            callback(constants.IOT_ERROR_TIMEDOUT);
-                        }
-                    },
-                    7000
-                );
-            }
-
+            super.read(payload, callback, 7000);
             // do the reading
             this.readpower();
-
             //
         }
         catch (err) {
