@@ -111,7 +111,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
             var cluster = 0x0b04;
             var reports = [];
             // power
-            var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 0x0001;
+            var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 0x0005;
             reports.push(
                 {
                     attribute: attribute,

@@ -33,6 +33,8 @@ const iotdefinitions = require("libs/iot/definitions");
 const BufferReader = require('buffer-reader');
 const BitStream = require('libs/utils/bitbuffer').BitStream;
 const sprintf = require('sprintf-js').sprintf;
+const Devices = require("libs/devices");
+const async = require("async");
 
 const MYENDPOINT = 0x02; // TODO review this to set it dynamcally
 
@@ -57,6 +59,8 @@ class XbeeHandler {
         this.is_portopened = false;
         this.gateway = 0;
         this.init_xbee_framehandler();
+        this.online_devices = [];
+        this.configured_devices = [];
     }
 
     dispatch_datarcv_event(address64, payload) {
@@ -83,7 +87,37 @@ class XbeeHandler {
             }
         );
     }
- 
+
+    // utility helpers
+
+    swapEUI64toLittleEndian(eui64) {
+        if (!eui64 || eui64.length != 16) {
+            throw new Error("Invalid EUI64 data. EUI64 must be an 16 charecter long string");
+        }
+
+        var buffer = Buffer.from(eui64, "hex");
+        var final = Buffer.alloc(8);
+        var index = 0;
+        for (let i = buffer.length - 1; i >= 0; i--) {
+            final[index++] = buffer[i];
+        }
+
+        return final;
+    }
+
+    swapEUI64BuffertoBigEndian(eui64) {
+        if (!eui64 || eui64.length != 8 || !Buffer.isBuffer(eui64)) {
+            throw new Error("Invalid EUI64 buffer, eui64 param must be a 8 byte lenght buffer");
+        }
+
+        var final = Buffer.alloc(8);
+        var index = 0;
+        for (let i = eui64.length - 1; i >= 0; i--) {
+            final[index++] = eui64[i];
+        }
+
+        return final;
+    }
 
     // Command helpers for ZDO & ZCL
 
@@ -179,45 +213,7 @@ class XbeeHandler {
 
     // end Command helpers mainly for ZDO & ZCL
 
-    handle_cluster_8032(frame) {
-        //debugger;
-        //console.log("handle_cluster_descriptor");
-        // clear the routetable so it will be populated with clusterID 0x31
-        neighbortable = [];
-
-        this.dispatch_datarcv_event(
-            frame.remote64,
-            {
-                "type": iotdefinitions.EVENT_DEVICE_ONLINE,
-                "deviceid": frame.remote64,
-                "devicedetails": [
-                    {
-                        "name": "address64",
-                        "value": frame.remote64,
-                    },
-                    {
-                        "name": "address16",
-                        "value": frame.remote16
-                    }
-                ]
-            }
-        );
-
-
-        if (frame.remote64.toLowerCase() != this.gateway) {
-            // send an Active Endpoint Request 0x0005 to the end device
-            var addressbuf = Buffer.from(frame.remote16, 'hex');
-            addressbuf.swap16();
-            const aerbuf = Buffer.alloc(3);
-            aerbuf.writeUInt8(0x12, 0); // 0x12 transaction sequence number (arbitrarily chosen)                        
-            addressbuf.copy(aerbuf, 1);
-            //console.log("Active Endpoint Request data: " + util.inspect(aerbuf));
-            this.active_endpoint_request(frame.remote64, frame.remote16, aerbuf);
-        }
-
-        //
-    }
-
+    
     handle_cluster_8031 (frame) {
         try {
             //console.log("handle_cluster_8031");
@@ -955,6 +951,128 @@ class XbeeHandler {
         }
     }
 
+    handle_cluster_8000(frame) {
+        try {
+            //console.log(util.inspect(frame));
+            var reader = new BufferReader(frame.data);
+            var id = reader.nextUInt8();
+            var status = reader.nextUInt8();
+            if (status != 0x00) {
+                return;
+            }
+
+            var ieebuf = reader.nextBuffer(8);
+            var swapped = this.swapEUI64BuffertoBigEndian(ieebuf);
+            var ieeestr = swapped.toString("hex")
+            console.log("IEEE: " + ieeestr);
+
+            var address16 = reader.nextUInt16LE();
+            var address16str = sprintf("%02x", address16)
+            console.log("network address: " + address16str);
+
+            this.dispatch_datarcv_event(
+                frame.remote64,
+                {
+                    "type": iotdefinitions.EVENT_DEVICE_ONLINE,
+                    "deviceid": frame.remote64,
+                    "devicedetails": [
+                        {
+                            "name": "address64",
+                            "value": ieeestr
+                        },
+                        {
+                            "name": "address16",
+                            "value": address16str
+                        }
+                    ]
+                }
+            );
+
+            if (this.online_devices.indexOf(frame.remote64) == -1) {
+                this.online_devices.push(frame.remote64);
+            }
+
+            // send Active Endpoint Request 0x0005
+            var addressbuf = Buffer.from(address16str, 'hex');
+            addressbuf.swap16();
+            const aerbuf = Buffer.alloc(3);
+            aerbuf.writeUInt8(0x12, 0); // 0x12 transaction sequence number (arbitrarily chosen)                        
+            addressbuf.copy(aerbuf, 1);
+            console.log("Active Endpoint Request data: " + util.inspect(aerbuf));
+            this.active_endpoint_request(ieeestr, address16str, aerbuf);
+        }
+        catch (err) {
+            logger.error("handle_cluster_8000() error: %j", err);
+        }
+    }
+
+    handle_cluster_8032(frame) {
+        //console.log(util.inspect(frame));
+        this.dispatch_datarcv_event(
+            frame.remote64,
+            {
+                "type": iotdefinitions.EVENT_DEVICE_ONLINE,
+                "deviceid": frame.remote64,
+                "devicedetails": [
+                    {
+                        "name": "address64",
+                        "value": frame.remote64,
+                    },
+                    {
+                        "name": "address16",
+                        "value": frame.remote16
+                    }
+                ]
+            }
+        );
+
+        if (this.online_devices.indexOf(frame.remote64) == -1) {
+            this.online_devices.push(frame.remote64);
+        }
+
+        if (frame.remote64.toLowerCase() != this.gateway) {
+            // send an Active Endpoint Request 0x0005 to the end device
+            var addressbuf = Buffer.from(frame.remote16, 'hex');
+            addressbuf.swap16();
+            const aerbuf = Buffer.alloc(3);
+            aerbuf.writeUInt8(0x12, 0); // 0x12 transaction sequence number (arbitrarily chosen)                        
+            addressbuf.copy(aerbuf, 1);
+            //console.log("Active Endpoint Request data: " + util.inspect(aerbuf));
+            this.active_endpoint_request(frame.remote64, frame.remote16, aerbuf);
+        }
+
+        //
+    }
+
+    // Network Address Request
+    netaddr_request(address64) {
+        try {
+            console.log("netaddr_request to " + address64);
+
+            var addressbuf = this.swapEUI64toLittleEndian(address64);
+            const narbuf = Buffer.alloc(10);
+            narbuf.writeUInt8(0x03, 0); // 0x03 transaction sequence number (arbitrarily chosen) 
+            addressbuf.copy(narbuf, 1);
+            narbuf.writeUInt8(0x00, 9); // Request Type 
+            //console.log("Network Address Request ClusterID=0x0000 buffer: " + util.inspect(narbuf));
+            var txframe = {
+                type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
+                destination64: "000000000000ffff",
+                destination16: "fffe",
+                clusterId: 0x0000,
+                profileId: 0x0000,
+                sourceEndpoint: 0x00,
+                destinationEndpoint: 0x00,
+                data: narbuf
+            };
+
+            serialport.write(xbee.buildFrame(txframe));
+        }
+        catch (err) {
+            logger.error("netaddr_request() error: %j", err);
+        }
+    }
+
     send_rtg_request() {
         var txframe = { // AT Request to be sent to 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
@@ -995,7 +1113,35 @@ class XbeeHandler {
             //
         }
         catch (err) {
-            logger.error("XBEE send error: %js", err);
+            logger.error("XBEE send error: %j", err);
+        }
+    }
+
+    check_online_devices(){        
+        try {
+            var offline_devices = [];
+
+            this.configured_devices.forEach(
+                (ieeeaddr) => {
+                    if (this.online_devices.indexOf(ieeeaddr) == -1) {
+                        //console.log("device " + ieeeaddr + " not online");
+                        offline_devices.push(ieeeaddr);
+                    }
+                }
+            );
+
+            async.eachSeries(
+                offline_devices,
+                (ieee_address, callback) => {
+                    this.netaddr_request(ieee_address);
+                    callback();
+                },
+                (err) => {
+                }
+            );
+        }
+        catch (err) {
+            logger.error("check_online_devices() error: %j", err);
         }
     }
 
@@ -1003,6 +1149,7 @@ class XbeeHandler {
         // enumerate the devices using the device settings of the configuration file
         // first send a ZDO 0x0032 to get all connected devices
         // there must be at last a gateway operational and we try to find that first
+        logger.debug("configure XBEE send ZDO 0x0032 cluster")
         this.send_rtg_request()
     }
 
@@ -1012,10 +1159,11 @@ class XbeeHandler {
         this.is_portopened = false;
 
         // get the gateway address64
-        var devices = config.iot_config.devices;
+        var devices = Devices.list();
         devices.forEach((item) => {
-            if (item.id && item.type == constants.IOT_DEVICE_GATEWAY && item.mcu == "xbee") {
-                this.gateway = item.id.toLowerCase();
+            this.configured_devices.push(item.deviceid);
+            if (item.deviceid && item.type == constants.IOT_DEVICE_GATEWAY && item.mcu == "xbee") {
+                this.gateway = item.deviceid.toLowerCase();
             }
         });
 
@@ -1088,6 +1236,7 @@ class XbeeHandler {
             case "8004":
             case "0020":
             case "8021":
+            case "8000":
                 var clusterfn = "handle_cluster_" + frame.clusterId;
                 this[clusterfn](frame);
                 break;
@@ -1119,6 +1268,8 @@ class XbeeHandler {
                     //console.log("try to init");
                     return this.init();
                 }
+
+                this.check_online_devices();
             },
             30000
         );

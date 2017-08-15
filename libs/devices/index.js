@@ -58,10 +58,19 @@ class Devices {
     static list() {
         var list = [];
         Devices.devices.forEach(
-            (value, key) => {
-                list.push(value);
+            (device, key) => {
+                list.push(device);
             }
         );
+        return list;
+    }
+
+    static get_devices_ids() {
+        let list = [];
+        let mapiter = Devices.devices.keys();
+        for (let key of mapiter) {
+            list.push(key);
+        }
         return list;
     }
 
