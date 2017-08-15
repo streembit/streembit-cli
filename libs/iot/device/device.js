@@ -120,14 +120,6 @@ class Device {
     create_event_handlers() {
     }
 
-    on_active_device(payload) {
-        this.active = true;
-        // call the features on_activated
-        this.features.forEach((feature, key, map) => {
-            feature.on_activated(payload);
-        });
-    }
-
     update_property(name, value) {
         if (name) {
             this.details[name] = value;
@@ -145,14 +137,6 @@ class Device {
             // You can get the value like this: myObject[propertyName]
             this.details[property] = property_set[property];
         }
-    }
-
-    update_active(isactive, payload) {
-        this.active = isactive;
-        if (isactive && payload) {
-            this.on_active_device(payload);
-        }
-        logger.debug("device " + this.id + " is active");
     }
 
     send_device_details(callback) {

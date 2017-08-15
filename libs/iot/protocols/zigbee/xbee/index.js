@@ -63,10 +63,10 @@ class XbeeHandler {
         this.configured_devices = [];
     }
 
-    dispatch_datarcv_event(address64, payload) {
+    dispatch_datarcv_event(payload) {
         try {
-            if (!address64) {
-                throw new Error("dispatch_datarcv_event() invalid address64");
+            if (!payload) {
+                throw new Error("dispatch_datarcv_event() invalid payload");
             }
             
             var eventname = iotdefinitions.IOT_DATA_RECEIVED_EVENT;
@@ -79,7 +79,6 @@ class XbeeHandler {
 
     dispatch_error_event(address64, error) {
         this.dispatch_datarcv_event(
-            address64,
             {
                 "type": iotdefinitions.EVENT_RADIO_ERROR,
                 "deviceid": address64,
@@ -227,8 +226,7 @@ class XbeeHandler {
             var devices_length = reader.nextUInt8();
             var startindex = reader.nextUInt8();
             var count = reader.nextUInt8();
-            //console.log("buffer length: %d, status: %d, devices length: %d, startindex: %d, count: %d", bufflen, status, devices_length, startindex, count);
-
+     
             if (count <= 0) {
                 return;
             }
@@ -329,7 +327,6 @@ class XbeeHandler {
         //logger.debug(frame.remote64 + " clusters: " + util.inspect(clusters));
 
         this.dispatch_datarcv_event(
-            frame.remote64,
             {
                 "type": iotdefinitions.EVENT_DEVICE_CLUSTERSRCV,
                 "deviceid": frame.remote64,
@@ -382,6 +379,11 @@ class XbeeHandler {
             return logger.debug("INVALID profileID for clusterId 0x8005")
         }
 
+        if (this.online_devices.indexOf(frame.remote64) == -1) {
+            this.online_devices.push(frame.remote64);
+            console.log(frame.remote64 + " added to online_devices list");
+        }
+
         if (!devices[frame.remote64]) {
             devices[frame.remote64] = { address16: frame.remote16,  endpoints: 0, clusters: 0 };
         }
@@ -408,7 +410,6 @@ class XbeeHandler {
 
         if (endpoints.length) {
             this.dispatch_datarcv_event(
-                frame.remote64,
                 {
                     "type": iotdefinitions.EVENT_DEVICE_ENDPOINTSRCV,
                     "deviceid": frame.remote64,
@@ -421,7 +422,6 @@ class XbeeHandler {
                 }
             );
         }
-        //console.log(frame.remote64 + " ednpoints: " + util.inspect(devices[frame.remote64]));
 
         // reply with 0004 Simple Descriptor Request
         var addressbuf = Buffer.from(frame.remote16, 'hex');
@@ -518,7 +518,6 @@ class XbeeHandler {
         }
 
         this.dispatch_datarcv_event(
-            frame.remote64,
             {
                 "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
                 "deviceid": frame.remote64,
@@ -553,7 +552,6 @@ class XbeeHandler {
 
         if (property_name) {
             this.dispatch_datarcv_event(
-                frame.remote64,
                 {
                     "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
                     "deviceid": frame.remote64,
@@ -586,35 +584,24 @@ class XbeeHandler {
         //
     }
 
-    handle_cluster_0402(frame) {
-        //debugger;
-        //console.log("handle_cluster_temperature");
-        //console.log(util.inspect(frame));
+    handle_cluster_0402_01(frame, reader) {
+        var attribute = reader.nextUInt16LE();
+        console.log("attribute: %s", sprintf("0x%04x", attribute));
 
-        var reader = new BufferReader(frame.data);
-        reader.seek(1);
-        var txid = reader.nextUInt8();
-        reader.seek(5);
         var status = reader.nextUInt8();
-        //console.log("status: %d", status);
         if (status != 0) {
-            return this.dispatch_error_event(frame.remote64, "invalid status returned");
+            return this.dispatch_error_event(frame.remote64, "cluster 0402 invalid status returned");
         }
 
         var datatype = reader.nextUInt8();
-        //console.log("datatype: %d", datatype);
         if (datatype != 0x29) {
-            return this.dispatch_error_event(frame.remote64, "invalid data type returned");
+            return this.dispatch_error_event(frame.remote64, "cluster 0402 invalid data type returned");
         }
 
-        var valuebuf = reader.nextBuffer(2);
-        valuebuf.swap16();
-        var tempvalue = valuebuf.readUInt16BE(0);
+        var tempvalue = reader.nextUInt16LE();
         var value = tempvalue * 0.01;
-        //console.log("temperature: %f Celsius", value);
 
         this.dispatch_datarcv_event(
-            frame.remote64,
             {
                 "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
                 "deviceid": frame.remote64,
@@ -625,7 +612,50 @@ class XbeeHandler {
                     }
                 ]
             }
-        );        
+        );
+    }
+
+    handle_cluster_0402_0a(frame, reader) {
+        var attribute = reader.nextUInt16LE();
+        //console.log("attribute: %s", sprintf("0x%04x", attribute));
+
+        var datatype = reader.nextUInt8();
+        if (datatype != 0x29) {
+            return this.dispatch_error_event(frame.remote64, "cluster 0402 invalid data type returned");
+        }
+
+        var tempvalue = reader.nextUInt16LE();
+        var value = tempvalue * 0.01;
+
+        this.dispatch_datarcv_event(
+            {
+                "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                "deviceid": frame.remote64,
+                "properties": [
+                    {
+                        "property": iotdefinitions.PROPERTY_TEMPERATURE,
+                        "value": value
+                    }
+                ]
+            }
+        );
+    }
+
+    handle_cluster_0402(frame) {
+
+        var properties = [];
+        var reader = new BufferReader(frame.data);
+        reader.seek(2);
+        var zcl_command = reader.nextUInt8();
+        console.log("cluster 0402 zcl_command: %s", sprintf("0x%02x", zcl_command));
+
+        if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11
+            //console.log(util.inspect(frame));
+            this.handle_cluster_0402_0a(frame, reader);
+        }
+        else if (zcl_command == 0x01) {  // ZCL 0x01 Read attributes response 7.2
+            this.handle_cluster_0402_01(frame, reader);
+        }           
 
         //
     }
@@ -678,7 +708,6 @@ class XbeeHandler {
                 logger.debug("hardware_version: %d", hardware_version);
                 // 0x0003 HWVersion
                 this.dispatch_datarcv_event(
-                    frame.remote64,
                     {
                         "type": iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE,
                         "deviceid": frame.remote64,
@@ -703,7 +732,6 @@ class XbeeHandler {
                 logger.debug("manufacturer: %s", manufacturer);
                 // 0x0004 ManufacturerName
                 this.dispatch_datarcv_event(
-                    frame.remote64,
                     {
                         "type": iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE,
                         "deviceid": frame.remote64,
@@ -728,7 +756,6 @@ class XbeeHandler {
                 logger.debug("modelid: %s", modelid);
                 // 0x0005 ModelIdentifier
                 this.dispatch_datarcv_event(
-                    frame.remote64,
                     {
                         "type": iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE,
                         "deviceid": frame.remote64,
@@ -785,7 +812,6 @@ class XbeeHandler {
 
             // binding was successful notify the device
             this.dispatch_datarcv_event(
-                frame.remote64,
                 {
                     "type": iotdefinitions.EVENT_DEVICE_BINDSUCCESS,
                     "deviceid": frame.remote64,
@@ -832,7 +858,6 @@ class XbeeHandler {
         this.match_descriptor_response(frame.remote64, frame.remote16, respbuf);
 
         this.dispatch_datarcv_event(
-            frame.remote64,
             {
                 "type": iotdefinitions.EVENT_DEVICE_CONTACTING,
                 "deviceid": frame.remote64,
@@ -886,7 +911,6 @@ class XbeeHandler {
 
                 var value = reader.nextUInt8();
                 this.dispatch_datarcv_event(
-                    frame.remote64,
                     {
                         "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
                         "deviceid": frame.remote64,
@@ -919,7 +943,6 @@ class XbeeHandler {
 
                 var value = reader.nextUInt8();
                 this.dispatch_datarcv_event(
-                    frame.remote64,
                     {
                         "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
                         "deviceid": frame.remote64,
@@ -964,17 +987,16 @@ class XbeeHandler {
             var ieebuf = reader.nextBuffer(8);
             var swapped = this.swapEUI64BuffertoBigEndian(ieebuf);
             var ieeestr = swapped.toString("hex")
-            console.log("IEEE: " + ieeestr);
+            //console.log("IEEE: " + ieeestr);
 
             var address16 = reader.nextUInt16LE();
             var address16str = sprintf("%02x", address16)
-            console.log("network address: " + address16str);
+            //console.log("network address: " + address16str);
 
             this.dispatch_datarcv_event(
-                frame.remote64,
                 {
                     "type": iotdefinitions.EVENT_DEVICE_ONLINE,
-                    "deviceid": frame.remote64,
+                    "deviceid": ieeestr,
                     "devicedetails": [
                         {
                             "name": "address64",
@@ -987,10 +1009,6 @@ class XbeeHandler {
                     ]
                 }
             );
-
-            if (this.online_devices.indexOf(frame.remote64) == -1) {
-                this.online_devices.push(frame.remote64);
-            }
 
             // send Active Endpoint Request 0x0005
             var addressbuf = Buffer.from(address16str, 'hex');
@@ -1009,7 +1027,6 @@ class XbeeHandler {
     handle_cluster_8032(frame) {
         //console.log(util.inspect(frame));
         this.dispatch_datarcv_event(
-            frame.remote64,
             {
                 "type": iotdefinitions.EVENT_DEVICE_ONLINE,
                 "deviceid": frame.remote64,

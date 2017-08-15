@@ -44,9 +44,6 @@ class ZwaveGateway extends Device {
     create_event_handlers() {       
     }
 
-    on_active_device() {    
-    }
-
 }
 
 module.exports = ZwaveGateway;

@@ -75,11 +75,11 @@ class ZigbeeGateway extends Device {
                             if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
                                 if (item.name == "address64") {
                                     m_address64 = item.value;
-                                    console.log("ZigbeeGatewayDevice address64: " + m_address64)
+                                    logger.debug("ZigbeeGatewayDevice address64: " + m_address64)
                                 }
                                 else if (item.name == "address16") {
                                     m_address16 = item.value;
-                                    console.log("ZigbeeGatewayDevice address16: " + m_address16)
+                                    logger.debug("ZigbeeGatewayDevice address16: " + m_address16)
                                 }
                             }
                         }
@@ -88,11 +88,8 @@ class ZigbeeGateway extends Device {
             }
         }
         catch (err) {
-            logger.error("ZigbeeGatewayDevice " + device_datareceived_event + " event error: %j", err);
+            logger.error("ZigbeeGateway on_data_received() error: %j", err);
         }
-    }
-
-    on_active_device() {    
     }
 
 }

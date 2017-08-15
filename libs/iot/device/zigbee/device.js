@@ -51,7 +51,9 @@ class ZigbeeDevice extends Device {
         }
 
         try {
+            //console.log("ZigbeeDevice on_data_received payload.type: " + payload.type);
             if (payload.type == iotdefinitions.EVENT_RADIO_ERROR) {
+                console.log("EVENT_RADIO_ERROR: " + util.inspect(payload));
                 if (payload.error) {
                     this.errors.push(payload.error)
                 }
@@ -84,12 +86,17 @@ class ZigbeeDevice extends Device {
                 this.set_property_item(payload.properties);
             }
             else if (payload.type == iotdefinitions.EVENT_DEVICE_ONLINE) {
-                this.active = true;
-                this.set_property_item(payload.devicedetails);
+                var properties = payload.devicedetails;
+                if (properties && Array.isArray(properties) && properties.length) {
+                    this.active = true;
+                    this.set_property_item(properties);
+                    logger.debug("ZigbeeDevice address64: " + this.details.address64);
+                    logger.debug("ZigbeeDevice address16: " + this.details.address16);
+                }
 
-                // call the actived event handler of each features
+                // call the device online event handler of each features
                 this.features.forEach((feature, key, map) => {
-                    feature.on_activated(payload);
+                    feature.on_device_online(payload);
                 });
             }
             else if (payload.type == iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE && payload.properties && Array.isArray(payload.properties) && payload.properties.length) {
@@ -107,12 +114,8 @@ class ZigbeeDevice extends Device {
             }
         }
         catch (err) {
-            logger.error("Device " + device_datareceived_event + " event error: %j", err);
+            logger.error("Device on_data_received() error: %j", err);
         }
-    }
-
-    on_active_device(payload) {
-        super.on_active_device(payload);
     }
 
 }

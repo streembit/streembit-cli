@@ -49,6 +49,10 @@ class IoTFeature {
 
         this.callbacks = new Map();
         this.property_names = [];
+
+        this.isonline = false;
+
+        this.last_update_time = 0;
     }
 
     on_bind_complete() {
@@ -75,7 +79,8 @@ class IoTFeature {
         }        
     }
 
-    on_activated(payload) {
+    on_device_online(payload) {
+        this.isonline = true;
     }
 
     on_device_contacting(payload) {
@@ -84,28 +89,44 @@ class IoTFeature {
     on_bind_complete(payload) {
     }
 
-    read(payload, callback, timeout) {
-        if (!callback && typeof callback != "function") {
-            return;
+    read(payload, callback, timeout) {        
+        if (!callback && typeof callback != "function") { return; }
+
+        if (this.isonline == false) {
+            throw new Error(constants.IOT_ERROR_DEVICE_OFFLINE);
         }
 
         let txn = payload.txn;
         if (!txn) {
-            return callback("invalid txn in payload");
+            throw new Error("invalid txn in payload");
         }
 
-        this.callbacks.set(txn, callback);
+        try {   
+            this.callbacks.set(txn, callback);
+            setTimeout(
+                () => {
+                    if (this.callbacks.has(txn)) {
+                        let cbfn = this.callbacks.get(txn);
+                        cbfn(constants.IOT_ERROR_TIMEDOUT);
+                        this.callbacks.delete(txn);
+                    }
+                },
+                timeout
+            );
+        }
+        catch (err) {
+            try {
+                callback(err.message);
+            }
+            catch (e) { }
 
-        setTimeout(
-            () => {
-                if (this.callbacks.has(txn)) {
-                    let cbfn = this.callbacks.get(txn);
-                    cbfn(constants.IOT_ERROR_TIMEDOUT);
+            try {                
+                if (txn && this.callbacks.has(txn)) {
                     this.callbacks.delete(txn);
                 }
-            },
-            timeout
-        );      
+            }
+            catch(e){}
+        }
     }
 
     is_property_handled(properties) {

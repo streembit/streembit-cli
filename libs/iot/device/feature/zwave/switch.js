@@ -43,7 +43,7 @@ class ZwaveSwitchFeature extends SwitchFeature {
     on_device_contacting(payload) {
     }
 
-    on_activated(payload) {
+    on_device_online(payload) {
     }
 
     toggle(callback) {

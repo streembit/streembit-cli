@@ -42,7 +42,8 @@ class TemperatureFeature extends IoTFeature {
         super.on_datareceive_event(data, event);
     }
 
-    on_activated(payload) {
+    on_device_online(payload) {
+        super.on_device_online(payload);
     }
 
     on_device_contacting(payload) {

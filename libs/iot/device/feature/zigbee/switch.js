@@ -103,10 +103,11 @@ class ZigbeeSwitchFeature extends SwitchFeature {
     }
 
     on_device_contacting(payload) {
-        this.get_switchstatus(payload);
+
     }
 
-    on_activated(payload) {        
+    on_device_online(payload) {   
+        super.on_device_online(payload);
     }
 
     on_clusterlist_receive() {
@@ -128,20 +129,18 @@ class ZigbeeSwitchFeature extends SwitchFeature {
                 logger.debug("SwitchFeature cluster 0006 exists");
 
                 // bind
+                var txn = 0x50;
                 var transport = this.device.transport;
                 var commandbuilder = this.device.command_builder;
                 var device_details = this.device.details;
                 var clusterid = 0x0006;
-                var cmd = commandbuilder.bind(0x50, device_details, clusterid);
+                var cmd = commandbuilder.bind(txn, device_details, clusterid);
                 transport.send(cmd);
             }
         }
         catch (err) {
             logger.error("SwitchFeature on_clusterlist_receive() error: %j", err);
         }
-    }
-
-    on_report_configured() {
     }
 
     toggle(payload, callback) {
@@ -184,7 +183,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
             //
         }
         catch (err) {
-            callback(err);
+            callback(err.message);
         }
     }
 

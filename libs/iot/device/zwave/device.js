@@ -43,10 +43,6 @@ class ZwaveDevice extends Device {
     create_event_handlers() {      
     }
 
-    on_active_device(payload) {
-        super.on_active_device(payload);
-    }
-
 }
 
 module.exports = ZwaveDevice;

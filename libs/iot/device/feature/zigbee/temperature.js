@@ -40,7 +40,9 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         this.ispolling = (feature.settings && feature.settings.ispolling) ? feature.settings.ispolling : false;
         this.long_poll_interval = (feature.settings && feature.settings.long_poll_interval) ? feature.settings.long_poll_interval : -1;
         this.longpolling_enabled = this.ispolling && this.long_poll_interval > 0;    
-        this.polling_timer = 0;        
+        this.polling_timer = 0;      
+
+        this.report_max = 0x005a; // 90 seconds        
 
         this.property_names.push(iotdefinitions.PROPERTY_TEMPERATURE);
 
@@ -49,32 +51,28 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
 
     on_datareceive_event(properties) {
         try {
-            if (!Array.isArray(properties) || !properties.length) {
-                return;
-            }
-
-            properties.forEach(
-                (item) => {
-                    if (item.property == iotdefinitions.PROPERTY_TEMPERATURE) {
-                        try {
+            if (Array.isArray(properties) && properties.length) {
+                properties.forEach(
+                    (item) => {
+                        if (item.property == iotdefinitions.PROPERTY_TEMPERATURE) {
                             var val = new Number(item.value);
-                            this.temperature = val.toFixed(2);
-                            //logger.debug("TemperatureFeature on_datareceive_event " + item.property + ": " + this.temperature);
-                            //this.emit(iotdefinitions.PROPERTY_TEMPERATURE, this.temperature);
-                            if (!this.datareceived) {
-                                this.datareceived = true;
-                            }
-                        }
-                        catch (err) {
-                            logger.error("TemperatureFeature on_datareceive_event() property iotdefinitions.PROPERTY_TEMPERATURE error: %j", err);
+                            this.temperature = val.toFixed(2);                            
+                            let data = {
+                                payload: {
+                                    temperature: this.temperature 
+                                }
+                            };
+                            super.on_datareceive_event(data, iotdefinitions.EVENT_PROPERTY_REPORT);
+                            this.last_update_time = Date.now();
+                            logger.debug("TemperatureFeature on_datareceive_event " + item.property + ": " + this.temperature);
                         }
                     }
-                }
-            );
+                );
+            }
         }
         catch (err) {
-            logger.error("TemperatureFeature on_datareceive_event() error: %j", err);
-        }
+            logger.error("ZigbeeTemperatureFeature on_datareceive_event() error: %j", err);
+        }        
     }
 
     iscluster(cluster) {
@@ -83,53 +81,68 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
     }
 
     on_bind_complete() {
-        var cluster = 0x0402;
-        var attribute = 0x0000, datatype = 0x29, mininterval = 0x05, maxinterval = 0x005a;
-        var reports = [];
-        reports.push(
-            {
-                attribute: attribute,
-                datatype: datatype,
-                mininterval: mininterval,
-                maxinterval: maxinterval
-            }
-        );
-        var cmd = commandbuilder.configureReport(device_details, cluster, reports);
-        transport.send(cmd);
+        try {
+            var cluster = 0x0402;
+            var attribute = 0x0000, datatype = 0x29, mininterval = 0x05, maxinterval = 0x005a;
+            var reports = [];
+            reports.push(
+                {
+                    attribute: attribute,
+                    datatype: datatype,
+                    mininterval: mininterval,
+                    maxinterval: maxinterval
+                }
+            );
+            var transport = this.device.transport;
+            var commandbuilder = this.device.command_builder;
+            var device_details = this.device.details;
+            var cmd = commandbuilder.configureReport(device_details, cluster, reports);
+            transport.send(cmd);
+        }
+        catch (err) {
+            logger.error("ZigbeeTemperatureFeature on_bind_complete() error: %j", err);
+        }
     }
 
     on_clusterlist_receive(payload) {
-        var txn = 0x52;
-    }
-
-    on_report_configured() {
-        /*
         try {
-            super.on_activated(payload);
-
-            if (this.longpolling_enabled) {
-                this.start_polling();
+            if (!this.device.details || !this.device.details.clusters || !Array.isArray(this.device.details.clusters) || !this.device.details.clusters.length) {
+                return logger.error("Zigbee cluster list is empty");
             }
-            else {
-                this.read_temperature();
+
+            var exists = false;
+            this.device.details.clusters.forEach(
+                (item) => {
+                    if (item == "0402") {
+                        exists = true;
+                    }
+                }
+            );
+
+            if (exists) {
+                logger.debug("ZigbeeTemperatureFeature cluster 0402 exists");
+
+                // bind
+                var txn = 0x52;
+                var transport = this.device.transport;
+                var commandbuilder = this.device.command_builder;
+                var device_details = this.device.details;
+                var clusterid = 0x0402;
+                var cmd = commandbuilder.bind(txn, device_details, clusterid);
+                transport.send(cmd);
             }
         }
         catch (err) {
-            logger.error("TemperatureFeature on_activated error %j", err);
+            logger.error("ZigbeeTemperatureFeature on_clusterlist_receive() error: %j", err);
         }
-        */
     }
 
-    on_activated(payload) {        
+
+    on_device_online(payload) {       
+        super.on_device_online(payload);
     }
 
     on_device_contacting(payload) {
-        if (this.longpolling_enabled) {
-            this.start_polling();
-        }
-        else {
-            this.read_temperature();
-        }
     }
 
     start_polling() {
@@ -165,12 +178,25 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         transport.send(cmd);
     }
 
-
     read(payload, callback) {
         try {    
-            super.read(payload, callback, TEMPSENS_TIMEOUT);
-            // do the reading
-            this.read_temperature();
+            let current_time = Date.now();
+            let last_update_elapsed = current_time - this.last_update_time;
+            let is_report_available = last_update_elapsed < this.report_max * 1000
+            console.log("ZigbeeTemperatureFeature last_update_elapsed: " + last_update_elapsed + " is_report_available: " + is_report_available);
+            if (is_report_available) {
+                var data = {
+                    payload: {
+                        temperature: this.temperature
+                    }
+                };
+                callback(null, data);                
+            }
+            else {
+                super.read(payload, callback, (this.report_max * 1000 - 1 ));
+                // do the reading
+                this.read_temperature();
+            }
             //
         }
         catch (err) {

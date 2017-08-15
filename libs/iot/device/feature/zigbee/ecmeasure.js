@@ -153,7 +153,8 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         // must send the report
     }
 
-    on_activated(payload) {        
+    on_device_online(payload) {
+        super.on_device_online(payload);
     }
 
     on_clusterlist_receive(payload) {
@@ -182,9 +183,6 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
             var cmd = commandbuilder.bind(txn, device_details, clusterid);
             transport.send(cmd);
         }
-    }
-
-    on_report_configured() {
     }
 
     readpower() {
