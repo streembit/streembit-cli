@@ -29,14 +29,18 @@ const TemperatureFeature = require("../temperature");
 const events = require("libs/events");
 const logger = require("libs/logger");
 const util = require('util');
+const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
 const TEMPSENS_TIMEOUT = 10000; 
 
 class ZigbeeTemperatureFeature extends TemperatureFeature {
 
-    constructor(device, feature) {
-        super(device, feature);     
-        this.clusters = feature.clusters;
+    constructor(feature, transport) {
+        super(feature, transport);     
+        this.cluster = feature.cluster;
+        this.cluster_endpoint = -1;
+        this.IEEEaddress = 0;
+        this.NWKaddress = 0;
         this.ispolling = (feature.settings && feature.settings.ispolling) ? feature.settings.ispolling : false;
         this.long_poll_interval = (feature.settings && feature.settings.long_poll_interval) ? feature.settings.long_poll_interval : -1;
         this.longpolling_enabled = this.ispolling && this.long_poll_interval > 0;    
@@ -46,7 +50,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
 
         this.property_names.push(iotdefinitions.PROPERTY_TEMPERATURE);
 
-        logger.debug("Initialized a Zigbee temperature sensor feature for device id: " + this.deviceid + ", ispolling: " + this.ispolling + " long_poll_interval: " + this.long_poll_interval);        
+        logger.debug("Initialized a Zigbee temperature sensor feature");        
     }
 
     on_datareceive_event(properties) {
@@ -76,8 +80,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
     }
 
     iscluster(cluster) {
-        var exists = this.clusters.indexOf(cluster);
-        return (exists > -1) ? true : false;
+        return this.cluster == cluster;
     }
 
     on_bind_complete() {
@@ -93,53 +96,65 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
                     maxinterval: maxinterval
                 }
             );
-            var transport = this.device.transport;
-            var commandbuilder = this.device.command_builder;
-            var device_details = this.device.details;
-            var cmd = commandbuilder.configureReport(device_details, cluster, reports);
-            transport.send(cmd);
+
+            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, cluster, reports, this.cluster_endpoint);
+            this.transport.send(cmd);
         }
         catch (err) {
             logger.error("ZigbeeTemperatureFeature on_bind_complete() error: %j", err);
         }
     }
 
-    on_clusterlist_receive(payload) {
+    on_clusterlist_receive(descriptor) {
         try {
-            if (!this.device.details || !this.device.details.clusters || !Array.isArray(this.device.details.clusters) || !this.device.details.clusters.length) {
-                return logger.error("Zigbee cluster list is empty");
+            if (!descriptor || !descriptor.hasOwnProperty("endpoint") || !descriptor.hasOwnProperty("clusters") || !Array.isArray(descriptor.clusters) || !descriptor.clusters.length) {
+                return logger.error("Zigbee cluster descriptor is empty");
             }
 
             var exists = false;
-            this.device.details.clusters.forEach(
-                (item) => {
-                    if (item == "0402") {
+            descriptor.clusters.forEach(
+                (cluster) => {
+                    if (cluster == "0402") {
+                        this.cluster_endpoint = descriptor.endpoint;
                         exists = true;
                     }
                 }
             );
-
+            
             if (exists) {
                 logger.debug("ZigbeeTemperatureFeature cluster 0402 exists");
 
                 // bind
                 var txn = 0x52;
-                var transport = this.device.transport;
-                var commandbuilder = this.device.command_builder;
-                var device_details = this.device.details;
                 var clusterid = 0x0402;
-                var cmd = commandbuilder.bind(txn, device_details, clusterid);
-                transport.send(cmd);
+                var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, clusterid, this.cluster_endpoint);
+                this.transport.send(cmd);
             }
         }
         catch (err) {
             logger.error("ZigbeeTemperatureFeature on_clusterlist_receive() error: %j", err);
         }
     }
+    
+    on_device_online(properties) {       
+        if (properties && Array.isArray(properties) && properties.length) {
+            properties.forEach(
+                (item) => {
+                    if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
+                        if (item.name == "address64") {
+                            this.IEEEaddress = item.value;
+                        }
+                        else if (item.name == "address16") {
+                            this.NWKaddress = item.value;
+                        }
+                    }
+                }
+            );
+        }
 
-
-    on_device_online(payload) {       
-        super.on_device_online(payload);
+        if (this.IEEEaddress && this.NWKaddress) {
+            super.on_device_online();
+        }
     }
 
     on_device_contacting(payload) {
@@ -163,19 +178,13 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
     }
 
     checkin(callback) {
-        var transport = this.device.transport;
-        var commandbuilder = this.device.command_builder;
-        var device_details = this.device.details;
-        var cmd = commandbuilder.pollCheckIn(device_details, TEMPSENS_TIMEOUT);
-        transport.send(cmd);
+        var cmd = zigbeecmd.pollCheckIn(this.IEEEaddress, this.NWKaddress, this.cluster_endpoint);
+        this.transport.send(cmd);
     }
 
     read_temperature(callback) {
-        var transport = this.device.transport;
-        var commandbuilder = this.device.command_builder;
-        var device_details = this.device.details;
-        var cmd = commandbuilder.readTemperature(device_details, TEMPSENS_TIMEOUT);
-        transport.send(cmd);
+        var cmd = zigbeecmd.readTemperature(this.IEEEaddress, this.NWKaddress, this.cluster_endpoint);
+        this.transport.send(cmd);
     }
 
     read(payload, callback) {

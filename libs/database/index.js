@@ -264,7 +264,7 @@ class Database {
         );
     }
 
-    add_feature(deviceid, type, clusters, setting) {
+    add_feature(deviceid, type, cluster, setting) {
         return new Promise(
             (resolve, reject) => {
                 if (!deviceid || !type) {
@@ -272,8 +272,8 @@ class Database {
                 }
 
                 this.sqldb.run(
-                    "INSERT INTO iotfeatures (devrowid, type, clusters, settings) VALUES (?,?,?,?)",
-                    [deviceid, type, clusters, setting],
+                    "INSERT INTO iotfeatures (devrowid, type, cluster, settings) VALUES (?,?,?,?)",
+                    [deviceid, type, cluster, setting],
                     (err) => {
                         if (err) {
                             return reject(err);
@@ -374,9 +374,9 @@ class Database {
                     var isadded = feature_indb(features, conf_features[i]);
                     if (!isadded) {
                         let type = conf_features[i].type,
-                            clusters = conf_features[i].clusters ? JSON.stringify(conf_features[i].clusters) : null,
+                            cluster = conf_features[i].cluster ? conf_features[i].cluster : null,
                             settings = conf_features[i].settings ? JSON.stringify(conf_features[i].settings) : null;
-                        await this.add_feature(devrowid, type, clusters, settings);
+                        await this.add_feature(devrowid, type, cluster, settings);
                         console.log("feature added to DB: " + util.inspect(conf_features[i]));
                     }
                 }
@@ -498,7 +498,7 @@ class Database {
                     featureid integer PRIMARY KEY, \
                     devrowid integer NOT NULL, \
                     type integer NOT NULL, \
-                    clusters text, \
+                    cluster text, \
                     settings text, \
                     FOREIGN KEY (devrowid) REFERENCES iotdevices (devrowid) )";
                     await this.create_table(iotfeatures_table);
@@ -510,7 +510,7 @@ class Database {
 
             try {
                 let get_iotfeatures_view = "CREATE VIEW IF NOT EXISTS vw_get_features AS \
-                    SELECT dev.deviceid, ft.devrowid, ft.featureid, ft.type, ft.clusters, ft.settings \
+                    SELECT dev.deviceid, ft.devrowid, ft.featureid, ft.type, ft.cluster, ft.settings \
                     FROM iotfeatures ft INNER JOIN iotdevices dev ON ft.devrowid = dev.devrowid;";
                 await this.create_table(get_iotfeatures_view);
             }

@@ -67,8 +67,7 @@ class IoTHandler {
     }
 
     init() {
-        try {
-            //debugger;     
+        try { 
             var conf = config.iot_config;
             if (!conf.run) {
                 return logger.debug("Don't run IoT handler");

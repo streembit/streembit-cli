@@ -36,7 +36,6 @@ class IoTProtocolHandler {
         this.protocol = protocol;
         this.mcu = mcu;
         this.mcuhandler = 0;
-        this.commandbuilder = 0;
         this.initialized = false;
         iotdevices = new Map();
     }
@@ -69,7 +68,7 @@ class IoTProtocolHandler {
             throw new Error("Device type " + device.type + " is not implemented. Provide the correct configuration settings in the config.js file.");
         }
 
-        return new device_instance(device.deviceid, device, this.commandbuilder, this.mcuhandler);
+        return new device_instance(device.deviceid, device, this.mcuhandler);
     }
 
     create_handler() {

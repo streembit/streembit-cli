@@ -31,9 +31,14 @@ const util = require('util');
 
 class ZigbeeDevice extends Device {
 
-    constructor(id, device, cmdbuilder, transport) {
+    constructor(id, device, transport) {
         try {
-            super(id, device, cmdbuilder, transport);
+            super(id, device, transport);
+
+            this.details.address64 = 0;
+            this.details.address16 = 0;
+            this.details.descriptors = new Map();
+
             logger.debug("Initialized Zigbee device id: " + id );
         }
         catch (err) {
@@ -43,6 +48,10 @@ class ZigbeeDevice extends Device {
 
     create_event_handlers() {
         super.create_event_handlers();
+    }
+
+    on_endpoint_receive(payload) {
+
     }
 
     on_data_received(payload) {
@@ -63,9 +72,9 @@ class ZigbeeDevice extends Device {
                 console.log("endpoints: " + util.inspect(payload.devicedetails));
             }
             else if (payload.type == iotdefinitions.EVENT_DEVICE_CLUSTERSRCV) {
-                this.set_property_item(payload.devicedetails);
+                this.details.descriptors.set(payload.descriptor.endpoint, payload.descriptor.clusters);                
                 this.features.forEach((feature, key, map) => {
-                    feature.on_clusterlist_receive();
+                    feature.on_clusterlist_receive(payload.descriptor);
                 });
             }
             else if (payload.type == iotdefinitions.EVENT_DEVICE_BINDSUCCESS) {
@@ -96,7 +105,7 @@ class ZigbeeDevice extends Device {
 
                 // call the device online event handler of each features
                 this.features.forEach((feature, key, map) => {
-                    feature.on_device_online(payload);
+                    feature.on_device_online(properties);
                 });
             }
             else if (payload.type == iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE && payload.properties && Array.isArray(payload.properties) && payload.properties.length) {

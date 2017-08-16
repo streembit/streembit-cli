@@ -30,22 +30,40 @@ const events = require("libs/events");
 const logger = require("libs/logger");
 const async = require("async");
 const util = require('util');
+const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
 
 class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
-    constructor(device, feature) {
-        super(device, feature);  
-        this.clusters = feature.clusters;
-        this.power_divisor = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.divisor) ? feature.settings.acformatting.divisor : 0;
-        this.power_multiplier = (feature.settings && feature.settings.acformatting && feature.settings.acformatting.multiplier) ? feature.settings.acformatting.multiplier : 1;        
+    constructor(feature, transport) {
+        super(feature, transport);  
+        this.cluster = feature.cluster;
+        this.power_divisor = 0;
+        this.power_multiplier = 1;
+
+        var settings = 0;
+        try {
+            if (feature.settings) {
+                settings = JSON.parse(feature.settings);
+            }
+        }
+        catch (err) { }
+
+        if (settings) {
+            this.power_divisor = (settings.acformatting && settings.acformatting.divisor) ? settings.acformatting.divisor : 0;
+            this.power_multiplier = (settings && settings.acformatting && settings.acformatting.multiplier) ? settings.acformatting.multiplier : 1;
+        }
 
         this.property_names.push(iotdefinitions.PROPERTY_ACTIVEPOWER);
         this.property_names.push(iotdefinitions.PROPERTY_VOLTAGE);
         this.property_names.push(iotdefinitions.PROPERTY_POWERMULTIPLIER);
         this.property_names.push(iotdefinitions.PROPERTY_POWERDIVISOR);
 
-        logger.debug("Initialized a Zigbee EC measuremenent feature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);        
+        this.cluster_endpoint = -1;
+        this.IEEEaddress = 0;
+        this.NWKaddress = 0;
+
+        logger.debug("Initialized a Zigbee EC measuremenent feature, power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);        
     }
 
     on_datareceive_event(properties) {
@@ -99,15 +117,11 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
     }    
 
     iscluster(cluster) {
-        var exists = this.clusters.indexOf(cluster);
-        return (exists > -1) ? true : false;
+        return this.cluster == cluster;
     }
 
     on_bind_complete() {
         try {
-
-            this.read_settings();
-        
             var cluster = 0x0b04;
             var reports = [];
             // power
@@ -134,11 +148,17 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                 }
             );
 
-            var transport = this.device.transport;
-            var commandbuilder = this.device.command_builder;
-            var device_details = this.device.details;
-            var cmd = commandbuilder.configureReport(device_details, cluster, reports);
-            transport.send(cmd);
+            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddres, cluster, reports, this.cluster_endpoint);
+            this.transport.send(cmd);
+
+            // read the settings
+            setTimeout(
+                () => {
+                    this.read_settings();
+                },
+                1000
+            );
+
         }
         catch (err) {
             logger.error("EcMeasureFeature on_bind_complete() error: %j", err);
@@ -153,94 +173,78 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         // must send the report
     }
 
-    on_device_online(payload) {
-        super.on_device_online(payload);
-    }
-
-    on_clusterlist_receive(payload) {
-        if (!this.device.details || !this.device.details.clusters || !Array.isArray(this.device.details.clusters) || !this.device.details.clusters.length) {
-            return logger.error("Zigbee cluster list is empty");
+    on_device_online(properties) {
+        if (properties && Array.isArray(properties) && properties.length) {
+            properties.forEach(
+                (item) => {
+                    if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
+                        if (item.name == "address64") {
+                            this.IEEEaddress = item.value;
+                        }
+                        else if (item.name == "address16") {
+                            this.NWKaddress = item.value;
+                        }
+                    }
+                }
+            );
         }
 
-        var exists = false;
-        this.device.details.clusters.forEach(
-            (item) => {
-                if (item == "0b04") {
-                    exists = true;
-                }
+        if (this.IEEEaddress && this.NWKaddress) {
+            super.on_device_online();
+        }
+    }
+
+    on_clusterlist_receive(descriptor) {
+        try {
+            if (!descriptor || !descriptor.hasOwnProperty("endpoint") || !descriptor.hasOwnProperty("clusters") || !Array.isArray(descriptor.clusters) || !descriptor.clusters.length) {
+                return logger.error("Zigbee cluster descriptor is empty");
             }
-        );
 
-        if (exists) {
-            logger.debug("ZigbeeEcMeasureFeature cluster 0B04 exists");
+            var exists = false;
+            descriptor.clusters.forEach(
+                (cluster) => {
+                    if (cluster == "0b04") {
+                        this.cluster_endpoint = descriptor.endpoint;
+                        exists = true;
+                    }
+                }
+            );
 
-            // bind
-            var txn = 0x51;
-            var transport = this.device.transport;
-            var commandbuilder = this.device.command_builder;
-            var device_details = this.device.details;
-            var clusterid = 0x0b04;
-            var cmd = commandbuilder.bind(txn, device_details, clusterid);
-            transport.send(cmd);
+            if (exists) {
+                logger.debug("ZigbeeEcMeasureFeature cluster 0B04 exists");
+
+                // bind
+                var txn = 0x51;
+                var clusterid = 0x0b04;
+                var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddres, clusterid, this.cluster_endpoint);
+                this.transport.send(cmd);
+            }
+        }
+        catch (err) {
+            logger.error("EcMeasureFeature on_clusterlist_receive() error: %j", err);
         }
     }
 
     readpower() {
-        var transport = this.device.transport;
-        var commandbuilder = this.device.command_builder;
-        var device_details = this.device.details;
         var attributes = [0x05, 0x05, 0x0b, 0x05];
-        var cmd = commandbuilder.readAttributes(device_details, null, 0x0b04, attributes);
-        transport.send(cmd);        
-    }
-
-    get_voltage(callback) {
-        this.voltage = 0;
-        var transport = this.device.transport;
-        var commandbuilder = this.device.command_builder;
-        var device_details = this.device.details;
-        var cmd = commandbuilder.readVoltage(device_details);
-        transport.send(cmd);
-        if (callback) {
-            setTimeout(() => { callback(); }, 1000);
-        }
-    }
-
-    get_powerconsumption(callback) {
-        this.power_consumption = 0;
-        var transport = this.device.transport;
-        var commandbuilder = this.device.command_builder;
-        var device_details = this.device.details;
-        var cmd = commandbuilder.readPower(device_details);
-        transport.send(cmd);
-        if (callback) {
-            setTimeout(() => { callback(); }, 1000);
-        }
+        var cmd = zigbeecmd.readAttributes(this.IEEEaddress, this.NWKaddres, 0x0b04, attributes, this.cluster_endpoint);
+        this.transport.send(cmd);        
     }
 
     read_settings() {
-        var transport = this.device.transport;
-        var commandbuilder = this.device.command_builder;
-        var device_details = this.device.details;
         var attributes = [0x05, 0x06, 0x04, 0x06];
-        var cmd = commandbuilder.readAttributes(device_details, null, 0x0b04, attributes);
-        transport.send(cmd);
+        var cmd = zigbeecmd.readAttributes(this.IEEEaddress, this.NWKaddres, 0x0b04, attributes, this.cluster_endpoint);
+        this.transport.send(cmd);
     }
 
     get_powermultiplier() {
-        var transport = this.device.transport;
-        var commandbuilder = this.device.command_builder;
-        var device_details = this.device.details;
-        var cmd = commandbuilder.readPowerMultiplier(device_details);
-        transport.send(cmd);
+        var cmd = zigbeecmd.readPowerMultiplier(this.IEEEaddress, this.NWKaddress, this.cluster_endpoint);
+        this.transport.send(cmd);
     }
 
     get_powerdivisor() {
-        var transport = this.device.transport;
-        var commandbuilder = this.device.command_builder;
-        var device_details = this.device.details;
-        var cmd = commandbuilder.readPowerDivisor(device_details);
-        transport.send(cmd);
+        var cmd = zigbeecmd.readPowerDivisor(this.IEEEaddress, this.NWKaddress, this.cluster_endpoint);
+        this.transport.send(cmd);
     }
 
     read(payload, callback) {

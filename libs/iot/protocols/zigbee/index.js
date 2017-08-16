@@ -29,7 +29,6 @@ const constants = require("libs/constants");
 const async = require("async");
 const util = require('util');
 const IoTProtocolHandler = require("libs/iot/protocols");
-const ZigbeeCommands = require("libs/iot/protocols/zigbee/commands");
 const Devices = require("libs/devices");
 const iotdefinitions = require("libs/iot/definitions");
 
@@ -38,7 +37,6 @@ class ZigbeeHandler extends IoTProtocolHandler {
 
     constructor(protocol, mcu) {        
         super(protocol, mcu);
-        this.commandbuilder = new ZigbeeCommands();
     }
 
     create_event_handlers() {
@@ -56,7 +54,6 @@ class ZigbeeHandler extends IoTProtocolHandler {
 
     init() {
         try {
-            //debugger;
             logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);
          
             this.create_handler();

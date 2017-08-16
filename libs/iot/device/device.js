@@ -31,7 +31,7 @@ const Devices = require("libs/devices");
 
 class Device {
 
-    constructor(id, device, cmdbuilder, transport) {
+    constructor(id, device, transport) {
         this.id = id;
         this.type = device.type;
         this.protocol = device.protocol;
@@ -44,9 +44,8 @@ class Device {
                 this.m_details = deteailsobj;
             }
         }
-        catch (err) { }
+        catch (err) { }        
 
-        this.command_builder = cmdbuilder;
         this.transport = transport;
 
         this.m_active = false;
@@ -59,21 +58,20 @@ class Device {
     addfeatures() {  
         let array = Devices.get_features_by_deviceid(this.id);
         if (array && Array.isArray(array) && array.length > 0) {
-            //debugger;
             for (let i = 0; i < array.length; i++) {
                 try {             
                     let feature_type = array[i].type;
                     let feature_name = iotdefinitions.FEATURETYPEMAP[feature_type];
                     let feature_lib = "libs/iot/device/feature/" + this.protocol + "/" + feature_name;
                     let feature_obj = require(feature_lib);
-                    let feature_handler = new feature_obj(this, array[i]);
+                    let feature_handler = new feature_obj(array[i], this.transport);
                     if (feature_handler) {
                         this.features.set(feature_type, feature_handler);
                         logger.debug("feature " + feature_type + " added to device " + this.id);
                     }
                 }
                 catch (err) {
-                    logger.error("add feature " + array[i].function + " handler error: %j", err);
+                    logger.error("add feature " + array[i].type + " handler error: %j", err);
                 }
             }
         }
@@ -149,36 +147,7 @@ class Device {
     }
 
     configure_reports(payload, callback) {
-        /*
-        var reports = payload.reports;
-        // must be an array
-        if (!reports || !Array.isArray(reports)) {
-            return callback("nvalid reports collection at configure reports")
-        }
-
-        reports.forEach(
-            (report) => {
-                var iotfeature = report.feature;
-                var feature = this.features.get(iotfeature);
-                if (!feature) {
-                    return callback("the feature handler is not available at configure reports")
-                }
-
-                feature.configure_report(payload.pkhash, report);
-            }
-        );
-
-        callback(
-            null,
-            {
-                payload: {
-                    report_created: true
-                }
-            }
-        );
-        */
     }
-
 
     executecmd(payload, callback) {
         var obj = this;

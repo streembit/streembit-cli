@@ -32,33 +32,16 @@ const iotdefinitions = require("libs/iot/definitions");
 const util = require("util");
 
 class IoTFeature {
-    constructor(device, feature) {
-        if (!device) {
-            throw new Error("IoTFeature constructor error: Invalid device ID");
-        }
-        this.device = device;
-        if (!device.id) {
-            throw new Error("IoTFeature constructor error: Invalid device ID");
-        }
-        this.deviceid = device.id;  // parent id, in case if Zigbee this is the address64 as well
+    constructor(feature, transport) {
+        this.transport = transport;
         this.type = feature.type;
         this.settings = feature.setting;
         this.isactive = false;
-
         this.datareceived = false;
-
         this.callbacks = new Map();
         this.property_names = [];
-
         this.isonline = false;
-
         this.last_update_time = 0;
-    }
-
-    on_bind_complete() {
-    }
-
-    on_clusterlist_receive() {
     }
 
     on_datareceive_event(data, event) {
@@ -79,14 +62,11 @@ class IoTFeature {
         }        
     }
 
-    on_device_online(payload) {
+    on_device_online() {
         this.isonline = true;
     }
 
     on_device_contacting(payload) {
-    }
-
-    on_bind_complete(payload) {
     }
 
     read(payload, callback, timeout) {        
@@ -133,7 +113,6 @@ class IoTFeature {
         if (properties && Array.isArray(properties)) {
             for (let i = 0; i < this.property_names.length; i++) {
                 if (properties.indexOf(this.property_names[i]) > -1) {
-                    //console.log("property " + this.property_names[i] + " == is_property_handled ");
                     return true;
                 }
             }

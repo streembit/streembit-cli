@@ -47,6 +47,7 @@ var definitions = {
     PROPERTY_RELATIVE_HUMIDITY: "relative_humidity",
     PROPERTY_POWERDIVISOR: "power_divisor",
     PROPERTY_POWERMULTIPLIER: "power_multiplier",
+    PROPERTY_OCCUPANCY: "occupancy",
 
     MIN_REPORTING_INTERVAL: 60000,
     MAX_REPORTING_INTERVAL: (60000 * 60),
@@ -56,7 +57,7 @@ var definitions = {
         3: "ecmeasure",
         4: "temperature",
         5: "motion",
-        6: UNDEFINED,
+        6: "occupancy",
         7: UNDEFINED,
         8: UNDEFINED,
         9: UNDEFINED,

@@ -126,7 +126,7 @@ class IoTDevicesDb {
         );        
     }
 
-    add_feature(deviceid, type, clusters, setting) {
+    add_feature(deviceid, type, cluster, setting) {
         return new Promise(
             (resolve, reject) => {
                 if (!deviceid || !type ) {
@@ -134,8 +134,8 @@ class IoTDevicesDb {
                 }
 
                 this.database.run(
-                    "INSERT INTO iotfeatures (devrowid, type, clusters, settings) VALUES (?,?,?,?)",
-                    [deviceid, type, clusters, setting],
+                    "INSERT INTO iotfeatures (devrowid, type, cluster, settings) VALUES (?,?,?,?)",
+                    [deviceid, type, cluster, setting],
                     (err) => {
                         if (err) {
                             return reject(err);

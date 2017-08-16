@@ -28,31 +28,32 @@ const iotdefinitions = require("libs/iot/definitions");
 const IoTFeature = require("./feature");
 const events = require("libs/events");
 const logger = require("libs/logger");
+const async = require("async");
 const util = require('util');
 
-
-class TemperatureFeature extends IoTFeature {
+class OccupancyFeature extends IoTFeature {
 
     constructor(feature, transport) {
-        super(feature, transport); 
-        this.temperature = 0;   
+        super(feature, transport);  
+        this.occupancy = 0;        
     }
 
-    on_datareceive_event(data, event) {
+    on_datareceive_event(data, event) {   
         super.on_datareceive_event(data, event);
-    }
-
-    on_device_online(payload) {
-        super.on_device_online(payload);
     }
 
     on_device_contacting(payload) {
     }
 
-    read_temperature(callback) {
-    }   
+    on_device_online(payload) {       
+        super.on_device_online(payload);
+    }
 
-    read(payload, callback, timeout) {   
+    read_power(completefn) {
+       
+    }
+
+    read(payload, callback, timeout) {
         super.read(payload, callback, timeout);
     }
 
@@ -60,4 +61,4 @@ class TemperatureFeature extends IoTFeature {
     }
 }
 
-module.exports = TemperatureFeature;
+module.exports = OccupancyFeature;
