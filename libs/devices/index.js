@@ -28,27 +28,29 @@ const async = require("async");
 const config = require("libs/config");
 const Database = require("libs/database/devicesdb");
 
-let instance = null;
+let thisobj = null;
 let m_devices = null;
 let m_features = null;
+let m_instances = null;
 
 class Devices {
 
     constructor() {
-        if (!instance) {
-            instance = this;
+        if (!thisobj) {
+            thisobj = this;
             m_devices = new Map();
             m_features = [];
+            m_instances = new Map();
         }
-        return instance;
+        return thisobj;
+    }
+
+    static get instances() {
+        return m_instances;
     }
 
     static get devices() {
         return m_devices;
-    }
-
-    static set devices(value) {
-        m_devices = value;
     }
 
     static get features() {

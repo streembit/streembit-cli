@@ -35,15 +35,14 @@ const iotdefinitions = require("libs/iot/definitions");
 class IoTHandler {
     constructor() {
         this.protocol_handlers = new Map();
-        this.iotdevices = new Map();
-    }
-
-    get devices() {
-        return this.iotdevices;
     }
 
     getdevice(id) {
-        return this.iotdevices.get(id);
+        return Devices.instances.get(id);
+    }
+
+    setdevice(id, instance) {
+        Devices.instances.set(id, instance);
     }
 
     getdeviceobj(type, protocol) {
@@ -66,8 +65,8 @@ class IoTHandler {
             throw new Error("Device type " + device.type + " is not implemented. Provide the correct configuration settings in the config.js file.");
         }
 
-        var mcuhandler = this.protocol_handlers.get(device.protocol);
-        return new device_instance(device.deviceid, device, mcuhandler);
+        var protocolhandler = this.protocol_handlers.get(device.protocol);
+        return new device_instance(device.deviceid, device, protocolhandler.mcuhandler);
     }
 
     init() {
@@ -87,16 +86,12 @@ class IoTHandler {
                 let handler = new ProtocolHandler(protocols[i].name, protocols[i].chipset);
                 this.protocol_handlers.set(protocols[i].name, handler);             
             };
-
-            //const devices = Devices.list();
-            //for (let i = 0; i < devices.length; i++) {
-            //    this.device_protocol_map.set(devices[i].deviceid, devices[i].protocol);
-            //}               
+         
             const devices = Devices.list();
             for (let i = 0; i < devices.length; i++) {
                 let device = this.device_factory(devices[i]);
                 device.init();
-                this.iotdevices.set(devices[i].deviceid, device);
+                this.setdevice(devices[i].deviceid, device);
             }
 
             // create the event handlers
@@ -124,46 +119,18 @@ class IoTHandler {
         }
     }
 
-    //handle_events() {
-    //    events.on(events.TYPES.ONIOTEVENT, (event, payload, callback) => {
-    //        try {
-    //            switch (event) {
-    //                case constants.IOTREQUEST:
-    //                    var handler = this.get_handler_by_id(payload.id);
-    //                    if (!handler && !handler.handle_request) {
-    //                        throw new Error("invalid IOTREQUEST handler");
-    //                    }
-    //                    handler.handle_request(payload, callback);
-    //                    break;
-    //                default:
-    //                    throw new Error("IOTREQUEST " + event + " handler is not implemented");
-    //            }
-    //        }
-    //        catch (err) {
-    //            if (callback) {
-    //                callback(err.message);
-    //            }
-    //            logger.error("ONIOTEVENT error: " + err.message);
-    //        }
-    //    });
-    //}
 
     handle_events() {
 
         // events from Streembit users
         events.on(events.TYPES.ONIOTEVENT, (event, payload, callback) => {
             try {
-                switch (event) {
-                    case constants.IOTREQUEST:
-                        var device = this.getdevice(payload.id);
-                        if (!device) {
-                            throw new Error("device for id " + id + " does not exists at the gateway");
-                        }
-
-                        device.executecmd(payload, callback);
-                        break;
-                    default:
-                        throw new Error("IOTREQUEST " + event + " handler is not implemented");
+                if (event == constants.IOTREQUEST) {
+                    var device = this.getdevice(payload.id);
+                    if (!device) {
+                        throw new Error("device for id " + id + " does not exists at the gateway");
+                    }
+                    device.executecmd(payload, callback);
                 }
             }
             catch (err) {

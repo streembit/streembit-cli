@@ -42,7 +42,6 @@ class ZigbeeHandler extends IoTProtocolHandler {
     init() {
         try {
             logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);         
-            this.create_handler();
             this.mcuhandler.init();
             this.mcuhandler.monitor();
             this.initialized = true;            

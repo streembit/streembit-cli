@@ -127,6 +127,9 @@ class ZigbeeDevice extends Device {
         }
     }
 
+
+    enable_join(payload, callback) {
+    }
 }
 
 module.exports = ZigbeeDevice;

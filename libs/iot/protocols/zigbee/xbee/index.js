@@ -134,18 +134,6 @@ class XbeeHandler {
         serialport.write(xbee.buildFrame(txframe));
     }
 
-    get_routing_table() {
-        var txframe = { // AT Request to be sent to 
-            type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
-            clusterId: 0x0032,
-            profileId: 0x0000,
-            sourceEndpoint: 0x00,
-            destinationEndpoint: 0x00,
-            data: [0x01, 0x00]
-        };
-
-        serialport.write(xbee.buildFrame(txframe));
-    }
 
     simple_descriptor_request(address64, address16, data) {
         //console.log("simple_descriptor_request to " + address64);
@@ -1120,6 +1108,10 @@ class XbeeHandler {
         );
     }
 
+    handle_cluster_8036(frame) {
+        console.log(util.inspect(frame));
+    }
+
     // Network Address Request
     netaddr_request(address64) {
         try {
@@ -1156,7 +1148,7 @@ class XbeeHandler {
             profileId: 0x0000,
             sourceEndpoint: 0x00,
             destinationEndpoint: 0x00,
-            data: [0x01, 0x00]
+            data: [0x02, 0x00]
         };
 
         serialport.write(xbee.buildFrame(txframe));
@@ -1314,6 +1306,7 @@ class XbeeHandler {
             case "8021":
             case "8000":
             case "0406":
+            case "8036":
                 var clusterfn = "handle_cluster_" + frame.clusterId;
                 this[clusterfn](frame);
                 break;

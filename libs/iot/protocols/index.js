@@ -30,11 +30,9 @@ class IoTProtocolHandler {
     constructor(protocol, mcu) {
         this.protocol = protocol;
         this.mcu = mcu;
-        this.mcuhandler = 0;
         this.initialized = false;
-    }
+        this.mcuhandler = 0;
 
-    create_handler() {
         var handler = 0;
         try {
             var lib = 'libs/iot/protocols/' + this.protocol + '/' + this.mcu;

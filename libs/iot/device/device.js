@@ -165,7 +165,7 @@ class Device {
                 this.send_device_details(callback);
                 break;
             case constants.IOTCMD_ENABLEDEVICEJOIN:
-                this.send_device_details(callback);
+                this.enable_join(payload, callback);
                 break;
             case constants.IOTCMD_TOGGLE:
                 obj.toggle(callback);

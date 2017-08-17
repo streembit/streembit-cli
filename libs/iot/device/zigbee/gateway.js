@@ -24,10 +24,13 @@ Copyright (C) 2017 The Streembit software development team
 
 
 const constants = require("libs/constants");
+const Devices = require("libs/devices");
 const Device = require("libs/iot/device/device");
 const events = require("libs/events");
 const logger = require("libs/logger");
 const iotdefinitions = require("libs/iot/definitions");
+const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
+
 
 let m_address64;
 let m_address16;
@@ -39,10 +42,6 @@ class ZigbeeGateway extends Device {
         try {
             super(id, device, cmdbuilder, transport);
             m_endpoint = (this.details && this.details.endpoint) ? this.details.endpoint : 0;
-
-            // joined device list, stores devices which issued a ZDO 0x0013 device announce
-            this.joined_devices = [];
-
             logger.debug("Initialized ZigbeeGateway device id: " + id);            
         }
         catch (err) {
@@ -88,33 +87,35 @@ class ZigbeeGateway extends Device {
                         }
                     );
                 }
+
+                // enable join for 60 seconds
+                var cmd = zigbeecmd.permitJoinRequest(m_address64, m_address16, 60);
+                this.transport.send(cmd);
+
+                //
             }
             else if (payload.type == iotdefinitions.EVENT_DEVICE_ANNOUNCE) {
-                var joined = false;
-                this.joined_devices.forEach(
-                    (device) => {
-                        if (device.ieeeaddress == payload.ieeeaddress) {
-                            joined = true;
-                        }
-                    }
-                );
-
-                if (!joined) {
+                if (!Devices.instances.has(payload.ieeeaddress)){
                     var device = {
                         "type": constants.IOT_DEVICE_ENDDEVICE,
-                        "ieeeaddress": payload.ieeeaddress,
-                        "nwkaddress": payload.nwkaddress,
+                        "deviceid": payload.ieeeaddress,
+                        "address64": payload.ieeeaddress,
+                        "address16": payload.nwkaddress,
+                        "protocol": constants.IOT_PROTOCOL_ZIGBEE,
                         "mcu": payload.mcu,
-                        "isjoinpermitted": false
+                        "joindisabled": true
                     }
-                    this.joined_devices.push(device);
-                    logger.debug("Device joined: " + device.ieeeaddress);
+                    Devices.instances.set(device.deviceid, device);
+                    logger.debug("Device joined: " + device.deviceid);
                 }
             }
         }
         catch (err) {
             logger.error("ZigbeeGateway on_data_received() error: %j", err);
         }
+    }
+
+    enable_join(payload, callback) {
     }
 
 }
