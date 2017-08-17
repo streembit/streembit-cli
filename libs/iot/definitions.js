@@ -28,6 +28,7 @@ var definitions = {
 
     IOT_DATA_RECEIVED_EVENT: "_iot_data_received",
     EVENT_RADIO_ERROR: "radio_error",
+    EVENT_DEVICE_ANNOUNCE: "device_announce",
     EVENT_DEVICE_CONTACTING: "device_contacting",
     EVENT_DEVICE_BINDSUCCESS: "binding_success",
     EVENT_DEVICE_ONLINE: "device_online",

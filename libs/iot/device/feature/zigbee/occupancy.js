@@ -35,14 +35,18 @@ const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
 class ZigbeeOccupancyFeature extends OccupancyFeature {
 
-    constructor(feature, transport) {
-        super(feature, transport);  
+    constructor(deviceid, feature, transport) {
+        super(deviceid, feature, transport);  
         this.cluster = feature.cluster; 
         this.cluster_endpoint = -1;
         this.IEEEaddress = 0;
         this.NWKaddress = 0;
+
+        this.report_max = 0x003c; // 60 seconds        
+        
         this.property_names.push(iotdefinitions.PROPERTY_OCCUPANCY);
-        logger.debug("Initialized a Zigbee occupancy feature" );        
+
+        logger.debug("Initialized a Zigbee occupancy feature");        
     }
 
     on_datareceive_event(properties) {
@@ -66,6 +70,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
                 }
             };
             super.on_datareceive_event(data, iotdefinitions.EVENT_PROPERTY_REPORT);
+            this.last_update_time = Date.now();
         }
         catch (err) {
             logger.error("ZigbeeOccupancyFeature on_datareceive_event() error: %j", err);
@@ -89,7 +94,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
                     attribute: attribute,
                     datatype: datatype,
                     mininterval: mininterval,
-                    maxinterval: maxinterval
+                    maxinterval: this.report_max
                 }
             );
 
@@ -156,7 +161,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
         }
     }
 
-    readoccupancy(callback) {
+    read_occupancy(callback) {
         var attributes = [0x00, 0x00];
         var cmd = zigbeecmd.readAttributes(this.IEEEaddress, this.NWKaddres, 0x0406, attributes, this.cluster_endpoint);
         this.transport.send(cmd);
@@ -164,14 +169,22 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
 
 
     read(payload, callback) {
-        try {   
-            super.read(payload, callback, 7000);
-            // do the reading
-            this.readoccupancy();
-            //
+        let current_time = Date.now();
+        let last_update_elapsed = current_time - this.last_update_time;
+        let is_report_available = last_update_elapsed < this.report_max * 1000
+        console.log("ZigbeeOccupancyFeature last_update_elapsed: " + last_update_elapsed + " is_report_available: " + is_report_available);
+        if (is_report_available) {
+            var data = {
+                payload: {
+                    occupancy: this.occupancy
+                }
+            };
+            callback(null, data);
         }
-        catch (err) {
-            callback(err);
+        else {
+            super.read(payload, callback, (this.report_max * 1000 - 1));
+            // do the reading
+            this.read_occupancy();
         }
     }   
 

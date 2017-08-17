@@ -31,8 +31,8 @@ const logger = require("libs/logger");
 
 class SwitchFeature extends IoTFeature {
 
-    constructor(feature, transport) {
-        super(feature, transport);  
+    constructor(deviceid, feature, transport) {
+        super(deviceid, feature, transport);  
         this.switchstatus = 0;        
     }
 

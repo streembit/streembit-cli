@@ -39,8 +39,11 @@ class ZigbeeGateway extends Device {
         try {
             super(id, device, cmdbuilder, transport);
             m_endpoint = (this.details && this.details.endpoint) ? this.details.endpoint : 0;
-            logger.debug("Initialized ZigbeeGateway device id: " + id);
-            this.create_event_handlers();
+
+            // joined device list, stores devices which issued a ZDO 0x0013 device announce
+            this.joined_devices = [];
+
+            logger.debug("Initialized ZigbeeGateway device id: " + id);            
         }
         catch (err) {
             throw new Error("ZigbeeGateway constructor error: " + err.message);
@@ -84,6 +87,28 @@ class ZigbeeGateway extends Device {
                             }
                         }
                     );
+                }
+            }
+            else if (payload.type == iotdefinitions.EVENT_DEVICE_ANNOUNCE) {
+                var joined = false;
+                this.joined_devices.forEach(
+                    (device) => {
+                        if (device.ieeeaddress == payload.ieeeaddress) {
+                            joined = true;
+                        }
+                    }
+                );
+
+                if (!joined) {
+                    var device = {
+                        "type": constants.IOT_DEVICE_ENDDEVICE,
+                        "ieeeaddress": payload.ieeeaddress,
+                        "nwkaddress": payload.nwkaddress,
+                        "mcu": payload.mcu,
+                        "isjoinpermitted": false
+                    }
+                    this.joined_devices.push(device);
+                    logger.debug("Device joined: " + device.ieeeaddress);
                 }
             }
         }

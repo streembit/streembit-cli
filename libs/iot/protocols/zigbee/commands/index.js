@@ -66,6 +66,28 @@ class ZigbeeCommands {
         return final;
     }
 
+    static mgmtLeaveRequesteq(address64, address16, data) {
+        var addressbuf = ZigbeeCommands.swapEUI64toLittleEndian(address64);
+        const narbuf = Buffer.alloc(10);
+        narbuf.writeUInt8(0x05, 0); 
+        addressbuf.copy(narbuf, 1);
+        narbuf.writeUInt8(0x00, 9); // Reserved Remove Children Rejoin
+        //console.log("mgmt_leave_reqt ClusterID=0x0034 buffer: " + util.inspect(narbuf));
+
+        var txframe = {
+            type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
+            destination64: address64,
+            destination16: address16,
+            clusterId: 0x0034,
+            profileId: 0x0000,
+            sourceEndpoint: 0x00,
+            destinationEndpoint: 0x00,
+            data: narbuf
+        };
+
+        serialport.write(xbee.buildFrame(txframe));
+    }
+
     static getNeighborTable(address64, address16, index) {
         var txn = txnmap[constants.IOT_CLUSTER_NEIGHBORTABLE]; // use 0x77 for the clusterID 0x0031, but it could be anything ...
         var cmd = {

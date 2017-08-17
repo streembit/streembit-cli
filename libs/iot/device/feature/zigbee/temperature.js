@@ -35,8 +35,8 @@ const TEMPSENS_TIMEOUT = 10000;
 
 class ZigbeeTemperatureFeature extends TemperatureFeature {
 
-    constructor(feature, transport) {
-        super(feature, transport);     
+    constructor(deviceid, feature, transport) {
+        super(deviceid, feature, transport);     
         this.cluster = feature.cluster;
         this.cluster_endpoint = -1;
         this.IEEEaddress = 0;
@@ -192,7 +192,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
             let current_time = Date.now();
             let last_update_elapsed = current_time - this.last_update_time;
             let is_report_available = last_update_elapsed < this.report_max * 1000
-            console.log("ZigbeeTemperatureFeature last_update_elapsed: " + last_update_elapsed + " is_report_available: " + is_report_available);
+            //console.log("ZigbeeTemperatureFeature last_update_elapsed: " + last_update_elapsed + " is_report_available: " + is_report_available);
             if (is_report_available) {
                 var data = {
                     payload: {

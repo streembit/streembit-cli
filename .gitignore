@@ -56,3 +56,4 @@ config.json
 /.idea/
 /data/account.json
 .vs/streembit-cli/v15/Browse.VC.db
+/config _copy.json

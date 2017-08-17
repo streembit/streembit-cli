@@ -27,12 +27,12 @@ const events = require("libs/events");
 const logger = require('libs/logger');
 const constants = require("libs/constants");
 const EventEmitter = require('events');
-const IoTReport = require('./iotreport');
 const iotdefinitions = require("libs/iot/definitions");
 const util = require("util");
 
 class IoTFeature {
-    constructor(feature, transport) {
+    constructor(deviceid, feature, transport) {
+        this.deviceid = deviceid;
         this.transport = transport;
         this.type = feature.type;
         this.settings = feature.setting;

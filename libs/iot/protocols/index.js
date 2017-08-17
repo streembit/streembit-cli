@@ -25,56 +25,19 @@ const logger = require("libs/logger");
 const events = require("libs/events");
 const config = require('libs/config');
 const constants = require("libs/constants");
-const ZigbeeGateway = require('libs/iot/device/zigbee/gateway');
-const ZigbeeDevice = require('libs/iot/device/zigbee/device');
-
-let iotdevices = 0;
 
 class IoTProtocolHandler {
-
     constructor(protocol, mcu) {
         this.protocol = protocol;
         this.mcu = mcu;
         this.mcuhandler = 0;
         this.initialized = false;
-        iotdevices = new Map();
-    }
-
-    static getdevice(id) {
-        return iotdevices.get(id);
-    }
-
-    static get devices() {
-        return iotdevices;
-    }
-
-    getdeviceobj(type, protocol) {
-        if (type == constants.IOT_DEVICE_GATEWAY) {
-            if (protocol == constants.IOT_PROTOCOL_ZIGBEE) {
-                return ZigbeeGateway;
-            }
-        }
-        else if (type == constants.IOT_DEVICE_ENDDEVICE) {
-            if (protocol == constants.IOT_PROTOCOL_ZIGBEE) {
-                return ZigbeeDevice;
-            }
-        }
-    }
-
-    device_factory(device) {
-        // the type must be the correct one in the config.js file
-        var device_instance = this.getdeviceobj(device.type, device.protocol);
-        if (!device_instance) {
-            throw new Error("Device type " + device.type + " is not implemented. Provide the correct configuration settings in the config.js file.");
-        }
-
-        return new device_instance(device.deviceid, device, this.mcuhandler);
     }
 
     create_handler() {
         var handler = 0;
         try {
-            var lib = 'libs/iot/protocols/zigbee/' + this.mcu;
+            var lib = 'libs/iot/protocols/' + this.protocol + '/' + this.mcu;
             handler = require(lib);
         }
         catch (err) {
@@ -87,28 +50,7 @@ class IoTProtocolHandler {
         this.mcuhandler = new handler();
     }
 
-    handle_request(message, callback) {
-        try {
-            // get the device
-            var device = IoTProtocolHandler.getdevice(message.id);
-            if (!device) {
-                throw new Error("device for id " + id + " does not exists at the gateway");
-            }
-
-            device.executecmd(message, callback);
-
-            //
-        }
-        catch (err) {
-            callback(err);
-        }
-    }
-
-    geteventfn(type) {
-        return this.eventfns.get(type);
-    }
-
-    async init() {        
+    init() {        
     }
 }
 

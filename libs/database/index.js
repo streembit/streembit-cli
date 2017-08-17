@@ -146,7 +146,7 @@ class Database {
         );
     }
 
-    create_table(sql) {
+    executecmd(sql) {
         return new Promise(
             (resolve, reject) => {
                 this.sqldb.run(sql, (err) => {
@@ -431,11 +431,11 @@ class Database {
                 let exists = await this.is_table_exists("accounts");
                 if (!exists) {
                     let accounts_table = "CREATE TABLE IF NOT EXISTS accounts ( \
-                        accountid integer PRIMARY KEY, \
+                        accountid integer PRIMARY KEY ASC, \
                         account text NOT NULL, \
                         accountpk text NOT NULL, \
                         cipher text NOT NULL)";
-                    await this.create_table(accounts_table);
+                    await this.executecmd(accounts_table);
                 }
             }
             catch (e) {
@@ -446,11 +446,11 @@ class Database {
                 let exists = await this.is_table_exists("contacts");
                 if (!exists) {
                     let contacts_table = "CREATE TABLE IF NOT EXISTS contacts ( \
-                        contactid integer PRIMARY KEY, \
+                        contactid integer PRIMARY KEY ASC, \
                         pkhash text NOT NULL, \
                         publickey text NOT NULL, \
                         username text )";
-                    await this.create_table(contacts_table);
+                    await this.executecmd(contacts_table);
                 }
             }
             catch (e) {
@@ -461,13 +461,13 @@ class Database {
                 let exists = await this.is_table_exists("users");
                 if (!exists) {
                     let users_table = "CREATE TABLE IF NOT EXISTS users ( \
-                        userid integer PRIMARY KEY, \
+                        userid integer PRIMARY KEY ASC, \
                         pkhash text NOT NULL, \
                         publickey text NOT NULL, \
                         isadmin integer NOT NULL DEFAULT 0, \
                         username text, \
                         settings text)";
-                    await this.create_table(users_table);
+                    await this.executecmd(users_table);
                 }
             }
             catch (e) {
@@ -478,30 +478,40 @@ class Database {
                 let exists = await this.is_table_exists("iotdevices");
                 if (!exists) {
                     let iotdevices_table = "CREATE TABLE IF NOT EXISTS iotdevices ( \
-                        devrowid integer PRIMARY KEY, \
+                        devrowid integer PRIMARY KEY ASC, \
                         deviceid text NOT NULL, \
                         type integer NOT NULL, \
                         protocol text NOT NULL, \
                         mcu text NOT NULL, \
+                        joindisabled integer, \
                         details text )";
-                    await this.create_table(iotdevices_table);
+                    await this.executecmd(iotdevices_table);
                 }
             }
             catch (e) {
                 return callback('create iotdevices table error: ' + e.message);
             }          
 
+            // 
+            try {
+                let devices_index = "CREATE UNIQUE INDEX IF NOT EXISTS idxIotdevicesDeviceid ON iotdevices (deviceid)";
+                await this.executecmd(devices_index);
+            }
+            catch (e) {
+                return callback('create iotfeatures table error: ' + e.message);
+            }  
+
             try {
                 let exists = await this.is_table_exists("iotfeatures");
                 if (!exists) {
                     let iotfeatures_table = "CREATE TABLE IF NOT EXISTS iotfeatures ( \
-                    featureid integer PRIMARY KEY, \
+                    featureid integer PRIMARY KEY ASC, \
                     devrowid integer NOT NULL, \
                     type integer NOT NULL, \
                     cluster text, \
                     settings text, \
                     FOREIGN KEY (devrowid) REFERENCES iotdevices (devrowid) )";
-                    await this.create_table(iotfeatures_table);
+                    await this.executecmd(iotfeatures_table);
                 }
             }
             catch (e) {
@@ -512,7 +522,7 @@ class Database {
                 let get_iotfeatures_view = "CREATE VIEW IF NOT EXISTS vw_get_features AS \
                     SELECT dev.deviceid, ft.devrowid, ft.featureid, ft.type, ft.cluster, ft.settings \
                     FROM iotfeatures ft INNER JOIN iotdevices dev ON ft.devrowid = dev.devrowid;";
-                await this.create_table(get_iotfeatures_view);
+                await this.executecmd(get_iotfeatures_view);
             }
             catch (e) {
                 return callback('create iotfeatures table error: ' + e.message);

@@ -64,7 +64,7 @@ class Device {
                     let feature_name = iotdefinitions.FEATURETYPEMAP[feature_type];
                     let feature_lib = "libs/iot/device/feature/" + this.protocol + "/" + feature_name;
                     let feature_obj = require(feature_lib);
-                    let feature_handler = new feature_obj(array[i], this.transport);
+                    let feature_handler = new feature_obj(this.id, array[i], this.transport);
                     if (feature_handler) {
                         this.features.set(feature_type, feature_handler);
                         logger.debug("feature " + feature_type + " added to device " + this.id);
@@ -164,8 +164,8 @@ class Device {
             case constants.IOTCMD_DEVICE_DETAILS:
                 this.send_device_details(callback);
                 break;
-            case constants.IOTCMD_CONFIGURE_REPORT:
-            //    this.configure_reports(payload, callback);
+            case constants.IOTCMD_ENABLEDEVICEJOIN:
+                this.send_device_details(callback);
                 break;
             case constants.IOTCMD_TOGGLE:
                 obj.toggle(callback);

@@ -39,47 +39,18 @@ class ZigbeeHandler extends IoTProtocolHandler {
         super(protocol, mcu);
     }
 
-    create_event_handlers() {
-        var device_datareceived_event = iotdefinitions.IOT_DATA_RECEIVED_EVENT;
-        events.on(
-            device_datareceived_event,
-            (payload) => {
-                var device = IoTProtocolHandler.getdevice(payload.deviceid);
-                if (device) {
-                    device.on_data_received(payload);
-                }               
-            }
-        );
-    }
-
     init() {
         try {
-            logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);
-         
+            logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);         
             this.create_handler();
-
-            var devices = Devices.get_devices_by_protocol(this.protocol);
-            for (let i = 0; i < devices.length; i++) {
-                let device = this.device_factory(devices[i]);
-                device.init();
-                let map_of_devices = IoTProtocolHandler.devices;
-                map_of_devices.set(devices[i].deviceid, device);
-            }
-
-            // event handlers
-            this.create_event_handlers();
-
             this.mcuhandler.init();
             this.mcuhandler.monitor();
-
             this.initialized = true;            
         }
         catch (err) {
             throw new Error("Zigbee protocol handler init error: " + err.message);
         }
-    }
-
-    
+    }    
 }
 
 module.exports = ZigbeeHandler;

@@ -28,42 +28,46 @@ const events = require("libs/events");
 const WebSocket = require("libs/websocket");
 const util = require("util");
 const Devices = require("libs/devices")
+const ZigbeeGateway = require('libs/iot/device/zigbee/gateway');
+const ZigbeeDevice = require('libs/iot/device/zigbee/device');
+const iotdefinitions = require("libs/iot/definitions");
 
 class IoTHandler {
     constructor() {
         this.protocol_handlers = new Map();
-        this.device_protocol_map = new Map();
+        this.iotdevices = new Map();
     }
 
-    get_handler_by_id(id) {
-        if (!id) {
-            throw new Error("invalid device ID");
-        }
-
-        var protocol = this.device_protocol_map.get(id);
-        if (!protocol) {
-            throw new Error("protocol for id " + id + " does not exists");
-        }
-
-        var handler = this.protocol_handlers.get(protocol);
-        if (!handler) {
-            throw new Error("handler for protocol " + protocol + " does not exists");
-        }
-
-        return handler;
+    get devices() {
+        return this.iotdevices;
     }
 
-    init_protocol(handler) {
-        if (!handler.init) {
-            throw new Error("handler does not exists");
+    getdevice(id) {
+        return this.iotdevices.get(id);
+    }
+
+    getdeviceobj(type, protocol) {
+        if (type == constants.IOT_DEVICE_GATEWAY) {
+            if (protocol == constants.IOT_PROTOCOL_ZIGBEE) {
+                return ZigbeeGateway;
+            }
+        }
+        else if (type == constants.IOT_DEVICE_ENDDEVICE) {
+            if (protocol == constants.IOT_PROTOCOL_ZIGBEE) {
+                return ZigbeeDevice;
+            }
+        }
+    }
+
+    device_factory(device) {
+        // the type must be the correct one in the config.js file
+        var device_instance = this.getdeviceobj(device.type, device.protocol);
+        if (!device_instance) {
+            throw new Error("Device type " + device.type + " is not implemented. Provide the correct configuration settings in the config.js file.");
         }
 
-        try {
-            handler.init();           
-        }
-        catch (err) {
-            throw err;
-        }         
+        var mcuhandler = this.protocol_handlers.get(device.protocol);
+        return new device_instance(device.deviceid, device, mcuhandler);
     }
 
     init() {
@@ -75,25 +79,25 @@ class IoTHandler {
 
             logger.info("Run IoT handler");
 
-            const devices = Devices.list();
-            for (let i = 0; i < devices.length; i++) {
-                this.device_protocol_map.set(devices[i].deviceid, devices[i].protocol);
-            }               
-            
             // initialize the IoT device handlers Zigbee, Z-Wave, 6LowPan, etc.
             var protocols = conf.protocols;
             for (let i = 0; i < protocols.length; i++) {
                 logger.info("create protocol " + protocols[i].name + " handler");
-                var ProtocolHandler = require("libs/iot/protocols/" + protocols[i].name);
-                var handler = new ProtocolHandler(protocols[i].name, protocols[i].chipset);
-                try {
-                    this.init_protocol(handler);
-                    this.protocol_handlers.set(protocols[i].name, handler);
-                }
-                catch (err) {
-                    throw new Error(protocols[i].name + " protocol handler error: " + err.message);
-                }                
+                let ProtocolHandler = require("libs/iot/protocols/" + protocols[i].name);
+                let handler = new ProtocolHandler(protocols[i].name, protocols[i].chipset);
+                this.protocol_handlers.set(protocols[i].name, handler);             
             };
+
+            //const devices = Devices.list();
+            //for (let i = 0; i < devices.length; i++) {
+            //    this.device_protocol_map.set(devices[i].deviceid, devices[i].protocol);
+            //}               
+            const devices = Devices.list();
+            for (let i = 0; i < devices.length; i++) {
+                let device = this.device_factory(devices[i]);
+                device.init();
+                this.iotdevices.set(devices[i].deviceid, device);
+            }
 
             // create the event handlers
             this.handle_events();
@@ -103,22 +107,60 @@ class IoTHandler {
             var wsserver = new WebSocket(port);
             wsserver.init();
 
+            // initiaize the transports
+            this.protocol_handlers.forEach(
+                (handler, protocol) => {
+                    try {
+                        handler.init();
+                    }
+                    catch (err) {
+                        logger.error("IoT " + protocol + " handler error: " + err.message);
+                    }
+                }
+            );
         }
         catch (err) {
             logger.error("IoT handler error: " + err.message);
         }
     }
 
+    //handle_events() {
+    //    events.on(events.TYPES.ONIOTEVENT, (event, payload, callback) => {
+    //        try {
+    //            switch (event) {
+    //                case constants.IOTREQUEST:
+    //                    var handler = this.get_handler_by_id(payload.id);
+    //                    if (!handler && !handler.handle_request) {
+    //                        throw new Error("invalid IOTREQUEST handler");
+    //                    }
+    //                    handler.handle_request(payload, callback);
+    //                    break;
+    //                default:
+    //                    throw new Error("IOTREQUEST " + event + " handler is not implemented");
+    //            }
+    //        }
+    //        catch (err) {
+    //            if (callback) {
+    //                callback(err.message);
+    //            }
+    //            logger.error("ONIOTEVENT error: " + err.message);
+    //        }
+    //    });
+    //}
+
     handle_events() {
+
+        // events from Streembit users
         events.on(events.TYPES.ONIOTEVENT, (event, payload, callback) => {
             try {
                 switch (event) {
                     case constants.IOTREQUEST:
-                        var handler = this.get_handler_by_id(payload.id);
-                        if (!handler && !handler.handle_request) {
-                            throw new Error("invalid IOTREQUEST handler");
+                        var device = this.getdevice(payload.id);
+                        if (!device) {
+                            throw new Error("device for id " + id + " does not exists at the gateway");
                         }
-                        handler.handle_request(payload, callback);
+
+                        device.executecmd(payload, callback);
                         break;
                     default:
                         throw new Error("IOTREQUEST " + event + " handler is not implemented");
@@ -131,6 +173,22 @@ class IoTHandler {
                 logger.error("ONIOTEVENT error: " + err.message);
             }
         });
+
+        // events from the protocol transports
+        events.on(
+            iotdefinitions.IOT_DATA_RECEIVED_EVENT,
+            (payload) => {
+                try {
+                    var device = this.getdevice(payload.deviceid);
+                    if (device) {
+                        device.on_data_received(payload);
+                    }
+                }
+                catch (err) {
+                    logger.error("IoTHandler IOT_DATA_RECEIVED_EVENT error: %j", err);
+                }
+            }
+        );
     }
 }
 

@@ -33,8 +33,8 @@ const util = require('util');
 
 class TemperatureFeature extends IoTFeature {
 
-    constructor(feature, transport) {
-        super(feature, transport); 
+    constructor(deviceid, feature, transport) {
+        super(deviceid, feature, transport); 
         this.temperature = 0;   
     }
 

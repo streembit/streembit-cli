@@ -32,8 +32,8 @@ const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
 class ZigbeeSwitchFeature extends SwitchFeature {
 
-    constructor(feature, transport) {
-        super(feature, transport);  
+    constructor(deviceid, feature, transport) {
+        super(deviceid, feature, transport);  
         this.cluster = feature.cluster;
         this.cluster_endpoint = -1;
         this.IEEEaddress = 0;

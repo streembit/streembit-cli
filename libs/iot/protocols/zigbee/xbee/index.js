@@ -1107,6 +1107,19 @@ class XbeeHandler {
         //
     }
 
+    handle_cluster_0013(frame) {
+        //console.log(util.inspect(frame));
+        this.dispatch_datarcv_event(
+            {
+                "type": iotdefinitions.EVENT_DEVICE_ANNOUNCE,
+                "deviceid": this.gateway,
+                "ieeeaddress": frame.remote64,
+                "nwkaddress": frame.remote16,
+                "mcu": "xbee"
+            }
+        );
+    }
+
     // Network Address Request
     netaddr_request(address64) {
         try {
