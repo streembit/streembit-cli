@@ -63,10 +63,11 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
                             this.temperature = val.toFixed(2);                            
                             let data = {
                                 payload: {
+                                    event: iotdefinitions.EVENT_PROPERTY_REPORT,
                                     temperature: this.temperature 
                                 }
                             };
-                            super.on_datareceive_event(data, iotdefinitions.EVENT_PROPERTY_REPORT);
+                            super.on_datareceive_event(data, iotdefinitions.EVENT_NOTIFY_USERS);
                             this.last_update_time = Date.now();
                             logger.debug("TemperatureFeature on_datareceive_event " + item.property + ": " + this.temperature);
                         }

@@ -35,7 +35,7 @@ const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
 class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
-    constructor(deviceid, feature, transport) {
+    constructor(deviceid, feature, transport, ieeeaddress, nwkaddress) {
         super(deviceid, feature, transport);  
         this.cluster = feature.cluster;
         this.power_divisor = 0;
@@ -60,8 +60,8 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         this.property_names.push(iotdefinitions.PROPERTY_POWERDIVISOR);
 
         this.cluster_endpoint = -1;
-        this.IEEEaddress = 0;
-        this.NWKaddress = 0;
+        this.IEEEaddress = ieeeaddress || 0;
+        this.NWKaddress = nwkaddress || 0;
 
         logger.debug("Initialized a Zigbee EC measuremenent feature, power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);        
     }
@@ -108,7 +108,8 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
             //console.log("ZigbeeEcMeasureFeature on_datareceive_event data: " + util.inspect(data));
             if (data.payload.hasOwnProperty("voltage") || data.payload.hasOwnProperty("power_consumption")) {
-                super.on_datareceive_event(data, iotdefinitions.EVENT_PROPERTY_REPORT);
+                data.payload.event = iotdefinitions.EVENT_PROPERTY_REPORT;
+                super.on_datareceive_event(data, iotdefinitions.EVENT_NOTIFY_USERS);
             }
         }
         catch (err) {
@@ -174,21 +175,8 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
     }
 
     on_device_online(properties) {
-        if (properties && Array.isArray(properties) && properties.length) {
-            properties.forEach(
-                (item) => {
-                    if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
-                        if (item.name == "address64") {
-                            this.IEEEaddress = item.value;
-                        }
-                        else if (item.name == "address16") {
-                            this.NWKaddress = item.value;
-                        }
-                    }
-                }
-            );
-        }
-
+        this.IEEEaddress = properties.address64;
+        this.NWKaddress = properties.address16;
         if (this.IEEEaddress && this.NWKaddress) {
             super.on_device_online();
         }

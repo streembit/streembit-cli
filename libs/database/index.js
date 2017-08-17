@@ -475,18 +475,16 @@ class Database {
             }
 
             try {
-                let exists = await this.is_table_exists("iotdevices");
-                if (!exists) {
-                    let iotdevices_table = "CREATE TABLE IF NOT EXISTS iotdevices ( \
-                        devrowid integer PRIMARY KEY ASC, \
-                        deviceid text NOT NULL, \
-                        type integer NOT NULL, \
-                        protocol text NOT NULL, \
-                        mcu text NOT NULL, \
-                        joindisabled integer, \
-                        details text )";
-                    await this.executecmd(iotdevices_table);
-                }
+                let iotdevices_table = "CREATE TABLE IF NOT EXISTS iotdevices ( \
+                    devrowid integer PRIMARY KEY ASC, \
+                    deviceid text NOT NULL, \
+                    type integer NOT NULL, \
+                    protocol text NOT NULL, \
+                    mcu text NOT NULL, \
+                    details text, \
+                    ispermitted integer, \
+                    isblacklisted integer )";
+                await this.executecmd(iotdevices_table);                
             }
             catch (e) {
                 return callback('create iotdevices table error: ' + e.message);
@@ -499,7 +497,7 @@ class Database {
             }
             catch (e) {
                 return callback('create iotfeatures table error: ' + e.message);
-            }  
+            }           
 
             try {
                 let exists = await this.is_table_exists("iotfeatures");

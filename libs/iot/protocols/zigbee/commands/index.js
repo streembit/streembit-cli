@@ -70,7 +70,7 @@ class ZigbeeCommands {
         const pjbuf = Buffer.alloc(2);
         pjbuf.writeUInt8(0x01, 0); // txn
         pjbuf.writeUInt8(duration, 1);
-        console.log("permit_join_req ClusterID=0x0036 buffer: " + util.inspect(pjbuf));
+        console.log("permit_join_req ClusterID=0x0036, duration: " + duration + ", buffer: " + util.inspect(pjbuf));
         var cmd = {
             destination64: address64, 
             destination16: address16, 
@@ -85,7 +85,7 @@ class ZigbeeCommands {
     }
 
 
-    static mgmtLeaveRequesteq(address64, address16, data) {
+    static mgmtLeaveRequesteq(address64, address16) {
         var addressbuf = ZigbeeCommands.swapEUI64toLittleEndian(address64);
         const narbuf = Buffer.alloc(10);
         narbuf.writeUInt8(0x05, 0); // txn
@@ -101,6 +101,51 @@ class ZigbeeCommands {
             sourceEndpoint: 0x00,
             destinationEndpoint: 0x00,
             data: narbuf
+        };
+
+        return cmd;
+    }
+
+    static active_endpoint_request(address64, address16) {
+        let addressbuf = Buffer.from(address16, 'hex');
+        addressbuf.swap16();
+        let aerbuf = Buffer.alloc(3);
+        aerbuf.writeUInt8(0x05, 0);                     
+        addressbuf.copy(aerbuf, 1);
+
+        console.log("Active Endpoint Request data: " + util.inspect(aerbuf));
+
+        var cmd = { 
+            destination64: address64,
+            destination16: address16,
+            clusterId: 0x0005,
+            profileId: 0x0000,
+            sourceEndpoint: 0x00,
+            destinationEndpoint: 0x00,
+            data: aerbuf
+        };
+
+        return cmd;
+    }
+
+    static simple_descriptor_request(address64, address16, endpoint) {
+        var addressbuf = Buffer.from(address16, 'hex');
+        addressbuf.swap16();
+        const sdrbuf = Buffer.alloc(4);
+        sdrbuf.writeUInt8(0x04, 0);                     
+        addressbuf.copy(sdrbuf, 1);
+        sdrbuf.writeUInt8(endpoint, 3);
+
+        console.log("Simple Descriptor Request data: " + util.inspect(sdrbuf));
+
+        var cmd = {
+            destination64: address64,
+            destination16: address16,
+            clusterId: 0x0004,
+            profileId: 0x0000,
+            sourceEndpoint: 0x00,
+            destinationEndpoint: 0x00,
+            data: sdrbuf
         };
 
         return cmd;

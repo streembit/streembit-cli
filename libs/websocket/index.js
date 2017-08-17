@@ -143,30 +143,34 @@ class WsServer {
                 // validate the user sent a valid token                
                 this.validate_user(message);
 
-                events.emit(events.TYPES.ONIOTEVENT, constants.IOTREQUEST, message, (err, data) => {
-                    try {
-                        if (err) {
-                            throw new Error(err.message || err);
-                        }
-
-                        if (!data) {
-                            throw new Error("the device IOTREQUEST handler returned an invalid data");
-                        }
-
-                        data.txn = message.txn;
-                        var response = JSON.stringify(data);
-                        ws.send(response);
-                    }
-                    catch (err) {
+                events.emit(
+                    events.TYPES.ONIOTEVENT,
+                    message,
+                    (err, data) => {
                         try {
-                            var errmsg = this.format_error(message.txn, err);
-                            ws.send(errmsg);
-                            logger.error("IOTREQUEST return handling error %j", errmsg)
+                            if (err) {
+                                throw new Error(err.message || err);
+                            }
+
+                            if (!data) {
+                                throw new Error("the device ONIOTEVENT handler returned an invalid data");
+                            }
+
+                            data.txn = message.txn;
+                            var response = JSON.stringify(data);
+                            ws.send(response);
                         }
-                        catch (e) {
+                        catch (err) {
+                            try {
+                                var errmsg = this.format_error(message.txn, err);
+                                ws.send(errmsg);
+                                logger.error("ONIOTEVENT return handling error %j", errmsg)
+                            }
+                            catch (e) {
+                            }
                         }
                     }
-                });
+                );
             }
         }
         catch (err) {
@@ -200,7 +204,7 @@ class WsServer {
     handle_server_messages() {
         try {
             events.on(
-                iotdefinitions.EVENT_PROPERTY_REPORT,
+                iotdefinitions.EVENT_NOTIFY_USERS,
                 (id, data) => {
                     try {
                         let pkhash = this.list_of_devices.get(id);

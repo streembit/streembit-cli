@@ -37,6 +37,7 @@ class Device {
         this.protocol = device.protocol;
         this.profile = device.profile;
         this.settings = device.setting;
+
         this.m_details = {};
         try {
             let deteailsobj = JSON.parse(device.details);
@@ -47,10 +48,11 @@ class Device {
         catch (err) { }        
 
         this.transport = transport;
-
         this.m_active = false;
-
         this.features = new Map();
+
+        this.ispermitted = 0;
+        this.isblacklisted = 0;
 
         this.errors = [];        
     }
@@ -80,7 +82,6 @@ class Device {
     init() {
         try {
             this.addfeatures();
-            this.create_event_handlers();
         }
         catch (err) {
             throw new Error("Device init error: " + err.message);
@@ -113,9 +114,6 @@ class Device {
                 }
             );
         }       
-    }
-
-    create_event_handlers() {
     }
 
     update_property(name, value) {

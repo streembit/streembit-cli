@@ -161,6 +161,20 @@ class IoTDevicesDb {
         );
     }
 
+    get_device_blackilst() {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM iotdevices WHERE isblacklisted = 1";
+                this.database.all(query, [], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
+            }
+        );
+    }
+
 }
 
 module.exports = IoTDevicesDb;

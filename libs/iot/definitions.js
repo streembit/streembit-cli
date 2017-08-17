@@ -26,9 +26,10 @@ const UNDEFINED = "undefined";
 var definitions = {
     ZIGBEE: "zigbee",
 
-    IOT_DATA_RECEIVED_EVENT: "_iot_data_received",
+    IOT_DATA_RECEIVED_EVENT: "iot_data_received",
     EVENT_RADIO_ERROR: "radio_error",
     EVENT_DEVICE_ANNOUNCE: "device_announce",
+    EVENT_DEVICE_INFO: "device_info",
     EVENT_DEVICE_CONTACTING: "device_contacting",
     EVENT_DEVICE_BINDSUCCESS: "binding_success",
     EVENT_DEVICE_ONLINE: "device_online",
@@ -37,6 +38,12 @@ var definitions = {
     EVENT_DEVICE_PROPERTY_UPDATE: "device_property_update",
     EVENT_FEATURE_PROPERTY_UPDATE: "iot_property_update",
     EVENT_PROPERTY_REPORT: "iot_property_report",
+    EVENT_ENDDEVICE_JOINED: "iot_enddevice_joined", 
+    EVENT_DEVICES_LIST: "iot_devices_list",
+    EVENT_NOTIFY_USERS: "iot_notify_users",
+
+    IOT_REQUEST_DEVICES_LIST: 0x01,
+    IOT_DEVICES_LIST_RESPONSE: 0x02,
 
     PROPERTY_HWVERSION: "hwversion",
     PROPERTY_MANUFACTURERNAME: "manufacturername",

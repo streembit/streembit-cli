@@ -120,12 +120,46 @@ class IoTHandler {
     }
 
 
+    device_list_response(deviceid, callback) {
+        try {
+            let devices = Devices.instances;
+            let devicelist = [];
+            devices.forEach(
+                (device) => {
+                    let info = device.get_device_info();
+                    devicelist.push(info);
+                }
+            );
+
+            var data = {
+                payload: {
+                    event: iotdefinitions.IOT_DEVICES_LIST_RESPONSE,
+                    deviceid: deviceid,
+                    devicelist: devicelist
+                }
+            };
+
+            callback(null, data);
+
+            //
+        }
+        catch (err) {
+            if (callback) {
+                callback(err.message);
+            }
+            logger.error("device_list_response() error: " + err.message);
+        }
+    }
+
     handle_events() {
 
         // events from Streembit users
-        events.on(events.TYPES.ONIOTEVENT, (event, payload, callback) => {
+        events.on(events.TYPES.ONIOTEVENT, (payload, callback) => {
             try {
-                if (event == constants.IOTREQUEST) {
+                if (payload.event && payload.event == iotdefinitions.IOT_REQUEST_DEVICES_LIST ) {
+                    this.device_list_response(payload.id, callback);
+                }
+                else {
                     var device = this.getdevice(payload.id);
                     if (!device) {
                         throw new Error("device for id " + id + " does not exists at the gateway");
@@ -149,6 +183,31 @@ class IoTHandler {
                     var device = this.getdevice(payload.deviceid);
                     if (device) {
                         device.on_data_received(payload);
+                    }
+                    else {
+                        if (payload.type == iotdefinitions.EVENT_DEVICE_ANNOUNCE ||
+                            payload.type == iotdefinitions.EVENT_DEVICE_ONLINE) {
+                            // some device is joined already, create a device object for it
+                            let ieeeaddress = payload.address64;
+                            let nwkaddress = payload.address16;
+                            let protocol = payload.protocol;
+                            let mcu = payload.mcu;
+                            let protocol_handler = this.protocol_handlers.get(protocol);
+                            let transport = protocol_handler.mcuhandler;
+                            let device = {
+                                "type": constants.IOT_DEVICE_ENDDEVICE,
+                                "deviceid": ieeeaddress,
+                                "address64": ieeeaddress,
+                                "address16": nwkaddress,
+                                "protocol": protocol,
+                                "mcu": mcu,
+                                "ispermitted": 0
+                            }
+
+                            let zigbee_device = new ZigbeeDevice(ieeeaddress, device, transport);
+                            Devices.instances.set(device.deviceid, zigbee_device);
+                            zigbee_device.on_data_received(payload);
+                        }
                     }
                 }
                 catch (err) {

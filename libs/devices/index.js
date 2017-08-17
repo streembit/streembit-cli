@@ -100,6 +100,28 @@ class Devices {
         return list;
     }
 
+    static get_device_by(deviceid) {
+        var list = [];
+        Devices.devices.forEach(
+            (item, key) => {
+                if (item.deviceid == deviceid) {
+                    list.push(item);
+                }
+            }
+        );
+        return list;
+    }
+
+    static is_device_blacklisted(deviceid) {
+        let device = Devices.devices.get(deviceid);
+        if (device && device.isblacklisted) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
     features_from_db() {
         return new Promise((resolve, reject) => {
             var db = new Database();

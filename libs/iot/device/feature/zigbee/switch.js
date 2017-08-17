@@ -55,10 +55,11 @@ class ZigbeeSwitchFeature extends SwitchFeature {
                         logger.debug("ZigbeeSwitchFeature switch status: " + item.value);
                         let data = {
                             payload: {
+                                event: iotdefinitions.EVENT_PROPERTY_REPORT,
                                 switch_status: item.value
                             }
                         };
-                        super.on_datareceive_event(data, iotdefinitions.EVENT_PROPERTY_REPORT);
+                        super.on_datareceive_event(data, iotdefinitions.EVENT_NOTIFY_USERS);
                     }
                 }
             );

@@ -66,10 +66,11 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
 
             let data = {
                 payload: {
+                    event: iotdefinitions.EVENT_PROPERTY_REPORT,
                     occupancy: this.occupancy
                 }
             };
-            super.on_datareceive_event(data, iotdefinitions.EVENT_PROPERTY_REPORT);
+            super.on_datareceive_event(data, iotdefinitions.EVENT_NOTIFY_USERS);
             this.last_update_time = Date.now();
         }
         catch (err) {
