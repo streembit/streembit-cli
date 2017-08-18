@@ -33,8 +33,8 @@ const util = require('util');
 
 class OccupancyFeature extends IoTFeature {
 
-    constructor(deviceid, feature, transport) {
-        super(deviceid, feature, transport);  
+    constructor(deviceid, feature, feature_type, transport) {
+        super(deviceid, feature, feature_type, transport);  
         this.occupancy = 0;        
     }
 

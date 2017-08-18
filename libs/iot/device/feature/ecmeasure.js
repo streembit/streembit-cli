@@ -33,8 +33,8 @@ const util = require('util');
 
 class EcMeasureFeature extends IoTFeature {
 
-    constructor(deviceid, feature, transport) {
-        super(deviceid, feature, transport);  
+    constructor(deviceid, feature, feature_type, transport) {
+        super(deviceid, feature, feature_type, transport);  
         this.voltage = constants.IOT_STATUS_UNKOWN;
         this.power_consumption = constants.IOT_STATUS_UNKOWN;        
     }

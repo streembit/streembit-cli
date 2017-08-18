@@ -35,9 +35,9 @@ const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
 class ZigbeeOccupancyFeature extends OccupancyFeature {
 
-    constructor(deviceid, feature, transport) {
-        super(deviceid, feature, transport);  
-        this.cluster = feature.cluster; 
+    constructor(deviceid, feature, feature_type,  transport) {
+        super(deviceid, feature, feature_type, transport);  
+        this.cluster = feature; 
         this.cluster_endpoint = -1;
         this.IEEEaddress = 0;
         this.NWKaddress = 0;

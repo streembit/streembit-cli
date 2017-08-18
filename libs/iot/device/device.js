@@ -37,6 +37,8 @@ class Device {
         this.protocol = device.protocol;
         this.profile = device.profile;
         this.settings = device.setting;
+        this.mcu = device.mcu;
+        this.premission = device.premission;
 
         this.m_details = {};
         try {
@@ -49,43 +51,45 @@ class Device {
 
         this.transport = transport;
         this.m_active = false;
-        this.features = new Map();
 
-        this.ispermitted = 0;
-        this.isblacklisted = 0;
+        this.featuredef = 0;
+        this.features = new Map();  
+        if (device.features) {
+            this.setfeatures(device.features);
+        }
 
         this.errors = [];        
     }
 
-    addfeatures() {  
-        let array = Devices.get_features_by_deviceid(this.id);
-        if (array && Array.isArray(array) && array.length > 0) {
-            for (let i = 0; i < array.length; i++) {
-                try {             
-                    let feature_type = array[i].type;
-                    let feature_name = iotdefinitions.FEATURETYPEMAP[feature_type];
-                    let feature_lib = "libs/iot/device/feature/" + this.protocol + "/" + feature_name;
-                    let feature_obj = require(feature_lib);
-                    let feature_handler = new feature_obj(this.id, array[i], this.transport);
-                    if (feature_handler) {
-                        this.features.set(feature_type, feature_handler);
-                        logger.debug("feature " + feature_type + " added to device " + this.id);
+    setfeatures(features) {
+        try {
+            this.featuredef = features;
+            var flist = JSON.parse(features);
+            if (flist.length) {
+                flist.forEach(
+                    (feature) => {
+                        try {
+                            let feature_type = iotdefinitions.CLUSTERMAP[feature];
+                            let feature_name = iotdefinitions.FEATURETYPEMAP[feature_type];
+                            let feature_lib = "libs/iot/device/feature/" + this.protocol + "/" + feature_name;
+                            let feature_obj = require(feature_lib);
+                            let feature_handler = new feature_obj(this.id, feature, feature_type, this.transport);
+                            if (feature_handler) {
+                                this.features.set(feature_type, feature_handler);
+                                logger.debug("feature " + feature_type + " added to device " + this.id);
+                            }
+                        }
+                        catch (err) {
+                            logger.error("add feature " + array[i].type + " handler error: %j", err);
+                        }
                     }
-                }
-                catch (err) {
-                    logger.error("add feature " + array[i].type + " handler error: %j", err);
-                }
+                );
             }
         }
+        catch (err) { }
     }
 
-    init() {
-        try {
-            this.addfeatures();
-        }
-        catch (err) {
-            throw new Error("Device init error: " + err.message);
-        }
+    init() {        
     }
 
     get active() {
@@ -172,7 +176,7 @@ class Device {
                 obj.read(payload, callback);
                 break;            
             default:
-                callback("invalid command");
+                callback("invalid command: " + payload.cmd);
                 break;
         }
     }

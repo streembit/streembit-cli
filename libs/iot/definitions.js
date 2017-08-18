@@ -44,6 +44,7 @@ var definitions = {
 
     IOT_REQUEST_DEVICES_LIST: 0x01,
     IOT_DEVICES_LIST_RESPONSE: 0x02,
+    IOT_DEVICES_LIST_CONFIGURE: 0x03,
 
     PROPERTY_HWVERSION: "hwversion",
     PROPERTY_MANUFACTURERNAME: "manufacturername",
@@ -59,6 +60,28 @@ var definitions = {
 
     MIN_REPORTING_INTERVAL: 60000,
     MAX_REPORTING_INTERVAL: (60000 * 60),
+
+    CLUSTERMAP: {
+        "0006": 2,
+        "0b04": 3,
+        "0402": 4,
+        "0405": 5,
+        "0406": 6,
+        7: UNDEFINED,
+        8: UNDEFINED,
+        9: UNDEFINED,
+        10: UNDEFINED,
+        11: UNDEFINED,
+        12: UNDEFINED,
+        13: UNDEFINED,
+        14: UNDEFINED,
+        15: UNDEFINED,
+        16: UNDEFINED,
+        17: UNDEFINED,
+        18: UNDEFINED,
+        19: UNDEFINED,
+        20: UNDEFINED
+    },
 
     FEATURETYPEMAP: {
         2: "switch",

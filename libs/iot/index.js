@@ -31,18 +31,20 @@ const Devices = require("libs/devices")
 const ZigbeeGateway = require('libs/iot/device/zigbee/gateway');
 const ZigbeeDevice = require('libs/iot/device/zigbee/device');
 const iotdefinitions = require("libs/iot/definitions");
+const async = require('async');
 
 class IoTHandler {
     constructor() {
         this.protocol_handlers = new Map();
+        this.devicelist = new Map();
     }
 
     getdevice(id) {
-        return Devices.instances.get(id);
+        return this.devicelist.get(id);
     }
 
-    setdevice(id, instance) {
-        Devices.instances.set(id, instance);
+    setdevice(id, device) {
+        this.devicelist.set(id, device);
     }
 
     getdeviceobj(type, protocol) {
@@ -90,8 +92,8 @@ class IoTHandler {
             const devices = Devices.list();
             for (let i = 0; i < devices.length; i++) {
                 let device = this.device_factory(devices[i]);
-                device.init();
                 this.setdevice(devices[i].deviceid, device);
+                device.init();
             }
 
             // create the event handlers
@@ -122,7 +124,7 @@ class IoTHandler {
 
     device_list_response(deviceid, callback) {
         try {
-            let devices = Devices.instances;
+            let devices = this.devicelist;
             let devicelist = [];
             devices.forEach(
                 (device) => {
@@ -151,6 +153,95 @@ class IoTHandler {
         }
     }
 
+    device_list_configure(id, list, callback) {
+        try {
+            if (!list || !Array.isArray(list) || !list.length) {
+                return callback("Empty list was submitted at device configuration");
+            }
+
+            var updatelist = [];
+            for (let i = 0; i < list.length; i++) {
+                let deviceid = list[i].deviceid;
+                let permission = list[i].permission;
+                let name = list[i].devicename;
+                let features = list[i].features;
+                // get the local device
+                let localdevice = this.getdevice(deviceid);
+                if (!localdevice) {
+                    return callback("the device does not exists at the Devices manager.");
+                }
+                localdevice.permission = permission;
+                localdevice.name = name;
+                if (!features || !Array.isArray(features) || !features.length) {
+                    return callback("empty feature list");
+                }
+                let strfeatures = JSON.stringify(features);
+                localdevice.setfeatures(strfeatures);
+                updatelist.push(localdevice);
+            }
+
+            // update the database
+            async.eachSeries(
+                updatelist,
+                (device, asyncfn) => {
+                    // update the device at the database
+                    Devices.update(device, asyncfn);                
+                },
+                (err) => {
+                    if (err) {
+                        return callback(err);
+                        logger.error("device_list_configure error: %j", err)
+                    }
+
+                    // reply with the permitted devices
+                    let permitted_devices = Devices.get_permitted_devices();
+                    var data = {
+                        payload: {
+                            deviceid: id,
+                            devicelist: devicelist
+                        }
+                    };
+
+                    callback(null, data);
+                }
+            );       
+
+            //
+        }
+        catch (err) {
+            if (callback) {
+                callback(err.message);
+            }
+            logger.error("device_list_configure() error: " + err.message);
+        }
+    }
+
+    create_device(payload) {
+        // some device is joined already, create a device object for it
+        let ieeeaddress = payload.address64;
+        let nwkaddress = payload.address16;
+        let protocol = payload.protocol;
+        let mcu = payload.mcu;
+        let protocol_handler = this.protocol_handlers.get(protocol);
+        let transport = protocol_handler.mcuhandler;
+        let device = {
+            "type": constants.IOT_DEVICE_ENDDEVICE,
+            "deviceid": ieeeaddress,
+            "address64": ieeeaddress,
+            "address16": nwkaddress,
+            "protocol": protocol,
+            "mcu": mcu,
+            "premission": 0,
+            "name": protocol + " device",
+            "details": "",
+            "features": ""
+        }
+
+        let zigbee_device = new ZigbeeDevice(ieeeaddress, device, transport);
+        zigbee_device.on_data_received(payload);
+        this.setdevice(device.deviceid, zigbee_device);
+    }
+
     handle_events() {
 
         // events from Streembit users
@@ -158,6 +249,9 @@ class IoTHandler {
             try {
                 if (payload.event && payload.event == iotdefinitions.IOT_REQUEST_DEVICES_LIST ) {
                     this.device_list_response(payload.id, callback);
+                }
+                else if (payload.event && payload.event == iotdefinitions.IOT_DEVICES_LIST_CONFIGURE) {
+                    this.device_list_configure(payload.id, payload.list, callback);
                 }
                 else {
                     var device = this.getdevice(payload.id);
@@ -187,26 +281,7 @@ class IoTHandler {
                     else {
                         if (payload.type == iotdefinitions.EVENT_DEVICE_ANNOUNCE ||
                             payload.type == iotdefinitions.EVENT_DEVICE_ONLINE) {
-                            // some device is joined already, create a device object for it
-                            let ieeeaddress = payload.address64;
-                            let nwkaddress = payload.address16;
-                            let protocol = payload.protocol;
-                            let mcu = payload.mcu;
-                            let protocol_handler = this.protocol_handlers.get(protocol);
-                            let transport = protocol_handler.mcuhandler;
-                            let device = {
-                                "type": constants.IOT_DEVICE_ENDDEVICE,
-                                "deviceid": ieeeaddress,
-                                "address64": ieeeaddress,
-                                "address16": nwkaddress,
-                                "protocol": protocol,
-                                "mcu": mcu,
-                                "ispermitted": 0
-                            }
-
-                            let zigbee_device = new ZigbeeDevice(ieeeaddress, device, transport);
-                            Devices.instances.set(device.deviceid, zigbee_device);
-                            zigbee_device.on_data_received(payload);
+                            this.create_device(payload);
                         }
                     }
                 }

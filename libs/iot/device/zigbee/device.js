@@ -39,7 +39,7 @@ class ZigbeeDevice extends Device {
 
             this.details.address64 = 0;
             this.details.address16 = 0;
-            this.details.descriptors = new Map();
+            this.details.descriptors = new Map();            
 
             logger.debug("Initialized Zigbee device id: " + id );
         }
@@ -138,8 +138,7 @@ class ZigbeeDevice extends Device {
             hwversion: this.details.hwversion || 0,
             manufacturername: this.details.manufacturername || 0,
             modelidentifier: this.details.modelidentifier || 0,
-            ispermitted: this.ispermitted,
-            isblacklisted: this.isblacklisted,
+            premission: this.premission,
             descriptors: descriptors //JSON.stringify(descriptors)
         };
         return data;
@@ -156,12 +155,12 @@ class ZigbeeDevice extends Device {
 
     on_device_info_completed() {
         try {
-            if (!this.isblacklisted && !this.ispermitted) {
+            if (this.premission == 0) {
                 // ask the user if the device is permitted
                 this.notify_device_info();
                 //
             }
-            else if (!this.isblacklisted && this.ispermitted) {
+            else if (this.premission == 1) {
                 this.features.forEach((feature, key, map) => {
                     feature.on_clusterlist_receive(this.details.descriptors);
                 });
@@ -246,6 +245,15 @@ class ZigbeeDevice extends Device {
 
 
     enable_join(payload, callback) {
+    }
+
+    init() {
+        try {
+            
+        }
+        catch (err) {
+            throw new Error("Device init error: " + err.message);
+        }
     }
 }
 

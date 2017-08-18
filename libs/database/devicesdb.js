@@ -77,35 +77,8 @@ class IoTDevicesDb {
         );
     }
 
-    get_features_by_devicerowid(devrowid) {
-        return new Promise(
-            (resolve, reject) => {
-                var query = "SELECT * FROM iotfeatures WHERE devrowid=?";
-                this.database.all(query, [devrowid], (err, rows) => {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve(rows);
-                });
-            }
-        );
-    }
 
-    get_features_by_deviceid(deviceid) {
-        return new Promise(
-            (resolve, reject) => {
-                var query = "SELECT * FROM vw_get_features WHERE deviceid=?";
-                this.database.all(query, [deviceid], (err, rows) => {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve(rows);
-                });
-            }
-        );
-    }
-
-    add_device(deviceid, type, protocol, mcu, details) {
+    add_device(deviceid, type, protocol, mcu, name, details, premission, features) {
         return new Promise(
             (resolve, reject) => {
                 if (!deviceid || !type || !protocol || !mcu) {
@@ -113,8 +86,8 @@ class IoTDevicesDb {
                 }
 
                 this.database.run(
-                    "INSERT INTO iotdevices (deviceid, type, protocol, mcu, details) VALUES (?,?,?,?,?)",
-                    [deviceid, type, protocol, mcu, details],
+                    "INSERT INTO iotdevices (deviceid, type, protocol, mcu, name, details, premission, features) VALUES (?,?,?,?,?,?,?,?)",
+                    [deviceid, type, protocol, mcu, name, details, premission, features],
                     (err) => {
                         if (err) {
                             return reject(err);
@@ -124,6 +97,28 @@ class IoTDevicesDb {
                 );
             }
         );        
+    }
+
+    update_device(deviceid, name, premission) {
+        return new Promise(
+            (resolve, reject) => {
+                if (!deviceid || !name ) {
+                    return reject("Invalid device data add database add_device.");
+                }
+
+                var sql = "UPDATE iotdevices SET name='" + name + "', premission=" + premission + " WHERE deviceid='" + deviceid + "'";
+                this.database.run(
+                    sql,
+                    [],
+                    (err) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve();
+                    }
+                );
+            }
+        );
     }
 
     add_feature(deviceid, type, cluster, setting) {
@@ -147,24 +142,10 @@ class IoTDevicesDb {
         );
     }
 
-    get_features() {
-        return new Promise(
-            (resolve, reject) => {
-                var query = "SELECT * FROM vw_get_features";
-                this.database.all(query, [], (err, rows) => {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve(rows);
-                });
-            }
-        );
-    }
-
     get_device_blackilst() {
         return new Promise(
             (resolve, reject) => {
-                var query = "SELECT * FROM iotdevices WHERE isblacklisted = 1";
+                var query = "SELECT * FROM iotdevices WHERE premission=2";
                 this.database.all(query, [], (err, rows) => {
                     if (err) {
                         return reject(err.message);

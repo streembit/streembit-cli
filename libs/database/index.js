@@ -215,35 +215,7 @@ class Database {
         );
     }
 
-    get_features_by_devicerowid(devrowid) {
-        return new Promise(
-            (resolve, reject) => {
-                var query = "SELECT * FROM iotfeatures WHERE devrowid=?";
-                this.sqldb.all(query, [devrowid], (err, rows) => {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve(rows);
-                });
-            }
-        );
-    }
-
-    get_features_by_deviceid(deviceid) {
-        return new Promise(
-            (resolve, reject) => {
-                var query = "SELECT * FROM vw_get_features WHERE deviceid=?";
-                this.sqldb.all(query, [deviceid], (err, rows) => {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve(rows);
-                });
-            }
-        );
-    }
-
-    add_device(deviceid, type, protocol, mcu, details) {
+    add_device(deviceid, type, protocol, mcu, name, details, premission, features) {
         return new Promise(
             (resolve, reject) => {
                 if (!deviceid || !type || !protocol || !mcu) {
@@ -251,8 +223,8 @@ class Database {
                 }
 
                 this.sqldb.run(
-                    "INSERT INTO iotdevices (deviceid, type, protocol, mcu, details) VALUES (?,?,?,?,?)",
-                    [deviceid, type, protocol, mcu, details],
+                    "INSERT INTO iotdevices (deviceid, type, protocol, mcu, name, details, premission, features) VALUES (?,?,?,?,?,?,?,?)",
+                    [deviceid, type, protocol, mcu, name, details, premission, features],
                     (err) => {
                         if (err) {
                             return reject(err);
@@ -335,23 +307,6 @@ class Database {
     }
 
     async device_to_db(device) {
-
-        function feature_indb(dbfeatures, conf) {
-            if (!dbfeatures) {
-                return false;
-            }
-
-            var exists = false;
-            dbfeatures.forEach(
-                (item) => {
-                    if (conf.type == item.type) {
-                        exists = true;
-                    }
-                }
-            );
-            return exists;
-        }
-
         try {
             let dbrow = await this.get_device(device.id);
             if (!dbrow) {
@@ -360,26 +315,12 @@ class Database {
                     type = device.type,
                     protocol = device.protocol,
                     mcu = device.mcu,
-                    details = device.details ? JSON.stringify(device.details) : null;
-                await this.add_device(deviceid, type, protocol, mcu, details);
+                    name = device.name,
+                    premission = device.premission,
+                    details = device.details ? JSON.stringify(device.details) : null,
+                    features = device.features ? JSON.stringify(device.features) : null;
+                await this.add_device(deviceid, type, protocol, mcu, name, details, premission, features);
                 dbrow = await this.get_device(device.id);
-            }
-
-            // get all features
-            let conf_features = device.features;
-            if (conf_features) {
-                let devrowid = dbrow.devrowid;
-                let features = await this.get_features_by_devicerowid(devrowid);
-                for (let i = 0; i < conf_features.length; i++) {
-                    var isadded = feature_indb(features, conf_features[i]);
-                    if (!isadded) {
-                        let type = conf_features[i].type,
-                            cluster = conf_features[i].cluster ? conf_features[i].cluster : null,
-                            settings = conf_features[i].settings ? JSON.stringify(conf_features[i].settings) : null;
-                        await this.add_feature(devrowid, type, cluster, settings);
-                        console.log("feature added to DB: " + util.inspect(conf_features[i]));
-                    }
-                }
             }
         }
         catch (err) {
@@ -480,10 +421,11 @@ class Database {
                     deviceid text NOT NULL, \
                     type integer NOT NULL, \
                     protocol text NOT NULL, \
+                    premission integer, \
                     mcu text NOT NULL, \
+                    name text, \
                     details text, \
-                    ispermitted integer, \
-                    isblacklisted integer )";
+                    features text)";  // 0 = not idenitified, 1 = permitted, 2 = blacklisted
                 await this.executecmd(iotdevices_table);                
             }
             catch (e) {
@@ -499,6 +441,7 @@ class Database {
                 return callback('create iotfeatures table error: ' + e.message);
             }           
 
+            /*
             try {
                 let exists = await this.is_table_exists("iotfeatures");
                 if (!exists) {
@@ -525,6 +468,7 @@ class Database {
             catch (e) {
                 return callback('create iotfeatures table error: ' + e.message);
             }  
+            */
 
             // make sure the users table is populated           
             try {

@@ -28,34 +28,23 @@ const async = require("async");
 const config = require("libs/config");
 const Database = require("libs/database/devicesdb");
 
-let thisobj = null;
+let instance = null;
 let m_devices = null;
-let m_features = null;
-let m_instances = null;
 
 class Devices {
 
     constructor() {
-        if (!thisobj) {
-            thisobj = this;
+        if (!instance) {
+            instance = this;
             m_devices = new Map();
-            m_features = [];
-            m_instances = new Map();
         }
-        return thisobj;
-    }
-
-    static get instances() {
-        return m_instances;
+        return instance;
     }
 
     static get devices() {
         return m_devices;
     }
 
-    static get features() {
-        return m_features;
-    }
 
     static list() {
         var list = [];
@@ -88,17 +77,18 @@ class Devices {
         return list;
     }
 
-    static get_features_by_deviceid(deviceid) {
+    static get_permitted_devices() {
         var list = [];
-        Devices.features.forEach(
+        Devices.devices.forEach(
             (item, key) => {
-                if (item.deviceid == deviceid) {
+                if (item.permission == 1) {
                     list.push(item);
                 }
             }
         );
         return list;
     }
+
 
     static get_device_by(deviceid) {
         var list = [];
@@ -114,7 +104,7 @@ class Devices {
 
     static is_device_blacklisted(deviceid) {
         let device = Devices.devices.get(deviceid);
-        if (device && device.isblacklisted) {
+        if (device && device.permission == 2) {
             return true;
         }
         else {
@@ -122,24 +112,33 @@ class Devices {
         }
     }
 
-    features_from_db() {
-        return new Promise((resolve, reject) => {
-            var db = new Database();
-            db.get_features().then(
-                (rows) => {
-                    rows.forEach(
-                        (item) => {
-                            Devices.features.push(item);
-                        }
-                    );
-                    resolve();
-                })
-                .catch(
-                    (err) => {
-                        reject(err);
-                    }
-                );
-        });
+    static async update(device, callback) {
+        try{
+            let deviceid = device.id, permission = device.permission, name = device.name, features = device.featuredef;
+            let dbdevice = Devices.devices.get(deviceid);
+        
+            let db = new Database();
+            if (!dbdevice)  {
+                // insert
+                var details = device.details ? JSON.stringify(device.details) : null;
+                await db.add_device(deviceid, device.type, device.protocol, device.mcu, name, details, permission, features);
+                // update the local list
+                Devices.devices.set(deviceid, device);
+            }
+            else {
+                // update
+                await db.update_device(deviceid, name, premission);
+                dbdevice.name = name;
+                dbdevice.premission = premission;
+                Devices.devices.set(deviceid, dbdevice);
+            }
+
+            callback();
+        }
+        catch (err) {
+            return callback(err);
+        }
+
     }
 
     devices_from_db() {
@@ -165,9 +164,8 @@ class Devices {
     init(callback) {
         try {
             this.devices_from_db()
-                .then(this.features_from_db)
                 .then(() => {
-                    logger.debug("devices initialized, total devices: " + Devices.devices.size + " features: " + Devices.features.length);
+                    logger.debug("devices initialized, total devices: " + Devices.devices.size );
                     callback()
                 })
                 .catch((err) => callback(err));

@@ -35,9 +35,9 @@ const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
 class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
-    constructor(deviceid, feature, transport, ieeeaddress, nwkaddress) {
-        super(deviceid, feature, transport);  
-        this.cluster = feature.cluster;
+    constructor(deviceid, feature, feature_type, transport, ieeeaddress, nwkaddress) {
+        super(deviceid, feature, feature_type, transport);  
+        this.cluster = feature;
         this.power_divisor = 0;
         this.power_multiplier = 1;
 

@@ -31,11 +31,11 @@ const iotdefinitions = require("libs/iot/definitions");
 const util = require("util");
 
 class IoTFeature {
-    constructor(deviceid, feature, transport) {
+    constructor(deviceid, feature, feature_type, transport) {
         this.deviceid = deviceid;
         this.transport = transport;
-        this.type = feature.type;
-        this.settings = feature.setting;
+        this.type = feature_type;
+        this.settings = 0;
         this.isactive = false;
         this.datareceived = false;
         this.callbacks = new Map();

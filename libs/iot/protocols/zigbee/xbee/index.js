@@ -1305,7 +1305,7 @@ class XbeeHandler {
         });
 
         if (!this.gateway) {
-            return logger.error("XBEE chipset was configured for Zigbee. An XBEE gateway must exists in the configuration file.");
+            return logger.error("XBEE chipset was configured for Zigbee. An XBEE gateway must exists in the database.");
         }
 
         logger.debug("Zigbee gateway is XBEE chipset, address64: " + this.gateway);
