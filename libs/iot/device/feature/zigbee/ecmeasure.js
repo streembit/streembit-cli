@@ -32,27 +32,32 @@ const async = require("async");
 const util = require('util');
 const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
+let CLUSTERID = 0x0b04;
 
 class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
     constructor(deviceid, feature, feature_type, transport, ieeeaddress, nwkaddress) {
-        super(deviceid, feature, feature_type, transport);  
-        this.cluster = feature;
+        super(deviceid, feature, feature_type, transport);
+        
+        this.cluster = feature.toLowerCase();
+        let clusternum = parseInt(this.cluster, 16);
+        if (clusternum != CLUSTERID) {
+            throw new Error("ZigbeeEcMeasureFeature " + feature + " is invalid cluster");
+        }
+
         this.power_divisor = 0;
         this.power_multiplier = 1;
 
-        var settings = 0;
         try {
             if (feature.settings) {
-                settings = JSON.parse(feature.settings);
-            }
+                let settings = JSON.parse(feature.settings);
+                if (settings) {
+                    this.power_divisor = (settings.acformatting && settings.acformatting.divisor) ? settings.acformatting.divisor : 0;
+                    this.power_multiplier = (settings && settings.acformatting && settings.acformatting.multiplier) ? settings.acformatting.multiplier : 1;
+                }
+            }            
         }
         catch (err) { }
-
-        if (settings) {
-            this.power_divisor = (settings.acformatting && settings.acformatting.divisor) ? settings.acformatting.divisor : 0;
-            this.power_multiplier = (settings && settings.acformatting && settings.acformatting.multiplier) ? settings.acformatting.multiplier : 1;
-        }
 
         this.property_names.push(iotdefinitions.PROPERTY_ACTIVEPOWER);
         this.property_names.push(iotdefinitions.PROPERTY_VOLTAGE);
@@ -117,8 +122,30 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         }
     }    
 
+    getcluster() {
+        return this.cluster.toLowerCase();
+    }
+
     iscluster(cluster) {
         return this.cluster == cluster;
+    }
+
+    // When the endpoint and cluster are identified, this receives the endpoint from the device.
+    on_clusterlist_receive(endpoint) {
+        try {
+            this.cluster_endpoint = endpoint;     
+            logger.debug("ZigbeeEcMeasureFeature cluster 0B04 exists at endpoint " + endpoint);
+
+            // bind
+            var txn = 0x51;
+            var clusterid = CLUSTERID;
+            var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddres, clusterid, this.cluster_endpoint);
+            this.transport.send(cmd);
+            
+        }
+        catch (err) {
+            logger.error("EcMeasureFeature on_clusterlist_receive() error: %j", err);
+        }
     }
 
     on_bind_complete() {
@@ -180,38 +207,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         if (this.IEEEaddress && this.NWKaddress) {
             super.on_device_online();
         }
-    }
-
-    on_clusterlist_receive(descriptor) {
-        try {
-            if (!descriptor || !descriptor.hasOwnProperty("endpoint") || !descriptor.hasOwnProperty("clusters") || !Array.isArray(descriptor.clusters) || !descriptor.clusters.length) {
-                return logger.error("Zigbee cluster descriptor is empty");
-            }
-
-            var exists = false;
-            descriptor.clusters.forEach(
-                (cluster) => {
-                    if (cluster == "0b04") {
-                        this.cluster_endpoint = descriptor.endpoint;
-                        exists = true;
-                    }
-                }
-            );
-
-            if (exists) {
-                logger.debug("ZigbeeEcMeasureFeature cluster 0B04 exists");
-
-                // bind
-                var txn = 0x51;
-                var clusterid = 0x0b04;
-                var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddres, clusterid, this.cluster_endpoint);
-                this.transport.send(cmd);
-            }
-        }
-        catch (err) {
-            logger.error("EcMeasureFeature on_clusterlist_receive() error: %j", err);
-        }
-    }
+    }    
 
     readpower() {
         var attributes = [0x05, 0x05, 0x0b, 0x05];

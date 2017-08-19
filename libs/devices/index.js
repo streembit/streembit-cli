@@ -27,6 +27,7 @@ const logger = require("libs/logger");
 const async = require("async");
 const config = require("libs/config");
 const Database = require("libs/database/devicesdb");
+const defs = require("libs/iot/definitions");
 
 let instance = null;
 let m_devices = null;
@@ -81,7 +82,7 @@ class Devices {
         var list = [];
         Devices.devices.forEach(
             (item, key) => {
-                if (item.permission == 1) {
+                if (item.permission == defs.PERMISSION_ALLOWED) {
                     list.push(item);
                 }
             }
@@ -104,7 +105,7 @@ class Devices {
 
     static is_device_blacklisted(deviceid) {
         let device = Devices.devices.get(deviceid);
-        if (device && device.permission == 2) {
+        if (device && device.permission == defs.PERMISSION_DENIED) {
             return true;
         }
         else {
@@ -114,7 +115,8 @@ class Devices {
 
     static async update(device, callback) {
         try{
-            let deviceid = device.id, permission = device.permission, name = device.name, features = device.featuredef;
+            let deviceid = device.id, permission = device.permission, name = device.name;
+            let features = device.featuredef;
             let dbdevice = Devices.devices.get(deviceid);
         
             let db = new Database();
@@ -127,9 +129,9 @@ class Devices {
             }
             else {
                 // update
-                await db.update_device(deviceid, name, premission);
+                await db.update_device(deviceid, name, permission);
                 dbdevice.name = name;
-                dbdevice.premission = premission;
+                dbdevice.permission = permission;
                 Devices.devices.set(deviceid, dbdevice);
             }
 

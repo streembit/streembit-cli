@@ -32,12 +32,19 @@ const async = require("async");
 const util = require('util');
 const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
+let CLUSTERID = 0x0406;
 
 class ZigbeeOccupancyFeature extends OccupancyFeature {
 
     constructor(deviceid, feature, feature_type,  transport) {
         super(deviceid, feature, feature_type, transport);  
-        this.cluster = feature; 
+
+        this.cluster = feature.toLowerCase();
+        let clusternum = parseInt(this.cluster, 16);
+        if (clusternum != CLUSTERID) {
+            throw new Error("ZigbeeOccupancyFeature " + feature + " is invalid cluster");
+        }
+
         this.cluster_endpoint = -1;
         this.IEEEaddress = 0;
         this.NWKaddress = 0;
@@ -78,8 +85,23 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
         }
     }    
 
+    getcluster() {
+        return this.cluster.toLowerCase();
+    }
+
     iscluster(cluster) {
         return this.cluster == cluster;
+    }
+
+    on_clusterlist_receive(endpoint) {
+        this.cluster_endpoint = endpoint;
+        logger.debug("ZigbeeOccupancyFeature cluster 0406 exists at endpoint " + endpoint);
+
+        // bind
+        var txn = 0x53;
+        var clusterid = CLUSTERID;
+        var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddres, clusterid, this.cluster_endpoint);
+        this.transport.send(cmd);        
     }
 
     on_bind_complete() {
@@ -133,32 +155,6 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
 
         if (this.IEEEaddress && this.NWKaddress) {
             super.on_device_online();
-        }
-    }
-
-    on_clusterlist_receive(descriptor) {
-        if (!descriptor || !descriptor.hasOwnProperty("endpoint") || !descriptor.hasOwnProperty("clusters") || !Array.isArray(descriptor.clusters) || !descriptor.clusters.length) {
-            return logger.error("Zigbee cluster descriptor is empty");
-        }
-
-        var exists = false;
-        descriptor.clusters.forEach(
-            (cluster) => {
-                if (cluster == "0406") {
-                    this.cluster_endpoint = descriptor.endpoint;
-                    exists = true;
-                }
-            }
-        );
-
-        if (exists) {
-            logger.debug("ZigbeeOccupancyFeature cluster 0406 exists");
-
-            // bind
-            var txn = 0x53;
-            var clusterid = 0x0406;
-            var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddres, clusterid, this.cluster_endpoint);
-            this.transport.send(cmd);
         }
     }
 

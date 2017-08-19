@@ -58,6 +58,10 @@ class ZwaveSwitchFeature extends SwitchFeature {
     get_switchstatus(payload, callback) {
     }
 
+    // start managing features
+    // called once the permission is PERMISSION_ALLOWED and the comm is established
+    process_features() {
+    }
 }
 
 module.exports = ZwaveSwitchFeature;

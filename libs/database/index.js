@@ -215,7 +215,7 @@ class Database {
         );
     }
 
-    add_device(deviceid, type, protocol, mcu, name, details, premission, features) {
+    add_device(deviceid, type, protocol, mcu, name, details, permission, features) {
         return new Promise(
             (resolve, reject) => {
                 if (!deviceid || !type || !protocol || !mcu) {
@@ -223,8 +223,8 @@ class Database {
                 }
 
                 this.sqldb.run(
-                    "INSERT INTO iotdevices (deviceid, type, protocol, mcu, name, details, premission, features) VALUES (?,?,?,?,?,?,?,?)",
-                    [deviceid, type, protocol, mcu, name, details, premission, features],
+                    "INSERT INTO iotdevices (deviceid, type, protocol, mcu, name, details, permission, features) VALUES (?,?,?,?,?,?,?,?)",
+                    [deviceid, type, protocol, mcu, name, details, permission, features],
                     (err) => {
                         if (err) {
                             return reject(err);
@@ -316,10 +316,10 @@ class Database {
                     protocol = device.protocol,
                     mcu = device.mcu,
                     name = device.name,
-                    premission = device.premission,
+                    permission = device.permission,
                     details = device.details ? JSON.stringify(device.details) : null,
                     features = device.features ? JSON.stringify(device.features) : null;
-                await this.add_device(deviceid, type, protocol, mcu, name, details, premission, features);
+                await this.add_device(deviceid, type, protocol, mcu, name, details, permission, features);
                 dbrow = await this.get_device(device.id);
             }
         }
@@ -421,7 +421,7 @@ class Database {
                     deviceid text NOT NULL, \
                     type integer NOT NULL, \
                     protocol text NOT NULL, \
-                    premission integer, \
+                    permission integer, \
                     mcu text NOT NULL, \
                     name text, \
                     details text, \

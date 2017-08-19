@@ -21,10 +21,17 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-const UNDEFINED = "undefined";
+const UNDEFINED = 0;
+const NOTHANDLED = -1;
 
 var definitions = {
+
     ZIGBEE: "zigbee",
+    ZWAVE: "zwave",
+
+    PERMISSION_NOT_COMISSIONED: 0,
+    PERMISSION_ALLOWED: 1,
+    PERMISSION_DENIED: 2,
 
     IOT_DATA_RECEIVED_EVENT: "iot_data_received",
     EVENT_RADIO_ERROR: "radio_error",
@@ -61,7 +68,8 @@ var definitions = {
     MIN_REPORTING_INTERVAL: 60000,
     MAX_REPORTING_INTERVAL: (60000 * 60),
 
-    CLUSTERMAP: {
+    ZIGBEE_CLUSTERMAP: {
+        "0000": 1,
         "0006": 2,
         "0b04": 3,
         "0402": 4,
@@ -83,7 +91,31 @@ var definitions = {
         20: UNDEFINED
     },
 
+    ZIGBEE_TYPEMAP: {
+        1: "0000",
+        2: "0006",
+        3: "0b04",
+        4: "0402",
+        5: "0405",
+        6: "0406",
+        7: UNDEFINED,
+        8: UNDEFINED,
+        9: UNDEFINED,
+        10: UNDEFINED,
+        11: UNDEFINED,
+        12: UNDEFINED,
+        13: UNDEFINED,
+        14: UNDEFINED,
+        15: UNDEFINED,
+        16: UNDEFINED,
+        17: UNDEFINED,
+        18: UNDEFINED,
+        19: UNDEFINED,
+        20: UNDEFINED
+    },
+
     FEATURETYPEMAP: {
+        1: NOTHANDLED,
         2: "switch",
         3: "ecmeasure",
         4: "temperature",

@@ -78,7 +78,7 @@ class IoTDevicesDb {
     }
 
 
-    add_device(deviceid, type, protocol, mcu, name, details, premission, features) {
+    add_device(deviceid, type, protocol, mcu, name, details, permission, features) {
         return new Promise(
             (resolve, reject) => {
                 if (!deviceid || !type || !protocol || !mcu) {
@@ -86,8 +86,8 @@ class IoTDevicesDb {
                 }
 
                 this.database.run(
-                    "INSERT INTO iotdevices (deviceid, type, protocol, mcu, name, details, premission, features) VALUES (?,?,?,?,?,?,?,?)",
-                    [deviceid, type, protocol, mcu, name, details, premission, features],
+                    "INSERT INTO iotdevices (deviceid, type, protocol, mcu, name, details, permission, features) VALUES (?,?,?,?,?,?,?,?)",
+                    [deviceid, type, protocol, mcu, name, details, permission, features],
                     (err) => {
                         if (err) {
                             return reject(err);
@@ -99,14 +99,14 @@ class IoTDevicesDb {
         );        
     }
 
-    update_device(deviceid, name, premission) {
+    update_device(deviceid, name, permission) {
         return new Promise(
             (resolve, reject) => {
                 if (!deviceid || !name ) {
                     return reject("Invalid device data add database add_device.");
                 }
 
-                var sql = "UPDATE iotdevices SET name='" + name + "', premission=" + premission + " WHERE deviceid='" + deviceid + "'";
+                var sql = "UPDATE iotdevices SET name='" + name + "', permission=" + permission + " WHERE deviceid='" + deviceid + "'";
                 this.database.run(
                     sql,
                     [],
@@ -145,7 +145,7 @@ class IoTDevicesDb {
     get_device_blackilst() {
         return new Promise(
             (resolve, reject) => {
-                var query = "SELECT * FROM iotdevices WHERE premission=2";
+                var query = "SELECT * FROM iotdevices WHERE permission=2";
                 this.database.all(query, [], (err, rows) => {
                     if (err) {
                         return reject(err.message);

@@ -60,6 +60,11 @@ class ZwaveEcMeasureFeature extends EcMeasureFeature {
     get_powerconsumption(callback) {
     }
 
+    // start managing features
+    // called once the permission is PERMISSION_ALLOWED and the comm is established
+    process_features() {       
+    }
+
 }
 
 module.exports = ZwaveEcMeasureFeature;

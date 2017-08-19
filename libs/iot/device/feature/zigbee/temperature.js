@@ -31,13 +31,20 @@ const logger = require("libs/logger");
 const util = require('util');
 const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
-const TEMPSENS_TIMEOUT = 10000; 
+let TEMPSENS_TIMEOUT = 10000; 
+let CLUSTERID = 0x0402;
 
 class ZigbeeTemperatureFeature extends TemperatureFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
         super(deviceid, feature, feature_type, transport);     
-        this.cluster = feature;
+
+        this.cluster = feature.toLowerCase();
+        let clusternum = parseInt(this.cluster, 16);
+        if (clusternum != CLUSTERID) {
+            throw new Error("ZigbeeTemperatureFeature " + feature + " is invalid cluster");
+        }
+
         this.cluster_endpoint = -1;
         this.IEEEaddress = 0;
         this.NWKaddress = 0;
@@ -80,8 +87,28 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         }        
     }
 
+    getcluster() {
+        return this.cluster.toLowerCase();
+    }
+
     iscluster(cluster) {
         return this.cluster == cluster;
+    }
+
+    on_clusterlist_receive(endpoint) {
+        try {
+            this.cluster_endpoint = endpoint;    
+            logger.debug("ZigbeeTemperatureFeature cluster 0402 at endpoint " + endpoint);
+
+            // bind
+            var txn = 0x52;
+            var clusterid = CLUSTERID;
+            var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, clusterid, this.cluster_endpoint);
+            this.transport.send(cmd);            
+        }
+        catch (err) {
+            logger.error("ZigbeeTemperatureFeature on_clusterlist_receive() error: %j", err);
+        }
     }
 
     on_bind_complete() {
@@ -106,37 +133,6 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         }
     }
 
-    on_clusterlist_receive(descriptor) {
-        try {
-            if (!descriptor || !descriptor.hasOwnProperty("endpoint") || !descriptor.hasOwnProperty("clusters") || !Array.isArray(descriptor.clusters) || !descriptor.clusters.length) {
-                return logger.error("Zigbee cluster descriptor is empty");
-            }
-
-            var exists = false;
-            descriptor.clusters.forEach(
-                (cluster) => {
-                    if (cluster == "0402") {
-                        this.cluster_endpoint = descriptor.endpoint;
-                        exists = true;
-                    }
-                }
-            );
-            
-            if (exists) {
-                logger.debug("ZigbeeTemperatureFeature cluster 0402 exists");
-
-                // bind
-                var txn = 0x52;
-                var clusterid = 0x0402;
-                var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, clusterid, this.cluster_endpoint);
-                this.transport.send(cmd);
-            }
-        }
-        catch (err) {
-            logger.error("ZigbeeTemperatureFeature on_clusterlist_receive() error: %j", err);
-        }
-    }
-    
     on_device_online(properties) {       
         if (properties && Array.isArray(properties) && properties.length) {
             properties.forEach(

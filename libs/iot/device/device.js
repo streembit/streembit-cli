@@ -38,7 +38,7 @@ class Device {
         this.profile = device.profile;
         this.settings = device.setting;
         this.mcu = device.mcu;
-        this.premission = device.premission;
+        this.permission = device.permission;
 
         this.m_details = {};
         try {
@@ -52,24 +52,47 @@ class Device {
         this.transport = transport;
         this.m_active = false;
 
-        this.featuredef = 0;
+        // this should store the device specific features string from the database, in case of Zigbee the clusters i.e. 0006, 0b04 etc.
+        this.featuredef = device.features;  
         this.features = new Map();  
-        if (device.features) {
-            this.setfeatures(device.features);
+        if (this.featuredef && this.featuredef.length) {
+            this.setfeatures();
         }
 
         this.errors = [];        
     }
 
-    setfeatures(features) {
+    get featuretypes() {
+        var types = [];
+        if (this.features) {
+            this.features.forEach(
+                (feature, type) => {
+                    types.push(parseInt(type)); // make sure sending a number
+                }
+            );
+        }
+        return types;
+    }
+
+    setfeatures() {
         try {
-            this.featuredef = features;
-            var flist = JSON.parse(features);
+            if (!this.featuredef || typeof this.featuredef != "string") {
+                throw new Error("the Device setfeatures() can be called if the featuredef proeprty is not empty");
+            }
+
+            var flist = 0;
+            try {
+                flist = JSON.parse(this.featuredef);
+            }
+            catch (e) {
+                throw new Error("JSON parse of featuredef failed. The featuredef variable must be a valid array")
+            }
+
             if (flist.length) {
                 flist.forEach(
                     (feature) => {
                         try {
-                            let feature_type = iotdefinitions.CLUSTERMAP[feature];
+                            let feature_type = iotdefinitions.ZIGBEE_CLUSTERMAP[feature]; // maps the Zigbee cluster to our generic feature type
                             let feature_name = iotdefinitions.FEATURETYPEMAP[feature_type];
                             let feature_lib = "libs/iot/device/feature/" + this.protocol + "/" + feature_name;
                             let feature_obj = require(feature_lib);
@@ -80,13 +103,15 @@ class Device {
                             }
                         }
                         catch (err) {
-                            logger.error("add feature " + array[i].type + " handler error: %j", err);
+                            logger.error("setfeatures() feature type " + feature + " error: %j", err);
                         }
                     }
                 );
             }
         }
-        catch (err) { }
+        catch (err) {
+            logger.error("Device setfeatures() error: %j", err)
+        }
     }
 
     init() {        

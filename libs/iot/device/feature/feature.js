@@ -31,10 +31,18 @@ const iotdefinitions = require("libs/iot/definitions");
 const util = require("util");
 
 class IoTFeature {
-    constructor(deviceid, feature, feature_type, transport) {
+    constructor(deviceid, feature, featuretype, transport) {
+        if (!feature || typeof feature != "string" ) {
+            throw new Error("IoTFeature error, the feature cannot be empty and must be a string");
+        }
+
+        if (!featuretype) {
+            throw new Error("IoTFeature error, the feature type must be bigger than 0");
+        }
+
         this.deviceid = deviceid;
         this.transport = transport;
-        this.type = feature_type;
+        this.type = featuretype;
         this.settings = 0;
         this.isactive = false;
         this.datareceived = false;

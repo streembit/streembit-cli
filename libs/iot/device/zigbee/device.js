@@ -48,6 +48,17 @@ class ZigbeeDevice extends Device {
         }
     }
 
+    types_to_features(types) {
+        var features = [];
+        for (let i = 0; i < types.length; i++) {
+            let val = iotdefinitions.ZIGBEE_TYPEMAP[types[i]];
+            if (val && typeof val == "string")  {
+                features.push(val);
+            }
+        }
+        return features;
+    }
+
     on_device_online(payload) {
         this.details.address64 = payload.address64;
         this.details.address16 = payload.address16;
@@ -98,6 +109,34 @@ class ZigbeeDevice extends Device {
         this.transport.send(cmd);
     }
 
+    select_descriptor(cluster) {
+        var endpoint = -1; 
+        this.details.descriptors.forEach(
+            (clusters, endpoint) => {
+                for (let i = 0; i < clusters.length; i++) {
+                    if (cluster == clusters[i]) {
+                        endpoint = endpoint;
+                    }
+                }
+            }
+        );
+
+        return endpoint;
+    }
+
+    process_features() {
+        if (this.permission != iotdefinitions.PERMISSION_ALLOWED) {
+            // don't perform the binding and reporting in case the device permission is not sufficient
+            return;
+        }
+
+        this.features.forEach((feature, key, map) => {
+            let cluster = feature.getcluster();
+            let endpoint = this.select_descriptor(cluster);
+            feature.on_clusterlist_receive(endpoint);
+        });
+    }
+
     on_clusterlist_receive(payload) {
         if (payload && payload.descriptor && payload.descriptor.endpoint && payload.descriptor.clusters) {
             // add the cluster list to the map
@@ -110,24 +149,30 @@ class ZigbeeDevice extends Device {
                 this.transport.send(cmd);
             }
             else {
-                this.on_device_info_completed();
+                this.process_clusters();
             }
         }
     }
 
     get_device_info() {
 
-        var descriptors = [];
-        this.details.descriptors.forEach(
-            (clusters, endpoint) => {
-                descriptors.push(
-                    {
-                        endpoint: endpoint,
-                        clusters: clusters
+        var features = [];
+        if (this.permission == iotdefinitions.PERMISSION_NOT_COMISSIONED) {
+            // translate the descriptors to our feature types in case of not comissioned devices
+            this.details.descriptors.forEach(
+                (clusters, endpoint) => {
+                    for (let i = 0; i < clusters.length; i++) {
+                        let val = iotdefinitions.ZIGBEE_CLUSTERMAP[clusters[i]];
+                        if (val > 0) {
+                            features.push(val);
+                        }
                     }
-                );
-            }
-        );
+                }
+            );
+        }
+        else if (this.permission == iotdefinitions.PERMISSION_ALLOWED) {
+            features = this.featuretypes;
+        }
 
         var data = {
             deviceid: this.id,
@@ -138,8 +183,8 @@ class ZigbeeDevice extends Device {
             hwversion: this.details.hwversion || 0,
             manufacturername: this.details.manufacturername || 0,
             modelidentifier: this.details.modelidentifier || 0,
-            premission: this.premission,
-            descriptors: descriptors //JSON.stringify(descriptors)
+            permission: this.permission,
+            features: features
         };
         return data;
     }
@@ -155,15 +200,13 @@ class ZigbeeDevice extends Device {
 
     on_device_info_completed() {
         try {
-            if (this.premission == 0) {
+            if (this.permission == iotdefinitions.PERMISSION_NOT_COMISSIONED) {
                 // ask the user if the device is permitted
                 this.notify_device_info();
                 //
             }
-            else if (this.premission == 1) {
-                this.features.forEach((feature, key, map) => {
-                    feature.on_clusterlist_receive(this.details.descriptors);
-                });
+            else if (this.permission == iotdefinitions.PERMISSION_ALLOWED) {
+                this.process_features();
             }
         }
         catch (err) {

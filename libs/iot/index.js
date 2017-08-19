@@ -153,6 +153,25 @@ class IoTHandler {
         }
     }
 
+    on_devices_comissioned(devices) {
+        try {
+            if (devices && devices.length) {
+                devices.forEach(
+                    (device) => {
+                        if (device.permission == iotdefinitions.PERMISSION_ALLOWED) {
+                            // the device has just been saved to the database some features must exists
+                            device.setfeatures();
+
+                        }
+                    }
+                );
+            }
+        }
+        catch (cerr) {
+            logger.error("on_devices_comissioned() error: %j", cerr);
+        }
+    }
+
     device_list_configure(id, list, callback) {
         try {
             if (!list || !Array.isArray(list) || !list.length) {
@@ -164,19 +183,27 @@ class IoTHandler {
                 let deviceid = list[i].deviceid;
                 let permission = list[i].permission;
                 let name = list[i].devicename;
-                let features = list[i].features;
+                let featuretypes = list[i].features;
                 // get the local device
                 let localdevice = this.getdevice(deviceid);
                 if (!localdevice) {
                     return callback("the device does not exists at the Devices manager.");
                 }
-                localdevice.permission = permission;
-                localdevice.name = name;
-                if (!features || !Array.isArray(features) || !features.length) {
-                    return callback("empty feature list");
+
+                localdevice.permission = permission;                
+
+                if (permission == iotdefinitions.PERMISSION_ALLOWED) {
+                    localdevice.name = name;
+
+                    if (!featuretypes || !Array.isArray(featuretypes) || !featuretypes.length) {
+                        return callback("Empty feature list. Allowed devices must have some features.");
+                    }
+                    // set the features translate the integer feature type to device specific clusters (in case of Zigbee)
+                    let features = localdevice.types_to_features(featuretypes);
+                    let strfeatures = JSON.stringify(features);
+                    localdevice.featuredef = strfeatures;
                 }
-                let strfeatures = JSON.stringify(features);
-                localdevice.setfeatures(strfeatures);
+
                 updatelist.push(localdevice);
             }
 
@@ -185,24 +212,38 @@ class IoTHandler {
                 updatelist,
                 (device, asyncfn) => {
                     // update the device at the database
-                    Devices.update(device, asyncfn);                
+                    try {
+                        Devices.update(device, asyncfn);
+                    }
+                    catch (asyncerr) {
+                        asyncfn(asyncerr);
+                    }
                 },
                 (err) => {
                     if (err) {
-                        return callback(err);
-                        logger.error("device_list_configure error: %j", err)
+                        logger.error("device_list_configure error: %j", err);
+                        return callback(err);                        
                     }
 
-                    // reply with the permitted devices
-                    let permitted_devices = Devices.get_permitted_devices();
-                    var data = {
-                        payload: {
-                            deviceid: id,
-                            devicelist: devicelist
-                        }
-                    };
+                    try {
+                        // reply with the permitted devices
+                        let permitted_devices = Devices.get_permitted_devices();
+                        var data = {
+                            payload: {
+                                deviceid: id,
+                                devicelist: devicelist
+                            }
+                        };
 
-                    callback(null, data);
+                        callback(null, data);
+
+                        // these devices has been just commissioned (approved), init the features, etc.
+                        this.on_devices_comissioned(updatelist);
+
+                    }
+                    catch (cerr) {
+                        logger.error("device_list_configure after complete error: %j", cerr);
+                    }
                 }
             );       
 
@@ -231,7 +272,7 @@ class IoTHandler {
             "address16": nwkaddress,
             "protocol": protocol,
             "mcu": mcu,
-            "premission": 0,
+            "permission": iotdefinitions.PERMISSION_NOT_COMISSIONED,
             "name": protocol + " device",
             "details": "",
             "features": ""
