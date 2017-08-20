@@ -50,6 +50,7 @@ class IoTProtocolHandler {
 
     init() {        
     }
+
 }
 
 module.exports = IoTProtocolHandler;

@@ -47,22 +47,26 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
         this.power_divisor = 0;
         this.power_multiplier = 1;
+        this.voltage_divisor = 0;
+        this.voltage_multiplier = 1;
 
-        try {
-            if (feature.settings) {
-                let settings = JSON.parse(feature.settings);
-                if (settings) {
-                    this.power_divisor = (settings.acformatting && settings.acformatting.divisor) ? settings.acformatting.divisor : 0;
-                    this.power_multiplier = (settings && settings.acformatting && settings.acformatting.multiplier) ? settings.acformatting.multiplier : 1;
-                }
-            }            
-        }
-        catch (err) { }
+        //try {
+        //    if (feature.settings) {
+        //        let settings = JSON.parse(feature.settings);
+        //        if (settings) {
+        //            this.power_divisor = (settings.acformatting && settings.acformatting.divisor) ? settings.acformatting.divisor : 0;
+        //            this.power_multiplier = (settings && settings.acformatting && settings.acformatting.multiplier) ? settings.acformatting.multiplier : 1;
+        //        }
+        //    }            
+        //}
+        //catch (err) { }
 
         this.property_names.push(iotdefinitions.PROPERTY_ACTIVEPOWER);
         this.property_names.push(iotdefinitions.PROPERTY_VOLTAGE);
         this.property_names.push(iotdefinitions.PROPERTY_POWERMULTIPLIER);
         this.property_names.push(iotdefinitions.PROPERTY_POWERDIVISOR);
+        this.property_names.push(iotdefinitions.PROPERTY_VOLTAGEMULTIPLIER);
+        this.property_names.push(iotdefinitions.PROPERTY_VOLTAGEDIVISOR);
 
         this.cluster_endpoint = -1;
         this.IEEEaddress = ieeeaddress || 0;
@@ -95,9 +99,16 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                         logger.debug("ZigbeeEcMeasureFeature power: %d Watt", this.power_consumption);
                     }
                     else if (item.property == iotdefinitions.PROPERTY_VOLTAGE) {
-                        let voltage = item.value;
-                        this.voltage = voltage;                        
-                        data.payload.voltage = voltage;
+                        let value = item.value;
+                        if (this.voltage_divisor > 0) {
+                            value = value / this.voltage_divisor;
+                        }
+                        if (this.voltage_multiplier) {
+                            value = value * this.voltage_multiplier;
+                        }
+
+                        this.voltage = value;                        
+                        data.payload.voltage = value;
                         logger.debug("ZigbeeEcMeasureFeature voltage: %d Volt", this.voltage);
                     }
                     else if (item.property == iotdefinitions.PROPERTY_POWERMULTIPLIER) {
@@ -107,6 +118,14 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                     else if (item.property == iotdefinitions.PROPERTY_POWERDIVISOR) {
                         this.power_divisor = item.value;
                         logger.debug("PROPERTY_POWERDIVISOR: %d", this.power_divisor);                        
+                    }
+                    else if (item.property == iotdefinitions.PROPERTY_VOLTAGEMULTIPLIER) {
+                        this.voltage_multiplier = item.value;
+                        logger.debug("PROPERTY_VOLTAGEMULTIPLIER: %d", this.voltage_multiplier);
+                    }
+                    else if (item.property == iotdefinitions.PROPERTY_VOLTAGEDIVISOR) {
+                        this.voltage_divisor = item.value;
+                        logger.debug("PROPERTY_VOLTAGEDIVISOR: %d", this.voltage_divisor);
                     }
                 }
             );
@@ -122,12 +141,8 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         }
     }    
 
-    getcluster() {
-        return this.cluster.toLowerCase();
-    }
-
-    iscluster(cluster) {
-        return this.cluster == cluster;
+    iscluster(param) {
+        return this.cluster == param;
     }
 
     // When the endpoint and cluster are identified, this receives the endpoint from the device.
@@ -139,7 +154,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
             // bind
             var txn = 0x51;
             var clusterid = CLUSTERID;
-            var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddres, clusterid, this.cluster_endpoint);
+            var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, clusterid, this.cluster_endpoint);
             this.transport.send(cmd);
             
         }
@@ -153,7 +168,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
             var cluster = 0x0b04;
             var reports = [];
             // power
-            var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 0x0005;
+            var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 2;
             reports.push(
                 {
                     attribute: attribute,
@@ -165,7 +180,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
             );
 
             // voltage
-            attribute = 0x0505, datatype = 0x21, mininterval = 0x02, maxinterval = 0x0031, reportable_change = 0x0005;
+            attribute = 0x0505, datatype = 0x21, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 50;
             reports.push(
                 {
                     attribute: attribute,
@@ -176,7 +191,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                 }
             );
 
-            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddres, cluster, reports, this.cluster_endpoint);
+            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, cluster, reports, this.cluster_endpoint);
             this.transport.send(cmd);
 
             // read the settings
@@ -211,13 +226,13 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
     readpower() {
         var attributes = [0x05, 0x05, 0x0b, 0x05];
-        var cmd = zigbeecmd.readAttributes(this.IEEEaddress, this.NWKaddres, 0x0b04, attributes, this.cluster_endpoint);
+        var cmd = zigbeecmd.readAttributes(this.IEEEaddress, this.NWKaddress, 0x0b04, attributes, this.cluster_endpoint);
         this.transport.send(cmd);        
     }
 
     read_settings() {
-        var attributes = [0x05, 0x06, 0x04, 0x06];
-        var cmd = zigbeecmd.readAttributes(this.IEEEaddress, this.NWKaddres, 0x0b04, attributes, this.cluster_endpoint);
+        var attributes = [0x00, 0x06, 0x01, 0x06, 0x05, 0x06, 0x04, 0x06];
+        var cmd = zigbeecmd.readAttributes(this.IEEEaddress, this.NWKaddress, 0x0b04, attributes, this.cluster_endpoint);
         this.transport.send(cmd);
     }
 

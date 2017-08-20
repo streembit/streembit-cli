@@ -161,7 +161,7 @@ class IoTHandler {
                         if (device.permission == iotdefinitions.PERMISSION_ALLOWED) {
                             // the device has just been saved to the database some features must exists
                             device.setfeatures();
-
+                            device.process_features();
                         }
                     }
                 );
@@ -227,14 +227,24 @@ class IoTHandler {
 
                     try {
                         // reply with the permitted devices
-                        let permitted_devices = Devices.get_permitted_devices();
+                        let allowed_devices = [];
+                        this.devicelist.forEach(
+                            (device) => {
+                                if (device.permission == iotdefinitions.PERMISSION_ALLOWED) {
+                                    // TODO get the features list correctly
+                                    let info = device.get_device_info();
+                                    allowed_devices.push(info);
+                                }
+                            }
+                        );
                         var data = {
                             payload: {
                                 deviceid: id,
-                                devicelist: devicelist
+                                devicelist: allowed_devices
                             }
                         };
 
+                        // TODO features is empty here
                         callback(null, data);
 
                         // these devices has been just commissioned (approved), init the features, etc.
@@ -315,14 +325,25 @@ class IoTHandler {
             iotdefinitions.IOT_DATA_RECEIVED_EVENT,
             (payload) => {
                 try {
-                    var device = this.getdevice(payload.deviceid);
-                    if (device) {
-                        device.on_data_received(payload);
+                    if (payload.type == iotdefinitions.EVENT_GATEWAY_UPDATED) {
+                        this.protocol_handlers.forEach(
+                            (handler) => {
+                                if (handler.on_gateway_updated && typeof handler.on_gateway_updated === "function") {
+                                    handler.on_gateway_updated(payload);
+                                }
+                            }
+                        );
                     }
                     else {
-                        if (payload.type == iotdefinitions.EVENT_DEVICE_ANNOUNCE ||
-                            payload.type == iotdefinitions.EVENT_DEVICE_ONLINE) {
-                            this.create_device(payload);
+                        var device = this.getdevice(payload.deviceid);
+                        if (device) {
+                            device.on_data_received(payload);
+                        }
+                        else {
+                            if (payload.type == iotdefinitions.EVENT_DEVICE_ANNOUNCE ||
+                                payload.type == iotdefinitions.EVENT_DEVICE_ONLINE) {
+                                this.create_device(payload);
+                            }
                         }
                     }
                 }

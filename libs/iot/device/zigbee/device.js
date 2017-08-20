@@ -62,8 +62,7 @@ class ZigbeeDevice extends Device {
     on_device_online(payload) {
         this.details.address64 = payload.address64;
         this.details.address16 = payload.address16;
-        logger.debug("ZigbeeDevice address64: " + this.details.address64 + " online");
-        logger.debug("ZigbeeDevice address16: " + this.details.address16 + " online");
+        logger.debug("ZigbeeDevice address64: " + this.details.address64 + " address16: " + this.details.address16 + " online");
 
         // send a ZDO 0x0005 "Active Endpoint Request"
         var cmd = zigbeecmd.active_endpoint_request(this.details.address64, this.details.address16);
@@ -109,13 +108,13 @@ class ZigbeeDevice extends Device {
         this.transport.send(cmd);
     }
 
-    select_descriptor(cluster) {
-        var endpoint = -1; 
+    select_endpoint(cluster) {
+        var endpoint = null; 
         this.details.descriptors.forEach(
-            (clusters, endpoint) => {
+            (clusters, endpoint_keyval) => {
                 for (let i = 0; i < clusters.length; i++) {
                     if (cluster == clusters[i]) {
-                        endpoint = endpoint;
+                        endpoint = endpoint_keyval;
                     }
                 }
             }
@@ -131,9 +130,14 @@ class ZigbeeDevice extends Device {
         }
 
         this.features.forEach((feature, key, map) => {
-            let cluster = feature.getcluster();
-            let endpoint = this.select_descriptor(cluster);
-            feature.on_clusterlist_receive(endpoint);
+            let cluster = feature.cluster;
+            let endpoint = this.select_endpoint(cluster);
+            if (endpoint == null || endpoint < 0) {
+                logger.error("process_features() error: endpoint is not available for cluster " + cluster);
+            }
+            else {
+                feature.on_clusterlist_receive(endpoint);
+            }
         });
     }
 
@@ -178,12 +182,14 @@ class ZigbeeDevice extends Device {
             deviceid: this.id,
             type: this.type,
             protocol: this.protocol,
+            network: iotdefinitions.IOT_NETWORK_ZIGBEE,
             address64: this.details.address64,
             address16: this.details.address16,
             hwversion: this.details.hwversion || 0,
             manufacturername: this.details.manufacturername || 0,
             modelidentifier: this.details.modelidentifier || 0,
             permission: this.permission,
+            name: this.name,
             features: features
         };
         return data;

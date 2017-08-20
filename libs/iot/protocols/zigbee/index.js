@@ -31,7 +31,7 @@ const util = require('util');
 const IoTProtocolHandler = require("libs/iot/protocols");
 const Devices = require("libs/devices");
 const iotdefinitions = require("libs/iot/definitions");
-
+const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
 class ZigbeeHandler extends IoTProtocolHandler {
 
@@ -50,6 +50,10 @@ class ZigbeeHandler extends IoTProtocolHandler {
             throw new Error("Zigbee protocol handler init error: " + err.message);
         }
     }    
+
+    on_gateway_updated(payload) {
+        zigbeecmd.on_gateway_updated(payload);
+    }
 }
 
 module.exports = ZigbeeHandler;

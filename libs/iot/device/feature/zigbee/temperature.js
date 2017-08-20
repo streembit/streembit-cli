@@ -87,12 +87,8 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         }        
     }
 
-    getcluster() {
-        return this.cluster.toLowerCase();
-    }
-
-    iscluster(cluster) {
-        return this.cluster == cluster;
+    iscluster(param) {
+        return this.cluster == param;
     }
 
     on_clusterlist_receive(endpoint) {
@@ -134,21 +130,8 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
     }
 
     on_device_online(properties) {       
-        if (properties && Array.isArray(properties) && properties.length) {
-            properties.forEach(
-                (item) => {
-                    if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
-                        if (item.name == "address64") {
-                            this.IEEEaddress = item.value;
-                        }
-                        else if (item.name == "address16") {
-                            this.NWKaddress = item.value;
-                        }
-                    }
-                }
-            );
-        }
-
+        this.IEEEaddress = properties.address64;
+        this.NWKaddress = properties.address16;
         if (this.IEEEaddress && this.NWKaddress) {
             super.on_device_online();
         }

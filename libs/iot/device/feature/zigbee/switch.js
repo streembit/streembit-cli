@@ -77,23 +77,19 @@ class ZigbeeSwitchFeature extends SwitchFeature {
         }
     }
 
-    getcluster() {
-        return this.cluster.toLowerCase();
-    }
-
-    iscluster(cluster) {
-        return this.cluster == cluster;
+    iscluster(param) {
+        return this.cluster == param;
     }
 
     on_clusterlist_receive(endpoint) {
         try {
             this.cluster_endpoint = endpoint;
-            logger.debug("SwitchFeature cluster 0006 at endpoint " + endpoint);
+            logger.debug("SwitchFeature cluster 0006 exists at endpoint " + endpoint);
 
             // bind
             var txn = 0x50;
             var clusterid = CLUSTERID;
-            var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddres, clusterid, this.cluster_endpoint);
+            var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, clusterid, this.cluster_endpoint);
             this.transport.send(cmd);            
         }
         catch (err) {
@@ -103,7 +99,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
 
     on_bind_complete(payload) {
         try {
-            var cluster = 0x0006;
+            var cluster = CLUSTERID;
             var attribute = 0x0000, datatype = 0x10, mininterval = 0x02, maxinterval = 0x0040;
             var reports = [];
             reports.push(
@@ -115,7 +111,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
                 }
             );
 
-            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddres, cluster, reports, this.cluster_endpoint);
+            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, cluster, reports, this.cluster_endpoint);
             this.transport.send(cmd);            
         }
         catch (err) {
@@ -127,21 +123,8 @@ class ZigbeeSwitchFeature extends SwitchFeature {
     }
 
     on_device_online(properties) {   
-        if (properties && Array.isArray(properties) && properties.length) {
-            properties.forEach(
-                (item) => {
-                    if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
-                        if (item.name == "address64") {
-                            this.IEEEaddress = item.value;
-                        }
-                        else if (item.name == "address16") {
-                            this.NWKaddress = item.value;
-                        }
-                    }
-                }
-            );
-        }
-
+        this.IEEEaddress = properties.address64;
+        this.NWKaddress = properties.address16;
         if (this.IEEEaddress && this.NWKaddress) {
             super.on_device_online();
         }

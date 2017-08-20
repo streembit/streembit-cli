@@ -29,6 +29,10 @@ var definitions = {
     ZIGBEE: "zigbee",
     ZWAVE: "zwave",
 
+    IOT_NETWORK_ZIGBEE: 1,
+    IOT_NETWORK_ZWAVE: 2,
+    IOT_NETWORK_SLOWPAN: 3,
+
     PERMISSION_NOT_COMISSIONED: 0,
     PERMISSION_ALLOWED: 1,
     PERMISSION_DENIED: 2,
@@ -48,6 +52,7 @@ var definitions = {
     EVENT_ENDDEVICE_JOINED: "iot_enddevice_joined", 
     EVENT_DEVICES_LIST: "iot_devices_list",
     EVENT_NOTIFY_USERS: "iot_notify_users",
+    EVENT_GATEWAY_UPDATED: "iot_gateway_updated",
 
     IOT_REQUEST_DEVICES_LIST: 0x01,
     IOT_DEVICES_LIST_RESPONSE: 0x02,
@@ -63,6 +68,8 @@ var definitions = {
     PROPERTY_RELATIVE_HUMIDITY: "relative_humidity",
     PROPERTY_POWERDIVISOR: "power_divisor",
     PROPERTY_POWERMULTIPLIER: "power_multiplier",
+    PROPERTY_VOLTAGEMULTIPLIER: "voltage_multiplier",
+    PROPERTY_VOLTAGEDIVISOR: "voltage_divisor",
     PROPERTY_OCCUPANCY: "occupancy",
 
     MIN_REPORTING_INTERVAL: 60000,

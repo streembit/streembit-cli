@@ -39,6 +39,7 @@ class Device {
         this.settings = device.setting;
         this.mcu = device.mcu;
         this.permission = device.permission;
+        this.name = device.name;
 
         this.m_details = {};
         try {
@@ -64,20 +65,35 @@ class Device {
 
     get featuretypes() {
         var types = [];
-        if (this.features) {
-            this.features.forEach(
-                (feature, type) => {
-                    types.push(parseInt(type)); // make sure sending a number
+        // get it from the featuredef
+        if (!this.featuredef || typeof this.featuredef != "string") {
+            throw new Error("featuretypes can be called if the featuredef property is not empty");
+        }
+
+        var flist = 0;
+        try {
+            flist = JSON.parse(this.featuredef);
+        }
+        catch (e) {
+            throw new Error("JSON parse of featuredef failed. The featuredef variable must be a valid array")
+        }
+
+        if (flist.length) {
+            flist.forEach(
+                (feature) => {
+                    let feature_type = iotdefinitions.ZIGBEE_CLUSTERMAP[feature]; 
+                    types.push(feature_type);
                 }
             );
         }
+
         return types;
     }
 
     setfeatures() {
         try {
             if (!this.featuredef || typeof this.featuredef != "string") {
-                throw new Error("the Device setfeatures() can be called if the featuredef proeprty is not empty");
+                throw new Error("the Device setfeatures() can be called if the featuredef property is not empty");
             }
 
             var flist = 0;

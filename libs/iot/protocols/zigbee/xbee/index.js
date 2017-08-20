@@ -448,33 +448,29 @@ class XbeeHandler {
                 }
                 let datatype = reader.nextUInt8();
 
-                if (attribute == 0x050b) { 
-                    if (datatype != 0x29) {
-                        return null;
-                    }
+                if (attribute == 0x050b && datatype == 0x29) { 
                     value = reader.nextInt16LE();
                     property_name = iotdefinitions.PROPERTY_ACTIVEPOWER;
                 }
-                else if (attribute == 0x0505) { 
-                    if (datatype != 0x21) {
-                        return null;
-                    }
+                else if (attribute == 0x0505 && datatype == 0x21) { 
                     value = reader.nextUInt16LE();
                     property_name = iotdefinitions.PROPERTY_VOLTAGE;
                 }
-                else if (attribute == 0x0605) { 
-                    if (datatype != 0x21) {
-                        return null;
-                    }
+                else if (attribute == 0x0605 && datatype == 0x21) { 
                     value = reader.nextInt16LE();
                     property_name = iotdefinitions.PROPERTY_POWERDIVISOR;
                 }
-                else if (attribute == 0x0604) { 
-                    if (datatype != 0x21) {
-                        return null;
-                    }
+                else if (attribute == 0x0604 && datatype == 0x21) { 
                     value = reader.nextInt16LE();
                     property_name = iotdefinitions.PROPERTY_POWERMULTIPLIER;
+                }
+                else if (attribute == 0x0600 && datatype == 0x21) {
+                    value = reader.nextInt16LE();
+                    property_name = iotdefinitions.PROPERTY_VOLTAGEMULTIPLIER;
+                }
+                else if (attribute == 0x0601 && datatype == 0x21) {
+                    value = reader.nextInt16LE();
+                    property_name = iotdefinitions.PROPERTY_VOLTAGEDIVISOR;
                 }
 
                 if (property_name) {
@@ -497,20 +493,16 @@ class XbeeHandler {
         var properties = [];
 
         var currpos = reader.tell();
-        if (currpos < bufferlen - 5) {
-            var prop = read_next_attribute();
-            if (prop) {
-                properties.push(prop);
-            }
-        }
+        var remaining = bufferlen - currpos;
 
-        currpos = reader.tell();
-        if (currpos < bufferlen - 5) {
+        while (remaining > 4) {
             var prop = read_next_attribute();
             if (prop) {
                 properties.push(prop);
             }
-        }
+            currpos = reader.tell();
+            remaining = bufferlen - currpos;
+        }            
 
         this.dispatch_datarcv_event(
             {
@@ -561,7 +553,8 @@ class XbeeHandler {
         }
     }
 
-    handle_cluster_0b04 (frame) {
+    handle_cluster_0b04(frame) {
+        console.log(util.inspect(frame));
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
@@ -689,20 +682,6 @@ class XbeeHandler {
         //
     }
 
-    //handle_cluster_0013(frame) {
-    //    //console.log(util.inspect(frame));
-
-    //    // reply with 0x0005 Active Endpoint Request
-    //    var addressbuf = Buffer.from(frame.remote16, 'hex');
-    //    addressbuf.swap16();
-    //    const aerbuf = Buffer.alloc(3);
-    //    aerbuf.writeUInt8(0x12, 0); // transaction sequence number (arbitrarily chosen)                        
-    //    addressbuf.copy(aerbuf, 1);
-    //    var aerdata = [...aerbuf];
-    //    //console.log("handle_cluster_0013() Active Endpoint Request data: " + util.inspect(aerdata));
-    //    this.active_endpoint_request(frame.remote64, frame.remote16, aerdata);
-    //}
-
     handle_cluster_0000(frame) {
         try {
             //console.log(util.inspect(frame));
@@ -791,98 +770,9 @@ class XbeeHandler {
                     "deviceid": frame.remote64,
                     "properties": properties
                 }
-            );
+            );          
 
-            /*
-            var attr1a = reader.nextUInt8();
-            var attr1b = reader.nextUInt8();
-            var attr1c = reader.nextUInt8();
-            if (attr1b != 0x00) {
-                return logger.error("handle_cluster_0000() invalid data attribute");
-            }
-
-            if (attr1c != 0x00) {
-                return logger.error("handle_cluster_0000() invalid status");
-            }
-
-            if (attr1a == 0x03) {
-                var datatype = reader.nextUInt8();
-                if (datatype != 0x20) {
-                    return logger.error("handle_cluster_0000() data type for 0003 is NOT UInt8(0x20)");
-                }
-
-                var hardware_version = reader.nextUInt8();
-                logger.debug("hardware_version: %d", hardware_version);
-
-                var properties = {};
-                properties[iotdefinitions.PROPERTY_HWVERSION] = hardware_version;
-                properties[iotdefinitions.PROPERTY_HWVERSION] = hardware_version;
-                properties[iotdefinitions.PROPERTY_HWVERSION] = hardware_version;
-
-                // 0x0003 HWVersion
-                this.dispatch_datarcv_event(
-                    {
-                        "type": iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE,
-                        "deviceid": frame.remote64,
-                        "properties": [
-                            {
-                                "property": iotdefinitions.PROPERTY_HWVERSION,
-                                "value": hardware_version
-                            }
-                        ]
-                    }
-                );      
-            }
-            else if (attr1a == 0x04) {
-                var datatype = reader.nextUInt8();
-                if (datatype != 0x42) {
-                    return logger.error("handle_cluster_0000() data type for 0004 is NOT string (0x42)");
-                }
-
-                reader.nextUInt8();
-                var strbuffer = reader.restAll();
-                var manufacturer = strbuffer.toString('utf8');
-                logger.debug("manufacturer: %s", manufacturer);
-                // 0x0004 ManufacturerName
-                this.dispatch_datarcv_event(
-                    {
-                        "type": iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE,
-                        "deviceid": frame.remote64,
-                        "properties": [
-                            {
-                                "property": iotdefinitions.PROPERTY_MANUFACTURERNAME,
-                                "value": manufacturer
-                            }
-                        ]
-                    }
-                );      
-            }
-            else if (attr1a == 0x05) {
-                var datatype = reader.nextUInt8();
-                if (datatype != 0x42) {
-                    return logger.error("handle_cluster_0000() data type for 0005 is NOT string (0x42)");
-                }
-
-                reader.nextUInt8();
-                var strbuffer = reader.restAll();
-                var modelid = strbuffer.toString('utf8');
-                logger.debug("modelid: %s", modelid);
-                // 0x0005 ModelIdentifier
-                this.dispatch_datarcv_event(
-                    {
-                        "type": iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE,
-                        "deviceid": frame.remote64,
-                        "properties": [
-                            {
-                                "property": iotdefinitions.PROPERTY_MODELIDENTIFIER,
-                                "value": modelid
-                            }
-                        ]
-                    }
-                );      
-            }
-            */
-
+            //
         }
         catch (err) {
             logger.error("handle_cluster_0000 error: %j", err);
@@ -911,7 +801,7 @@ class XbeeHandler {
                     cluster = "0006";
                     break;
                 case BIND_ID_ELECTRICAL_MEASUREMENT:
-                    cluster = "0B04";
+                    cluster = "0b04";
                     break;
                 case BIND_ID_TEMPERATURE:
                     cluster = "0402";

@@ -24,7 +24,6 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const util = require('util');
-const gateway = require('libs/iot/device/zigbee/gateway');
 
 let txnmap = {};
 txnmap[constants.IOT_CLUSTER_READATTRIBUTE] = 0x74;
@@ -43,8 +42,16 @@ txnmap[constants.IOT_CLUSTER_SWITCHON] = 0xad;
 txnmap[constants.IOT_CLUSTER_SWITCHTOGGLE] = 0xae;
 txnmap[constants.IOT_CLUSTER_CONFIGUREREPORT] = 0xdd;        
 
+let zigbeegateway = {};
+
 class ZigbeeCommands {
     constructor() {        
+    }
+
+    static on_gateway_updated(payload) {
+        zigbeegateway.address64 = payload.address64;
+        zigbeegateway.address16 = payload.address16;
+        zigbeegateway.endpoint = payload.endpoint;
     }
 
     static getTxn(clusterId) {
@@ -171,9 +178,21 @@ class ZigbeeCommands {
         var source64 = ZigbeeCommands.swapEUI64toLittleEndian(address64);
         var srcendpoint = deviceendpoint;
 
-        var destaddress16 = gateway.address16;
-        var destendpoint = gateway.endpoint;
-        var gateway64 = gateway.address64;
+        var destaddress16 = zigbeegateway.address16;
+        if (!destaddress16) {
+            throw new Error("invalid gateway NWK address");
+        }
+
+        var destendpoint = zigbeegateway.endpoint;
+        if (destendpoint == null) {
+            throw new Error("invalid gateway endpoint");
+        }
+
+        var gateway64 = zigbeegateway.address64;
+        if (!gateway64) {
+            throw new Error("invalid gateway IEEE address");
+        }
+
         var dest64buf = ZigbeeCommands.swapEUI64toLittleEndian(gateway64);
 
         const bindingbuf = Buffer.alloc(22);
@@ -212,7 +231,7 @@ class ZigbeeCommands {
             txid: txn,
             destination64: address64,
             destination16: address16, 
-            sourceEndpoint: gateway.endpoint, 
+            sourceEndpoint: zigbeegateway.endpoint, 
             destinationEndpoint: destendpoint, 
             clusterId: 0x0402,
             profileId: 0x0104,
@@ -235,7 +254,7 @@ class ZigbeeCommands {
             txid: txn,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: gateway.endpoint,
+            sourceEndpoint: zigbeegateway.endpoint,
             destinationEndpoint: destendpoint,
             clusterId: clusterId,
             profileId: 0x0104,
@@ -251,7 +270,7 @@ class ZigbeeCommands {
             txid: txn,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: gateway.endpoint,
+            sourceEndpoint: zigbeegateway.endpoint,
             destinationEndpoint: destendpoint,
             clusterId: 0x0006,
             profileId: 0x0104,
@@ -267,7 +286,7 @@ class ZigbeeCommands {
             txid: txn,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: gateway.endpoint,
+            sourceEndpoint: zigbeegateway.endpoint,
             destinationEndpoint: destendpoint,
             clusterId: 0x0006,
             profileId: 0x0104,
@@ -283,7 +302,7 @@ class ZigbeeCommands {
             txid: txn,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: gateway.endpoint,
+            sourceEndpoint: zigbeegateway.endpoint,
             destinationEndpoint: destendpoint,
             clusterId: 0x0020,
             profileId: 0x0104,
@@ -299,7 +318,7 @@ class ZigbeeCommands {
             txid: txn,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: gateway.endpoint,
+            sourceEndpoint: zigbeegateway.endpoint,
             destinationEndpoint: destendpoint,
             clusterId: 0x0b04,
             profileId: 0x0104,
@@ -316,7 +335,7 @@ class ZigbeeCommands {
             txid: txn,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: gateway.endpoint,
+            sourceEndpoint: zigbeegateway.endpoint,
             destinationEndpoint: destendpoint,
             clusterId: 0x0b04,
             profileId: 0x0104,
@@ -332,7 +351,7 @@ class ZigbeeCommands {
             txid: txn,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: gateway.endpoint,
+            sourceEndpoint: zigbeegateway.endpoint,
             destinationEndpoint: destendpoint,
             clusterId: 0x0b04,
             profileId: 0x0104,
@@ -349,7 +368,7 @@ class ZigbeeCommands {
             txid: txn,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: gateway.endpoint,
+            sourceEndpoint: zigbeegateway.endpoint,
             destinationEndpoint: destendpoint,
             clusterId: 0x0b04,
             profileId: 0x0104,
@@ -413,7 +432,7 @@ class ZigbeeCommands {
             txid: txn,
             destination64: address64,
             destination16: address16,
-            sourceEndpoint: gateway.endpoint,
+            sourceEndpoint: zigbeegateway.endpoint,
             destinationEndpoint: destendpoint,
             clusterId: cluster,
             profileId: 0x0104,

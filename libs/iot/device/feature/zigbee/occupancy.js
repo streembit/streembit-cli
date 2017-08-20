@@ -85,12 +85,8 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
         }
     }    
 
-    getcluster() {
-        return this.cluster.toLowerCase();
-    }
-
-    iscluster(cluster) {
-        return this.cluster == cluster;
+    iscluster(param) {
+        return this.cluster == param;
     }
 
     on_clusterlist_receive(endpoint) {
@@ -100,7 +96,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
         // bind
         var txn = 0x53;
         var clusterid = CLUSTERID;
-        var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddres, clusterid, this.cluster_endpoint);
+        var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, clusterid, this.cluster_endpoint);
         this.transport.send(cmd);        
     }
 
@@ -121,7 +117,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
                 }
             );
 
-            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddres, cluster, reports, this.cluster_endpoint);
+            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, cluster, reports, this.cluster_endpoint);
             this.transport.send(cmd);
         }
         catch (err) {
@@ -138,21 +134,8 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
     }
 
     on_device_online(properties) {
-        if (properties && Array.isArray(properties) && properties.length) {
-            properties.forEach(
-                (item) => {
-                    if (item.hasOwnProperty("name") && item.hasOwnProperty("value")) {
-                        if (item.name == "address64") {
-                            this.IEEEaddress = item.value;
-                        }
-                        else if (item.name == "address16") {
-                            this.NWKaddress = item.value;
-                        }
-                    }
-                }
-            );
-        }
-
+        this.IEEEaddress = properties.address64;
+        this.NWKaddress = properties.address16;
         if (this.IEEEaddress && this.NWKaddress) {
             super.on_device_online();
         }
@@ -160,7 +143,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
 
     read_occupancy(callback) {
         var attributes = [0x00, 0x00];
-        var cmd = zigbeecmd.readAttributes(this.IEEEaddress, this.NWKaddres, 0x0406, attributes, this.cluster_endpoint);
+        var cmd = zigbeecmd.readAttributes(this.IEEEaddress, this.NWKaddress, 0x0406, attributes, this.cluster_endpoint);
         this.transport.send(cmd);
     }
 

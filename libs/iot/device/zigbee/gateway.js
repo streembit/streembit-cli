@@ -42,6 +42,7 @@ class ZigbeeGateway extends Device {
         try {
             super(id, device, cmdbuilder, transport);
             m_endpoint = (this.details && this.details.endpoint) ? this.details.endpoint : 0;
+            this.permission = iotdefinitions.PERMISSION_ALLOWED;
             logger.debug("Initialized ZigbeeGateway device id: " + id);            
         }
         catch (err) {
@@ -67,8 +68,18 @@ class ZigbeeGateway extends Device {
                 this.active = true;
                 m_address64 = payload.address64;
                 m_address16 = payload.address16;
-                logger.debug("ZigbeeGatewayDevice address64: " + m_address64);
-                logger.debug("ZigbeeGatewayDevice address16: " + m_address16);
+                logger.debug("ZigbeeGatewayDevice address64: " + m_address64 + ", address16: " + m_address16);
+
+                // update other devices
+                events.emit(
+                    iotdefinitions.IOT_DATA_RECEIVED_EVENT,
+                    {
+                        "type": iotdefinitions.EVENT_GATEWAY_UPDATED,
+                        "address64": m_address64,
+                        "address16": m_address16,
+                        "endpoint": m_endpoint
+                    }
+                );  
 
                 // enable join for 120 seconds
                 var cmd = zigbeecmd.permitJoinRequest(m_address64, m_address16, 120);
@@ -85,10 +96,12 @@ class ZigbeeGateway extends Device {
     }
 
     get_device_info() {
-        this.details["address64"] = m_address64;
-        this.details["address16"] = m_address16;
-        this.details["deviceid"] = this.id;
-        return this.details;
+        var info = this.details;
+        info["address64"] = m_address64;
+        info["address16"] = m_address16;
+        info["deviceid"] = this.id;
+        info["type"] = this.type;
+        return info;
     }
 
 }
