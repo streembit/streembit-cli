@@ -43,6 +43,8 @@ class ZigbeeGateway extends Device {
             super(id, device, cmdbuilder, transport);
             m_endpoint = (this.details && this.details.endpoint) ? this.details.endpoint : 0;
             this.permission = iotdefinitions.PERMISSION_ALLOWED;
+            this.active = false;
+
             logger.debug("Initialized ZigbeeGateway device id: " + id);            
         }
         catch (err) {
@@ -64,7 +66,7 @@ class ZigbeeGateway extends Device {
 
     on_data_received(payload) {
         try {
-            if (payload.type == iotdefinitions.EVENT_DEVICE_ONLINE) {
+            if (payload.type == iotdefinitions.EVENT_DEVICE_ONLINE && !this.active) {
                 this.active = true;
                 m_address64 = payload.address64;
                 m_address16 = payload.address16;
@@ -82,8 +84,7 @@ class ZigbeeGateway extends Device {
                 );  
 
                 // enable join for 120 seconds
-                var cmd = zigbeecmd.permitJoinRequest(m_address64, m_address16, 120);
-                this.transport.send(cmd);
+                this.enable_join();
             }
            
         }
@@ -92,7 +93,12 @@ class ZigbeeGateway extends Device {
         }
     }
 
-    enable_join(payload, callback) {
+    enable_join(interval) {
+        // enable join for 120 seconds
+        var time = interval || 120;
+        logger.debug("Gateway " + this.id + " enable join for " + time + " seconds.")
+        var cmd = zigbeecmd.permitJoinRequest(m_address64, m_address16, time);
+        this.transport.send(cmd);
     }
 
     get_device_info() {

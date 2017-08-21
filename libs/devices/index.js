@@ -91,7 +91,7 @@ class Devices {
     }
 
 
-    static get_device_by(deviceid) {
+    static get_devices_byid(deviceid) {
         var list = [];
         Devices.devices.forEach(
             (item, key) => {
@@ -103,6 +103,14 @@ class Devices {
         return list;
     }
 
+    static get_device(deviceid) {
+        var device = null;
+        if (Devices.devices.has(deviceid)) {
+            device = Devices.devices.get(deviceid);
+        }
+        return device;
+    }
+
     static is_device_blacklisted(deviceid) {
         let device = Devices.devices.get(deviceid);
         if (device && device.permission == defs.PERMISSION_DENIED) {
@@ -111,6 +119,24 @@ class Devices {
         else {
             return false;
         }
+    }
+
+    static async set_device_permission(deviceid, permission, callback) {        
+        try {
+            let db = new Database();
+            await db.update_device_permission(deviceid, permission);
+
+            let dbdevice = Devices.devices.get(deviceid);
+            dbdevice.permission = permission;
+
+            callback();
+
+            //
+        }
+        catch (err) {
+            return callback(err);
+        }
+
     }
 
     static async update(device, callback) {

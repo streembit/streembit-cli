@@ -25,7 +25,6 @@ const constants = require("libs/constants");
 const config = require("libs/config");
 const logger = require("libs/logger");
 const events = require("libs/events");
-const WebSocket = require("libs/websocket");
 const util = require("util");
 const Devices = require("libs/devices")
 const ZigbeeGateway = require('libs/iot/device/zigbee/gateway');
@@ -48,13 +47,13 @@ class IoTHandler {
     }
 
     getdeviceobj(type, protocol) {
-        if (type == constants.IOT_DEVICE_GATEWAY) {
-            if (protocol == constants.IOT_PROTOCOL_ZIGBEE) {
+        if (type == iotdefinitions.IOT_DEVICE_GATEWAY) {
+            if (protocol == iotdefinitions.ZIGBEE) {
                 return ZigbeeGateway;
             }
         }
-        else if (type == constants.IOT_DEVICE_ENDDEVICE) {
-            if (protocol == constants.IOT_PROTOCOL_ZIGBEE) {
+        else if (type == iotdefinitions.IOT_DEVICE_ENDDEVICE) {
+            if (protocol == iotdefinitions.ZIGBEE) {
                 return ZigbeeDevice;
             }
         }
@@ -62,13 +61,24 @@ class IoTHandler {
 
     device_factory(device) {
         // the type must be the correct one in the config.js file
-        var device_instance = this.getdeviceobj(device.type, device.protocol);
+        let device_instance = this.getdeviceobj(device.type, device.protocol);
         if (!device_instance) {
             throw new Error("Device type " + device.type + " is not implemented. Provide the correct configuration settings in the config.js file.");
         }
 
         var protocolhandler = this.protocol_handlers.get(device.protocol);
-        return new device_instance(device.deviceid, device, protocolhandler.mcuhandler);
+
+        let deviceid = device.deviceid;
+        if (!deviceid) {
+            deviceid = device.id;
+        }
+
+        if (!deviceid) {
+            throw new Error("Device factory error: invalid device ID");
+        }
+
+        return new device_instance(deviceid, device, protocolhandler.mcuhandler);
+        
     }
 
     init() {
@@ -89,20 +99,19 @@ class IoTHandler {
                 this.protocol_handlers.set(protocols[i].name, handler);             
             };
          
-            const devices = Devices.list();
+            let devices = Devices.list();
             for (let i = 0; i < devices.length; i++) {
-                let device = this.device_factory(devices[i]);
-                this.setdevice(devices[i].deviceid, device);
-                device.init();
+                if (devices[i].permission == iotdefinitions.PERMISSION_DENIED) {
+                    logger.debug("skip device " + devices[i].deviceid + " PERMISSION_DENIED");
+                }
+                else {
+                    let device = this.device_factory(devices[i]);
+                    this.setdevice(devices[i].deviceid, device);
+                }
             }
 
             // create the event handlers
-            this.handle_events();
-
-            // start the websocket server
-            var port = conf.wsport ? conf.wsport : 32318;
-            var wsserver = new WebSocket(port);
-            wsserver.init();
+            this.handle_events();          
 
             // initiaize the transports
             this.protocol_handlers.forEach(
@@ -118,6 +127,57 @@ class IoTHandler {
         }
         catch (err) {
             logger.error("IoT handler error: " + err.message);
+        }
+    }
+
+
+    join_device(payload) {
+        // some device is joined already, create a device object for it
+        let id = payload.address64;
+        if (!id) {
+            console.log("join_device(payload) -> " + util.inspect(payload));
+            return logger.error("IoT handler join_device() error: invalid device ID");
+        }
+
+        let protocol = payload.protocol;
+        if (protocol == iotdefinitions.ZIGBEE) {
+            let protocol_handler = this.protocol_handlers.get(protocol);
+            let transport = protocol_handler.mcuhandler;
+            let nwkaddress = payload.address16;
+
+            let device = 0;
+            // try to get the device from the database
+            var dbdevice = Devices.get_device(id);
+            if (dbdevice) {
+                dbdevice.id = id;
+                dbdevice.address64 = payload.address64;
+                if (nwkaddress) {
+                    dbdevice.address16 = nwkaddress;
+                }
+                device = dbdevice;
+            }
+            else {                
+                let mcu = payload.mcu;
+                device = {
+                    "type": iotdefinitions.IOT_DEVICE_ENDDEVICE,
+                    "deviceid": id,
+                    "address64": payload.address64,
+                    "address16": nwkaddress,
+                    "protocol": protocol,
+                    "mcu": mcu,
+                    "permission": iotdefinitions.PERMISSION_NOT_COMISSIONED,
+                    "name": protocol + " device",
+                    "details": "",
+                    "features": ""
+                }
+            }
+
+            let zigbee_device = new ZigbeeDevice(id, device, transport);
+            zigbee_device.on_data_received(payload);
+            this.setdevice(device.deviceid, zigbee_device);
+        }
+        else if (protocol == iotdefinitions.ZWAVE) {
+            // TODO
         }
     }
 
@@ -153,6 +213,144 @@ class IoTHandler {
         }
     }
 
+    send_all_devices(deviceid, callback) {
+        try {
+            let devices = Devices.list();
+            devices.forEach(
+                (device) => {
+                    try {
+                        let typeslist = [];
+                        if (device.type == iotdefinitions.IOT_DEVICE_ENDDEVICE) {
+                            if (device.features && typeof device.features == "string") {
+                                let flist = JSON.parse(device.features);
+                                if (!flist || !flist.length) {
+                                    throw new Error("No features exist for device " + device.deviceid);
+                                }
+
+                                flist.forEach(
+                                    (feature) => {
+                                        let featuretype = iotdefinitions.ZIGBEE_CLUSTERMAP[feature];
+                                        typeslist.push(featuretype);
+                                    }
+                                );
+                                device.features = typeslist;
+                            }
+                        }
+                    }
+                    catch (e) {
+                        throw new Error("JSON parse of features failed. Features must be a valid array. Error: " + e.message)
+                    }
+                }
+            );
+
+            var data = {
+                payload: {
+                    event: iotdefinitions.IOT_ALLDEVICES_LIST_RESPONSE,
+                    deviceid: deviceid,
+                    devicelist: devices
+                }
+            };
+
+            callback(null, data);
+
+            //
+        }
+        catch (err) {
+            if (callback) {
+                callback(err.message);
+            }
+            logger.error("device_list_response() error: " + err.message);
+        }
+    }
+
+    enable_join(payload, callback) {
+        try {
+            var enabled = false;
+            var gatewayid = payload.id;
+            var interval = payload.interval;
+            this.devicelist.forEach(
+                (device) => {
+                    if (device.type == iotdefinitions.IOT_DEVICE_GATEWAY && device.id == gatewayid) {
+                        device.enable_join(interval);
+                        enabled = true;
+                    }
+                }
+            );
+            if (enabled) {
+                let data = {
+                    payload: {
+                        deviceid: gatewayid,
+                        event: iotdefinitions.IOT_ENABLE_JOIN_RESPONSE,
+                        interval: interval
+                    }
+                };
+                callback(null, data);
+            }
+            else {
+                callback("Enable join error, the device was not found.");
+            }
+        }
+        catch (err) {
+            callback(err);
+            logger.error("enable_join() error: %j", cerr);
+        }
+    }
+
+    on_device_allowed(deviceid) {
+        try {
+            // enable the gateway to accept devices
+            this.devicelist.forEach(
+                (device) => {
+                    if (device.type == iotdefinitions.IOT_DEVICE_GATEWAY) {
+                        device.enable_join();
+                    }
+                }
+            );
+            
+            setTimeout(
+                (err) => {
+                    if (err) {
+                        return logger.error("on_device_allowed() error: %j", err);
+                    }
+
+                    let device = this.getdevice(deviceid);
+                    if (device) {
+                        device.permission = iotdefinitions.PERMISSION_ALLOWED;
+                        this.setdevice(deviceid, device);
+                        device.init();
+                    }
+                    else{
+                        // must exists in the database
+                        device = Devices.get_device(deviceid);
+                        if (!device) {
+                            return logger.error("Device " + deviceid + " does not exists in the database.");
+                        }
+                        let deviceobj = this.device_factory(device);
+                        this.setdevice(deviceid, deviceobj);
+                        deviceobj.init();
+                    }                  
+
+                    //
+                },
+                2000
+            ); 
+        }
+        catch (cerr) {
+            logger.error("on_device_allowed() error: %j", cerr);
+        }
+    }
+
+    on_device_denied(deviceid) {
+        try {
+            let device = this.getdevice(deviceid);
+            device.permission = iotdefinitions.PERMISSION_DENIED;
+            device.disjoin();
+        }
+        catch (cerr) {
+            logger.error("on_device_denied() error: %j", cerr);
+        }
+    }
+
     on_devices_comissioned(devices) {
         try {
             if (devices && devices.length) {
@@ -169,6 +367,55 @@ class IoTHandler {
         }
         catch (cerr) {
             logger.error("on_devices_comissioned() error: %j", cerr);
+        }
+    }
+
+    set_device_permission(data, callback) {
+        try {
+            let gatewayid = data.id;
+            let deviceid = data.payload.deviceid;
+            let permission = data.payload.permission;
+            Devices.set_device_permission(deviceid, permission,
+                (err) => {
+                    if (err) {
+                        logger.error("set_device_permission() error: %j", err);
+                        return callback(err);
+                    }
+
+                    try {
+                        // return the set permission
+                        let data = {
+                            payload: {
+                                gateway: gatewayid,
+                                deviceid: deviceid,
+                                permission: permission
+                            }
+                        };
+                        callback(null, data);
+
+                        
+                        if (permission == iotdefinitions.PERMISSION_ALLOWED) {
+                            // the device has been just commissioned (approved), init the features, etc.
+                            this.on_device_allowed(deviceid);
+                        }
+                        else {
+                            this.on_device_denied(deviceid);
+                        }
+
+                    }
+                    catch (cerr) {
+                        logger.error("device_list_configure after complete error: %j", cerr);
+                    }
+                }
+            );
+
+            //
+        }
+        catch (err) {
+            if (callback) {
+                callback(err.message);
+            }
+            logger.error("device_list_response() error: " + err.message);
         }
     }
 
@@ -231,7 +478,6 @@ class IoTHandler {
                         this.devicelist.forEach(
                             (device) => {
                                 if (device.permission == iotdefinitions.PERMISSION_ALLOWED) {
-                                    // TODO get the features list correctly
                                     let info = device.get_device_info();
                                     allowed_devices.push(info);
                                 }
@@ -243,8 +489,6 @@ class IoTHandler {
                                 devicelist: allowed_devices
                             }
                         };
-
-                        // TODO features is empty here
                         callback(null, data);
 
                         // these devices has been just commissioned (approved), init the features, etc.
@@ -267,32 +511,6 @@ class IoTHandler {
         }
     }
 
-    create_device(payload) {
-        // some device is joined already, create a device object for it
-        let ieeeaddress = payload.address64;
-        let nwkaddress = payload.address16;
-        let protocol = payload.protocol;
-        let mcu = payload.mcu;
-        let protocol_handler = this.protocol_handlers.get(protocol);
-        let transport = protocol_handler.mcuhandler;
-        let device = {
-            "type": constants.IOT_DEVICE_ENDDEVICE,
-            "deviceid": ieeeaddress,
-            "address64": ieeeaddress,
-            "address16": nwkaddress,
-            "protocol": protocol,
-            "mcu": mcu,
-            "permission": iotdefinitions.PERMISSION_NOT_COMISSIONED,
-            "name": protocol + " device",
-            "details": "",
-            "features": ""
-        }
-
-        let zigbee_device = new ZigbeeDevice(ieeeaddress, device, transport);
-        zigbee_device.on_data_received(payload);
-        this.setdevice(device.deviceid, zigbee_device);
-    }
-
     handle_events() {
 
         // events from Streembit users
@@ -303,6 +521,15 @@ class IoTHandler {
                 }
                 else if (payload.event && payload.event == iotdefinitions.IOT_DEVICES_LIST_CONFIGURE) {
                     this.device_list_configure(payload.id, payload.list, callback);
+                }
+                else if (payload.event && payload.event == iotdefinitions.IOT_ALLDEVICES_LIST_REQUEST) {
+                    this.send_all_devices(payload.id, callback);
+                }
+                else if (payload.event && payload.event == iotdefinitions.IOT_SET_DEVICE_PERMISSION_REQUEST) {
+                    this.set_device_permission(payload, callback);
+                }
+                else if (payload.event && payload.event == iotdefinitions.IOT_ENABLE_JOIN_REQUEST) {
+                    this.enable_join(payload, callback);
                 }
                 else {
                     var device = this.getdevice(payload.id);
@@ -342,7 +569,7 @@ class IoTHandler {
                         else {
                             if (payload.type == iotdefinitions.EVENT_DEVICE_ANNOUNCE ||
                                 payload.type == iotdefinitions.EVENT_DEVICE_ONLINE) {
-                                this.create_device(payload);
+                                this.join_device(payload);
                             }
                         }
                     }
@@ -353,6 +580,7 @@ class IoTHandler {
             }
         );
     }
+
 }
 
 module.exports = IoTHandler; 

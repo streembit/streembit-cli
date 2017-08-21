@@ -554,7 +554,7 @@ class XbeeHandler {
     }
 
     handle_cluster_0b04(frame) {
-        console.log(util.inspect(frame));
+        //console.log(util.inspect(frame));
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
@@ -780,11 +780,15 @@ class XbeeHandler {
     }
 
     handle_cluster_0020(frame) {
-        console.log(util.inspect(frame));
+        //console.log(util.inspect(frame));
+    }
+
+    handle_cluster_8034(frame) {
+        //console.log(util.inspect(frame));
     }
 
     handle_cluster_8021(frame) {
-        console.log(util.inspect(frame));
+        //console.log(util.inspect(frame));
         if (frame.profileId == "0000") {
             // ZDO bind response
             var reader = new BufferReader(frame.data);
@@ -963,7 +967,7 @@ class XbeeHandler {
     }
 
     handle_cluster_0006(frame) {
-        console.log(util.inspect(frame));
+        //console.log(util.inspect(frame));
         if (frame.profileId == "0000") {
             // this is a ZDO Match Descriptor Request
             this.handle_ZDO_match_descriptor_request(frame);
@@ -996,26 +1000,18 @@ class XbeeHandler {
             this.dispatch_datarcv_event(
                 {
                     "type": iotdefinitions.EVENT_DEVICE_ONLINE,
-                    "deviceid": ieeestr,
-                    "devicedetails": [
-                        {
-                            "name": "address64",
-                            "value": ieeestr
-                        },
-                        {
-                            "name": "address16",
-                            "value": address16str
-                        }
-                    ]
+                    "deviceid": frame.remote64,
+                    "address64": frame.remote64,
+                    "address16": frame.remote16,
+                    "protocol": iotdefinitions.ZIGBEE,
+                    "mcu": "xbee"
                 }
             );
 
-            // send Active Endpoint Request 0x0005
-            const aerbuf = Buffer.alloc(3);
-            aerbuf.writeUInt8(0x12, 0); // 0x12 transaction sequence number (arbitrarily chosen)   
-            aerbuf.writeUInt16LE(address16, 1);
-            console.log("Active Endpoint Request data: " + util.inspect(aerbuf));
-            this.active_endpoint_request(ieeestr, address16str, aerbuf);
+            if (this.online_devices.indexOf(frame.remote64) == -1) {
+                this.online_devices.push(frame.remote64);
+            }
+
         }
         catch (err) {
             logger.error("handle_cluster_8000() error: %j", err);
@@ -1030,7 +1026,7 @@ class XbeeHandler {
                 "deviceid": frame.remote64,
                 "address64": frame.remote64,
                 "address16": frame.remote16,
-                "protocol": constants.IOT_PROTOCOL_ZIGBEE,
+                "protocol": iotdefinitions.ZIGBEE,
                 "mcu": "xbee"
             }
         );
@@ -1038,17 +1034,7 @@ class XbeeHandler {
         if (this.online_devices.indexOf(frame.remote64) == -1) {
             this.online_devices.push(frame.remote64);
         }
-
-        //if (frame.remote64.toLowerCase() != this.gateway) {
-        //    // send an Active Endpoint Request 0x0005 to the end device
-        //    var addressbuf = Buffer.from(frame.remote16, 'hex');
-        //    addressbuf.swap16();
-        //    const aerbuf = Buffer.alloc(3);
-        //    aerbuf.writeUInt8(0x12, 0); // 0x12 transaction sequence number (arbitrarily chosen)                        
-        //    addressbuf.copy(aerbuf, 1);
-        //    //console.log("Active Endpoint Request data: " + util.inspect(aerbuf));
-        //    this.active_endpoint_request(frame.remote64, frame.remote16, aerbuf);
-        //}
+        
 
         //
     }
@@ -1061,7 +1047,7 @@ class XbeeHandler {
                 "deviceid": frame.remote64,
                 "address64": frame.remote64,
                 "address16": frame.remote16,
-                "protocol": constants.IOT_PROTOCOL_ZIGBEE,
+                "protocol": iotdefinitions.ZIGBEE,
                 "mcu": "xbee"
             }
         );
@@ -1188,9 +1174,11 @@ class XbeeHandler {
         // get the gateway address64
         var devices = Devices.list();
         devices.forEach((item) => {
-            this.configured_devices.push(item.deviceid);
-            if (item.deviceid && item.type == constants.IOT_DEVICE_GATEWAY && item.mcu == "xbee") {
-                this.gateway = item.deviceid.toLowerCase();
+            if (item.permission == iotdefinitions.PERMISSION_ALLOWED) {
+                this.configured_devices.push(item.deviceid);
+                if (item.deviceid && item.type == iotdefinitions.IOT_DEVICE_GATEWAY && item.mcu == "xbee") {
+                    this.gateway = item.deviceid.toLowerCase();
+                }
             }
         });
 
@@ -1266,6 +1254,7 @@ class XbeeHandler {
             case "8000":
             case "0406":
             case "8036":
+            case "8034":
                 var clusterfn = "handle_cluster_" + frame.clusterId;
                 this[clusterfn](frame);
                 break;

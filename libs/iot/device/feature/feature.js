@@ -81,7 +81,7 @@ class IoTFeature {
         if (!callback && typeof callback != "function") { return; }
 
         if (this.isonline == false) {
-            throw new Error(constants.IOT_ERROR_DEVICE_OFFLINE);
+            throw new Error(iotdefinitions.IOT_ERROR_DEVICE_OFFLINE);
         }
 
         let txn = payload.txn;
@@ -95,7 +95,7 @@ class IoTFeature {
                 () => {
                     if (this.callbacks.has(txn)) {
                         let cbfn = this.callbacks.get(txn);
-                        cbfn(constants.IOT_ERROR_TIMEDOUT);
+                        cbfn(iotdefinitions.IOT_ERROR_TIMEDOUT);
                         this.callbacks.delete(txn);
                     }
                 },

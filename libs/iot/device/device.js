@@ -25,13 +25,16 @@ Copyright (C) 2017 The Streembit software development team
 
 const events = require("libs/events");
 const logger = require('libs/logger');
-const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
 const Devices = require("libs/devices");
 
 class Device {
 
     constructor(id, device, transport) {
+        if (!id) {
+            throw new Error("Device constructor error: invalid ID paramater");
+        }
+
         this.id = id;
         this.type = device.type;
         this.protocol = device.protocol;
@@ -43,10 +46,13 @@ class Device {
 
         this.m_details = {};
         try {
-            let deteailsobj = JSON.parse(device.details);
-            if (deteailsobj) {
-                this.m_details = deteailsobj;
+            if (device.details && typeof device.details == "string") {
+                let deteailsobj = JSON.parse(device.details);
+                if (deteailsobj) {
+                    this.m_details = deteailsobj;
+                }
             }
+            
         }
         catch (err) { }        
 
@@ -54,7 +60,13 @@ class Device {
         this.m_active = false;
 
         // this should store the device specific features string from the database, in case of Zigbee the clusters i.e. 0006, 0b04 etc.
-        this.featuredef = device.features;  
+        if (device.featuredef && typeof device.featuredef == "string") {
+            this.featuredef = device.featuredef;
+        }
+        else {
+            this.featuredef = device.features;
+        }
+
         this.features = new Map();  
         if (this.featuredef && this.featuredef.length) {
             this.setfeatures();
@@ -66,8 +78,12 @@ class Device {
     get featuretypes() {
         var types = [];
         // get it from the featuredef
-        if (!this.featuredef || typeof this.featuredef != "string") {
+        if (!this.featuredef) {
             throw new Error("featuretypes can be called if the featuredef property is not empty");
+        }
+
+        if (typeof this.featuredef != "string") {
+            throw new Error("featuretypes can be called if the featuredef property is a string");
         }
 
         var flist = 0;
@@ -174,8 +190,6 @@ class Device {
         }
 
         for (var property in property_set) {
-            // propertyName is what you want.
-            // You can get the value like this: myObject[propertyName]
             this.details[property] = property_set[property];
         }
     }
@@ -204,22 +218,22 @@ class Device {
         }
 
         switch (payload.cmd) {
-            case constants.IOTCMD_DEVICE_DETAILS:
+            case iotdefinitions.IOTCMD_DEVICE_DETAILS:
                 this.send_device_details(callback);
                 break;
-            case constants.IOTCMD_ENABLEDEVICEJOIN:
-                this.enable_join(payload, callback);
+            case iotdefinitions.IOTCMD_TOGGLE:
+                obj.toggle(payload, callback);
                 break;
-            case constants.IOTCMD_TOGGLE:
-                obj.toggle(callback);
-                break;
-            case constants.IOTCMD_READVALUES:
+            case iotdefinitions.IOTCMD_READVALUES:
                 obj.read(payload, callback);
                 break;            
             default:
                 callback("invalid command: " + payload.cmd);
                 break;
         }
+    }
+
+    disjoin() {
     }
 }
 

@@ -99,6 +99,32 @@ class IoTDevicesDb {
         );        
     }
 
+    update_device_permission(deviceid, permission) {
+        return new Promise(
+            (resolve, reject) => {
+                if (!deviceid) {
+                    return reject("Invalid device id.");
+                }
+
+                if (permission < 0 || permission > 2) {
+                    return reject("Invalid permission.");
+                }
+
+                var sql = "UPDATE iotdevices SET permission=" + permission + " WHERE deviceid='" + deviceid + "'";
+                this.database.run(
+                    sql,
+                    [],
+                    (err) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve();
+                    }
+                );
+            }
+        );
+    }
+
     update_device(deviceid, name, permission) {
         return new Promise(
             (resolve, reject) => {

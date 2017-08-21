@@ -41,6 +41,7 @@ var events = require("libs/events");
 const Users = require("libs/users");
 const Devices = require("libs/devices");
 const IoTHandler = require('libs/iot');
+const WebSocket = require("libs/websocket");
 
 // initialize the logger
 function initialize_logger(callback) {
@@ -110,6 +111,19 @@ module.exports = exports = function (port, ip, password) {
                     try {
                         var devices = new Devices();
                         devices.init(callback);
+                    }
+                    catch (e) {
+                        callback(e);
+                    }
+                },
+                function (callback) {
+                    try {
+                        // start the websocket server
+                        var conf = config.iot_config;
+                        var port = conf.wsport ? conf.wsport : 32318;
+                        var wsserver = new WebSocket(port);
+                        wsserver.init();
+                        callback();
                     }
                     catch (e) {
                         callback(e);

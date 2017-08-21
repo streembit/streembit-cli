@@ -135,7 +135,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
 
         setTimeout(
             () => {
-                this.read(callback);
+                this.read(payload, callback);
             },
             500
         );

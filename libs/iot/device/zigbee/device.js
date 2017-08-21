@@ -35,11 +35,27 @@ class ZigbeeDevice extends Device {
 
     constructor(id, device, transport) {
         try {
-            super(id, device, transport);
+            // call the base class
+            super(id, device, transport);           
 
-            this.details.address64 = 0;
-            this.details.address16 = 0;
-            this.details.descriptors = new Map();            
+            if (device.details && (typeof device.details != "string") &&
+                device.details.hasOwnProperty("address64") && device.details.hasOwnProperty("address16") &&
+                device.details.hasOwnProperty("descriptors")) {
+                // this is being initialzing from an existing ZigbeeDevice object
+                this.details.address64 = device.details.address64 || 0;
+                this.details.address16 = device.details.address16 || 0;
+                this.details.descriptors = device.details.descriptors || 0;     
+            }
+
+            if (!this.details.address64) {
+                this.details.address64 = device.address64 || 0;
+            }
+
+            if (!this.details.address16) {
+                this.details.address16 = device.address16 || 0;
+            }
+
+            this.details.descriptors = new Map();
 
             logger.debug("Initialized Zigbee device id: " + id );
         }
@@ -64,20 +80,49 @@ class ZigbeeDevice extends Device {
         this.details.address16 = payload.address16;
         logger.debug("ZigbeeDevice address64: " + this.details.address64 + " address16: " + this.details.address16 + " online");
 
-        // send a ZDO 0x0005 "Active Endpoint Request"
-        var cmd = zigbeecmd.active_endpoint_request(this.details.address64, this.details.address16);
-        this.transport.send(cmd);
+        // set to active
+        this.active = true;
 
         // call the device online event handler of each features
         this.features.forEach((feature, key, map) => {
             feature.on_device_online(payload);
         });
+
+        // send a ZDO 0x0005 "Active Endpoint Request"
+        var cmd = zigbeecmd.active_endpoint_request(this.details.address64, this.details.address16);
+        this.transport.send(cmd);
+
+        //
+    }
+
+    on_device_announce(payload) {
+        if (this.permission == iotdefinitions.PERMISSION_DENIED) {
+            return this.disjoin();
+        }
+
+        this.details.address64 = payload.address64;
+        this.details.address16 = payload.address16;
+        logger.debug("Device joined: " + this.id + " address16: " + this.details.address16);
+
+        // set to active
+        this.active = true;
+
+        // call the device online event handler of each features
+        this.features.forEach((feature, key, map) => {
+            feature.on_device_online(payload);
+        });
+
+        // send a ZDO 0x0005 "Active Endpoint Request"
+        var cmd = zigbeecmd.active_endpoint_request(this.details.address64, this.details.address16);
+        this.transport.send(cmd);
     }
 
     on_endpoint_receive(payload) {
         if (!payload || !payload.endpoints) {
             return;
         }
+
+        this.active = true;
 
         this.details.endpoints = payload.endpoints;
         logger.debug("ZigbeeDevice " + this.id + " endpoints: " + util.inspect(this.details.endpoints));
@@ -98,16 +143,6 @@ class ZigbeeDevice extends Device {
         );       
     }
 
-    on_device_announce(payload) {
-        this.details.address64 = payload.address64;
-        this.details.address16 = payload.address16;
-        logger.debug("Device joined: " + this.id + " address16: " + this.details.address16);
-
-        // send a ZDO 0x0005 "Active Endpoint Request"
-        var cmd = zigbeecmd.active_endpoint_request(this.details.address64, this.details.address16);
-        this.transport.send(cmd);
-    }
-
     select_endpoint(cluster) {
         var endpoint = null; 
         this.details.descriptors.forEach(
@@ -126,6 +161,7 @@ class ZigbeeDevice extends Device {
     process_features() {
         if (this.permission != iotdefinitions.PERMISSION_ALLOWED) {
             // don't perform the binding and reporting in case the device permission is not sufficient
+            logger.debug("ZigbeeDevice process_features() called with no permission.")
             return;
         }
 
@@ -133,15 +169,18 @@ class ZigbeeDevice extends Device {
             let cluster = feature.cluster;
             let endpoint = this.select_endpoint(cluster);
             if (endpoint == null || endpoint < 0) {
-                logger.error("process_features() error: endpoint is not available for cluster " + cluster);
+                return logger.error("process_features() error: endpoint is not available for cluster " + cluster);
             }
-            else {
-                feature.on_clusterlist_receive(endpoint);
-            }
+       
+            feature.on_clusterlist_receive(endpoint);
+
+            //
         });
     }
 
     on_clusterlist_receive(payload) {
+        this.active = true;
+
         if (payload && payload.descriptor && payload.descriptor.endpoint && payload.descriptor.clusters) {
             // add the cluster list to the map
             this.details.descriptors.set(payload.descriptor.endpoint, payload.descriptor.clusters);
@@ -159,7 +198,6 @@ class ZigbeeDevice extends Device {
     }
 
     get_device_info() {
-
         var features = [];
         if (this.permission == iotdefinitions.PERMISSION_NOT_COMISSIONED) {
             // translate the descriptors to our feature types in case of not comissioned devices
@@ -185,9 +223,9 @@ class ZigbeeDevice extends Device {
             network: iotdefinitions.IOT_NETWORK_ZIGBEE,
             address64: this.details.address64,
             address16: this.details.address16,
-            hwversion: this.details.hwversion || 0,
-            manufacturername: this.details.manufacturername || 0,
-            modelidentifier: this.details.modelidentifier || 0,
+            hwversion: this.details.hwversion || "",
+            manufacturername: this.details.manufacturername || "",
+            modelidentifier: this.details.modelidentifier || "",
             permission: this.permission,
             name: this.name,
             features: features
@@ -212,6 +250,7 @@ class ZigbeeDevice extends Device {
                 //
             }
             else if (this.permission == iotdefinitions.PERMISSION_ALLOWED) {
+                this.active = true;
                 this.process_features();
             }
         }
@@ -292,18 +331,47 @@ class ZigbeeDevice extends Device {
         }
     }
 
+    enable_join() {
+    }
 
-    enable_join(payload, callback) {
+    disjoin() {
+        // send a ZDO 0x0034
+        logger.debug("Levase request to " + this.details.address64);
+        var cmd = zigbeecmd.mgmtLeaveRequesteq(this.details.address64, this.details.address16);
+        this.transport.send(cmd);
+
+        // set to inactive
+        this.active = false;
     }
 
     init() {
         try {
-            
+            // set to inactive
+            this.active = false;
+
+            logger.debug("Net address request to " + this.id);
+            let cmd = zigbeecmd.netAddressRequest(this.id);
+            this.transport.send(cmd);
+
+            let isactive_timer = setInterval(
+                () => {
+                    if (this.active) {
+                        clearInterval(isactive_timer);
+                        return;
+                    }
+
+                    this.transport.send_rtg_request();
+
+                    //
+                },
+                10000
+            );
         }
         catch (err) {
             throw new Error("Device init error: " + err.message);
         }
     }
+
 }
 
 module.exports = ZigbeeDevice;

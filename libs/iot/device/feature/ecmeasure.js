@@ -35,8 +35,8 @@ class EcMeasureFeature extends IoTFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
         super(deviceid, feature, feature_type, transport);  
-        this.voltage = constants.IOT_STATUS_UNKOWN;
-        this.power_consumption = constants.IOT_STATUS_UNKOWN;        
+        this.voltage = iotdefinitions.IOT_STATUS_UNKOWN;
+        this.power_consumption = iotdefinitions.IOT_STATUS_UNKOWN;        
     }
 
     on_datareceive_event(data, event) {   

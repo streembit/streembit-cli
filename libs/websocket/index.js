@@ -116,6 +116,14 @@ class WsServer {
             throw new Error("invalid authentication secret");
         }
 
+        // the message is valid, check if the deviceid is registered
+        var deviceid = message.id;
+        if (deviceid) {
+            if (!this.list_of_devices.has(deviceid)) {
+                this.list_of_devices.set(deviceid, message.pkhash);
+            }
+        }
+
         //console.log("message.hmacdigest: " + message.hmacdigest + " computed hmacdigest: " + hmacdigest);    
     }
 
@@ -246,15 +254,11 @@ class WsServer {
 
             // set the connection handler
             wsserver.on('connection', (ws) => {
-                try {
-                    //var $self = this;
-
-                    console.log("ws client connected");
-
+                try {             
+                    //console.log("ws client connected");
                     ws.on('message', (message) => {
                         this.processmsg(ws, message);
                     });
-
                     //
                 }
                 catch (err) {
