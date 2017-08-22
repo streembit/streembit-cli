@@ -49,6 +49,20 @@ class IoTDevicesDb {
         );
     }
 
+    delete_device(deviceid) {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "DELETE FROM iotdevices WHERE deviceid=?";
+                this.database.run(query, [deviceid], (err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve();
+                });
+            }
+        );
+    }
+
     get_device(deviceid) {
         return new Promise(
             (resolve, reject) => {

@@ -263,6 +263,45 @@ class IoTHandler {
         }
     }
 
+    delete_device(data, callback) {
+        try {
+            let gatewayid = data.id;
+            let deviceid = data.payload.deviceid;
+            Devices.delete_device(
+                deviceid,
+                (err) => {
+                    try {
+                        if (err) {
+                            logger.error("delete_device() error: %j", err);
+                            return callback(err);
+                        }                    
+                        // return the set permission
+                        let data = {
+                            payload: {
+                                gateway: gatewayid,
+                                deviceid: deviceid,
+                                isdeleted: true
+                            }
+                        };
+                        callback(null, data);
+
+                        // remove from the local list
+                        this.devicelist.delete(deviceid);
+
+                    }
+                    catch (cerr) {
+                        logger.error("delete_device error: %j", cerr);
+                    }
+                }
+            );
+        }
+        catch (err) {
+            callback(err);
+            logger.error("delete_device() error: %j", cerr);
+        }
+    }
+
+
     enable_join(payload, callback) {
         try {
             var enabled = false;
@@ -475,6 +514,39 @@ class IoTHandler {
                     try {
                         // reply with the permitted devices
                         let allowed_devices = [];
+                        /*
+                        let devices = Devices.list();
+                        devices.forEach(
+                            (device) => {
+                                try {   
+                                    if (device.permission == iotdefinitions.PERMISSION_ALLOWED &&
+                                        device.type == iotdefinitions.IOT_DEVICE_ENDDEVICE) {
+                                        if (device.features && typeof device.features == "string") {
+                                            let typeslist = [];
+                                            let flist = JSON.parse(device.features);
+                                            if (!flist || !flist.length) {
+                                                throw new Error("No features exist for device " + device.deviceid);
+                                            }
+
+                                            flist.forEach(
+                                                (feature) => {
+                                                    let featuretype = iotdefinitions.ZIGBEE_CLUSTERMAP[feature];
+                                                    typeslist.push(featuretype);
+                                                }
+                                            );
+                                            device.features = typeslist;
+                                        }     
+
+                                        allowed_devices.push(device);
+                                    }
+                                }
+                                catch (e) {
+                                    throw new Error("JSON parse of features failed. Features must be a valid array. Error: " + e.message)
+                                }
+                            }
+                        );
+                        */
+
                         this.devicelist.forEach(
                             (device) => {
                                 if (device.permission == iotdefinitions.PERMISSION_ALLOWED) {
@@ -483,12 +555,14 @@ class IoTHandler {
                                 }
                             }
                         );
+
                         var data = {
                             payload: {
                                 deviceid: id,
                                 devicelist: allowed_devices
                             }
                         };
+
                         callback(null, data);
 
                         // these devices has been just commissioned (approved), init the features, etc.
@@ -530,6 +604,9 @@ class IoTHandler {
                 }
                 else if (payload.event && payload.event == iotdefinitions.IOT_ENABLE_JOIN_REQUEST) {
                     this.enable_join(payload, callback);
+                }
+                else if (payload.event && payload.event == iotdefinitions.IOT_DELETE_DEVICE_REQUEST) {
+                    this.delete_device(payload, callback);
                 }
                 else {
                     var device = this.getdevice(payload.id);

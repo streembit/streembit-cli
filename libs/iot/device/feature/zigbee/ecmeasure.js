@@ -199,7 +199,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                 () => {
                     this.read_settings();
                 },
-                1000
+                500
             );
 
         }

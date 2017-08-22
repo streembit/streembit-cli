@@ -434,7 +434,7 @@ class XbeeHandler {
     }
 
     handle_cluster_0b04_01(frame, reader) {
-        //console.log(util.inspect(frame));
+        console.log(util.inspect(frame));
 
         function read_next_attribute() {
             try {
@@ -457,19 +457,19 @@ class XbeeHandler {
                     property_name = iotdefinitions.PROPERTY_VOLTAGE;
                 }
                 else if (attribute == 0x0605 && datatype == 0x21) { 
-                    value = reader.nextInt16LE();
+                    value = reader.nextUInt16LE();
                     property_name = iotdefinitions.PROPERTY_POWERDIVISOR;
                 }
                 else if (attribute == 0x0604 && datatype == 0x21) { 
-                    value = reader.nextInt16LE();
+                    value = reader.nextUInt16LE();
                     property_name = iotdefinitions.PROPERTY_POWERMULTIPLIER;
                 }
                 else if (attribute == 0x0600 && datatype == 0x21) {
-                    value = reader.nextInt16LE();
+                    value = reader.nextUInt16LE();
                     property_name = iotdefinitions.PROPERTY_VOLTAGEMULTIPLIER;
                 }
                 else if (attribute == 0x0601 && datatype == 0x21) {
-                    value = reader.nextInt16LE();
+                    value = reader.nextUInt16LE();
                     property_name = iotdefinitions.PROPERTY_VOLTAGEDIVISOR;
                 }
 

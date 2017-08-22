@@ -165,7 +165,16 @@ class ZigbeeDevice extends Device {
             return;
         }
 
+        var properties = {
+            address64: this.details.address64,
+            address16: this.details.address16
+        };
+
         this.features.forEach((feature, key, map) => {
+            if (!feature.IEEEaddress || !feature.NWKaddress) {
+                feature.on_device_online(properties);
+            }
+
             let cluster = feature.cluster;
             let endpoint = this.select_endpoint(cluster);
             if (endpoint == null || endpoint < 0) {

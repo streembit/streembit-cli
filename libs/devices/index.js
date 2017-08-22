@@ -46,6 +46,35 @@ class Devices {
         return m_devices;
     }
 
+    static getdevices() {
+        Devices.devices.clear();
+        return new Promise((resolve, reject) => {
+            var db = new Database();
+            db.get_devices().then(
+                (rows) => {
+                    rows.forEach(
+                        (item) => {
+                            Devices.devices.set(item.deviceid, item);
+                        }
+                    );
+                    resolve();
+                })
+                .catch(
+                (err) => {
+                    reject(err);
+                }
+                );
+        });
+    }
+
+    static async refresh() {
+        try {
+            await Devices.getdevices();
+        }
+        catch (err) {
+            throw new Error("Devices refresh error: " + err.message);
+        }
+    }
 
     static list() {
         var list = [];
@@ -129,6 +158,8 @@ class Devices {
             let dbdevice = Devices.devices.get(deviceid);
             dbdevice.permission = permission;
 
+            Devices.refresh();
+
             callback();
 
             //
@@ -151,7 +182,8 @@ class Devices {
                 var details = device.details ? JSON.stringify(device.details) : null;
                 await db.add_device(deviceid, device.type, device.protocol, device.mcu, name, details, permission, features);
                 // update the local list
-                Devices.devices.set(deviceid, device);
+                //Devices.devices.set(deviceid, device);
+                Devices.refresh();
             }
             else {
                 // update
@@ -166,8 +198,23 @@ class Devices {
         catch (err) {
             return callback(err);
         }
-
     }
+
+    static async delete_device(deviceid, callback) {
+        try {
+            let db = new Database();
+            await db.delete_device(deviceid);
+
+            // update the local list
+            Devices.devices.delete(deviceid);
+
+            callback();
+        }
+        catch (err) {
+            return callback(err);
+        }
+    }
+
 
     devices_from_db() {
         return new Promise((resolve, reject) => {
