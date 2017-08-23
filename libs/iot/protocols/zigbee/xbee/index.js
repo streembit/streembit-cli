@@ -962,6 +962,17 @@ class XbeeHandler {
         }       
         else if (zcl_command == 0x07) {  // ZCL 0x07 Configure reporting response 7.8
             console.log(util.inspect(frame.data));
+
+            var status = reader.nextUInt8();
+            if (status == 0x00) {
+                this.dispatch_datarcv_event(
+                    {
+                        "type": iotdefinitions.EVENT_REPORT_CONFIGURED,
+                        "deviceid": frame.remote64,
+                        "status": 0
+                    }
+                );
+            }
         }       
         
     }
@@ -980,7 +991,7 @@ class XbeeHandler {
 
     handle_cluster_8000(frame) {
         try {
-            //console.log(util.inspect(frame));
+            console.log(util.inspect(frame));
             var reader = new BufferReader(frame.data);
             var id = reader.nextUInt8();
             var status = reader.nextUInt8();
@@ -991,25 +1002,25 @@ class XbeeHandler {
             var ieebuf = reader.nextBuffer(8);
             var swapped = this.swapEUI64BuffertoBigEndian(ieebuf);
             var ieeestr = swapped.toString("hex")
-            //console.log("IEEE: " + ieeestr);
+            console.log("IEEE: " + ieeestr);
 
             var address16 = reader.nextUInt16LE();
             var address16str = sprintf("%02x", address16)
-            //console.log("network address: " + address16str);
+            console.log("IEEE: " + ieeestr + "NWK address: " + address16str);
 
             this.dispatch_datarcv_event(
                 {
                     "type": iotdefinitions.EVENT_DEVICE_ONLINE,
-                    "deviceid": frame.remote64,
-                    "address64": frame.remote64,
-                    "address16": frame.remote16,
+                    "deviceid": ieeestr,
+                    "address64": ieeestr,
+                    "address16": address16str,
                     "protocol": iotdefinitions.ZIGBEE,
                     "mcu": "xbee"
                 }
             );
 
-            if (this.online_devices.indexOf(frame.remote64) == -1) {
-                this.online_devices.push(frame.remote64);
+            if (this.online_devices.indexOf(ieeestr) == -1) {
+                this.online_devices.push(ieeestr);
             }
 
         }

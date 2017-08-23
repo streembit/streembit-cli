@@ -242,12 +242,31 @@ class ZigbeeDevice extends Device {
         return data;
     }
 
-    notify_device_info() {     
-        var data = {
-            payload: this.get_device_info()
-        };
-        //console.log("sending for " + this.deviceid + " EVENT_ENDDEVICE_JOINED: " + util.inspect(data));
-        events.emit(iotdefinitions.EVENT_NOTIFY_USERS, this.id, data);
+    notify_device_info() {    
+
+        // get the gateway 
+        var payload = {
+            event: iotdefinitions.EVENT_GATEWAY_DATA_REQUEST,
+            protocol: iotdefinitions.ZIGBEE
+        }
+        events.emit(
+            events.TYPES.ONIOTEVENT,
+            payload,
+            (gateway) => {
+                let gatewayid = gateway.id;
+                let data = {                    
+                    payload: {
+                        event: iotdefinitions.IOT_NEW_DEVICE_JOINED,
+                        gateway: gatewayid,
+                        device: this.get_device_info()
+                    }
+                };
+
+                logger.debug("sending IOT_NEW_DEVICE_JOINED event for " + this.id);
+                events.emit(iotdefinitions.EVENT_NOTIFY_USERS, gatewayid, data);
+            }
+        );    
+       
         //
     }
 

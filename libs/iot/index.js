@@ -331,8 +331,19 @@ class IoTHandler {
         }
         catch (err) {
             callback(err);
-            logger.error("enable_join() error: %j", cerr);
+            logger.error("enable_join() error: %j", err);
         }
+    }
+
+    send_gateway_details(payload, callback) {
+        var protocol = payload.protocol;
+        this.devicelist.forEach(
+            (device) => {
+                if (device.type == iotdefinitions.IOT_DEVICE_GATEWAY && device.protocol == payload.protocol) {
+                    device.send_gateway_details(callback);
+                }
+            }
+        );
     }
 
     on_device_allowed(deviceid) {
@@ -513,40 +524,7 @@ class IoTHandler {
 
                     try {
                         // reply with the permitted devices
-                        let allowed_devices = [];
-                        /*
-                        let devices = Devices.list();
-                        devices.forEach(
-                            (device) => {
-                                try {   
-                                    if (device.permission == iotdefinitions.PERMISSION_ALLOWED &&
-                                        device.type == iotdefinitions.IOT_DEVICE_ENDDEVICE) {
-                                        if (device.features && typeof device.features == "string") {
-                                            let typeslist = [];
-                                            let flist = JSON.parse(device.features);
-                                            if (!flist || !flist.length) {
-                                                throw new Error("No features exist for device " + device.deviceid);
-                                            }
-
-                                            flist.forEach(
-                                                (feature) => {
-                                                    let featuretype = iotdefinitions.ZIGBEE_CLUSTERMAP[feature];
-                                                    typeslist.push(featuretype);
-                                                }
-                                            );
-                                            device.features = typeslist;
-                                        }     
-
-                                        allowed_devices.push(device);
-                                    }
-                                }
-                                catch (e) {
-                                    throw new Error("JSON parse of features failed. Features must be a valid array. Error: " + e.message)
-                                }
-                            }
-                        );
-                        */
-
+                        let allowed_devices = [];    
                         this.devicelist.forEach(
                             (device) => {
                                 if (device.permission == iotdefinitions.PERMISSION_ALLOWED) {
@@ -590,31 +568,37 @@ class IoTHandler {
         // events from Streembit users
         events.on(events.TYPES.ONIOTEVENT, (payload, callback) => {
             try {
-                if (payload.event && payload.event == iotdefinitions.IOT_REQUEST_DEVICES_LIST ) {
-                    this.device_list_response(payload.id, callback);
+                switch (payload.event) {
+                    case iotdefinitions.IOT_REQUEST_DEVICES_LIST:
+                        this.device_list_response(payload.id, callback);
+                        break
+                    case iotdefinitions.IOT_DEVICES_LIST_CONFIGURE:
+                        this.device_list_configure(payload.id, payload.list, callback);
+                        break
+                    case iotdefinitions.IOT_ALLDEVICES_LIST_REQUEST:
+                        this.send_all_devices(payload.id, callback);
+                        break
+                    case iotdefinitions.IOT_SET_DEVICE_PERMISSION_REQUEST:
+                        this.set_device_permission(payload, callback);
+                        break
+                    case iotdefinitions.IOT_ENABLE_JOIN_REQUEST:
+                        this.enable_join(payload, callback);
+                        break
+                    case iotdefinitions.IOT_DELETE_DEVICE_REQUEST:
+                        this.delete_device(payload, callback);
+                        break
+                    case iotdefinitions.EVENT_GATEWAY_DATA_REQUEST:
+                        this.send_gateway_details(payload, callback);
+                        break
+                    default:
+                        var device = this.getdevice(payload.id);
+                        if (!device) {
+                            throw new Error("device for id " + id + " does not exists at the gateway");
+                        }
+                        device.executecmd(payload, callback);
+                        break;
                 }
-                else if (payload.event && payload.event == iotdefinitions.IOT_DEVICES_LIST_CONFIGURE) {
-                    this.device_list_configure(payload.id, payload.list, callback);
-                }
-                else if (payload.event && payload.event == iotdefinitions.IOT_ALLDEVICES_LIST_REQUEST) {
-                    this.send_all_devices(payload.id, callback);
-                }
-                else if (payload.event && payload.event == iotdefinitions.IOT_SET_DEVICE_PERMISSION_REQUEST) {
-                    this.set_device_permission(payload, callback);
-                }
-                else if (payload.event && payload.event == iotdefinitions.IOT_ENABLE_JOIN_REQUEST) {
-                    this.enable_join(payload, callback);
-                }
-                else if (payload.event && payload.event == iotdefinitions.IOT_DELETE_DEVICE_REQUEST) {
-                    this.delete_device(payload, callback);
-                }
-                else {
-                    var device = this.getdevice(payload.id);
-                    if (!device) {
-                        throw new Error("device for id " + id + " does not exists at the gateway");
-                    }
-                    device.executecmd(payload, callback);
-                }
+
             }
             catch (err) {
                 if (callback) {

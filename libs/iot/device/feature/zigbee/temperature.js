@@ -31,7 +31,6 @@ const logger = require("libs/logger");
 const util = require('util');
 const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
-let TEMPSENS_TIMEOUT = 10000; 
 let CLUSTERID = 0x0402;
 
 class ZigbeeTemperatureFeature extends TemperatureFeature {
@@ -53,7 +52,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         this.longpolling_enabled = this.ispolling && this.long_poll_interval > 0;    
         this.polling_timer = 0;      
 
-        this.report_max = 0x005a; // 90 seconds        
+        this.report_max = 0x003c; // 60 seconds  
 
         this.property_names.push(iotdefinitions.PROPERTY_TEMPERATURE);
 
@@ -93,6 +92,8 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
 
     on_clusterlist_receive(endpoint) {
         try {
+            logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " on_clusterlist_receive()");
+
             this.cluster_endpoint = endpoint;    
             logger.debug("ZigbeeTemperatureFeature cluster 0402 at endpoint " + endpoint);
 
@@ -109,6 +110,8 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
 
     on_bind_complete() {
         try {
+            logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " on_bind_complete()");
+
             var cluster = 0x0402;
             var attribute = 0x0000, datatype = 0x29, mininterval = 0x05, maxinterval = 0x005a;
             var reports = [];
@@ -127,6 +130,10 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         catch (err) {
             logger.error("ZigbeeTemperatureFeature on_bind_complete() error: %j", err);
         }
+    }
+
+    on_report_configured() {
+        logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " on_report_configured()");
     }
 
     on_device_online(properties) {       

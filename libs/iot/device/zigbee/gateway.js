@@ -110,6 +110,15 @@ class ZigbeeGateway extends Device {
         return info;
     }
 
+    send_gateway_details(callback) {
+        let response = {
+            id: this.id,
+            address64: m_address64,
+            address16: m_address16
+        };
+        callback(response);
+    }
+
 }
 
 module.exports = ZigbeeGateway;

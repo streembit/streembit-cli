@@ -50,6 +50,7 @@ class IoTFeature {
         this.property_names = [];
         this.isonline = false;
         this.last_update_time = 0;
+        this.initialized = false;
     }
 
     on_datareceive_event(data, event) {
