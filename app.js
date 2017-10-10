@@ -218,12 +218,16 @@ module.exports.backup = function() {
                 if (!config.password) {
                     return callback("Invalid password");
                 }
-
-                db.init_databases(__dirname, callback);
+                try {
+                    database.init(__dirname, callback);
+                }
+                catch (err) {
+                    callback(err);
+                }
             },
             function (callback) {
                 var account = new Account();
-                account.load(config.password, function (err) {
+                account.load(config.password, config.account,function (err) {
                     if (err) {
                         return callback(err);
                     }
@@ -263,7 +267,7 @@ module.exports.backup = function() {
         ],
         function (err) {
             if (err) {
-                return console.log("Error: %j", err.message || err);
+                return console.log("Backup error: %j", err.message || err);
             }
 
             console.log("Backup file account.json was created in the data directory",);

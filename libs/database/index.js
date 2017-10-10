@@ -439,36 +439,7 @@ class Database {
             }
             catch (e) {
                 return callback('create iotfeatures table error: ' + e.message);
-            }           
-
-            /*
-            try {
-                let exists = await this.is_table_exists("iotfeatures");
-                if (!exists) {
-                    let iotfeatures_table = "CREATE TABLE IF NOT EXISTS iotfeatures ( \
-                    featureid integer PRIMARY KEY ASC, \
-                    devrowid integer NOT NULL, \
-                    type integer NOT NULL, \
-                    cluster text, \
-                    settings text, \
-                    FOREIGN KEY (devrowid) REFERENCES iotdevices (devrowid) )";
-                    await this.executecmd(iotfeatures_table);
-                }
-            }
-            catch (e) {
-                return callback('create iotfeatures table error: ' + e.message);
-            }          
-
-            try {
-                let get_iotfeatures_view = "CREATE VIEW IF NOT EXISTS vw_get_features AS \
-                    SELECT dev.deviceid, ft.devrowid, ft.featureid, ft.type, ft.cluster, ft.settings \
-                    FROM iotfeatures ft INNER JOIN iotdevices dev ON ft.devrowid = dev.devrowid;";
-                await this.executecmd(get_iotfeatures_view);
-            }
-            catch (e) {
-                return callback('create iotfeatures table error: ' + e.message);
-            }  
-            */
+            }   
 
             // make sure the users table is populated           
             try {
@@ -478,8 +449,7 @@ class Database {
             }
             catch (e) {
                 return callback('create users table error: ' + e.message);
-            }  
-
+            } 
 
             // make sure the devices data is populated           
             try {
