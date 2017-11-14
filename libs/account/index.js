@@ -121,8 +121,6 @@ class Account {
                     return callback("Database update error: " + ( err.message || err));
                 }
 
-                logger.debug("Account was added to database");
-
                 if (callback) {
                     callback();
                 }
@@ -164,8 +162,8 @@ class Account {
             this.accountname = account;
 
             this.addToDB(cipher_context, (err) => {
-                logger.info("created pkhash: " + this.public_key_hash);
-                logger.info("created bs58pk: " + this.bs58pk);
+                logger.info("New account pkhash: " + this.public_key_hash);
+                logger.info("New account bs58pk: " + this.bs58pk);
                 callback(err);
             });
         }

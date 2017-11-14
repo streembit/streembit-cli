@@ -267,6 +267,7 @@ class IoTHandler {
         try {
             let gatewayid = data.id;
             let deviceid = data.payload.deviceid;
+            logger.debug("delete device ID: " + deviceid);
             Devices.delete_device(
                 deviceid,
                 (err) => {

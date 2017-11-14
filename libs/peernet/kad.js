@@ -150,7 +150,7 @@ class KadHandler {
         var options = {
             transport: transport,
             logger: logger,
-            storage: database.streembitdb,
+            storage: database.db["streembitkv"], // streembit key-value database (leveldb)
             seeds: seeds,
             isseed: options.isseed
         };

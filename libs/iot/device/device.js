@@ -51,8 +51,7 @@ class Device {
                 if (deteailsobj) {
                     this.m_details = deteailsobj;
                 }
-            }
-            
+            }            
         }
         catch (err) { }        
 
@@ -106,6 +105,16 @@ class Device {
         return types;
     }
 
+    // override this withe the protocol specific map function
+    get_feature_type(feature) {
+    }
+
+    // override this withe the protocol specific map function
+    get_feature_name(feature_type) {
+    }
+
+    is_feature_handled(feature) { }
+
     setfeatures() {
         try {
             if (!this.featuredef || typeof this.featuredef != "string") {
@@ -120,26 +129,76 @@ class Device {
                 throw new Error("JSON parse of featuredef failed. The featuredef variable must be a valid array")
             }
 
-            if (flist.length) {
-                flist.forEach(
-                    (feature) => {
-                        try {
-                            let feature_type = iotdefinitions.ZIGBEE_CLUSTERMAP[feature]; // maps the Zigbee cluster to our generic feature type
-                            let feature_name = iotdefinitions.FEATURETYPEMAP[feature_type];
+            if (!flist.length) {
+                return;
+            }
+ 
+            flist.forEach(
+                (feature) => {
+                    try {     
+                        let feature_type = this.get_feature_type(feature); 
+                        let feature_name = this.get_feature_name(feature_type);
+                        if ((feature_type && feature_name) && !this.features.has(feature_type)) {
                             let feature_lib = "libs/iot/device/feature/" + this.protocol + "/" + feature_name;
                             let feature_obj = require(feature_lib);
                             let feature_handler = new feature_obj(this.id, feature, feature_type, this.transport);
                             if (feature_handler) {
                                 this.features.set(feature_type, feature_handler);
-                                logger.debug("feature " + feature_type + " added to device " + this.id);
+                                logger.debug("feature " + feature_type + " added to device " + this.id);                                
                             }
                         }
-                        catch (err) {
-                            logger.error("setfeatures() feature type " + feature + " error: %j", err);
+                    }
+                    catch (err) {
+                        logger.error("setfeatures() feature type " + feature + " error: %j", err);
+                    }
+                }
+            );
+            
+        }
+        catch (err) {
+            logger.error("Device setfeatures() error: %j", err)
+        }
+    }
+
+    verifyfeatures(features) {
+        try {
+            // process only if the device was not comissioned
+            if (this.permission == iotdefinitions.PERMISSION_ALLOWED || this.permission == iotdefinitions.PERMISSION_DENIED) {
+                return;
+            }
+
+            if (!features || !Array.isArray(features) || !features.length) {
+                return;
+            }
+
+            if (!this.featuredef) {
+                let tmparr = [];
+                for (let i = 0; i < features.length; i++) {
+                    if (this.is_feature_handled(features[i])) {
+                        tmparr.push(features[i]);                        
+                    }
+                }
+                this.featuredef = JSON.stringify(tmparr);
+            }
+            else {
+                let tmpdef = "";
+                let clustersarray
+                if (this.featuredef) {
+                    let arr = JSON.parse(this.featuredef);
+                    for (let i = 0; i < features.length; i++) {
+                        if (this.is_feature_handled(features[i])){
+                            if (arr.indexOf(features[i]) == -1) {
+                                arr.push(features[i]);
+                            }
                         }
                     }
-                );
+                    this.featuredef = JSON.stringify(arr);
+                }
             }
+
+            this.setfeatures();
+
+            //
         }
         catch (err) {
             logger.error("Device setfeatures() error: %j", err)
@@ -163,6 +222,14 @@ class Device {
 
     set details(value) {
         this.m_details = value;
+    }
+
+    get details_populated() {
+        let populated = false;
+        for (var prop in this.m_details) {
+            populated = true;
+        }
+        return populated;
     }
 
     set_property_item(properties) {
@@ -213,7 +280,7 @@ class Device {
         if (iotfeature) {
             obj = this.features.get(iotfeature);
             if (!obj) {
-                return callback("The feature handler is not available for the device")
+                return callback("The feature handler is not available for the device, feature: " + iotfeature)
             }
         }
 

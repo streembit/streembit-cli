@@ -22,6 +22,7 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 const dbinstance = require("libs/database").instance;
+const dbnamekey = "streembitsql";
 
 class IoTDevicesDb {
     constructor() {
@@ -30,12 +31,12 @@ class IoTDevicesDb {
 
     get database () {
         if (!this.m_database) {
-            this.m_database = dbinstance.sqldb;
+            this.m_database = dbinstance.databases[dbnamekey];
         }
         return this.m_database;
     }
 
-    get_devices() {
+    devices() {
         return new Promise(
             (resolve, reject) => {
                 var query = "SELECT * FROM iotdevices";
@@ -75,20 +76,6 @@ class IoTDevicesDb {
                 });
             }
         );        
-    }
-
-    get_devices_by_protocol(protocol) {
-        return new Promise(
-            (resolve, reject) => {
-                var query = "SELECT * FROM iotdevices WHERE protocol=?";
-                this.database.all(query, [protocol], (err, rows) => {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve(rows);
-                });
-            }
-        );
     }
 
 
@@ -150,27 +137,6 @@ class IoTDevicesDb {
                 this.database.run(
                     sql,
                     [],
-                    (err) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        resolve();
-                    }
-                );
-            }
-        );
-    }
-
-    add_feature(deviceid, type, cluster, setting) {
-        return new Promise(
-            (resolve, reject) => {
-                if (!deviceid || !type ) {
-                    return reject("Invalid feaure data add database add_feature.");
-                }
-
-                this.database.run(
-                    "INSERT INTO iotfeatures (devrowid, type, cluster, settings) VALUES (?,?,?,?)",
-                    [deviceid, type, cluster, setting],
                     (err) => {
                         if (err) {
                             return reject(err);

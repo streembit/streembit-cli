@@ -95,7 +95,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
             logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " on_clusterlist_receive()");
 
             this.cluster_endpoint = endpoint;    
-            logger.debug("ZigbeeTemperatureFeature cluster 0402 at endpoint " + endpoint);
+            logger.debug("ZigbeeTemperatureFeature cluster 0402 exists at endpoint " + endpoint + " send bind request");
 
             // bind
             var txn = 0x52;
@@ -110,7 +110,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
 
     on_bind_complete() {
         try {
-            logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " on_bind_complete()");
+            logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " 0x0402 on_bind_complete()");
 
             var cluster = 0x0402;
             var attribute = 0x0000, datatype = 0x29, mininterval = 0x05, maxinterval = 0x005a;

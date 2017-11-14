@@ -83,8 +83,8 @@ class ZigbeeGateway extends Device {
                     }
                 );  
 
-                // enable join for 120 seconds
-                this.enable_join();
+                // enable join 
+                //this.enable_join();
             }
            
         }
@@ -94,8 +94,8 @@ class ZigbeeGateway extends Device {
     }
 
     enable_join(interval) {
-        // enable join for 120 seconds
-        var time = interval || 120;
+        // enable join for 240 seconds
+        var time = interval || 240;
         logger.debug("Gateway " + this.id + " enable join for " + time + " seconds.")
         var cmd = zigbeecmd.permitJoinRequest(m_address64, m_address16, time);
         this.transport.send(cmd);

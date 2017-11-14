@@ -33,6 +33,14 @@ var constants = {
     TASK_PUBLISHACCOUNT: "publish_account",
     TASK_INFORM_CONTACTS: "inform_contacts",
 
+    DBSTREEMBIT: "streembit_database",
+    DBACCOUNTS: "accounts_database",
+    DBIOT: "iot_database",
+    DBBCAPP: "bcapp_database",
+    DBBLOCKS: "blocks_database",
+    DBTXN: "txn_database",
+    DBTEMP: "temp_database",
+
     RESPONSETIMEOUT: 10000
 
 };

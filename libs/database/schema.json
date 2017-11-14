@@ -1,0 +1,191 @@
+﻿[
+    {
+        "type": "leveldb",
+        "name": "streembit",
+        "key": "streembitkv"
+    },
+    {
+        "type": "sqlite",
+        "name": "streembit",
+        "key": "streembitsql",
+        "tables": [
+            {
+                "name": "accounts",
+                "columns": [
+                    {
+                        "name": "accountid",
+                        "datatype": "integer",
+                        "pkey": true
+                    },
+                    {
+                        "name": "account",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "accountpk",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "cipher",
+                        "datatype": "text",
+                        "notnull": true
+                    }
+                ]
+            },
+            {
+                "name": "contacts",
+                "columns": [
+                    {
+                        "name": "contactid",
+                        "datatype": "integer",
+                        "pkey": true
+                    },
+                    {
+                        "name": "pkhash",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "publickey",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "username",
+                        "datatype": "text"
+                    }
+                ]
+            },
+            {
+                "name": "users",
+                "columns": [
+                    {
+                        "name": "userid",
+                        "datatype": "integer",
+                        "pkey": true
+                    },
+                    {
+                        "name": "pkhash",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "publickey",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "isadmin",
+                        "datatype": "integer",
+                        "notnull": true,
+                        "default": 0
+                    },
+                    {
+                        "name": "username",
+                        "datatype": "text"
+                    },
+                    {
+                        "name": "settings",
+                        "datatype": "text"
+                    }
+                ]
+            },
+            {
+                "name": "iotdevices",
+                "columns": [
+                    {
+                        "name": "iotdevid",
+                        "datatype": "integer",
+                        "pkey": true
+                    },
+                    {
+                        "name": "deviceid",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "type",
+                        "datatype": "integer",
+                        "notnull": true
+                    },
+                    {
+                        "name": "protocol",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "permission",
+                        "datatype": "integer",
+                        "notnull": true,
+                        "default": 0
+                    },
+                    {
+                        "name": "mcu",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "name",
+                        "datatype": "text"
+                    },
+                    {
+                        "name": "details",
+                        "datatype": "text"
+                    },
+                    {
+                        "name": "features",
+                        "datatype": "text"
+                    }
+                ]
+            },
+            {
+                "name": "bcutxo",
+                "delete_if_exists": true,
+                "columns": [
+                    {
+                        "name": "utxo",
+                        "datatype": "integer",
+                        "pkey": true
+                    },
+                    {
+                        "name": "txid",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "blockid",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "amount",
+                        "datatype": "integer",
+                        "notnull": true
+                    }
+                ]
+            }
+        ],
+        "indexes": [
+            {
+                "unique": true,
+                "name": "idxIotdevicesDeviceid",
+                "table": "iotdevices",
+                "column": "deviceid"
+            },
+            {
+                "unique": true,
+                "name": "idxContactsPkhash",
+                "table": "contacts",
+                "column": "pkhash"
+            },
+            {
+                "unique": true,
+                "name": "idxIotDeviceDeviceId",
+                "table": "iotdevices",
+                "column": "deviceid"
+            }
+        ]
+    }
+]

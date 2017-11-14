@@ -50,7 +50,7 @@ class Devices {
         Devices.devices.clear();
         return new Promise((resolve, reject) => {
             var db = new Database();
-            db.get_devices().then(
+            db.devices().then(
                 (rows) => {
                     rows.forEach(
                         (item) => {
@@ -60,9 +60,9 @@ class Devices {
                     resolve();
                 })
                 .catch(
-                (err) => {
-                    reject(err);
-                }
+                    (err) => {
+                        reject(err);
+                    }
                 );
         });
     }
@@ -215,11 +215,10 @@ class Devices {
         }
     }
 
-
-    devices_from_db() {
+    populate() {
         return new Promise((resolve, reject) => {
             var db = new Database();
-            db.get_devices().then(
+            db.devices().then(
                 (rows) => {
                     rows.forEach(
                         (item)=> {
@@ -236,18 +235,73 @@ class Devices {
         });
     }
 
-    init(callback) {
+    async add(device) {
         try {
-            this.devices_from_db()
-                .then(() => {
-                    logger.debug("devices initialized, total devices: " + Devices.devices.size );
-                    callback()
-                })
-                .catch((err) => callback(err));
+            var db = new Database();
+            let dbrow = await db.get_device(device.id);
+            if (!dbrow) {
+                // add to database
+                logger.debug("add IoT device " + device.id + " to database");
+
+                let deviceid = device.id,
+                    type = device.type,
+                    protocol = device.protocol,
+                    mcu = device.mcu,
+                    name = device.name,
+                    permission = device.permission,
+                    details = device.details ? JSON.stringify(device.details) : null,
+                    features = device.features ? JSON.stringify(device.features) : null;
+
+                await db.add_device(deviceid, type, protocol, mcu, name, details, permission, features);
+            }
+            else {
+                logger.debug("device " + device.id + " exist in database ");
+            }
         }
         catch (err) {
-            callback("devices init error: " + err.message);
+            logger.error("Device to DB error: " + err.message);
         }
+    }
+
+    // synchronise the devices with the config file
+    async syncdevices() {
+        try {
+            logger.debug("creating IoT devices in the database");
+            var conf = config.iot_config;
+            var devices = conf.devices;
+            for (let i = 0; i < devices.length; i++) {
+                try {
+                    await this.add(devices[i]);
+                }
+                catch (err) {
+                    return Promise.reject(new Error(err.message));
+                }
+            }
+            return Promise.resolve();
+        }
+        catch (err) {
+            return Promise.reject(new Error(err.message));
+        }
+    }
+
+    async init(callback) {
+        try {
+            await this.syncdevices();
+        }
+        catch (err) {
+            return callback("Devices initdb error: " + err.message);
+        }
+
+        try {
+            await this.populate();         
+        }
+        catch (err) {
+            return callback("Devices populate error: " + err.message);
+        }
+
+        callback();
+
+        //
     }
 }
 

@@ -1006,7 +1006,7 @@ class XbeeHandler {
 
             var address16 = reader.nextUInt16LE();
             var address16str = sprintf("%02x", address16)
-            console.log("IEEE: " + ieeestr + "NWK address: " + address16str);
+            console.log("IEEE: " + ieeestr + " NWK address: " + address16str);
 
             this.dispatch_datarcv_event(
                 {
@@ -1298,6 +1298,7 @@ class XbeeHandler {
                     return this.init();
                 }
 
+                //TODO comment out
                 this.check_online_devices();
             },
             30000

@@ -20,6 +20,7 @@ Copyright (C) 2017 The Streembit software development team
 */
 
 const db = require("libs/database").instance;
+const dbnamekey = "streembitsql";
 
 'use strict';
 
@@ -30,7 +31,7 @@ class UsersDb {
 
     get database() {
         if (!this.m_database) {
-            this.m_database = db.sqldb;
+            this.m_database = db.databases[dbnamekey];
         }
         return this.m_database;
     }
@@ -62,6 +63,36 @@ class UsersDb {
             }
         );
     }
+
+    add_user(pkhash, publickey, username, isadmin, settings) {
+        return new Promise(
+            (resolve, reject) => {
+                let sql = "INSERT INTO users(pkhash, publickey, username, isadmin, settings) VALUES (?,?,?,?,?)"
+                this.database.run(sql, [pkhash, publickey, username, isadmin, settings], (err) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve();
+                });
+            }
+        );
+    }
+
+    
+    get_users() {
+        return new Promise(
+            (resolve, reject) => {
+                var query = "SELECT * FROM users";
+                this.database.all(query, [], (err, rows) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve(rows);
+                });
+            }
+        );
+    }
+
 }
 
 module.exports = UsersDb;

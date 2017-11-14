@@ -180,7 +180,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
             );
 
             // voltage
-            attribute = 0x0505, datatype = 0x21, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 50;
+            attribute = 0x0505, datatype = 0x21, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 10;
             reports.push(
                 {
                     attribute: attribute,

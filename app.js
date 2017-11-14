@@ -116,6 +116,16 @@ module.exports = exports = function (port, ip, password) {
                         callback(e);
                     }
                 },
+                // TODO 
+                //function (callback) {
+                //    try {
+                //        var devices = new Devices();
+                //        blockchia.init(callback);
+                //    }
+                //    catch (e) {
+                //        callback(e);
+                //    }
+                //},
                 function (callback) {
                     try {
                         // start the websocket server

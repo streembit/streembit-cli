@@ -40,6 +40,7 @@ class IoTFeature {
             throw new Error("IoTFeature error, the feature type must be bigger than 0");
         }
 
+        this.featuredef = feature;
         this.deviceid = deviceid;
         this.transport = transport;
         this.type = featuretype;

@@ -71,7 +71,7 @@ class Users {
         return user;
     }
 
-    init_from_db() {
+    populate() {
         return new Promise((resolve, reject) => {
             var db = new Database();
             db.getall().then(
@@ -89,18 +89,81 @@ class Users {
         });
     }
 
-    init(callback) {
-        try {           
-            this.init_from_db()
-                .then(() => {
-                    logger.debug("users initialized, total users: " + this.users.size);    
-                    callback()
-                })
-                .catch((err) => callback(err));
+    async syncusers(cnfusers) {
+        try {
+            if (!cnfusers || !cnfusers.length) {
+                logger.info("NO user defined in the config file");
+                return Promise.resolve();
+            }
+
+            var db = new Database();
+
+            const dbusers = await db.get_users();
+
+            for (let i = 0; i < cnfusers.length; i++) {
+                try {
+                    let user = cnfusers[i];
+                    let pkhash = user.pkhash;
+                    let exists = false;
+                    if (dbusers && dbusers.length) {
+                        dbusers.forEach(
+                            (dbitem) => {
+                                if (dbitem.pkhash == pkhash) {
+                                    exists = true;
+                                }
+                            }
+                        );
+                    }
+
+                    if (!exists) {
+                        let settings = user.settings ? JSON.stringify(user.settings) : null;
+
+                        logger.debug("adding user " + user.pkhash + " to database ");
+
+                        try {
+                            await db.add_user(pkhash, user.publickey, user.username, user.isadmin, settings);
+                        }
+                        catch (err) {
+                            return Promise.reject(new Error(err.message));
+                        }
+                    }
+                    else {
+                        logger.debug("user " + user.pkhash + " exist in database ");
+                    }
+                }
+                catch (err) {
+                    return Promise.reject(new Error(err.message));
+                }
+            }
+
+            return Promise.resolve();
         }
         catch (err) {
-            callback("users init error: " + err.message);
+            return Promise.reject(new Error(err.message));
         }
+    }
+
+    async init(callback) { 
+
+        try {
+            logger.debug("creating users in the database");
+            var cnfusers = config.users;            
+            await this.syncusers(cnfusers);
+        }
+        catch (err) {
+            return callback("users init syncusers error: " + err.message);
+        }
+
+        try {
+            await this.populate();                
+        }
+        catch (err) {
+            return callback("users populate error: " + err.message);
+        }            
+
+        callback();   
+
+        //
     }
 }
 

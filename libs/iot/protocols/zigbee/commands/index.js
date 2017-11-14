@@ -132,7 +132,7 @@ class ZigbeeCommands {
         let aerbuf = Buffer.alloc(3);
         aerbuf.writeUInt8(0x05, 0);                     
         addressbuf.copy(aerbuf, 1);
-        //console.log("Active Endpoint Request data: " + util.inspect(aerbuf));
+        console.log("Active Endpoint Request data: " + util.inspect(aerbuf));
         var cmd = { 
             destination64: address64,
             destination16: address16,

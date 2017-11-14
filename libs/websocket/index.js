@@ -244,7 +244,7 @@ class WsServer {
     init() {
         try {
 
-            logger.info("starting ws server");  
+            logger.info("Starting ws server");  
             
             const wsserver = new WebSocket.Server(
                 {
@@ -267,11 +267,16 @@ class WsServer {
             });
 
             wsserver.on('close', function() {
-
+                //TODO signal the app that the server was closed
+                logger.info("Web socket server was closed");
             });
 
             wsserver.on('error', function(e) {
                 logger.error('ws error: %s', e.message);
+            });
+
+            wsserver.on('listening', function (e) {
+                logger.info('ws server listening');
             });
 
             // listen to messages from the devices, etc. to the client

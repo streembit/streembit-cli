@@ -64,6 +64,19 @@ class ZigbeeDevice extends Device {
         }
     }
 
+    is_feature_handled(feature) {
+        let num = iotdefinitions.ZIGBEE_CLUSTERMAP[feature]; 
+        return num > 1;
+    }
+
+    get_feature_type(feature) {
+        return iotdefinitions.ZIGBEE_CLUSTERMAP[feature]; // maps the Zigbee cluster to our generic feature type
+    }
+
+    get_feature_name(feature_type) {
+        return iotdefinitions.FEATURETYPEMAP[feature_type]; // maps the Zigbee feature type to a name
+    }
+
     types_to_features(types) {
         var features = [];
         for (let i = 0; i < types.length; i++) {
@@ -102,15 +115,21 @@ class ZigbeeDevice extends Device {
 
         this.details.address64 = payload.address64;
         this.details.address16 = payload.address16;
-        logger.debug("Device joined: " + this.id + " address16: " + this.details.address16);
-
-        // set to active
-        this.active = true;
+        logger.debug("Device announce: " + this.id + " address16: " + this.details.address16);
 
         // call the device online event handler of each features
         this.features.forEach((feature, key, map) => {
             feature.on_device_online(payload);
         });
+
+        // set to active
+        this.active = true;
+
+        if (this.details.endpoints && this.details.descriptors.size > 0) {
+            return;
+        }
+
+        logger.debug("Device joined " + this.id );
 
         // send a ZDO 0x0005 "Active Endpoint Request"
         var cmd = zigbeecmd.active_endpoint_request(this.details.address64, this.details.address16);
@@ -159,9 +178,9 @@ class ZigbeeDevice extends Device {
     }
 
     process_features() {
-        if (this.permission != iotdefinitions.PERMISSION_ALLOWED) {
+        if (this.permission == iotdefinitions.PERMISSION_DENIED) {
             // don't perform the binding and reporting in case the device permission is not sufficient
-            logger.debug("ZigbeeDevice process_features() called with no permission.")
+            logger.error("ZigbeeDevice process_features() called with no permission.")
             return;
         }
 
@@ -171,9 +190,8 @@ class ZigbeeDevice extends Device {
         };
 
         this.features.forEach((feature, key, map) => {
-            if (!feature.IEEEaddress || !feature.NWKaddress) {
-                feature.on_device_online(properties);
-            }
+            // make sure the NWKadress is set
+            feature.on_device_online(properties);
 
             let cluster = feature.cluster;
             let endpoint = this.select_endpoint(cluster);
@@ -188,20 +206,25 @@ class ZigbeeDevice extends Device {
     }
 
     on_clusterlist_receive(payload) {
+        logger.debug("Cluster list received for " + this.id);
+
         this.active = true;
 
         if (payload && payload.descriptor && payload.descriptor.endpoint && payload.descriptor.clusters) {
             // add the cluster list to the map
             this.details.descriptors.set(payload.descriptor.endpoint, payload.descriptor.clusters);
 
+            this.active = true;
+            this.verifyfeatures(payload.descriptor.clusters);
+
+            this.process_features();
+
+            // try to get the device info 
             if (payload.descriptor.clusters.indexOf("0000") > -1) {
                 // get the device info
                 var attributes = [0x03, 0x00, 0x04, 0x00, 0x05, 0x00];
                 var cmd = zigbeecmd.readAttributes(this.details.address64, this.details.address16, 0x0000, attributes, payload.descriptor.endpoint);
                 this.transport.send(cmd);
-            }
-            else {
-                this.process_clusters();
             }
         }
     }
@@ -272,15 +295,19 @@ class ZigbeeDevice extends Device {
 
     on_device_info_completed() {
         try {
+            logger.debug("Device info completed for " + this.id);
+
             if (this.permission == iotdefinitions.PERMISSION_NOT_COMISSIONED) {
                 // ask the user if the device is permitted
                 this.notify_device_info();
                 //
             }
-            else if (this.permission == iotdefinitions.PERMISSION_ALLOWED) {
-                this.active = true;
-                this.process_features();
-            }
+            //else if (this.permission == iotdefinitions.PERMISSION_ALLOWED) {
+            //    this.active = true;
+            //    this.process_features();
+            //}
+
+            //
         }
         catch (err) {
             logger.error("on_device_info_completed() error: %j", err);

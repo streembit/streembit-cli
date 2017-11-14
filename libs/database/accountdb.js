@@ -20,6 +20,7 @@ Copyright (C) 2017 The Streembit software development team
 */
 
 const dbinstance = require("libs/database").instance;
+const dbnamekey = "streembitsql";
 
 'use strict';
 
@@ -30,7 +31,7 @@ class AccountsDb {
 
     get database () {
         if (!this.m_database) {
-            this.m_database = dbinstance.sqldb;
+            this.m_database = dbinstance.databases[dbnamekey];
         }
         return this.m_database;
     }
