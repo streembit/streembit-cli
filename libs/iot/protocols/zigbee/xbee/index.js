@@ -62,6 +62,7 @@ class XbeeHandler {
         this.init_xbee_framehandler();
         this.online_devices = [];
         this.configured_devices = [];
+        this.last_onlinedevice_check = 0;
     }
 
     dispatch_datarcv_event(payload) {
@@ -677,7 +678,20 @@ class XbeeHandler {
         }
         else if (zcl_command == 0x01) {  // ZCL 0x01 Read attributes response 7.2
             this.handle_cluster_0402_01(frame, reader);
-        }           
+        }          
+        else if (zcl_command == 0x07) {  // ZCL 0x07 Configure reporting response 7.8
+            console.log(util.inspect(frame.data));
+            var status = reader.nextUInt8();
+            if (status == 0x00) {
+                this.dispatch_datarcv_event(
+                    {
+                        "type": iotdefinitions.EVENT_REPORT_CONFIGURED,
+                        "deviceid": frame.remote64,
+                        "status": 0
+                    }
+                );
+            }
+        }       
 
         //
     }
@@ -1245,6 +1259,9 @@ class XbeeHandler {
             }
             this.is_portopened = false;
         });
+
+        // set the onlide device timer value
+        this.last_onlinedevice_check = Date.now();
         
         //
     }
@@ -1290,19 +1307,33 @@ class XbeeHandler {
         });
     }
 
-    monitor() {
-        setInterval(
-            () => {
-                if (!this.is_portopened) {
-                    //console.log("try to init");
-                    return this.init();
-                }
+    dotasks() {
+        // check if the devices are online
+        console.log("xbee dotasks");
+        var currtime = Date.now();
+        var lastcheck = this.last_onlinedevice_check;
+        if ((currtime - this.last_onlinedevice_check) > 30000) {
+            console.log("xbee dotasks run");
+            if (!this.is_portopened) {
+                return this.init();
+            }
 
-                //TODO comment out
-                this.check_online_devices();
-            },
-            30000
-        );
+            this.check_online_devices();
+            this.last_onlinedevice_check = Date.now();            
+        }
+
+        //setInterval(
+        //    () => {
+        //        if (!this.is_portopened) {
+        //            //console.log("try to init");
+        //            return this.init();
+        //        }
+
+        //        //TODO comment out
+        //        this.check_online_devices();
+        //    }, 
+        //    30000
+        //);
     }
 }
 

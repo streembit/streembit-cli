@@ -127,7 +127,7 @@ class Database {
         return new Promise(
             (resolve, reject) => {
                 try {
-                    // CREATE UNIQUE INDEX IF NOT EXISTS idxIotdevicesDeviceid ON iotdevices (deviceid)
+                    logger.debug("create DB index " + index.name);
                     let sql = "CREATE";
                     if (index.unique == true) {
                         sql += " UNIQUE";

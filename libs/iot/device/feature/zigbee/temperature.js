@@ -90,42 +90,65 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         return this.cluster == param;
     }
 
+    on_device_announce(properties) {
+        this.IEEEaddress = properties.address64;
+        this.NWKaddress = properties.address16;
+        logger.debug("ZigbeeTemperatureFeature on_device_announce() IEEEaddress: " + this.IEEEaddress + " NWKaddress: " + this.NWKaddress);
+
+        if (!this.isbindcomplete) {
+            this.bind();
+        }
+        else {
+            if (!this.isreportcomplete) {
+                // bind was completed, send the report configure request
+                this.configure_report();
+            }
+            else {
+                logger.info("ZigbeeTemperatureFeature on_device_announce() do nothing as the feature was binded and report was configured");
+            }
+        }
+    }
+
+    bind() {        
+        var txn = 0x52;
+        logger.debug("ZigbeeTemperatureFeature cluster 0402, send bind request at endpoint: " + this.cluster_endpoint);
+        var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
+        this.transport.send(cmd);
+    }
+
     on_clusterlist_receive(endpoint) {
         try {
             logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " on_clusterlist_receive()");
-
-            this.cluster_endpoint = endpoint;    
-            logger.debug("ZigbeeTemperatureFeature cluster 0402 exists at endpoint " + endpoint + " send bind request");
-
-            // bind
-            var txn = 0x52;
-            var clusterid = CLUSTERID;
-            var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, clusterid, this.cluster_endpoint);
-            this.transport.send(cmd);            
+            this.cluster_endpoint = endpoint; 
+            this.bind();
         }
         catch (err) {
             logger.error("ZigbeeTemperatureFeature on_clusterlist_receive() error: %j", err);
         }
     }
 
+    configure_report() {
+        logger.debug("ZigbeeTemperatureFeature send configure report");
+        var attribute = 0x0000, datatype = 0x29, mininterval = 0x05, maxinterval = 0x005a;
+        var reports = [];
+        reports.push(
+            {
+                attribute: attribute,
+                datatype: datatype,
+                mininterval: mininterval,
+                maxinterval: maxinterval
+            }
+        );
+
+        var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, CLUSTERID, reports, this.cluster_endpoint);
+        this.transport.send(cmd);
+    }
+
     on_bind_complete() {
         try {
+            super.on_bind_complete();
             logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " 0x0402 on_bind_complete()");
-
-            var cluster = 0x0402;
-            var attribute = 0x0000, datatype = 0x29, mininterval = 0x05, maxinterval = 0x005a;
-            var reports = [];
-            reports.push(
-                {
-                    attribute: attribute,
-                    datatype: datatype,
-                    mininterval: mininterval,
-                    maxinterval: maxinterval
-                }
-            );
-
-            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, cluster, reports, this.cluster_endpoint);
-            this.transport.send(cmd);
+            this.configure_report();
         }
         catch (err) {
             logger.error("ZigbeeTemperatureFeature on_bind_complete() error: %j", err);
@@ -133,12 +156,14 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
     }
 
     on_report_configured() {
+        super.on_report_configured();
         logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " on_report_configured()");
     }
 
     on_device_online(properties) {       
         this.IEEEaddress = properties.address64;
         this.NWKaddress = properties.address16;
+        logger.debug("ZigbeeTemperatureFeature IEEEaddress: " + this.IEEEaddress + " NWKaddress: " + this.NWKaddress);
         if (this.IEEEaddress && this.NWKaddress) {
             super.on_device_online();
         }

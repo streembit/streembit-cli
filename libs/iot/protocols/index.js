@@ -33,19 +33,24 @@ class IoTProtocolHandler {
         this.initialized = false;
         this.mcuhandler = 0;
 
-        var handler = 0;
-        try {
-            var lib = 'libs/iot/protocols/' + this.protocol + '/' + this.mcu;
-            handler = require(lib);
-        }
-        catch (err) {
-            throw new Error("MCU library " + this.mcu + " error: " + err.message);
-        }
+        if (protocol && mcu) {
+            var handler = 0;
+            try {
+                var lib = 'libs/iot/protocols/' + this.protocol + '/' + this.mcu;
+                handler = require(lib);
+            }
+            catch (err) {
+                throw new Error("MCU library " + this.mcu + " error: " + err.message);
+            }
 
-        if (!handler) {
-            throw new Error("handler for MCU " + this.mcu + " is missing");
+            if (!handler) {
+                throw new Error("handler for MCU " + this.mcu + " is missing");
+            }
+            this.mcuhandler = new handler();
         }
-        this.mcuhandler = new handler();
+    }
+
+    dotasks() {
     }
 
     init() {        

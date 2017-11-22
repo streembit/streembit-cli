@@ -32,6 +32,8 @@ const iotdefinitions = require("libs/iot/definitions");
 const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 const ZigbeeDevice = require('libs/iot/device/zigbee/device');
 
+const DEFAULT_JOIN_TIME = 180; // permit joining interval in seconds
+
 let m_address64;
 let m_address16;
 let m_endpoint;
@@ -84,7 +86,7 @@ class ZigbeeGateway extends Device {
                 );  
 
                 // enable join 
-                //this.enable_join();
+                this.enable_join();
             }
            
         }
@@ -94,8 +96,7 @@ class ZigbeeGateway extends Device {
     }
 
     enable_join(interval) {
-        // enable join for 240 seconds
-        var time = interval || 240;
+        var time = interval || DEFAULT_JOIN_TIME;
         logger.debug("Gateway " + this.id + " enable join for " + time + " seconds.")
         var cmd = zigbeecmd.permitJoinRequest(m_address64, m_address16, time);
         this.transport.send(cmd);

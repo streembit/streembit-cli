@@ -59,6 +59,12 @@ class OccupancyFeature extends IoTFeature {
 
     configure() {
     }
+
+    bind() {
+    }
+
+    configure_report() {
+    }
 }
 
 module.exports = OccupancyFeature;

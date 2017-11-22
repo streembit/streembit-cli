@@ -108,32 +108,56 @@ class ZigbeeDevice extends Device {
         //
     }
 
+    on_report_configured(payload) {
+        try {
+            // call the device online event handler of each features
+            this.features.forEach((feature, key, map) => {
+                feature.on_report_configured(payload);
+            });            
+        }
+        catch (err) {
+            logger.error("on_device_announce() error: %j", err);
+        }
+    }
+
     on_device_announce(payload) {
-        if (this.permission == iotdefinitions.PERMISSION_DENIED) {
-            return this.disjoin();
+        try {
+            if (this.permission == iotdefinitions.PERMISSION_DENIED) {
+                return this.disjoin();
+            }
+
+            this.details.address64 = payload.address64;
+            this.details.address16 = payload.address16;
+            logger.debug("Device announce: " + this.id + " address16: " + this.details.address16);
+
+            // call the device online event handler of each features
+            this.features.forEach((feature, key, map) => {
+                feature.on_device_online(payload);
+            });
+
+            // set to active
+            this.active = true;
+
+            if (this.details.endpoints && this.details.descriptors.size > 0) {
+                // the endpoints are exists, just set the NWKaddress and bind
+                var properties = {
+                    address64: this.details.address64,
+                    address16: this.details.address16
+                };
+                this.features.forEach((feature, key, map) => {
+                    feature.on_device_announce(properties);
+                });
+            }
+            else {
+                logger.debug("Device joined " + this.id);
+                // send a ZDO 0x0005 "Active Endpoint Request"
+                var cmd = zigbeecmd.active_endpoint_request(this.details.address64, this.details.address16);
+                this.transport.send(cmd);
+            }
         }
-
-        this.details.address64 = payload.address64;
-        this.details.address16 = payload.address16;
-        logger.debug("Device announce: " + this.id + " address16: " + this.details.address16);
-
-        // call the device online event handler of each features
-        this.features.forEach((feature, key, map) => {
-            feature.on_device_online(payload);
-        });
-
-        // set to active
-        this.active = true;
-
-        if (this.details.endpoints && this.details.descriptors.size > 0) {
-            return;
+        catch (err) {
+            logger.error("on_device_announce() error: %j", err);
         }
-
-        logger.debug("Device joined " + this.id );
-
-        // send a ZDO 0x0005 "Active Endpoint Request"
-        var cmd = zigbeecmd.active_endpoint_request(this.details.address64, this.details.address16);
-        this.transport.send(cmd);
     }
 
     on_endpoint_receive(payload) {
@@ -350,6 +374,9 @@ class ZigbeeDevice extends Device {
             else if (payload.type == iotdefinitions.EVENT_DEVICE_INFO) {
                 this.on_device_info(payload);
             }
+            else if (payload.type == iotdefinitions.EVENT_REPORT_CONFIGURED) {
+                this.on_report_configured(payload);
+            }
             else if (payload.type == iotdefinitions.EVENT_DEVICE_BINDSUCCESS) {
                 this.features.forEach((feature, key, map) => {
                     if (feature.iscluster(payload.cluster)) {
@@ -382,7 +409,7 @@ class ZigbeeDevice extends Device {
             }
         }
         catch (err) {
-            logger.error("Device on_data_received() error: %j", err);
+            logger.error("Device on_data_received() error. Payload type: " + payload.type + " error msg: %j", err);
         }
     }
 

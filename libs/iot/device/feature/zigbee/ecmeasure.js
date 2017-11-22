@@ -137,7 +137,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
             }
         }
         catch (err) {
-            logger.error("EcMeasureFeature on_datareceive_event() error: %j", err);
+            logger.error("ZigbeeEcMeasureFeature on_datareceive_event() error: %j", err);
         }
     }    
 
@@ -145,66 +145,91 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         return this.cluster == param;
     }
 
+    on_device_announce(properties) {
+        this.IEEEaddress = properties.address64;
+        this.NWKaddress = properties.address16;
+        logger.debug("ZigbeeEcMeasureFeature on_device_announce() IEEEaddress: " + this.IEEEaddress + " NWKaddress: " + this.NWKaddress);
+
+        if (!this.isbindcomplete) {
+            this.bind();
+        }
+        else {
+            if (!this.isreportcomplete) {
+                // bind was completed, send the report configure request
+                this.configure_report();
+            }
+            else {
+                logger.info("ZigbeeEcMeasureFeature on_device_announce() do nothing as the feature was binded and report was configured");
+            }
+        }
+    }
+    
+    bind() {
+        var txn = 0x51;
+        logger.debug("ZigbeeOccupancyFeature cluster 0B04, send bind request at endpoint: " + this.cluster_endpoint);
+        var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
+        this.transport.send(cmd);
+    }
+
     // When the endpoint and cluster are identified, this receives the endpoint from the device.
     on_clusterlist_receive(endpoint) {
         try {
+            logger.debug("ZigbeeEcMeasureFeature " + this.IEEEaddress + " on_clusterlist_receive()");
             this.cluster_endpoint = endpoint;     
-            logger.debug("ZigbeeEcMeasureFeature cluster 0B04 exists at endpoint " + endpoint);
-
-            // bind
-            var txn = 0x51;
-            var clusterid = CLUSTERID;
-            var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, clusterid, this.cluster_endpoint);
-            this.transport.send(cmd);
-            
+            this.bind();            
         }
         catch (err) {
-            logger.error("EcMeasureFeature on_clusterlist_receive() error: %j", err);
+            logger.error("ZigbeeEcMeasureFeature on_clusterlist_receive() error: %j", err);
         }
+    }
+
+    configure_report() {
+        logger.debug("ZigbeeEcMeasureFeature send configure report");
+        var reports = [];
+        // power
+        var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 2;
+        reports.push(
+            {
+                attribute: attribute,
+                datatype: datatype,
+                mininterval: mininterval,
+                maxinterval: maxinterval,
+                reportable_change: reportable_change
+            }
+        );
+
+        // voltage
+        attribute = 0x0505, datatype = 0x21, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 10;
+        reports.push(
+            {
+                attribute: attribute,
+                datatype: datatype,
+                mininterval: mininterval,
+                maxinterval: maxinterval,
+                reportable_change: reportable_change
+            }
+        );
+
+        var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, CLUSTERID, reports, this.cluster_endpoint);
+        this.transport.send(cmd);
+
+        // read the settings
+        setTimeout(
+            () => {
+                this.read_settings();
+            },
+            500
+        );
     }
 
     on_bind_complete() {
         try {
-            var cluster = 0x0b04;
-            var reports = [];
-            // power
-            var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 2;
-            reports.push(
-                {
-                    attribute: attribute,
-                    datatype: datatype,
-                    mininterval: mininterval,
-                    maxinterval: maxinterval,
-                    reportable_change: reportable_change
-                }
-            );
-
-            // voltage
-            attribute = 0x0505, datatype = 0x21, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 10;
-            reports.push(
-                {
-                    attribute: attribute,
-                    datatype: datatype,
-                    mininterval: mininterval,
-                    maxinterval: maxinterval,
-                    reportable_change: reportable_change
-                }
-            );
-
-            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, cluster, reports, this.cluster_endpoint);
-            this.transport.send(cmd);
-
-            // read the settings
-            setTimeout(
-                () => {
-                    this.read_settings();
-                },
-                500
-            );
-
+            super.on_bind_complete();
+            logger.debug("ZigbeeEcMeasureFeature " + this.IEEEaddress + " 0B04 on_bind_complete()");
+            this.configure_report();
         }
         catch (err) {
-            logger.error("EcMeasureFeature on_bind_complete() error: %j", err);
+            logger.error("ZigbeeEcMeasureFeature on_bind_complete() error: %j", err);
         }
     }
 
@@ -214,6 +239,11 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
     on_device_contacting(payload) {
         // must send the report
+    }
+
+    on_report_configured() {
+        super.on_report_configured();
+        logger.debug("ZigbeeEcMeasureFeature " + this.IEEEaddress + " on_report_configured()");
     }
 
     on_device_online(properties) {

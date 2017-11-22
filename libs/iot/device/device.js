@@ -19,14 +19,13 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-
 'use strict';
-
 
 const events = require("libs/events");
 const logger = require('libs/logger');
 const iotdefinitions = require("libs/iot/definitions");
 const Devices = require("libs/devices");
+const TrackingEvent = require("./tracking_event");
 
 class Device {
 
@@ -105,6 +104,11 @@ class Device {
         return types;
     }
 
+    // Send an event and track if it was handled
+    send_tracking_event() {
+
+    }
+
     // override this withe the protocol specific map function
     get_feature_type(feature) {
     }
@@ -144,7 +148,7 @@ class Device {
                             let feature_handler = new feature_obj(this.id, feature, feature_type, this.transport);
                             if (feature_handler) {
                                 this.features.set(feature_type, feature_handler);
-                                logger.debug("feature " + feature_type + " added to device " + this.id);                                
+                                logger.debug("feature " + feature_name + " added to device " + this.id);                                
                             }
                         }
                     }
@@ -302,6 +306,7 @@ class Device {
 
     disjoin() {
     }
+
 }
 
 

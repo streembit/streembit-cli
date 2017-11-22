@@ -22,18 +22,18 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-
 const logger = require("libs/logger");
 const events = require("libs/events");
 const constants = require("libs/constants");
-const async = require("async");
+const IoTProtocolHandler = require("libs/iot/protocols");
 
-class Handler {
+class SixLowPanHandler extends IoTProtocolHandler {
 
     constructor() {
+        super();
     }
 
-    async init() {
+    init() {
         try {
             logger.info("6lowpan init")
             this.initialized = true;
@@ -44,4 +44,4 @@ class Handler {
     }
 }
 
-module.exports = Handler;
+module.exports = SixLowPanHandler;

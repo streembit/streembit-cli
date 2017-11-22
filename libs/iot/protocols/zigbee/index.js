@@ -43,7 +43,7 @@ class ZigbeeHandler extends IoTProtocolHandler {
         try {
             logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);         
             this.mcuhandler.init();
-            this.mcuhandler.monitor();
+            //this.mcuhandler.monitor();
             this.initialized = true;            
         }
         catch (err) {
@@ -53,6 +53,10 @@ class ZigbeeHandler extends IoTProtocolHandler {
 
     on_gateway_updated(payload) {
         zigbeecmd.on_gateway_updated(payload);
+    }
+
+    dotasks() {
+        this.mcuhandler.dotasks();
     }
 }
 

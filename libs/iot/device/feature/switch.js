@@ -65,6 +65,12 @@ class SwitchFeature extends IoTFeature {
 
     configure() {
     }
+
+    bind() {
+    }
+
+    configure_report() {
+    }
 }
 
 module.exports = SwitchFeature;

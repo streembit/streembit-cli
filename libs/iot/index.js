@@ -26,16 +26,19 @@ const config = require("libs/config");
 const logger = require("libs/logger");
 const events = require("libs/events");
 const util = require("util");
-const Devices = require("libs/devices")
+const Devices = require("libs/devices");
 const ZigbeeGateway = require('libs/iot/device/zigbee/gateway');
 const ZigbeeDevice = require('libs/iot/device/zigbee/device');
+const TrackingEvent = require('libs/iot/device/tracking_event');
 const iotdefinitions = require("libs/iot/definitions");
 const async = require('async');
+
 
 class IoTHandler {
     constructor() {
         this.protocol_handlers = new Map();
         this.devicelist = new Map();
+        this.tracking_event = 0;
     }
 
     getdevice(id) {
@@ -81,6 +84,28 @@ class IoTHandler {
         
     }
 
+    taskhandler() {
+        setInterval(
+            () => {
+                // monitor events
+                TrackingEvent.monitor();
+
+                // call the protocols task handlers
+                this.protocol_handlers.forEach(
+                    (handler, protocol) => {
+                        try {
+                            handler.dotasks();
+                        }
+                        catch (err) {
+                            logger.error("IoT handler dotasks error: " + err.message);
+                        }
+                    }
+                );
+            },
+            5000
+        );
+    }
+
     init() {
         try { 
             var conf = config.iot_config;
@@ -90,12 +115,15 @@ class IoTHandler {
 
             logger.info("Run IoT handler");
 
+            // create a tracking event handler to monitor event completions e.g. IOT_NEW_DEVICE_JOINED 
+            this.tracking_event = new TrackingEvent();
+
             // initialize the IoT device handlers Zigbee, Z-Wave, 6LowPan, etc.
             var protocols = conf.protocols;
             for (let i = 0; i < protocols.length; i++) {
                 logger.info("create protocol " + protocols[i].name + " handler");
-                let ProtocolHandler = require("libs/iot/protocols/" + protocols[i].name);
-                let handler = new ProtocolHandler(protocols[i].name, protocols[i].chipset);
+                var ProtocolHandler = require("libs/iot/protocols/" + protocols[i].name);
+                var handler = new ProtocolHandler(protocols[i].name, protocols[i].chipset);
                 this.protocol_handlers.set(protocols[i].name, handler);             
             };
          
@@ -105,7 +133,7 @@ class IoTHandler {
                     logger.debug("skip device " + devices[i].deviceid + " PERMISSION_DENIED");
                 }
                 else {
-                    let device = this.device_factory(devices[i]);
+                    var device = this.device_factory(devices[i]);
                     this.setdevice(devices[i].deviceid, device);
                 }
             }
@@ -124,6 +152,11 @@ class IoTHandler {
                     }
                 }
             );
+
+            // start the recurring tasks handler
+            this.taskhandler();
+
+            //
         }
         catch (err) {
             logger.error("IoT handler error: " + err.message);

@@ -48,10 +48,14 @@ class IoTFeature {
         this.isactive = false;
         this.datareceived = false;
         this.callbacks = new Map();
-        this.property_names = [];
-        this.isonline = false;
+        this.property_names = [];        
         this.last_update_time = 0;
         this.initialized = false;
+
+        // initialization flags
+        this.isonline = false;
+        this.isbindcomplete = false;
+        this.isreportcomplete = false;
     }
 
     on_datareceive_event(data, event) {
@@ -72,8 +76,25 @@ class IoTFeature {
         }        
     }
 
+    bind() {
+    }
+
+    configure_report() {
+    }
+
+    on_report_configured(payload) {
+        this.isreportcomplete = true;
+    }
+
     on_device_online() {
         this.isonline = true;
+    }
+
+    on_bind_complete() {
+        this.isbindcomplete = true;
+    }
+
+    on_device_announce() {
     }
 
     on_device_contacting(payload) {

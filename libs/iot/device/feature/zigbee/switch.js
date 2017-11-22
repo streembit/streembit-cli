@@ -73,7 +73,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
             );
         }
         catch (err) {
-            logger.error("SwitchFeature on_datareceive_event() error: %j", err);
+            logger.error("ZigbeeSwitchFeature on_datareceive_event() error: %j", err);
         }
     }
 
@@ -81,45 +81,77 @@ class ZigbeeSwitchFeature extends SwitchFeature {
         return this.cluster == param;
     }
 
+    on_device_announce(properties) {
+        this.IEEEaddress = properties.address64;
+        this.NWKaddress = properties.address16;
+        logger.debug("ZigbeeSwitchFeature on_device_announce() IEEEaddress: " + this.IEEEaddress + " NWKaddress: " + this.NWKaddress);
+
+        if (!this.isbindcomplete) {
+            this.bind();
+        }
+        else {
+            if (!this.isreportcomplete) {
+                // bind was completed, send the report configure request
+                this.configure_report();
+            }
+            else {
+                logger.info("ZigbeeTemperatureFeature on_device_announce() do nothing as the feature was binded and report was configured");
+            }
+        }
+    }
+
+    bind() {
+        var txn = 0x50;
+        logger.debug("ZigbeeSwitchFeature cluster 0006, send bind request at endpoint: " + this.cluster_endpoint);
+        var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
+        this.transport.send(cmd);
+    }
+
     on_clusterlist_receive(endpoint) {
         try {
+            logger.debug("ZigbeeSwitchFeature " + this.IEEEaddress + " on_clusterlist_receive()");
             this.cluster_endpoint = endpoint;
-            logger.debug("SwitchFeature cluster 0006 exists at endpoint " + endpoint);
-
-            // bind
-            var txn = 0x50;
-            var clusterid = CLUSTERID;
-            var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, clusterid, this.cluster_endpoint);
-            this.transport.send(cmd);            
+            this.bind();           
         }
         catch (err) {
-            logger.error("SwitchFeature on_clusterlist_receive() error: %j", err);
+            logger.error("ZigbeeSwitchFeature on_clusterlist_receive() error: %j", err);
         }
+    }
+
+    configure_report() {
+        logger.debug("ZigbeeSwitchFeature send configure report");
+        var attribute = 0x0000, datatype = 0x10, mininterval = 0x02, maxinterval = 0x0040;
+        var reports = [];
+        reports.push(
+            {
+                attribute: attribute,
+                datatype: datatype,
+                mininterval: mininterval,
+                maxinterval: maxinterval
+            }
+        );
+
+        var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, CLUSTERID, reports, this.cluster_endpoint);
+        this.transport.send(cmd);     
     }
 
     on_bind_complete(payload) {
         try {
-            var cluster = CLUSTERID;
-            var attribute = 0x0000, datatype = 0x10, mininterval = 0x02, maxinterval = 0x0040;
-            var reports = [];
-            reports.push(
-                {
-                    attribute: attribute,
-                    datatype: datatype,
-                    mininterval: mininterval,
-                    maxinterval: maxinterval
-                }
-            );
-
-            var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, cluster, reports, this.cluster_endpoint);
-            this.transport.send(cmd);            
+            super.on_bind_complete();
+            logger.debug("ZigbeeSwitchFeature " + this.IEEEaddress + " 0006 on_bind_complete()");
+            this.configure_report();
         }
         catch (err) {
-            logger.error("SwitchFeature on_bind_complete() error: %j", err);
+            logger.error("ZigbeeSwitchFeature on_bind_complete() error: %j", err);
         }
     }
 
     on_device_contacting(payload) {
+    }
+
+    on_report_configured() {
+        super.on_report_configured();
+        logger.debug("ZigbeeSwitchFeature " + this.IEEEaddress + " on_report_configured()");
     }
 
     on_device_online(properties) {   

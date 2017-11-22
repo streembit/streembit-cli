@@ -87,34 +87,35 @@ function log_error(err, param) {
 
 function level_log(level, msg, val1, val2, val3, val4) {
     try {
-        if (!logger) {
-            return;
-        }
 
-        if (!logger.log) {
-            console.log(msg);
-            return;
+        function logmsg(level, msg) {
+            if (!logger || !logger.log) {
+                console.log(msg);;
+            }
+            else {
+                logger.log(level, msg);
+            }
         }
 
         if (msg) {
             if (val1 != undefined && val2 != undefined && val3 != undefined && val4 != undefined) {
                 msg = util.format(msg, val1, val2, val3, val4);
-                logger.log(level, msg);
+                logmsg(level, msg);
             }
             else if (val1 != undefined && val2 != undefined && val3 != undefined) {
                 msg = util.format(msg, val1, val2, val3);
-                logger.log(level, msg);
+                logmsg(level, msg);
             }
             else if (val1 != undefined && val2 != undefined) {
                 msg = util.format(msg, val1, val2);
-                logger.log(level, msg);
+                logmsg(level, msg);
             }
             else if (val1 != undefined) {
                 msg = util.format(msg, val1);
-                logger.log(level, msg);
+                logmsg(level, msg);
             }
             else {
-                logger.log(level, msg);
+                logmsg(level, msg);
             }
 
             if (logger.taskbar_info_proc && level == "info") {

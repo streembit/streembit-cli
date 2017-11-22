@@ -182,9 +182,9 @@
             },
             {
                 "unique": true,
-                "name": "idxIotDeviceDeviceId",
-                "table": "iotdevices",
-                "column": "deviceid"
+                "name": "idxBcutxoTxid",
+                "table": "bcutxo",
+                "column": "txid"
             }
         ]
     }

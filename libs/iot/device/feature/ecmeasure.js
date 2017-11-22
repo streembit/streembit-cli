@@ -66,6 +66,12 @@ class EcMeasureFeature extends IoTFeature {
 
     configure() {
     }
+
+    bind() {
+    }
+
+    configure_report() {
+    }
 }
 
 module.exports = EcMeasureFeature;

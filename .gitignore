@@ -45,8 +45,10 @@ data/*.json
 
 *.ldb
 *.dat
-/db/streembitdb/
-/db/sqldb/
+*.db
+/db
+/db/sqlite/streembit/
+/db/leveldb/streembit/
 /build
 
 /.vs/config/applicationhost.config
@@ -57,3 +59,5 @@ config.json
 /data/account.json
 .vs/streembit-cli/v15/Browse.VC.db
 /config _copy.json
+db/sqlite/streembit/streembit.db
+db/leveldb/streembit/CURRENT

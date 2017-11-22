@@ -58,6 +58,12 @@ class TemperatureFeature extends IoTFeature {
 
     configure() {
     }
+
+    bind() {
+    }
+
+    configure_report() {
+    }
 }
 
 module.exports = TemperatureFeature;
