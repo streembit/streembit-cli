@@ -486,6 +486,10 @@ class IoTHandler {
                             this.on_device_denied(deviceid);
                         }
 
+                        // remove the tracking event if any
+                        TrackingEvent.remove_event_bydevice(deviceid, iotdefinitions.IOT_NEW_DEVICE_JOINED);
+
+                        //
                     }
                     catch (cerr) {
                         logger.error("device_list_configure after complete error: %j", cerr);
@@ -536,6 +540,10 @@ class IoTHandler {
                 }
 
                 updatelist.push(localdevice);
+
+                // remove the tracking event if any
+                TrackingEvent.remove_event_bydevice(deviceid, iotdefinitions.IOT_NEW_DEVICE_JOINED);
+
             }
 
             // update the database

@@ -43,12 +43,12 @@ class TrackingEvent {
         return m_events;
     }
 
-    static insert(eventtype, deviceid, data, interval) {
+    static insert(eventtype, gatewayid, data, interval) {
         var index = -1;
         var eventitem = 0;
         for (var i = 0; i < TrackingEvent.events.length; i++) {
             var item = TrackingEvent.events[i];
-            if (item.eventtype == eventtype && item.deviceid == deviceid && item.data.eventid == data.eventid) {
+            if (item.eventtype == eventtype && item.gatewayid == gatewayid && item.data.payload.event == data.payload.event) {
                 index = i;
                 eventitem = item[i];
                 break;
@@ -61,7 +61,7 @@ class TrackingEvent {
         if (!eventitem) {
             eventitem = {
                 eventtype: eventtype,
-                deviceid: deviceid,
+                gatewayid: gatewayid,
                 data: data
             };
         }
@@ -71,30 +71,80 @@ class TrackingEvent {
         TrackingEvent.events.push(eventitem);
     }
 
-    static remove(eventid, deviceid) {
+    static remove_event_bydevice(deviceid, eventid) {
+        try {
+            console.log("remove tracking event: " + eventid + ", deviceid: " + deviceid)
+            var index = -1;
+            for (var i = 0; i < TrackingEvent.events.length; i++) {
+                var item = TrackingEvent.events[i];
+                if (item.data && item.data.payload &&
+                    item.data.payload.device && item.data.payload.device.deviceid == deviceid &&
+                    item.data.payload.event == eventid) {
+                    index = i;
+                    break;
+                }
+            }
+            if (index > -1) {
+                TrackingEvent.events.splice(index, 1);
+                logger.debug("removing TrackingEvent event: " + eventid + ", deviceid: " + deviceid);
+            }
+        }
+        catch (err) {
+            logger.error("TrackingEvent remove_event_bydevice() error: %j", err);
+        }
+    }
+
+    static remove(eventtype, gatewayid, eventid) {
+        console.log("remove tracking event type: " + eventtype + ", event: " + eventid + ", gateway: " + gatewayid)
         var index = -1;
-        var eventitem = 0;
         for (var i = 0; i < TrackingEvent.events.length; i++) {
             var item = TrackingEvent.events[i];
-            if (item.deviceid == deviceid && item.data.eventid == data.eventid) {
+            if (item.eventtype == eventtype && item.gatewayid == gatewayid && item.data.payload.event == eventid) {
                 index = i;
-                eventitem = item[i];
                 break;
             }
         }
         if (index > -1) {
             TrackingEvent.events.splice(index, 1);
+            logger.debug("removing TrackingEvent type: " + eventtype + ", event: " + eventid + ", gateway: " + gatewayid);
         }
     }
 
+    static send(eventtype, gatewayid, data, interval) {
+        if (!eventtype ) {
+            throw new Error("Invalid tracking event, eventtype required.");
+        }
+        if (!gatewayid) {
+            throw new Error("Invalid tracking event, gatewayid required.");
+        }
+        if (!data || !data.payload) {
+            throw new Error("Invalid tracking event, data and data.payload required.");
+        }
+        if (!data.payload.event) {
+            throw new Error("Invalid tracking event, payload event required.");
+        }
 
-    static send(eventtype, deviceid, data, interval) {
-        events.emit(eventtype, deviceid, data);
-        TrackingEvent.events.insert(eventtype, deviceid, interval);
+        logger.debug("sending TrackingEvent type: " + eventtype + ", event: " + data.payload.event + ", gateway: " + gatewayid);
+        events.emit(eventtype, gatewayid, data);
+        TrackingEvent.insert(eventtype, gatewayid, data, interval);
     }
 
     static monitor() {
-        console.log("TrackingEvent monitor");
+        try {
+            //console.log("TrackingEvent monitor");
+            var currtime = Date.now();
+            for (var i = 0; i < TrackingEvent.events.length; i++) {
+                var item = TrackingEvent.events[i];
+                if ((currtime - item.time) > item.interval) {
+                    // resend 
+                    var eventtype = item.eventtype, gatewayid = item.gatewayid, data = item.data, interval = item.interval;
+                    TrackingEvent.send(eventtype, gatewayid, data, interval);
+                }
+            }
+        }
+        catch (err) {
+            logger.error("TrackingEvent monitor error: %j", err);
+        }
     }
 }
 

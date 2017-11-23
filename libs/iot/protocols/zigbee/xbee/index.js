@@ -1309,11 +1309,11 @@ class XbeeHandler {
 
     dotasks() {
         // check if the devices are online
-        console.log("xbee dotasks");
+        //console.log("xbee dotasks");
         var currtime = Date.now();
         var lastcheck = this.last_onlinedevice_check;
         if ((currtime - this.last_onlinedevice_check) > 30000) {
-            console.log("xbee dotasks run");
+            //console.log("xbee dotasks run");
             if (!this.is_portopened) {
                 return this.init();
             }

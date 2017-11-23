@@ -30,6 +30,7 @@ const config = require("libs/config");
 const util = require('util');
 const async = require('async');
 const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
+const TrackingEvent = require('libs/iot/device/tracking_event');
 
 class ZigbeeDevice extends Device {
 
@@ -308,9 +309,8 @@ class ZigbeeDevice extends Device {
                         device: this.get_device_info()
                     }
                 };
-
-                logger.debug("sending IOT_NEW_DEVICE_JOINED event for " + this.id);
-                events.emit(iotdefinitions.EVENT_NOTIFY_USERS, gatewayid, data);
+                
+                TrackingEvent.send(iotdefinitions.EVENT_NOTIFY_USERS, gatewayid, data);
             }
         );    
        
