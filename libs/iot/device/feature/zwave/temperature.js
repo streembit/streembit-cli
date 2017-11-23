@@ -25,9 +25,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const events = require("libs/events");
-const logger = require("libs/logger");
-const util = require('util');
+const logger = require("streembit-util").logger;
 
 const TEMPSENS_TIMEOUT = 10000; 
 

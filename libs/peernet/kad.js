@@ -22,7 +22,7 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 const config = require("libs/config");
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 const database = require("libs/database");
 const kad = require('libs/kad');
 const Account = require("libs/account");

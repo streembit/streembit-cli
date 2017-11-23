@@ -21,8 +21,8 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const events = require("libs/events");
-const logger = require('libs/logger');
+const events = require("streembit-util").events;
+const logger = require("streembit-util").logger;
 
 const DEFAULT_INTERVAL = 60000;
 
@@ -73,7 +73,7 @@ class TrackingEvent {
 
     static remove_event_bydevice(deviceid, eventid) {
         try {
-            console.log("remove tracking event: " + eventid + ", deviceid: " + deviceid)
+            //console.log("remove tracking event: " + eventid + ", deviceid: " + deviceid)
             var index = -1;
             for (var i = 0; i < TrackingEvent.events.length; i++) {
                 var item = TrackingEvent.events[i];

@@ -30,14 +30,14 @@ var levelup = require('levelup');
 var async = require('async');
 var util = require('util');
 var assert = require('assert');
-var logger = require("./libs/logger");
-var AppRunner = require("./modules");
-var database = require("./libs/database").instance;
+var logger = require("streembit-util").logger;
+var AppRunner = require("modules");
+var database = require("libs/database").instance;
 var config = require('libs/config');
 var utils = require("libs/utils");
 var Account = require("libs/account");
 var Tasks = require("libs/tasks");
-var events = require("libs/events");
+var events = require("streembit-util").events;
 const Users = require("libs/users");
 const Devices = require("libs/devices");
 const IoTHandler = require('libs/iot');
@@ -46,6 +46,7 @@ const WebSocket = require("libs/websocket");
 // initialize the logger
 function initialize_logger(callback) {
     var wdir = process.cwd();
+    //console.log("wdir: " + wdir);
     var logspath = path.join(wdir, config.log.logs_dir || "logs");
     var loglevel = config.log && config.log.level ? config.log.level : "debug";
     logger.init(loglevel, logspath, null, callback);
@@ -66,7 +67,10 @@ module.exports = exports = function (port, ip, password) {
                 function (callback) {
                     try {
                         console.log("config initialized port: " + config.port + ", host: " + config.host)
-                        initialize_logger(callback);
+                        //initialize_logger(callback);
+                        var loglevel = config.log && config.log.level ? config.log.level : "debug";
+                        logger.init(loglevel);
+                        callback();
                     }
                     catch (e) {
                         callback(e);
@@ -116,16 +120,6 @@ module.exports = exports = function (port, ip, password) {
                         callback(e);
                     }
                 },
-                // TODO 
-                //function (callback) {
-                //    try {
-                //        var devices = new Devices();
-                //        blockchia.init(callback);
-                //    }
-                //    catch (e) {
-                //        callback(e);
-                //    }
-                //},
                 function (callback) {
                     try {
                         // start the websocket server
@@ -158,7 +152,7 @@ module.exports = exports = function (port, ip, password) {
                         callback(e);
                     }
                 }
-            ],
+            ],  
             function (err) {
                 if (err) {
                     return logger.error("application init error: %j", err);

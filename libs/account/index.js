@@ -30,7 +30,7 @@ const secrand = require('secure-random');
 const config = require("libs/config");
 const Database = require("libs/database/accountdb");
 const peermsg = require("libs/message");
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 
 let instance = null;
 

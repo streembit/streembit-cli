@@ -23,8 +23,8 @@ Copyright (C) 2016 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
-const logger = require("libs/logger");
-const events = require("libs/events");
+const logger = require("streembit-util").logger;
+const events = require("streembit-util").events;
 const WebSocket = require('ws');
 const util = require("util");
 const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
@@ -152,7 +152,7 @@ class WsServer {
                 this.validate_user(message);
 
                 events.emit(
-                    events.TYPES.ONIOTEVENT,
+                    events.ONIOTEVENT,
                     message,
                     (err, data) => {
                         try {

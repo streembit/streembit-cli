@@ -23,12 +23,11 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const events = require("libs/events");
-const logger = require('libs/logger');
+const events = require("streembit-util").events;
+const logger = require("streembit-util").logger;
 const constants = require("libs/constants");
 const EventEmitter = require('events');
 const iotdefinitions = require("libs/iot/definitions");
-const util = require("util");
 
 class IoTFeature {
     constructor(deviceid, feature, featuretype, transport) {
@@ -69,7 +68,6 @@ class IoTFeature {
             this.callbacks.clear();
         }
         else {
-            //console.log("sending datarcv event " + util.inspect(frame));
             data.payload.deviceid = this.deviceid;
             data.payload.feature = this.type;
             events.emit(event, this.deviceid, data);

@@ -22,9 +22,7 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("libs/logger");
-const events = require("libs/events");
-const constants = require("libs/constants");
+const logger = require("streembit-util").logger;
 const IoTProtocolHandler = require("libs/iot/protocols");
 
 class SixLowPanHandler extends IoTProtocolHandler {

@@ -21,7 +21,7 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 const kad = require("libs/peernet/kad");
 const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
 

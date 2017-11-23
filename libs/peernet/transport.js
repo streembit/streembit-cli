@@ -24,8 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 const http = require("http");
 const config = require("libs/config");
 const constants = require("libs/constants");
-const logger = require("libs/logger");
-const events = require("libs/events");
+const logger = require("streembit-util").logger;
 
 let instance = null;
 

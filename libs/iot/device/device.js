@@ -21,8 +21,8 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const events = require("libs/events");
-const logger = require('libs/logger');
+
+const logger = require("streembit-util").logger;
 const iotdefinitions = require("libs/iot/definitions");
 const Devices = require("libs/devices");
 const TrackingEvent = require("./tracking_event");

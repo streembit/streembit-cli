@@ -26,8 +26,8 @@ Copyright (C) 2017 The Streembit software development team
 const constants = require("libs/constants");
 const Devices = require("libs/devices");
 const Device = require("libs/iot/device/device");
-const events = require("libs/events");
-const logger = require("libs/logger");
+const events = require("streembit-util").events;
+const logger = require("streembit-util").logger;
 const iotdefinitions = require("libs/iot/definitions");
 const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 const ZigbeeDevice = require('libs/iot/device/zigbee/device');

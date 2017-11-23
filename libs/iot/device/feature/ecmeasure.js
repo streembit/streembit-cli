@@ -26,13 +26,8 @@ Copyright (C) 2017 The Streembit software development team
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
 const IoTFeature = require("./feature");
-const events = require("libs/events");
-const logger = require("libs/logger");
-const async = require("async");
-const util = require('util');
 
 class EcMeasureFeature extends IoTFeature {
-
     constructor(deviceid, feature, feature_type, transport) {
         super(deviceid, feature, feature_type, transport);  
         this.voltage = iotdefinitions.IOT_STATUS_UNKOWN;

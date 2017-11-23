@@ -22,7 +22,7 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 
 module.exports = (message, callback) => {
     logger.debug("handle FIND_NODE message");

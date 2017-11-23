@@ -23,8 +23,8 @@ Copyright (C) 2016 The Streembit software development team
 
 const constants = require("libs/constants");
 const config = require("libs/config");
-const logger = require("libs/logger");
-const events = require("libs/events");
+const logger = require("streembit-util").logger;
+const events = require("streembit-util").events;
 const util = require("util");
 const Devices = require("libs/devices");
 const ZigbeeGateway = require('libs/iot/device/zigbee/gateway');
@@ -608,7 +608,7 @@ class IoTHandler {
     handle_events() {
 
         // events from Streembit users
-        events.on(events.TYPES.ONIOTEVENT, (payload, callback) => {
+        events.on(events.ONIOTEVENT, (payload, callback) => {
             try {
                 switch (payload.event) {
                     case iotdefinitions.IOT_REQUEST_DEVICES_LIST:

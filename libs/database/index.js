@@ -24,7 +24,7 @@ Copyright (C) 2016 The Streembit software development team
 
 const util = require('util');
 const dbschema = require('./schema.json');
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 
 const singleton = Symbol();
 const singleton_verifier = Symbol()

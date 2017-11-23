@@ -22,8 +22,8 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("libs/logger");
-const events = require("libs/events");
+const logger = require("streembit-util").logger;
+const events = require("streembit-util").events;
 const constants = require("libs/constants");
 const PeerNet = require("libs/peernet");
 const Users = require("libs/users");

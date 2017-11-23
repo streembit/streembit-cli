@@ -21,11 +21,6 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("libs/logger");
-const events = require("libs/events");
-const config = require('libs/config');
-const constants = require("libs/constants");
-
 class IoTProtocolHandler {
     constructor(protocol, mcu) {
         this.protocol = protocol;

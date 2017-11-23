@@ -21,7 +21,7 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 const async = require("async");
 const peermsg = require("./msghandlers/peer.js");
 const storemsg = require("./msghandlers/store.js");

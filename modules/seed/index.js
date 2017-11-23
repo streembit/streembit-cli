@@ -25,7 +25,7 @@ var streembit = streembit || {};
 
 const async = require("async");
 const config = require("libs/config");
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 const db = require("libs/database");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");

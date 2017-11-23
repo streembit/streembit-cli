@@ -25,13 +25,12 @@ Copyright (C) 2016 The Streembit software development team
 const constants = require("libs/constants");
 const async = require("async");
 const config = require("libs/config");
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 const peerutils = require("libs/peernet/peerutils");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
 const PeerTransport = require("libs/peernet/transport");
-const events = require("libs/events");
-
+const events = require("streembit-util").events;
 
 function process_tasks() {
     try {

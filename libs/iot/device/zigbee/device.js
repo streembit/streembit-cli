@@ -24,8 +24,8 @@ Copyright (C) 2017 The Streembit software development team
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
 const Device = require("libs/iot/device/device");
-const events = require("libs/events");
-const logger = require("libs/logger");
+const events = require("streembit-util").events;
+const logger = require("streembit-util").logger;
 const config = require("libs/config");
 const util = require('util');
 const async = require('async');
@@ -298,7 +298,7 @@ class ZigbeeDevice extends Device {
             protocol: iotdefinitions.ZIGBEE
         }
         events.emit(
-            events.TYPES.ONIOTEVENT,
+            events.ONIOTEVENT,
             payload,
             (gateway) => {
                 let gatewayid = gateway.id;

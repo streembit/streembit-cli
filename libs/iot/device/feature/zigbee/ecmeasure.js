@@ -26,9 +26,7 @@ Copyright (C) 2017 The Streembit software development team
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
 const EcMeasureFeature = require("../ecmeasure");
-const events = require("libs/events");
-const logger = require("libs/logger");
-const async = require("async");
+const logger = require("streembit-util").logger;
 const util = require('util');
 const zigbeecmd = require("libs/iot/protocols/zigbee/commands");
 
@@ -49,17 +47,6 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         this.power_multiplier = 1;
         this.voltage_divisor = 0;
         this.voltage_multiplier = 1;
-
-        //try {
-        //    if (feature.settings) {
-        //        let settings = JSON.parse(feature.settings);
-        //        if (settings) {
-        //            this.power_divisor = (settings.acformatting && settings.acformatting.divisor) ? settings.acformatting.divisor : 0;
-        //            this.power_multiplier = (settings && settings.acformatting && settings.acformatting.multiplier) ? settings.acformatting.multiplier : 1;
-        //        }
-        //    }            
-        //}
-        //catch (err) { }
 
         this.property_names.push(iotdefinitions.PROPERTY_ACTIVEPOWER);
         this.property_names.push(iotdefinitions.PROPERTY_VOLTAGE);

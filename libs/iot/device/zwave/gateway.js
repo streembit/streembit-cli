@@ -25,8 +25,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const Device = require("libs/iot/device/device");
-const events = require("libs/events");
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 const iotdefinitions = require("libs/iot/definitions");
 
 class ZwaveGateway extends Device {

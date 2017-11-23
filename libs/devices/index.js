@@ -23,7 +23,7 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 const async = require("async");
 const config = require("libs/config");
 const Database = require("libs/database/devicesdb");

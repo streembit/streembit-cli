@@ -21,7 +21,7 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 const seedrunner = require("./seed");
 const clientrunner = require("./client");
 const config = require('libs/config');

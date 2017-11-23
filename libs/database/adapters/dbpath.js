@@ -24,7 +24,7 @@ Copyright (C) 2016 The Streembit software development team
 
 const fs = require('fs');
 const path = require('path');
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 
 class DbPath {
     constructor(verifier) {

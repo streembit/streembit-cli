@@ -25,7 +25,7 @@ const sqlite3 = require('sqlite3').verbose();
 const config = require("libs/config");
 const path = require('path');
 const DbPath = require("./dbpath");
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 
 class Database {
     constructor() {

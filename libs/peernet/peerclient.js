@@ -22,7 +22,7 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 const config = require("libs/config");
-const logger = require("libs/logger");
+const logger = require("streembit-util").logger;
 const constants = require("libs/constants");
 const async = require("async");
 const PeerTransport = require("./transport");

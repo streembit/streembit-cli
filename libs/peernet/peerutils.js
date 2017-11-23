@@ -23,7 +23,7 @@ Copyright (C) 2017 The Streembit software development team
 
 var http = require("http");
 var stutils = require("libs/utils");
-var logger = require("libs/logger");
+var logger = require("streembit-util").logger;
 
 /*
     Discover the ipaddress of this node

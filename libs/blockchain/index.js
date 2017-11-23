@@ -24,7 +24,7 @@ Copyright (C) 2016 The Streembit software development team
 
 
 var config = require("libs/config");
-var logger = require("libs/logger");
+var logger = require("streembit-util").logger;
 var merkle = require("./merkle");
 
 module.exports = exports = function (callback) {

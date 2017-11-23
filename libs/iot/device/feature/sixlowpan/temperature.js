@@ -26,9 +26,6 @@ Copyright (C) 2017 The Streembit software development team
 const constants = require("libs/constants");
 const iotdefinitions = require("libs/iot/definitions");
 const TemperatureFeature = require("../temperature");
-const events = require("libs/events");
-const logger = require("libs/logger");
-const util = require('util');
 
 const TEMPSENS_TIMEOUT = 10000; 
 
