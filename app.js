@@ -44,14 +44,6 @@ const IoTHandler = require('libs/iot');
 const WebSocket = require("libs/websocket");
 
 // initialize the logger
-function initialize_logger(callback) {
-    var wdir = process.cwd();
-    //console.log("wdir: " + wdir);
-    var logspath = path.join(wdir, config.log.logs_dir || "logs");
-    var loglevel = config.log && config.log.level ? config.log.level : "debug";
-    logger.init(loglevel, logspath, null, callback);
-}
-
 module.exports = exports = function (port, ip, password) {
     try {
         async.waterfall(
@@ -66,8 +58,7 @@ module.exports = exports = function (port, ip, password) {
                 },
                 function (callback) {
                     try {
-                        console.log("config initialized port: " + config.port + ", host: " + config.host)
-                        //initialize_logger(callback);
+                        //console.log("config initialized port: " + config.port + ", host: " + config.host);
                         var loglevel = config.log && config.log.level ? config.log.level : "debug";
                         logger.init(loglevel);
                         callback();
