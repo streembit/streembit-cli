@@ -649,11 +649,11 @@ class IoTHandler {
 
     initapp(callback) {
         try {
-            console.log("iot initapp")
             // create a tracking event handler to monitor event completions e.g. IOT_NEW_DEVICE_JOINED 
             this.tracking_event = new TrackingEvent();
 
             // initialize the IoT device handlers Zigbee, Z-Wave, 6LowPan, etc.
+            let conf = config.iot_config;
             let protocols = conf.protocols;
             for (let i = 0; i < protocols.length; i++) {
                 logger.info("create protocol " + protocols[i].name + " handler");
@@ -710,7 +710,7 @@ class IoTRunner {
         try {
             let conf = config.iot_config;
             if (!conf.run) {
-                return callback(null, "Don't run IoT handler");
+                return callback(null, "Config IoT handler -> not running");
             }
 
             logger.info("Run IoT handler");
@@ -720,15 +720,12 @@ class IoTRunner {
             async.series(
                 [
                     function (cbfn) {
-                        console.log("call initdevices");
                         iot.initdevices(cbfn);                        
                     },
-                    function (cbfn) {
-                        console.log("call initwshandler");
+                    function (cbfn) {                        
                         iot.initwshandler(cbfn);
                     },
-                    function (cbfn) {
-                        console.log("call initapp");
+                    function (cbfn) {                        
                         iot.initapp(cbfn);
                     }
                 ],

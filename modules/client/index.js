@@ -39,8 +39,7 @@ module.exports = exports = function (callback) {
 
         var conf = config.client_config;
         if (!conf.run) {
-            logger.debug("Don't run streembit client handler");
-            return callback(null, "Don't run streembit client handler");
+            return callback(null, "Config client handler -> not running");
         }
 
         logger.info("Run streembit client handler, net: " + config.net );

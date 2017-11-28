@@ -39,8 +39,7 @@ module.exports = exports = function (callback) {
 
         var conf = config.seed_config;
         if (!conf.run) {
-            logger.debug("Don't run seed handler");
-            return callback(null, "Don't run seed handler");
+            return callback(null, "Config seed handler -> not running");
         }
 
         async.waterfall(
