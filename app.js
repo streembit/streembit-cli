@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Zsolt Pardi 
+Author: Tibor Z Pardi 
 Copyright (C) 2016 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ var util = require('util');
 var assert = require('assert');
 var logger = require("streembit-util").logger;
 var AppRunner = require("modules");
-var database = require("libs/database").instance;
+var database = require("streembit-db").instance;
 var config = require('libs/config');
 var utils = require("libs/utils");
 var Account = require("libs/account");
@@ -42,6 +42,7 @@ const Users = require("libs/users");
 const Devices = require("libs/devices");
 const IoTHandler = require('libs/iot');
 const WebSocket = require("libs/websocket");
+const dbschema = require("./dbschema");
 
 // initialize the logger
 module.exports = exports = function (port, ip, password) {
@@ -58,7 +59,6 @@ module.exports = exports = function (port, ip, password) {
                 },
                 function (callback) {
                     try {
-                        //console.log("config initialized port: " + config.port + ", host: " + config.host);
                         var loglevel = config.log && config.log.level ? config.log.level : "debug";
                         logger.init(loglevel);
                         callback();
@@ -68,12 +68,7 @@ module.exports = exports = function (port, ip, password) {
                     }
                 },
                 function (callback) {
-                    try {
-                        database.init(__dirname, callback);
-                    }
-                    catch (e) {
-                        callback(e);
-                    }
+                    database.init(dbschema, callback);
                 },
                 function (callback) {
                     try {
@@ -121,7 +116,7 @@ module.exports = exports = function (port, ip, password) {
                         callback();
                     }
                     catch (e) {
-                        callback(e);
+                        callback("Starting web socket error: " + e.message);
                     }
                 },
                 function (callback) {

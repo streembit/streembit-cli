@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Zsolt Pardi 
+Author: Tibor Z Pardi 
 Copyright (C) 2016 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -608,47 +608,50 @@ class IoTHandler {
     handle_events() {
 
         // events from Streembit users
-        events.on(events.ONIOTEVENT, (payload, callback) => {
-            try {
-                switch (payload.event) {
-                    case iotdefinitions.IOT_REQUEST_DEVICES_LIST:
-                        this.device_list_response(payload.id, callback);
-                        break
-                    case iotdefinitions.IOT_DEVICES_LIST_CONFIGURE:
-                        this.device_list_configure(payload.id, payload.list, callback);
-                        break
-                    case iotdefinitions.IOT_ALLDEVICES_LIST_REQUEST:
-                        this.send_all_devices(payload.id, callback);
-                        break
-                    case iotdefinitions.IOT_SET_DEVICE_PERMISSION_REQUEST:
-                        this.set_device_permission(payload, callback);
-                        break
-                    case iotdefinitions.IOT_ENABLE_JOIN_REQUEST:
-                        this.enable_join(payload, callback);
-                        break
-                    case iotdefinitions.IOT_DELETE_DEVICE_REQUEST:
-                        this.delete_device(payload, callback);
-                        break
-                    case iotdefinitions.EVENT_GATEWAY_DATA_REQUEST:
-                        this.send_gateway_details(payload, callback);
-                        break
-                    default:
-                        var device = this.getdevice(payload.id);
-                        if (!device) {
-                            throw new Error("device for id " + id + " does not exists at the gateway");
-                        }
-                        device.executecmd(payload, callback);
-                        break;
-                }
+        events.register(
+            events.ONIOTEVENT,
+            (payload, callback) => {
+                try {
+                    switch (payload.event) {
+                        case iotdefinitions.IOT_REQUEST_DEVICES_LIST:
+                            this.device_list_response(payload.id, callback);
+                            break
+                        case iotdefinitions.IOT_DEVICES_LIST_CONFIGURE:
+                            this.device_list_configure(payload.id, payload.list, callback);
+                            break
+                        case iotdefinitions.IOT_ALLDEVICES_LIST_REQUEST:
+                            this.send_all_devices(payload.id, callback);
+                            break
+                        case iotdefinitions.IOT_SET_DEVICE_PERMISSION_REQUEST:
+                            this.set_device_permission(payload, callback);
+                            break
+                        case iotdefinitions.IOT_ENABLE_JOIN_REQUEST:
+                            this.enable_join(payload, callback);
+                            break
+                        case iotdefinitions.IOT_DELETE_DEVICE_REQUEST:
+                            this.delete_device(payload, callback);
+                            break
+                        case iotdefinitions.EVENT_GATEWAY_DATA_REQUEST:
+                            this.send_gateway_details(payload, callback);
+                            break
+                        default:
+                            var device = this.getdevice(payload.id);
+                            if (!device) {
+                                throw new Error("device for id " + id + " does not exists at the gateway");
+                            }
+                            device.executecmd(payload, callback);
+                            break;
+                    }
 
-            }
-            catch (err) {
-                if (callback) {
-                    callback(err.message);
                 }
-                logger.error("ONIOTEVENT error: " + err.message);
+                catch (err) {
+                    if (callback) {
+                        callback(err.message);
+                    }
+                    logger.error("ONIOTEVENT error: " + err.message);
+                }
             }
-        });
+        );
 
         // events from the protocol transports
         events.on(

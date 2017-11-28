@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Zsolt Pardi 
+Author: Tibor Z Pardi 
 Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -115,22 +115,28 @@ class TaskManager {
         try {
 
             // initialize the task event handler
-            events.on(events.TASK_INIT, (task, payload) => {
-                switch (task) {
-                    case constants.TASK_PUBLISHACCOUNT:
-                        this.publish_account();
-                        break;
-                    case constants.TASK_INFORM_CONTACTS:
-                        this.inform_contacts(payload);
-                        break;
-                    default:
-                        break;
+            events.register(
+                this.ONTASK,
+                (task, payload) => {
+                    switch (task) {
+                        case constants.TASK_PUBLISHACCOUNT:
+                            this.publish_account();
+                            break;
+                        case constants.TASK_INFORM_CONTACTS:
+                            this.inform_contacts(payload);
+                            break;
+                        default:
+                            break;
+                    }
                 }
-            });
+            );
 
-            events.on(events.APP_INIT, () => {
-                this.on_application_init();
-            });
+            events.register(
+                events.ONAPPINIT,
+                (result) => {
+                    this.on_application_init();
+                }
+            );
 
             callback();
         }

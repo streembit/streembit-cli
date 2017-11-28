@@ -13,14 +13,13 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Zsolt Pardi 
+Author: Tibor Z Pardi 
 Copyright (C) 2016 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
 */
 
 'use strict';
-
 
 const constants = require("libs/constants");
 const async = require("async");

@@ -13,13 +13,13 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Zsolt Pardi 
+Author: Tibor Z Pardi 
 Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
 */
 
-const dbinstance = require("libs/database").instance;
+const dbinstance = require("streembit-db").instance;
 const dbnamekey = "streembitsql";
 
 'use strict';

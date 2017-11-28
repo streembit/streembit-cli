@@ -50,6 +50,8 @@ data/*.json
 /db/sqlite/streembit/
 /db/leveldb/streembit/
 /build
+db/*/*
+db/*/*/*
 
 /.vs/config/applicationhost.config
 

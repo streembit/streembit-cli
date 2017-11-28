@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
 
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Zsolt Pardi
+Author: Tibor Z Pardi
 Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const config = require("libs/config");
 const logger = require("streembit-util").logger;
-const database = require("libs/database");
+const db = require("streembit-db").instance;
 const kad = require('libs/kad');
 const Account = require("libs/account");
 const utils = require("libs/utils");
@@ -150,7 +150,7 @@ class KadHandler {
         var options = {
             transport: transport,
             logger: logger,
-            storage: database.db["streembitkv"], // streembit key-value database (leveldb)
+            storage: db.getdb("streembitkv"), // streembit key-value database (leveldb)
             seeds: seeds,
             isseed: options.isseed
         };

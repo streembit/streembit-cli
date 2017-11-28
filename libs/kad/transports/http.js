@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Zsolt Pardi 
+Author: Tibor Z Pardi 
 Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
   
@@ -38,6 +38,7 @@ var inherits = require('util').inherits;
 var http = require('http');
 var https = require('https');
 var RPC = require('../rpc');
+var events = require("streembit-util").events;
 
 // create agents to enable http persistent connections:
 var httpagent = new http.Agent({keepAlive: true, keepAliveMsecs: 25000});
@@ -74,147 +75,85 @@ function HTTPTransport(contact, options) {
 
 inherits(HTTPTransport, RPC);
 
-/**
- * Opens the HTTP server and handles incoming messages
- * @private
- * @param {Function} done
- */
-HTTPTransport.prototype._open = function(done) {
-  var self = this;
+HTTPTransport.prototype._open = function (done) {
+    var self = this;
 
-  function createServer(handler) {
-    return self._sslopts ?
-           self._protocol.createServer(self._sslopts, handler) :
-           self._protocol.createServer(handler);
-  }
-
-  this.peer_processor = function(payload, req, res) {
-      try {
-
-          function create_error_buffer(err) {
-              var errmsg = JSON.stringify({ error: err.message ? err.message : err });
-              var buffer = new Buffer(errmsg);
-              return buffer;
-          }
-
-          function complete(err, data) {
-              if (err) {
-                  res.statusCode = 500;
-                  var buffer = create_error_buffer(err);
-                  return res.end(buffer);
-              }
-
-              // make sure it is a buffer
-              if (data && typeof data != "string") {
-                  data = JSON.stringify(data);
-              }
-
-              res.end(data);
-          }
-
-          var retval = false;
-
-          var message = JSON.parse(payload);
-          if (!message || !message.type) {
-              return false;
-          }
-
-          switch (message.type) {
-              case "DISCOVERY":
-                  var ipaddress = req.connection.remoteAddress;
-                  var reply = JSON.stringify({ address: ipaddress });
-                  res.end(reply);
-                  retval = true;
-                  break;
-
-              case "PUT":
-              case "GET":
-              case "TXN":
-              case "PING":
-                  this.peer_msg_receive(message, complete);
-                  retval = true;
-                  break;
-
-              default:
-                  // bad request
-                  res.statusCode = 405;
-                  res.end();
-                  retval = true;
-          }
-      }
-      catch (err) {
-          self._log.error('HTTP peer_processor error: %s', err.message);
-          res.end();
-          return true;
-      }
-
-      return retval;
-  }
-
-  this._server = createServer(function(req, res) {
-    var payload = '';
-    var message = null;
-
-    if (self._cors) {
-        self._addCrossOriginHeaders(req, res);
-    }
-
-    if (req.method === 'OPTIONS') {
-        return res.end();
-    }
-
-    if (req.method !== 'POST') {
-        res.statusCode = 400;
-        return res.end();
-    }
-
-    req.on('error', function(err) {
-        self._log.warn('remote client terminated early: %s', err.message);
-        self.receive(null);
-    });
-
-    req.on('data', function(chunk) {
-        payload += chunk.toString();
-    });
-
-    //request end
-    req.on('end', function () {
-
-        var processed = self.peer_processor(payload, req, res);
-        if (processed) {
-            return;
-        }
-
-        var buffer = new Buffer(payload);
-
+    this.requesthandler = function (payload, req, res) {
         try {
-            message = Message.fromBuffer(buffer);
+
+            function create_error_buffer(err) {
+                var errmsg = JSON.stringify({ error: err.message ? err.message : err });
+                var buffer = new Buffer(errmsg);
+                return buffer;
+            }
+
+            function complete(err, data) {
+                if (err) {
+                    res.statusCode = 500;
+                    var buffer = create_error_buffer(err);
+                    return res.end(buffer);
+                }
+
+                // make sure it is a buffer
+                if (data && typeof data != "string") {
+                    data = JSON.stringify(data);
+                }
+
+                res.end(data);
+            }
+
+            var message = JSON.parse(payload);
+            if (!message || !message.type) {
+                try {
+                    var buffer = new Buffer(payload);
+                    message = Message.fromBuffer(buffer);
+
+                    if (Message.isRequest(message) && message.id) {
+                        var pending = {
+                            timestamp: Date.now(),
+                            response: res
+                        };
+                        self._pendingmsgs.set(message.id, pending);
+                    }
+
+                    self.receive(buffer, {});
+                }
+                catch (err) {
+                    this._log.error('HTTP requesthandler message error: ' + err.message);
+                    return self.receive(null);
+                }
+            }
+            else {
+                switch (message.type) {
+                    case "PUT":
+                    case "GET":
+                    case "PING":
+                        this.peer_msg_receive(message, complete);
+                        break;
+
+                    default:
+                        // bad request
+                        res.statusCode = 405;
+                        res.end();
+                        break;
+                }
+            }
         }
         catch (err) {
-            return self.receive(null);
+            self._log.error('HTTP requesthandler error: %s', err.message);
+            res.end();
         }
+    }
 
-        if (Message.isRequest(message) && message.id) {
-            var pending = {
-                timestamp: Date.now(),
-                response: res
-            };
-            self._pendingmsgs.set(message.id, pending);
+    events.register(
+        events.ONPEERMSG,
+        (payload, req, res) => {
+            self.requesthandler(payload, req, res);
         }
+    );
 
-        self.receive(buffer, {});
-    });
-
-  });
-
-  // we should disable nagling as all of our response gets sent in one go:
-  this._server.on('connection', function(socket) {
-    // disable the tcp nagle algorithm on the newly accepted socket:
-    socket.setNoDelay(true);
-  });
-
-  this._server.listen(this._contact.port, done);
 };
+
 
 /**
  * Sends a RPC to the given contact
@@ -283,20 +222,8 @@ HTTPTransport.prototype._send = function(data, contact) {
  * @private
  */
 HTTPTransport.prototype._close = function() {
-  this._server.close();
 };
 
-/**
- * Adds CORS headers to the given response object
- * @private
- * @param {http.IncomingMessage} res
- */
-HTTPTransport.prototype._addCrossOriginHeaders = function(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.setHeader('Access-Control-Allow-Methods', '*');
-  res.setHeader('Access-Control-Allow-Headers', '*');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-};
 
 /**
  * Listen for dropped messages and make sure we clean up references
