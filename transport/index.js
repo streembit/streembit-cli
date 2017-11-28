@@ -34,7 +34,7 @@ class HTTPTransport {
 
     constructor(options) {
         this.cors = options && !!options.cors;
-        this.sslopts = options && options.ssl;
+        this.sslopts = options && options.ssl ? options.ssl : 0;
         this.protocol = this.sslopts ? https : http;
         this.agent = this.sslopts ? httpsagent : httpagent;
         this.server = 0;
@@ -42,7 +42,7 @@ class HTTPTransport {
     }  
 
     create_server(handler) {
-        return this._sslopts ?
+        return this.sslopts ?
             this.protocol.createServer(this.sslopts, handler) :
             this.protocol.createServer(handler);
     }
@@ -54,47 +54,50 @@ class HTTPTransport {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
     };
 
+    handler(req, res) {
+        try {
+            var payload = '';
+            var message = null;
+
+            if (this.cors) {
+                this.add_crossorigin_headers(req, res);
+            }
+
+            if (req.method === 'OPTIONS') {
+                return res.end();
+            }
+
+            if (req.method !== 'POST') {
+                res.statusCode = 400;
+                return res.end();
+            }
+
+            req.on('error', function (err) {
+                logger.error('Http transport server error: %', err.message);
+            });
+
+            req.on('data', function (chunk) {
+                payload += chunk.toString();
+            });
+
+            //request end
+            req.on('end', function () {
+                try {
+                    events.peermsg(payload, req, res);
+                }
+                catch (err) {
+                    logger.error("HTTPTransport events.peermsg error: " + err.message);
+                }
+            });
+        }
+        catch (err) {
+            logger.error('Http transport handler error: %', err.message);
+        }
+    }
 
     init( done) {
 
-        this.server = this.create_server(
-            (req, res) => {
-                var payload = '';
-                var message = null;
-
-                if (this.cors) {
-                    this.add_crossorigin_headers(req, res);
-                }
-
-                if (req.method === 'OPTIONS') {
-                    return res.end();
-                }
-
-                if (req.method !== 'POST') {
-                    res.statusCode = 400;
-                    return res.end();
-                }
-
-                req.on('error', function (err) {
-                    logger.warn('remote client terminated early: %s', err.message);
-                    self.receive(null);
-                });
-
-                req.on('data', function (chunk) {
-                    payload += chunk.toString();
-                });
-
-                //request end
-                req.on('end', function () {
-                    try {
-                        events.peermsg(payload, req, res);
-                    }
-                    catch (err) {
-                        logger.error("HTTPTransport events.peermsg error: " + err.message);
-                    }
-                });
-            }
-        );
+        this.server = this.create_server(this.handler);
 
         this.server.on(
             'connection',
@@ -104,7 +107,10 @@ class HTTPTransport {
             }
         );
 
-        this.server.listen(this.port, done);
+        this.server.listen(this.port, () => {
+            logger.info('Http transport listeining on port ' + this.port);
+            done();
+        });
     }
 
     close () {

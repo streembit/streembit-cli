@@ -606,7 +606,6 @@ class IoTHandler {
     }
 
     handle_events() {
-
         // events from Streembit users
         events.register(
             events.ONIOTEVENT,

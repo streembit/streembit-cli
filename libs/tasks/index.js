@@ -116,7 +116,7 @@ class TaskManager {
 
             // initialize the task event handler
             events.register(
-                this.ONTASK,
+                events.ONTASK,
                 (task, payload) => {
                     switch (task) {
                         case constants.TASK_PUBLISHACCOUNT:

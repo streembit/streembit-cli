@@ -42,6 +42,7 @@ const Users = require("libs/users");
 const Devices = require("libs/devices");
 const IoTHandler = require('libs/iot');
 const WebSocket = require("libs/websocket");
+const Transport = require("./transport");
 const dbschema = require("./dbschema");
 
 // initialize the logger
@@ -69,6 +70,13 @@ module.exports = exports = function (port, ip, password) {
                 },
                 function (callback) {
                     database.init(dbschema, callback);
+                },
+                function (callback) {
+                    var options = {
+                        port: config.port
+                    };
+                    var transport = new Transport(options);
+                    transport.init(callback);
                 },
                 function (callback) {
                     try {

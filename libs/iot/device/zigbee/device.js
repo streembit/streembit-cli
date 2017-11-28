@@ -291,7 +291,6 @@ class ZigbeeDevice extends Device {
     }
 
     notify_device_info() {    
-
         // get the gateway 
         var payload = {
             event: iotdefinitions.EVENT_GATEWAY_DATA_REQUEST,
