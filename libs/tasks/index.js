@@ -30,8 +30,7 @@ const Users = require("libs/users");
 const async = require("async");
 const Account = require("libs/account");
 const config = require("libs/config");
-const IoTHandler = require('libs/iot');
-const BlockchainHandler = require('libs/blockchain');
+
 
 class TaskManager {
 
@@ -106,9 +105,6 @@ class TaskManager {
 
     on_application_init() {
         logger.debug("on_application_init");
-        
-        var blockchain = new BlockchainHandler();
-        blockchain.init();
     }
 
     run(callback) {

@@ -22,45 +22,52 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 const logger = require("streembit-util").logger;
-const seedrunner = require("./seed");
-const clientrunner = require("./client");
+const seed = require("./seed");
+const client = require("./client");
+const iot = require("./iot");
+const BlockchainHandler = require("./blockchain");
 const config = require('libs/config');
+const async = require('async');
 
-class AppRunner {
+class ModulesHandler {
     constructor() {
     }
 
-    run(callback) {
-        var seedconf = config.seed_config;
-        var clientconf = config.client_config;
-        if (!seedconf.run && !clientconf.run) {
-            return callback("Invalid configuration. Seed or Client must run");
-        }
+    init(callback) {
+        async.series(
+            [
+                async.reflect(function (callback) {
+                    seed(callback);
+                }),
+                async.reflect(function (callback) {
+                    client(callback);
+                }),
+                async.reflect(function (callback) {
+                    iot.run(callback);
+                }),
+                async.reflect(function (callback) {
+                    var blockchain = new BlockchainHandler();
+                    blockchain.run(callback);
+                })
+            ],
+            function (err, results) {
+                results.forEach(
+                    (res) => {
+                        if (res.error) {
+                            logger.error(res.error);
+                        }
+                        else {
+                            logger.info(res.value);
+                        }
+                    }
+                );
 
-        var runner = 0;
-        var task = "";
-
-        // either run the application as a seed or as a client
-        if (seedconf.run) {
-            runner = seedrunner;
-            task = "Start Streembit seed";
-        }
-        else if (clientconf.run) {
-            runner = clientrunner;
-            task = "Start Streembit client";
-        }
-
-        runner(
-            (err) => {
-                if (err) {
-                    logger.error(task + " error");
-                }
-                callback(err);
+                callback();
             }
         );
     }
 }
 
 
-module.exports = AppRunner;
+module.exports = ModulesHandler;
 

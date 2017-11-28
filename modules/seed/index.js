@@ -40,7 +40,7 @@ module.exports = exports = function (callback) {
         var conf = config.seed_config;
         if (!conf.run) {
             logger.debug("Don't run seed handler");
-            return callback();
+            return callback(null, "Don't run seed handler");
         }
 
         async.waterfall(
@@ -68,7 +68,7 @@ module.exports = exports = function (callback) {
                 }
 
                 logger.info("Seed handler started");
-                callback();
+                callback(null, "Seed module initialized");
             }
         );
 

@@ -31,14 +31,6 @@ const Account = require("libs/account");
 const PeerTransport = require("libs/peernet/transport");
 const events = require("streembit-util").events;
 
-function process_tasks() {
-    try {
-        events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
-    }
-    catch (err) {
-        logger.error("process_tasks error: %j", err);
-    }
-}
 
 module.exports = exports = function (callback) {
     try {
@@ -48,7 +40,7 @@ module.exports = exports = function (callback) {
         var conf = config.client_config;
         if (!conf.run) {
             logger.debug("Don't run streembit client handler");
-            return callback();
+            return callback(null, "Don't run streembit client handler");
         }
 
         logger.info("Run streembit client handler, net: " + config.net );
@@ -80,10 +72,10 @@ module.exports = exports = function (callback) {
                 }
 
                 logger.info("Client handler started");
-                callback();
+                callback(null, "Client module initialized");
 
                 // process the tasks following init
-                process_tasks();
+                events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
             }
         );
 

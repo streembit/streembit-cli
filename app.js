@@ -31,7 +31,7 @@ var async = require('async');
 var util = require('util');
 var assert = require('assert');
 var logger = require("streembit-util").logger;
-var AppRunner = require("modules");
+var ModulesHandler = require("modules");
 var database = require("streembit-db").instance;
 var config = require('libs/config');
 var utils = require("libs/utils");
@@ -39,9 +39,6 @@ var Account = require("libs/account");
 var Tasks = require("libs/tasks");
 var events = require("streembit-util").events;
 const Users = require("libs/users");
-const Devices = require("libs/devices");
-const IoTHandler = require('libs/iot');
-const WebSocket = require("libs/websocket");
 const Transport = require("./transport");
 const dbschema = require("./dbschema");
 
@@ -105,42 +102,42 @@ module.exports = exports = function (port, ip, password) {
                         callback(e);
                     }
                 },
+                //function (callback) {
+                //    try {
+                //        var devices = new Devices();
+                //        devices.init(callback);
+                //    }
+                //    catch (e) {
+                //        callback(e);
+                //    }
+                //},
+                //function (callback) {
+                //    try {
+                //        // start the websocket server
+                //        var conf = config.iot_config;
+                //        var port = conf.wsport ? conf.wsport : 32318;
+                //        var wsserver = new WebSocket(port);
+                //        wsserver.init();
+                //        callback();
+                //    }
+                //    catch (e) {
+                //        callback("Starting web socket error: " + e.message);
+                //    }
+                //},
+                //function (callback) {
+                //    try {
+                //        var iot = new IoTHandler();
+                //        iot.init();
+                //        callback();
+                //    }
+                //    catch (e) {
+                //        callback(e);
+                //    }
+                //},
                 function (callback) {
                     try {
-                        var devices = new Devices();
-                        devices.init(callback);
-                    }
-                    catch (e) {
-                        callback(e);
-                    }
-                },
-                function (callback) {
-                    try {
-                        // start the websocket server
-                        var conf = config.iot_config;
-                        var port = conf.wsport ? conf.wsport : 32318;
-                        var wsserver = new WebSocket(port);
-                        wsserver.init();
-                        callback();
-                    }
-                    catch (e) {
-                        callback("Starting web socket error: " + e.message);
-                    }
-                },
-                function (callback) {
-                    try {
-                        var iot = new IoTHandler();
-                        iot.init();
-                        callback();
-                    }
-                    catch (e) {
-                        callback(e);
-                    }
-                },
-                function (callback) {
-                    try {
-                        var apprunner = new AppRunner();
-                        apprunner.run(callback);
+                        let handler = new ModulesHandler();
+                        handler.init(callback);
                     }
                     catch (e) {
                         callback(e);

@@ -22,7 +22,7 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 const constants = require("libs/constants");
-const iotdefinitions = require("libs/iot/definitions");
+const iotdefinitions = require("modules/iot/definitions");
 const logger = require("streembit-util").logger;
 const events = require("streembit-util").events;
 const WebSocket = require('ws');
@@ -151,8 +151,7 @@ class WsServer {
                 // validate the user sent a valid token                
                 this.validate_user(message);
 
-                events.emit(
-                    events.ONIOTEVENT,
+                events.iotmsg(
                     message,
                     (err, data) => {
                         try {

@@ -27,7 +27,7 @@ const logger = require("streembit-util").logger;
 const async = require("async");
 const config = require("libs/config");
 const Database = require("libs/database/devicesdb");
-const defs = require("libs/iot/definitions");
+const defs = require("modules/iot/definitions");
 
 let instance = null;
 let m_devices = null;
@@ -293,7 +293,7 @@ class Devices {
         }
 
         try {
-            await this.populate();         
+            await this.populate();
         }
         catch (err) {
             return callback("Devices populate error: " + err.message);
