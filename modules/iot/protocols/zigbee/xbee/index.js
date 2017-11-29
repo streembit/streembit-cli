@@ -70,7 +70,8 @@ class XbeeHandler {
             if (!payload) {
                 throw new Error("dispatch_datarcv_event() invalid payload");
             }
-            
+
+            //console.log("IOT_DATA_RECEIVED_EVENT")
             var eventname = iotdefinitions.IOT_DATA_RECEIVED_EVENT;
             events.emit(eventname, payload);            
         }
