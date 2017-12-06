@@ -141,7 +141,7 @@ $ node streembit
 ```
 
 At this point seed No. 2 will try to connect to seed No. 1. 
-Upon successful connection you should see debug messages on the console and log files of seed No. 1. These are debug messages related to FIND_NODE Kademlia operations.
+Upon successful connection you should see debug messages on the console as well as in the log files of seed No. 1. These are debug messages related to FIND_NODE Kademlia operations.
 "debug: received FIND_NODE from {"publickey": ... etc"
 The public key of the message is the public key of seed No. 2 that is printed to console during startup.
 The FIND_NODE messages indicates that the Kademlia network is formed.
