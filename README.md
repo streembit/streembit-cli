@@ -133,17 +133,17 @@ Define the seeds array in the config file. The seed is the instance that is desc
  ]
 }
 ```
-(The host is your machine's local IP so it mght different than 192.168.0.10.)
+(The host is your machine's local IP so it might different than 192.168.0.10.)
 Set the "account" field, it can be anything, but should be different than seed No. 1, like "seed2".
 Run the application with 
 ```bash
 $ node streembit
 ```
 
-At this point seed No. 2 will try to connnect to seed No. 1. 
-Upon successfull connection you should see debug messages on the console and log files of seed No. 1. These are debug messages related to FIND_NODE Kademlia operations.
+At this point seed No. 2 will try to connect to seed No. 1. 
+Upon successful connection you should see debug messages on the console and log files of seed No. 1. These are debug messages related to FIND_NODE Kademlia operations.
 "debug: received FIND_NODE from {"publickey": ... etc"
 The public key of the message is the public key of seed No. 2 that is printed to console during startup.
 The FIND_NODE messages indicates that the Kademlia network is formed.
 
-Once the Kademlia network is operational the Streembut UI application can connect to the network.
+Once the Kademlia network is operational the Streembit UI application can connect to the network.
