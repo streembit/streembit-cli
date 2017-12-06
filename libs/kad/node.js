@@ -143,10 +143,12 @@ Node.prototype.connect = function (contact, callback) {
     async.waterfall([
         this._ensureTransportState.bind(this),
         function (next) {
+            console.log("connect updateContact");
             self._router.updateContact(seed, function () {
+                console.log("connect _router.findNode.bind");
                 next();
             });
-        },
+        },        
         this._router.findNode.bind(this._router, this._self.nodeID, {
             aggressiveLookup: true,
             aggressiveCache: true

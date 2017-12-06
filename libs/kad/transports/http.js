@@ -31,14 +31,15 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-var StreembitContact = require('../contacts/streembit-contact');
-var Message = require('../message');
-var assert = require('assert');
-var inherits = require('util').inherits;
-var http = require('http');
-var https = require('https');
-var RPC = require('../rpc');
-var events = require("streembit-util").events;
+const StreembitContact = require('../contacts/streembit-contact');
+const Message = require('../message');
+const assert = require('assert');
+const inherits = require('util').inherits;
+const http = require('http');
+const https = require('https');
+const RPC = require('../rpc');
+const events = require("streembit-util").events;
+const util = require('util');
 
 // create agents to enable http persistent connections:
 var httpagent = new http.Agent({keepAlive: true, keepAliveMsecs: 25000});
@@ -145,13 +146,18 @@ HTTPTransport.prototype._open = function (done) {
         }
     }
 
+    self._log.info('HTTP_open events.register events.ONPEERMSG');
+
     events.register(
         events.ONPEERMSG,
         (payload, req, res) => {
+            //console.log("ONPEERMSG");
+            //console.log(util.inspect(payload));
             self.requesthandler(payload, req, res);
         }
     );
 
+    done();
 };
 
 

@@ -63,3 +63,4 @@ config.json
 /config _copy.json
 db/sqlite/streembit/streembit.db
 db/leveldb/streembit/CURRENT
+/config_with_seed.json
