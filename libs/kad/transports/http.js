@@ -151,8 +151,6 @@ HTTPTransport.prototype._open = function (done) {
     events.register(
         events.ONPEERMSG,
         (payload, req, res) => {
-            //console.log("ONPEERMSG");
-            //console.log(util.inspect(payload));
             self.requesthandler(payload, req, res);
         }
     );

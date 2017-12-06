@@ -2,7 +2,7 @@
 
 var util = require('util');
 var SerialPort = require('serialport');
-var xbeeapi = require('modules/iot/iot_protocols/zigbee/xbee/xbeeapi');
+var xbeeapi = require('apps/iot/iot_protocols/zigbee/xbee/xbeeapi');
 var devicelist = require('./devicelist');
 var events = require("./events");
 var BufferReader = require('buffer-reader');

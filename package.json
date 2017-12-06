@@ -49,5 +49,8 @@
         "winston": "^2.4.0",
         "ws": "^3.3.0",
         "xml2js": "~0.1.14"
+    },
+    "scripts": {
+        "test": "mocha"
     }
 }

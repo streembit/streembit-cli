@@ -31,7 +31,7 @@ var async = require('async');
 var util = require('util');
 var assert = require('assert');
 var logger = require("streembit-util").logger;
-var ModulesHandler = require("modules");
+var AppsHandler = require("apps");
 var database = require("streembit-db").instance;
 var config = require('libs/config');
 var utils = require("libs/utils");
@@ -39,7 +39,9 @@ var Account = require("libs/account");
 var Tasks = require("libs/tasks");
 var events = require("streembit-util").events;
 const Users = require("libs/users");
-const Transport = require("./transport");
+const HttpTransport = require("./transport/http");
+const WebSocket = require("./transport/ws");
+const ServicesHandler = require("./services");
 const dbschema = require("./dbschema");
 
 // initialize the logger
@@ -70,10 +72,10 @@ module.exports = exports = function (port, ip, password) {
                 },
                 function (callback) {
                     var options = {
-                        port: config.port
+                        port: config.transport.port
                     };
-                    var transport = new Transport(options);
-                    transport.init(callback);
+                    var httptransport = new HttpTransport(options);
+                    httptransport.init(callback);
                 },
                 function (callback) {
                     try {
@@ -81,7 +83,7 @@ module.exports = exports = function (port, ip, password) {
                         tasks.run(callback);
                     }
                     catch (e) {
-                        callback(e);
+                        callback("Task init error: " + e.message);
                     }
                 },
                 function (callback) {
@@ -90,7 +92,7 @@ module.exports = exports = function (port, ip, password) {
                         account.init(callback)
                     }
                     catch (e) {
-                        callback(e);
+                        callback("Account init error: " + e.message);
                     }
                 },
                 function (callback) {
@@ -99,45 +101,21 @@ module.exports = exports = function (port, ip, password) {
                         users.init(callback);
                     }
                     catch (e) {
-                        callback(e);
+                        callback("Users init error: " + e.message);
                     }
                 },
-                //function (callback) {
-                //    try {
-                //        var devices = new Devices();
-                //        devices.init(callback);
-                //    }
-                //    catch (e) {
-                //        callback(e);
-                //    }
-                //},
-                //function (callback) {
-                //    try {
-                //        // start the websocket server
-                //        var conf = config.iot_config;
-                //        var port = conf.wsport ? conf.wsport : 32318;
-                //        var wsserver = new WebSocket(port);
-                //        wsserver.init();
-                //        callback();
-                //    }
-                //    catch (e) {
-                //        callback("Starting web socket error: " + e.message);
-                //    }
-                //},
-                //function (callback) {
-                //    try {
-                //        var iot = new IoTHandler();
-                //        iot.init();
-                //        callback();
-                //    }
-                //    catch (e) {
-                //        callback(e);
-                //    }
-                //},
+                function (callback) {
+                    let port = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : 32318;
+                    let wsserver = new WebSocket(port);
+                    wsserver.init(callback);
+                },      
+                function (callback) {
+                    ServicesHandler.init(callback)
+                },
                 function (callback) {
                     try {
-                        let handler = new ModulesHandler();
-                        handler.init(callback);
+                        let apps = new AppsHandler();
+                        apps.init(callback);
                     }
                     catch (e) {
                         callback(e);

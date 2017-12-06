@@ -122,8 +122,8 @@ class KadHandler {
         var bs58pk = account.bs58pk;
 
         var contact_param = {
-            host: config.host,
-            port: config.port,
+            host: config.transport.host,
+            port: config.transport.port,
             publickey: bs58pk
         };
 

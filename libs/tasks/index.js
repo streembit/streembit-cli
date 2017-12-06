@@ -44,8 +44,8 @@ class TaskManager {
             var account = new Account();
             var pubkey_hash = account.public_key_hash;
             var public_key = account.bs58pk;
-            var address = config.host;
-            var port = config.port;
+            var address = config.transport.host;
+            var port = config.transport.port;
             var transport = constants.DEFAULT_TRANSPORT;
             var type = config.usertype;
             var pubkeyhash = account.public_key_hash;
@@ -91,8 +91,8 @@ class TaskManager {
 
         var account = new Account();
         var public_key = account.bs58pk;
-        var address = config.host;
-        var port = config.port;
+        var address = config.transport.host;
+        var port = config.transport.port;
         var transport = constants.DEFAULT_TRANSPORT;
         var type = config.usertype;
         var pubkeyhash = account.public_key_hash;

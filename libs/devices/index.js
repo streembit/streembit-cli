@@ -27,7 +27,7 @@ const logger = require("streembit-util").logger;
 const async = require("async");
 const config = require("libs/config");
 const Database = require("libs/database/devicesdb");
-const defs = require("modules/iot/definitions");
+const defs = require("apps/iot/definitions");
 
 let instance = null;
 let m_devices = null;

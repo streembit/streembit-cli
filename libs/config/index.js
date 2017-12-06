@@ -171,25 +171,41 @@ var streembit_config = (function (cnfobj) {
         }
     });
 
+
+    cnfobj.transport = {
+        "protocol": "",
+        "host": "",
+        "port": 0,
+        "ws": {
+            "port": 0
+        }
+    };
+
+
     cnfobj.init = function (argv_port, argv_ip, argv_password, callback) {
         try {
 
             cnfobj.log = config.log;
 
+            cnfobj.transport.protocol = config.transport.protocol;
+
             var ipport = argv_port ? argv_port : 0;
             if (!ipport) {
                 //  check the config file
-                ipport = config.port || constants.DEFAULT_STREEMBIT_PORT;
+                ipport = config.transport.port || constants.DEFAULT_STREEMBIT_PORT;
             }
             assert(ipport > 0 && ipport < 65535, "Invalid port configuration value");
-            cnfobj.port = ipport;
+            cnfobj.transport.port = ipport;
 
             var ip = argv_ip;
             if (!ip) {
                 //  check the config file
-                ip = config.host || 0;
+                ip = config.transport.host || 0;
             }
-            cnfobj.host = ip;
+            cnfobj.transport.host = ip;
+
+            // set the ws port
+            cnfobj.transport.ws.port = config.transport.ws.port;
 
             cnfobj.seeds = config.seeds;
 
@@ -261,6 +277,7 @@ var streembit_config = (function (cnfobj) {
             
         }
         catch (err) {
+            console.log(err.message);
             callback(err.message);
         }
     };

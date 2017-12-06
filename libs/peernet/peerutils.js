@@ -45,7 +45,6 @@ module.exports.discovery = function (host, seeds, callback) {
     
     function discover_address(seed, asyncfn) {
 
-        //The url we want is `www.nodejitsu.com:1337/`
         var options = {
             host: seed.host,
             path: '/',

@@ -23,8 +23,8 @@ Copyright (C) 2016 The Streembit software development team
 
 const pinfo = require('./package.json');
 const version = pinfo.version;
-
-require('app-module-path').addPath(__dirname);
+// resolve the directories for require
+const res = require('./resolvedir');
 
 const program = require('commander');
 const app = require('app');

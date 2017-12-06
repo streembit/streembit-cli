@@ -124,10 +124,10 @@ class PeerTransport{
     }
 
     open(callback) {
-        var host = config.host ? config.host : "localhost";
+        var host = config.transport.host ? config.transport.host : "localhost";
         this.server.on('request', (req, res) => this.handle(req, res));
-        //this.server.listen(config.port, host, () => {
-        this.server.listen(config.port, () => {
+        //this.server.listen(config.transport.port, host, () => {
+        this.server.listen(config.transport.port, () => {
             logger.info('opened server on %s:%d', this.server.address().address, this.server.address().port);
             callback();
         });
