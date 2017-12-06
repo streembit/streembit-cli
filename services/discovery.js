@@ -43,7 +43,7 @@ class DiscoverySrvc {
                     }
                 }
                 catch (err) {
-                    logger.error("DiscoverySrvc handlererror %j", err)
+                    logger.error("DiscoverySrvc service error %j", err)
                 }
             }
         );   

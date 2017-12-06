@@ -55,12 +55,11 @@ db/*/*/*
 
 /.vs/config/applicationhost.config
 
-config.json
+
 /typings
 /.idea/
 /data/account.json
 .vs/streembit-cli/v15/Browse.VC.db
-/config _copy.json
 db/sqlite/streembit/streembit.db
 db/leveldb/streembit/CURRENT
-/config_with_seed.json
+/config*.json
