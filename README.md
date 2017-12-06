@@ -1,6 +1,6 @@
 ﻿# streembit-cli
  
- Streembit client project.
+ Streembit back-end application.
  
  This application is the Streembit back-end process. Depending on the configuration settings the application can run as
  - A Streembit Kademlia node
