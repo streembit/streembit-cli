@@ -2,7 +2,11 @@
  
  Streembit client project.
  
- TODO describe the project ...
+ This application is the Streembit back-end process. Depending on the configuration settings the application can run as
+ - A Streembit Kademlia node
+ - A Streembit client application
+ - A Streembit IoT application 
+ - A Streembit blockchain application
  
  In order to run the application a configuration file config.json must exists in the root directory of the project.
  
@@ -129,7 +133,7 @@ Users: the Streembit UI user who can connect to this node.
 
 Log: logger settings.
 
-**Create a Kademlia network**
+**Create a Kademlia network for test and development**
 
 For test and development purposes to create a basic Kademlia network at least two nodes must exist on the network. To run multiple nodes on a computer, do the the following steps:
 
