@@ -98,6 +98,63 @@ class HTTPTransport {
         }
     }
 
+    write(message, target, callback) {
+        try {
+
+            logger.debug("peer transport write");
+
+            if (!message  || typeof message != "string") {
+                return callback("http write data must be string");
+            }
+
+            function handleResponse(res) {
+                var payload = '';
+                var status = res.statusCode;
+                var statusmsg = res.statusMessage;
+
+                res.on('data', function (chunk) {
+                    payload += chunk.toString();
+                });
+
+                res.on('error', function (err) {                    
+                    callback(err);
+                });
+
+                res.on('end', function () {  
+                    if (status != 200) {
+                        callback(status + " " + statusmsg);
+                    }
+                    else {
+                        callback(null, payload);
+                    }
+                });
+            }            
+
+            var options = {
+                host: target.host,
+                path: '/',
+                port: target.port,
+                method: 'POST'
+            };
+
+            var req = http.request(options, handleResponse);
+
+            req.setNoDelay(true); // disable the tcp nagle algorithm
+
+            req.on('error', function (err) {
+                callback(err);
+            });
+
+            req.write(message);
+            req.end();        
+
+            //
+        }
+        catch (err) {
+            callback(err);
+        }
+    }
+
     init( done) {
 
         this.server = this.create_server(this.handler);

@@ -28,7 +28,8 @@ const logger = require("streembit-util").logger;
 const peerutils = require("libs/peernet/peerutils");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
-const PeerTransport = require("libs/peernet/transport");
+//const PeerTransport = require("libs/peernet/transport");
+const HTTPTransport=require("transport/http")
 const events = require("streembit-util").events;
 
 
@@ -57,8 +58,8 @@ module.exports = exports = function (callback) {
                 function (host, cb) {
                     try {
                         config.transport.host = host;
-                        var transport = new PeerTransport();
-                        transport.open(cb)
+                      //  var transport = new PeerTransport();
+                        //transport.open(cb)
                     }
                     catch (e) {
                         cb(e.message);

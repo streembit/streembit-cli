@@ -243,7 +243,7 @@ module.exports.backup = function() {
                 return console.log("Backup error: %j", err.message || err);
             }
 
-            console.log("Backup file account.json was created in the data directory",);
+            console.log("Backup file account.json was created in the data directory");
         }
     ); 
 }
