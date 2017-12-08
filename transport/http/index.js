@@ -41,6 +41,7 @@ class HTTPTransport {
         this.port = options.port || constants.DEFAULT_STREEMBIT_PORT;
         this.islistening = false;
         this.max_connections = options.max_connections || 250; 
+        this.pending=null;
     }  
 
     create_server(handler) {
@@ -95,6 +96,20 @@ class HTTPTransport {
         }
         catch (err) {
             logger.error('Http transport handler error: %', err.message);
+        }
+    }
+
+timeout_pending() {
+        const now = Date.now();
+        if(this.pending){
+            this.pending.forEach(({ timestamp, response }, id) => {
+                let timeout = timestamp + constants.T_RESPONSETIMEOUT;
+                if (now >= timeout) {
+                    response.statusCode = 504;
+                    response.end();
+                    this.pending.delete(id);
+                }
+            });
         }
     }
 
@@ -156,7 +171,7 @@ class HTTPTransport {
     }
 
     init( done) {
-
+        this.pending = new Map();
         this.server = this.create_server(this.handler);
 
         this.server.on(
@@ -166,7 +181,7 @@ class HTTPTransport {
                 socket.setNoDelay(true);
             }
         );
-
+        setInterval(() => this.timeout_pending(), constants.RESPONSETIMEOUT);
         this.server.listen(this.port, () => {
             logger.info('Http transport listeining on port ' + this.port);
             this.islistening = true;

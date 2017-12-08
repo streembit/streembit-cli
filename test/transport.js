@@ -26,6 +26,7 @@ const res = require('../resolvedir');
 const Transport = require('transport/http');
 const peerutils = require("libs/peernet/peerutils");
 const stutils = require("libs/utils");
+const constants = require("libs/constants");
 const DiscoverySrvc = require("services/discovery");
 
 var http_config = require("./http_config");
@@ -49,6 +50,17 @@ describe("HTTP Transport handler", function () {
             assert.equal(true, islisten);
         });
 
+    });
+
+    
+    describe("Timeout", function () {
+        it("Current is greater than to set time",function(){
+        const now = Date.now();
+        transport.pending.forEach(({ timestamp, response }, id) => {
+            let timeout = timestamp + constants.T_RESPONSETIMEOUT;
+            assert.isAtLeast(now, timeout, timeout+' is greater or equal to '+timeout);
+        });
+        });
     });
 
     describe("Messages", function () {
