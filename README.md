@@ -106,9 +106,9 @@ The "transport" field:
 
 protocol: default value is "http".
 
-host: IP address. If the application run as a Kademlia node this field is required and must be an IP address.
+host: IP address for the HTTP listener. Since The Kademlia contact is the composite of IP address and port, if the application run as a Kademlia seed node this field is required and must be an IP address. 
 
-port: Default is 32321
+port: Port for the http listener. Default value is 32321
 
 ws.port: Port for the websocket listener. Default value is 32318.
 
