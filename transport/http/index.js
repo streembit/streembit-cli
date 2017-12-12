@@ -26,9 +26,13 @@ const events = require("streembit-util").events;
 const logger = require("streembit-util").logger;
 const constants = require("../../libs/constants");
 
+
 // create agents to enable http persistent connections:
 var httpagent = new http.Agent({keepAlive: true, keepAliveMsecs: 25000});
 var httpsagent = new https.Agent({keepAlive: true, keepAliveMsecs: 25000});
+
+let messageid = 0;
+const HTTPTIMEOUT = 15000;
 
 class HTTPTransport {
 
@@ -41,8 +45,15 @@ class HTTPTransport {
         this.port = options.port || constants.DEFAULT_STREEMBIT_PORT;
         this.islistening = false;
         this.max_connections = options.max_connections || 250; 
-        this.pending=null;
     }  
+
+    static get newid() {
+        if (messageid > 100000) {
+            messageid = 0;
+        }
+        messageid += 1;
+        return messageid;
+    }
 
     create_server(handler) {
         return this.sslopts ?
@@ -84,10 +95,20 @@ class HTTPTransport {
             });
 
             //request end
-            req.on('end', function () {
+            req.on('end', ()=> {
                 try {
-                    //console.log(payload);
-                    events.peermsg(payload, req, res);
+                    ////console.log(payload);
+                    var msgid = HTTPTransport.newid; 
+                    events.peermsg(
+                        payload,
+                        req,
+                        res,
+                        msgid,
+                        (id, replymsg) => {
+                            // TODO handle here the completion of the message
+                            // if the response object is not closed return status 200
+                        }
+                    );
                 }
                 catch (err) {
                     logger.error("HTTPTransport events.peermsg error: " + err.message);
@@ -96,20 +117,6 @@ class HTTPTransport {
         }
         catch (err) {
             logger.error('Http transport handler error: %', err.message);
-        }
-    }
-
-timeout_pending() {
-        const now = Date.now();
-        if(this.pending){
-            this.pending.forEach(({ timestamp, response }, id) => {
-                let timeout = timestamp + constants.T_RESPONSETIMEOUT;
-                if (now >= timeout) {
-                    response.statusCode = 504;
-                    response.end();
-                    this.pending.delete(id);
-                }
-            });
         }
     }
 
@@ -170,8 +177,7 @@ timeout_pending() {
         }
     }
 
-    init( done) {
-        this.pending = new Map();
+    init(done) {
         this.server = this.create_server(this.handler);
 
         this.server.on(
@@ -181,16 +187,20 @@ timeout_pending() {
                 socket.setNoDelay(true);
             }
         );
-        setInterval(() => this.timeout_pending(), constants.RESPONSETIMEOUT);
+
         this.server.listen(this.port, () => {
-            logger.info('Http transport listeining on port ' + this.port);
+            logger.info('Http transport listening on port ' + this.port);
             this.islistening = true;
             done();
         });
     }
 
-    close () {
+    close(callback) {
+        logger.info('Http transport close');
         this.server.close();
+        if (callback) {
+            callback();
+        }
     }
 
 }

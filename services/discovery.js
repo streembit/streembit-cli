@@ -33,13 +33,16 @@ class DiscoverySrvc {
     init() {
         events.register(
             events.ONPEERMSG,
-            (payload, req, res) => {
+            (payload, req, res, msgid, completefn) => {
                 try {
                     var message = JSON.parse(payload);
                     if (message && message.type && message.type == "DISCOVERY") {
                         var ipaddress = req.connection.remoteAddress;
                         var reply = JSON.stringify({ address: ipaddress });
                         res.end(reply);
+                        if (completefn) {
+                            completefn(msgid);
+                        }
                     }
                 }
                 catch (err) {

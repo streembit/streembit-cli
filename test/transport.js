@@ -22,6 +22,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const assert = require('assert');
 const expect = require("chai").expect;
+const util = require("util");
 const res = require('../resolvedir');
 const Transport = require('transport/http');
 const peerutils = require("libs/peernet/peerutils");
@@ -33,36 +34,64 @@ var http_config = require("./http_config");
 
 describe("HTTP Transport handler", function () {
 
-    var transport;
+    var httptransport;
 
     before(function (done) {
         var options = {
             port: http_config.port
         };
-        transport = new Transport(options);
-        transport.init(done);
+        httptransport = new Transport(options);
+        httptransport.init(done);
     });
 
     describe("Initialize", function () {
 
         it("the transport listening variable set to true", function () {
-            var islisten = transport.islistening;
+            var islisten = httptransport.islistening;
             assert.equal(true, islisten);
         });
 
     });
 
     
-    describe("Timeout", function () {
-        it("Current is greater than to set time",function(){
-        const now = Date.now();
-        transport.pending.forEach(({ timestamp, response }, id) => {
-            let timeout = timestamp + constants.T_RESPONSETIMEOUT;
-            assert.isAtLeast(now, timeout, timeout+' is greater or equal to '+timeout);
-        });
-        });
-    });
+    //describe("Pending timeout", function () {
 
+    //    it("The pending message should existst upon add to the pending Map", function (done) { 
+    //        var id = Transport.newid;
+    //        Transport.add_pending(id, { timestamp: Date.now(), foo: "foo" });
+    //        var obj = Transport.get_pending(id);
+    //        var exists = obj.foo == "foo";            
+    //        Transport.delete_pending(id);
+    //        assert.equal(true, exists);
+    //        done();
+    //    });
+
+    //    it("The pending message should time out and not exists after 25 seconds", function (done) {
+    //        this.timeout(40000);
+    //        var payload = {
+    //            timestamp: Date.now(),
+    //            response: {
+    //                statusCode: 0,
+    //                end: function () { }
+    //            }
+    //        };
+    //        var id = Transport.newid;
+    //        Transport.add_pending(id, payload);
+    //        setTimeout(
+    //            () => {
+    //                //console.log("test get_pending " + id);
+    //                var obj = Transport.get_pending(id);
+    //                //console.log(util.inspect(obj));
+    //                var notexists = !obj;
+    //                assert.equal(true, notexists);
+    //                done();
+    //            },
+    //            25000
+    //        );
+    //    });           
+        
+    //});
+    
     describe("Messages", function () {
 
         it("DISCOVERY message should return an IP address", function (done) {
@@ -80,8 +109,7 @@ describe("HTTP Transport handler", function () {
     });
 
     after(function () {
-        transport.close(function () {
-        })
+        httptransport.close()       
     });
 
 });
