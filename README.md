@@ -138,7 +138,7 @@ Log: logger settings.
 For test and development purposes to create a basic Kademlia network at least two nodes must exist on the network. To run multiple nodes on a computer, do the the following steps:
 
 1) In step 1 we need to create a streembit-cli application, this will be seed No. 1, the first seed node of the Kademlia network.
-The "port" of the config.json file can be default port 32321. The "host" field of the config.json file must be defined. For development purposes it should be your local IP like 192.168.xxx.xxx or even just 127.0..0.1. 
+The "port" of the config.json file can be default port 32321. The "host" field of the config.json file must be defined. For development purposes it should be your local IP like 192.168.xxx.xxx or even just 127.0.0.1. 
 The "account" field can be anything, such as "seed1".
 The "seeds" field of the config is an empty array. 
 Run the application, with
