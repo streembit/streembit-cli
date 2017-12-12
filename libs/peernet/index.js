@@ -116,14 +116,26 @@ class PeerNet {
         }
     }
 
-    inform_contact(crypto_key, account, user_pkhash, user_public_key, contact_bs58public_key, connsymmkey, transport, address, port, type, cbfunc) {
+    inform_contact(crypto_key, account, user_pkhash, user_public_key, contact_bs58public_key, contact_pkey_hash, connsymmkey, transport, address, port, type, cbfunc) {
         try {
             if (!cbfunc || typeof cbfunc != "function") {
                 throw new Error("publish_contact error: invalid callback parameter")
             }
 
-            if (!user_pkhash || !user_public_key || !address || !contact_bs58public_key || !connsymmkey || !transport || !type ) {
-                return cbfunc("publish_contact error: invalid parameters");
+            if (!transport ) {
+                return cbfunc("publish_contact error: invalid transport parameter");
+            }
+
+            if (!user_pkhash || !user_public_key || !address || !type ) {
+                return cbfunc("publish_contact error: invalid user parameters");
+            }
+
+            if (!contact_bs58public_key  ) {
+                return cbfunc("publish_contact error: invalid contact parameters");
+            }
+
+            if ( !connsymmkey) {
+                return cbfunc("publish_contact error: invalid connsymmkey parameters");
             }
 
             // decode the contact's rmd160 key
@@ -133,6 +145,10 @@ class PeerNet {
             var hexbuffer = new Buffer(contact_public_key, 'hex');
             var rmd160buffer = createHash('rmd160').update(hexbuffer).digest();
             var contact_pkhash = bs58check.encode(rmd160buffer);
+            var check_pkhash = rmd160buffer.toString("hex");
+            if (contact_pkey_hash != check_pkhash) {
+                return cbfunc("publish_contact error: invalid contact pkey hash parameter");
+            }
 
             //  publish the public keys so this client can communicate with the devices
             //  via direct peer to peer messaging as well

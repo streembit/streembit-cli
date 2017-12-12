@@ -28,7 +28,6 @@ const logger = require("streembit-util").logger;
 const peerutils = require("libs/peernet/peerutils");
 const kad = require("libs/peernet/kad");
 const Account = require("libs/account");
-//const PeerTransport = require("libs/peernet/transport");
 const HTTPTransport=require("transport/http")
 const events = require("streembit-util").events;
 
@@ -43,41 +42,28 @@ module.exports = exports = function (callback) {
             return callback(null, "Config client handler -> not running");
         }
 
-        logger.info("Run streembit client handler, net: " + config.net );
+        logger.info("Run streembit client handler, net: " + config.net);
 
-        async.waterfall(
-            [        
-                function (cb) {
-                    try {
-                        peerutils.discovery(config.transport.host, config.seeds, cb)
-                    }
-                    catch (e) {
-                        cb(e.message);
-                    }
-                },
-                function (host, cb) {
-                    try {
-                        config.transport.host = host;
-                      //  var transport = new PeerTransport();
-                        //transport.open(cb)
-                    }
-                    catch (e) {
-                        cb(e.message);
-                    }
-                }
-            ],
-            function (err) {
+        peerutils.discovery(config.transport.host, config.seeds, function (err, host) {
+            try {
                 if (err) {
                     return callback(err);
                 }
+
+                config.transport.host = host;
 
                 logger.info("Client handler started");
                 callback(null, "Client module initialized");
 
                 // process the tasks following init
                 events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
+
+                //
             }
-        );
+            catch (e) {
+                callback(e.message);
+            }
+        });
 
     }
     catch (err) {
