@@ -55,6 +55,7 @@ class HTTPTransport {
         return messageid;
     }
 
+
     create_server(handler) {
         return this.sslopts ?
             this.protocol.createServer(this.sslopts, handler) :
@@ -120,7 +121,7 @@ class HTTPTransport {
         }
     }
 
-    write(message, target, callback) {
+    static write(message, target, callback) {
         try {
 
             logger.debug("peer transport write");

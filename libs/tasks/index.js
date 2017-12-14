@@ -59,7 +59,7 @@ class TaskManager {
 
             function send_to_contact(contact, next) {
                 try {
-                    peernet.inform_contact(crypto_key, account_name, pubkey_hash, public_key, contact.public_key, symcryptkey, transport, address, port, type, function (err) {
+                    peernet.inform_contact(crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash, symcryptkey, transport, address, port, type, function (err) {
                         if (err) {
                             var msg = "send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err);
                             logger.error(msg);                            

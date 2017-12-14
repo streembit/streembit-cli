@@ -25,8 +25,7 @@ const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const constants = require("libs/constants");
 const async = require("async");
-//const PeerTransport = require("./transport");
-const HTTPTransport=require("transport/http")
+const HTTPTransport = require("transport/http")
 const utils = require("libs/utils");
 
 let instance = null;
@@ -45,11 +44,6 @@ class PeerClient{
 
     put(key, value, callback) {
 
-        //var transport = new PeerTransport();
-         var options = {
-                        port: config.transport.port
-                    };
-              var transport =new HTTPTransport(options);
         var seeds = utils.shuffle(config.seeds);
 
         var data = {
@@ -63,7 +57,7 @@ class PeerClient{
         var errormsg = null;
 
         function write(seed, cb) {
-            transport.write(message, seed, function (err, msg) {
+            HTTPTransport.write(message, seed, function (err, msg) {
                 var complete = false;
                 if (err) {
                     errormsg = err;
