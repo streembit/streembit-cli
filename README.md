@@ -173,3 +173,4 @@ The public key of the message is the public key of seed No. 2 that is logged to 
 The FIND_NODE messages indicates that the Kademlia network is formed.
 
 Once the Kademlia network is operational the Streembit UI application can connect to the network.
+* Test text from Tanvir*
