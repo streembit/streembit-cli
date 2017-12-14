@@ -30,14 +30,14 @@ describe("Account module test lib/account", function () {
     describe("Account name", function () {
 
         it("Should set a value to m_accountname", function () {
-            account.accountname = account_data.name;
+            account.accountname = account_data.account;
             let account_name = account.accountname;
 
-            assert.equal(account_name, account_data.name);
+            assert.equal(account_name, account_data.account);
         });
 
         it("Should neither null nor undefined", function () {
-            account.accountname = account_data.name;
+            account.accountname = account_data.account;
             let account_name = account.accountname;
 
             assert.exists(account_name);
