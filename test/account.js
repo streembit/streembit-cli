@@ -3,7 +3,6 @@ const expect = require("chai").expect;
 const util = require("util");
 const res = require('../resolvedir');
 const Account = require('libs/account');
-const account_data = require('./account_data.json');
 //const peerutils = require("libs/peernet/peerutils");
 //const stutils = require("libs/utils");
 //const constants = require("libs/constants");
