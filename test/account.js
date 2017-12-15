@@ -59,5 +59,20 @@ describe("Account module test lib/account", function () {
 
             assert.exists(ppikey_value);
         })
-    })
+    });
+
+    describe("Test User Initialization", function () {
+
+        it("Should neither null nor undefined", function () {
+            let user = account.is_user_initialized;
+
+            assert.exists(user);
+        });
+
+        it("Should be true", function () {
+            let user = account.is_user_initialized;
+
+            assert.isOk(user);
+        });
+    });
 });
