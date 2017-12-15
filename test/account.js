@@ -38,10 +38,15 @@ describe("Account module test lib/account", function () {
         });
 
         it("Should neither null nor undefined", function () {
-            account.accountname = account_config.account;
             let account_name = account.accountname;
 
             assert.exists(account_name);
+        });
+
+        it("Should match with the account object's m_accountname", function () {
+            let account_name = account.accountname;
+
+            assert.equal(account_name, account.m_accountname);
         });
     });
 
@@ -58,7 +63,7 @@ describe("Account module test lib/account", function () {
             let ppikey_value = account.ppkikey;
 
             assert.exists(ppikey_value);
-        })
+        });
     });
 
     describe("Test User Initialization", function () {
