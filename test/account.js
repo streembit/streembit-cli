@@ -1,6 +1,7 @@
 const assert = require('chai').assert;
 const expect = require("chai").expect;
 const util = require("util");
+const createHash = require('create-hash');
 const res = require('../resolvedir');
 const Account = require('libs/account');
 const account_config = require('./account_config.json');
@@ -73,6 +74,29 @@ describe("Account module test lib/account", function () {
             let user = account.is_user_initialized;
 
             assert.isOk(user);
+        });
+    });
+
+    describe("Test password encryption", function () {
+
+        it("Should neither empty nor undefined", function () {
+            let pwd_encrypt = account.getCryptPassword(account_config.password);
+
+            assert.exists(pwd_encrypt);
+        });
+
+        it("Should be a string", function () {
+            let pwd_encrypt = account.getCryptPassword(account_config.password);
+
+            assert.isString(pwd_encrypt);
+        });
+
+        it("Should match with the encrypted password", function () {
+            let pwd_encrypt = account.getCryptPassword(account_config.password);
+            let salt = createHash('sha256').update(account_config.password).digest('hex');
+            let pwdhex = createHash('sha256').update(salt).digest('hex');
+
+            assert.equal(pwd_encrypt, pwdhex);
         });
     });
 });
