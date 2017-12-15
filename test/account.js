@@ -48,14 +48,14 @@ describe("Account module test lib/account", function () {
     describe("Test ppkikey value", function () {
 
         it("Should set a value to ppkikey", function () {
-            account.ppkikey = account_config.m_key;
+            account.ppkikey = account_config.key;
             let ppikey_value = account.ppkikey;
 
-            assert.equal(ppikey_value, account_config.m_key);
+            assert.equal(ppikey_value, account_config.key);
         });
 
         it("Should neither null nor undefined", function () {
-            account.ppkikey = account_config.m_key;
+            account.ppkikey = account_config.key;
             let ppikey_value = account.ppkikey;
 
             assert.exists(ppikey_value);
