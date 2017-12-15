@@ -55,7 +55,6 @@ describe("Account module test lib/account", function () {
         });
 
         it("Should neither null nor undefined", function () {
-            account.ppkikey = account_config.key;
             let ppikey_value = account.ppkikey;
 
             assert.exists(ppikey_value);
@@ -97,6 +96,28 @@ describe("Account module test lib/account", function () {
             let pwdhex = createHash('sha256').update(salt).digest('hex');
 
             assert.equal(pwd_encrypt, pwdhex);
+        });
+    });
+
+    describe("Test connsymmkey value", function () {
+
+        it("Should set a value to m_connsymmkey", function () {
+            account.connsymmkey = account_config.connsymmkey;
+            let connsymmkey_value = account.connsymmkey;
+
+            assert.equal(connsymmkey_value, account_config.connsymmkey);
+        });
+
+        it("Should neither null nor undefined", function () {
+            let connsymmkey_value = account.connsymmkey;
+
+            assert.exists(connsymmkey_value);
+        });
+
+        it("Should match with the account object's m_connsymmkey", function () {
+            let connsymmkey_value = account.connsymmkey;
+
+            assert.equal(connsymmkey_value, account.m_connsymmkey);
         });
     });
 });

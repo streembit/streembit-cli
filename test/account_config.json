@@ -1,5 +1,6 @@
 {
   "account": "streembit_example_account",
   "password": "streembit_example_password",
-  "key": "streembit_example_key"
+  "key": "streembit_example_key",
+  "connsymmkey": "streembit_example_connsymmkey"
 }
