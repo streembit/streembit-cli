@@ -8,9 +8,22 @@
  - A Streembit IoT application 
  - A Streembit blockchain application
  
- In order to run the application a configuration file config.json must exists in the root directory of the project.
+ **Dependencies**
  
- A typical configuration file is the following:
+ Get the dependencies with 
+```bash
+$ npm install
+```
+
+Windows note:
+In case of leveldown or any any node-gyp error provide a correct msvs_version build parameter e.g.
+```bash
+npm install leveldown --msvs_version=2015
+```
+
+In order to run the application a configuration file config.json must exists in the root directory of the project.
+ 
+A typical configuration file is the following:
  
  ```json
  {
