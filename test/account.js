@@ -124,14 +124,14 @@ describe("Account module test lib/account", function () {
 
             assert.equal(connsymmkey_value, account.m_connsymmkey);
         });
+    });
 
-        describe("Test clear()", function () {
+    describe("Test clear()", function () {
 
-            it("Should set ppkikey value to null", function () {
-                account.clear();
+        it("Should set ppkikey value to null", function () {
+            account.clear();
 
-                assert.equal(account.ppkikey, null);
-            });
+            assert.equal(account.ppkikey, null);
         });
     });
 });
