@@ -58,7 +58,7 @@ var Logger = require('./logger');
 function Node(options) {
     options = merge(Object.create(Node.DEFAULTS), options);
 
-    var config = options.config.
+    var config = options.config;
 
     if (!(this instanceof Node)) {
         return new Node(options);
