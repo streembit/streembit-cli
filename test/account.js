@@ -147,6 +147,33 @@ describe("Account module test lib/account", function () {
         });
     });
 
+    describe("Test private_key_hex()", function () {
+
+        it("should be defined", function () {
+            let private_key_hex = account.private_key_hex;
+
+            assert.isDefined(private_key_hex);
+        });
+
+        it("should neither null or undefined", function () {
+            let private_key_hex = account.private_key_hex;
+
+            assert.exists(private_key_hex);
+        });
+
+        it("should be truthy" , function () {
+            let private_key_hex = account.private_key_hex;
+
+            assert.isOk(private_key_hex);
+        });
+
+        it("should not be an empty string", function () {
+            let private_key_hex = account.private_key_hex;
+
+            assert.notEqual(private_key_hex, '');
+        });
+    });
+
     describe("Test User Initialization", function () {
 
         it("should neither null nor undefined", function () {
