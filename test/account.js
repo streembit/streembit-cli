@@ -4,6 +4,7 @@ const util = require("util");
 const createHash = require('create-hash');
 const res = require('../resolvedir');
 const Account = require('libs/account');
+const ecckey = require('libs/crypto');
 const account_config = require('./account_config.json');
 //const peerutils = require("libs/peernet/peerutils");
 //const stutils = require("libs/utils");
@@ -50,19 +51,33 @@ describe("Account module test lib/account", function () {
         });
     });
 
-    describe("Test ppkikey value", function () {
+    describe("Test ppkikey() value", function () {
 
         it("Should set a value to ppkikey", function () {
-            account.ppkikey = account_config.key;
-            let ppikey_value = account.ppkikey;
-
-            assert.equal(ppikey_value, account_config.key);
+            let ppkikey_value = new ecckey();
+            let m_publickey = account_config.publickey;
+            ppkikey_value.keyFromPrivate(m_publickey, 'hex');
+            account.ppkikey = ppkikey_value;
+            
+            assert.isDefined(account.ppkikey);
         });
 
         it("Should neither null nor undefined", function () {
-            let ppikey_value = account.ppkikey;
+            let ppkikey_value = account.ppkikey;
+            
+            assert.exists(ppkikey_value);
+        });
+        
+        it("Should not be an empty string", function () {
+            let ppkikey_value = account.ppkikey;
 
-            assert.exists(ppikey_value);
+            assert.notEqual(ppkikey_value, '');
+        });
+
+        it("Should be an object", function () {
+            let ppkikey_value = account.ppkikey;
+
+            assert.isObject(ppkikey_value);
         });
     });
 
