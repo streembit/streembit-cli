@@ -83,7 +83,7 @@ describe("Account module test lib/account", function () {
 
     describe("Test cryptokey()", function () {
 
-        it("should a value set in after initializing m_key through ppkikey", function () {
+        it("should be defined", function () {
             let crypto_key = account.cryptokey;
 
             assert.isDefined(crypto_key);
