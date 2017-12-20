@@ -58,6 +58,8 @@ var Logger = require('./logger');
 function Node(options) {
     options = merge(Object.create(Node.DEFAULTS), options);
 
+    var config = options.config.
+
     if (!(this instanceof Node)) {
         return new Node(options);
     }
@@ -78,7 +80,7 @@ function Node(options) {
 
     this._bindRouterEventHandlers();
     this._bindRPCMessageHandlers(options);
-    this._startReplicationInterval();
+    this._startReplicationInterval(config.limits.replicate || constants.T_REPLICATE);
     this._startExpirationInterval();
     this._log.info('node created Contact: ' + this._self.toString() + '; nodeID: ' + this._self.nodeID + '; isseed: ' + this._self.isseed);
 }
@@ -484,8 +486,8 @@ Node.prototype._bindRPCMessageHandlers = function (options) {
  * Replicate local storage every T_REPLICATE
  * @private
  */
-Node.prototype._startReplicationInterval = function () {
-    setInterval(this._replicate.bind(this), constants.T_REPLICATE);
+Node.prototype._startReplicationInterval = function (timeoutval) {
+    setInterval(this._replicate.bind(this), timeoutval);
 };
 
 /**

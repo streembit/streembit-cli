@@ -152,7 +152,8 @@ class KadHandler {
             logger: logger,
             storage: db.getdb("streembitkv"), // streembit key-value database (leveldb)
             seeds: seeds,
-            isseed: options.isseed
+            isseed: options.isseed,
+            config: config
         };
 
         kad.create(options, (err, peer) => {
