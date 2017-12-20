@@ -40,6 +40,7 @@ var streembit_config = (function (cnfobj) {
     var m_account_name = null;
     var m_net = null;
     var m_users = null;
+    var m_limits = null;
 
     Object.defineProperty(cnfobj, "password", {
         get: function () {
@@ -171,7 +172,6 @@ var streembit_config = (function (cnfobj) {
         }
     });
 
-
     cnfobj.transport = {
         "protocol": "",
         "host": "",
@@ -179,6 +179,14 @@ var streembit_config = (function (cnfobj) {
         "ws": {
             "port": 0
         }
+    };
+
+    cnfobj.limits = {
+        "refresh": 0,
+        "replicate": 0,
+        "republish": 0,
+        "expire": 0,
+        "timeout": 0
     };
 
 
@@ -217,6 +225,13 @@ var streembit_config = (function (cnfobj) {
             cnfobj.account = config.account;
 
             cnfobj.users = config.users;
+            
+            //time limits set for kad tools
+            cnfobj.limits.refresh = config.limits.refresh;
+            cnfobj.limits.replicate = config.limits.replicate;
+            cnfobj.limits.republish = config.limits.republish;
+            cnfobj.limits.expire = config.limits.expire;
+            cnfobj.limits.timeout = config.limits.timeout;
 
             // Validate the configuration file. There are some configurations disallowed. Throw an exception here if we detect such invalid configuration
             var seedcfarr = config.modules.filter(function (item) {
