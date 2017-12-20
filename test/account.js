@@ -155,10 +155,16 @@ describe("Account module test lib/account", function () {
             assert.exists(user);
         });
 
-        it("should be true", function () {
+        it("should be truthy", function () {
             let user = account.is_user_initialized;
 
             assert.isOk(user);
+        });
+
+        it("should be true", function () {
+            let user = account.is_user_initialized;
+
+            assert.isTrue(user);
         });
     });
 
