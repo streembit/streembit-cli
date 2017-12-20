@@ -34,6 +34,7 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 var ms = require('ms');
+var config = require('config');
 
 module.exports = {
 
@@ -45,21 +46,21 @@ module.exports = {
 
     /** @constant {Number} K - Number of contacts held in a bucket */
     K: 20,
-
+    
     /** @constant {Number} T_REFRESH - Interval for performing router refresh */
-    T_REFRESH: ms('3600s'),
+    T_REFRESH: ms(config.limits.refresh + 's'),
 
     /** @constant {Number} T_REPLICATE - Interval for replicating local data */
-    T_REPLICATE: ms('3600s'),
+    T_REPLICATE: ms(config.limits.replicate + 's'),
 
     /** @constant {Number} T_REPUBLISH - Interval for republishing data */
-    T_REPUBLISH: ms('86400s'),
+    T_REPUBLISH: ms(config.limits.refresh + 's'),
 
     /** @constant {Number} T_EXPIRE - Interval for expiring local data entries */
-    T_EXPIRE: ms('86405s'),
+    T_EXPIRE: ms(config.limits.republish + 's'),
 
     /** @constant {Number} T_RESPONSETIMEOUT - Time to wait for RPC response */
-    T_RESPONSETIMEOUT: ms('5s'),
+    T_RESPONSETIMEOUT: ms(config.limits.timeout + 's'),
 
     /** @constant {Array} MESSAGE_TYPES - Allowed RPC methods */
     MESSAGE_TYPES: [

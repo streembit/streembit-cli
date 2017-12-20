@@ -22,7 +22,6 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-
 const logger = require("streembit-util").logger;
 const async = require("async");
 const config = require("libs/config");
@@ -147,7 +146,7 @@ class Users {
 
         try {
             logger.debug("creating users in the database");
-            var cnfusers = config.users;            
+            var cnfusers = config.users;           
             await this.syncusers(cnfusers);
         }
         catch (err) {

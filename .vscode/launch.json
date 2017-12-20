@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
-            "program": "${workspaceFolder}\\streembit.js"
+            "program": "${workspaceFolder}\/streembit.js"
         }
     ]
 }

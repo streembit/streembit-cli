@@ -1,6 +1,6 @@
 {
   "account": "streembit_example_account",
   "password": "streembit_example_password",
-  "key": "streembit_example_key",
+  "publickey": "streembit_example_publickey",
   "connsymmkey": "streembit_example_connsymmkey"
 }
