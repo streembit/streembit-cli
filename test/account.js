@@ -114,6 +114,39 @@ describe("Account module test lib/account", function () {
         });
     });
 
+    describe("Test private_key()", function () {
+
+        it("should be defined", function () {
+            let private_key = account.private_key;
+
+            assert.isDefined(private_key);
+        });
+
+        it("should neither null nor undefined", function () {
+            let private_key = account.private_key;
+
+            assert.exists(private_key);
+        });
+
+        it("should be truthy", function () {
+            let private_key = account.private_key;
+
+            assert.isOk(private_key);
+        });
+
+        it("should not be an empty string", function () {
+            let private_key = account.private_key;
+
+            assert.notEqual(private_key, '');
+        });
+
+        it("should be an object", function () {
+            let private_key = account.private_key;
+
+            assert.isObject(private_key);
+        });
+    });
+
     describe("Test User Initialization", function () {
 
         it("should neither null nor undefined", function () {
