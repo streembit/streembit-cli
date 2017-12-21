@@ -51,6 +51,12 @@ Object.defineProperty(EccKey.prototype, 'publicKeyHex', {
     }
 })
 
+Object.defineProperty(EccKey.prototype, 'publicKeyHexCompressed', {
+    get: function () {
+        return this.key.getPublic(true, 'hex');
+    }
+})
+
 Object.defineProperty(EccKey.prototype, 'privateKeyHex', {
     get: function () {
         return this.key.getPrivate('hex');

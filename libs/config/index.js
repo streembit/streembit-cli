@@ -225,6 +225,8 @@ var streembit_config = (function (cnfobj) {
             cnfobj.account = config.account;
 
             cnfobj.users = config.users;
+
+            cnfobj.limits = {};
             
             //time limits set for kad tools
             cnfobj.limits.refresh =  (config.limits && config.limits.refresh) || 3600;
