@@ -81,7 +81,7 @@ function Node(options) {
     this._bindRouterEventHandlers();
     this._bindRPCMessageHandlers(options);
     this._startReplicationInterval(config.limits.replicate || constants.T_REPLICATE);
-    this._startExpirationInterval();
+    this._startExpirationInterval(config.limits.expire || constants.T_EXPIRE);
     this._log.info('node created Contact: ' + this._self.toString() + '; nodeID: ' + this._self.nodeID + '; isseed: ' + this._self.isseed);
 }
 /**
@@ -483,11 +483,11 @@ Node.prototype._bindRPCMessageHandlers = function (options) {
 };
 
 /**
- * Replicate local storage every T_REPLICATE
+ * Replicate local storage every replicate limit set in config
  * @private
  */
-Node.prototype._startReplicationInterval = function (timeoutval) {
-    setInterval(this._replicate.bind(this), timeoutval);
+Node.prototype._startReplicationInterval = function (replicateval) {
+    setInterval(this._replicate.bind(this), replicateval);
 };
 
 /**
@@ -542,11 +542,11 @@ Node.prototype._replicate = function () {
  * Expire entries older than T_EXPIRE
  * @private
  */
-Node.prototype._startExpirationInterval = function () {
-    setInterval(this._expire.bind(this), constants.T_EXPIRE);
+Node.prototype._startExpirationInterval = function (expireval) {
+    setInterval(this._expire.bind(this), expireval);
 };
 
-/**
+/** 
  * Expire entries older than T_EXPIRE
  * @private
  */

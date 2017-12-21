@@ -227,11 +227,11 @@ var streembit_config = (function (cnfobj) {
             cnfobj.users = config.users;
             
             //time limits set for kad tools
-            cnfobj.limits.refresh = config.limits.refresh;
-            cnfobj.limits.replicate = config.limits.replicate;
-            cnfobj.limits.republish = config.limits.republish;
-            cnfobj.limits.expire = config.limits.expire;
-            cnfobj.limits.timeout = config.limits.timeout;
+            cnfobj.limits.refresh =  (config.limits && config.limits.refresh) || 3600;
+            cnfobj.limits.replicate = (config.limits && config.limits.replicate) || 3600;
+            cnfobj.limits.republish = (config.limits && config.limits.republish) || 86400;
+            cnfobj.limits.expire = (config.limits && config.limits.expire) || 86405;
+            cnfobj.limits.timeout = (config.limits && config.limits.timeout) || 5;
 
             // Validate the configuration file. There are some configurations disallowed. Throw an exception here if we detect such invalid configuration
             var seedcfarr = config.modules.filter(function (item) {

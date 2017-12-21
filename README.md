@@ -38,6 +38,13 @@ A typical configuration file is the following:
             "port": 32318
         }
     },
+    "limits": {
+        "refresh": 3600,
+        "replicate": 3600,
+        "republish": 86400,
+        "expire": 86405,
+        "timeout": 5
+    },
     "modules": [
         {
             "name": "seed",
@@ -137,6 +144,18 @@ The format is
 ]
 ```
 The host and port where the seed node listen for connections.
+
+"Limits" Intervals:
+
+refresh: Interval for performing router refresh
+
+replicate: Interval for replicating local data
+
+republish: Interval for republishing data
+
+expire: Interval for expiring local data entries
+
+timeout: Time to wait for RPC response
 
 Modules:
 This section defines how the application will be executed. Whether it is seed, client, IoT node or a blockchain node. The "run" flag of each module defines whether or not execute the module.
