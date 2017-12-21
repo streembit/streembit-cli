@@ -147,15 +147,15 @@ The host and port where the seed node listen for connections.
 
 "Limits" Intervals:
 
-refresh: Interval for performing router refresh
+refresh: Interval for performing router refresh, Default value is 3600
 
-replicate: Interval for replicating local data
+replicate: Interval for replicating local data, Default value is 3600
 
-republish: Interval for republishing data
+republish: Interval for republishing data, Default value is 86400
 
-expire: Interval for expiring local data entries
+expire: Interval for expiring local data entries, Default value is 86405
 
-timeout: Time to wait for RPC response
+timeout: Time to wait for RPC response, Default value is 5
 
 Modules:
 This section defines how the application will be executed. Whether it is seed, client, IoT node or a blockchain node. The "run" flag of each module defines whether or not execute the module.
