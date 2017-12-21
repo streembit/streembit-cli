@@ -174,6 +174,33 @@ describe("Account module test lib/account", function () {
         });
     });
 
+    describe("Test public_key()", function () {
+
+        it("should be defined", function () {
+            let public_key = account.public_key;
+
+            assert.isDefined(public_key);
+        });
+
+        it("should neither null nor undefined", function () {
+            let public_key = account.public_key;
+
+            assert.exists(public_key);
+        });
+
+        it("should be truthy", function () {
+            let public_key = account.public_key;
+
+            assert.isOk(public_key);
+        });
+
+        it("should not be an empty string", function () {
+            let public_key = account.public_key;
+
+            assert.notEqual(public_key, '');
+        });
+    });
+
     describe("Test User Initialization", function () {
 
         it("should neither null nor undefined", function () {
