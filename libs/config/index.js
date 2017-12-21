@@ -228,12 +228,13 @@ var streembit_config = (function (cnfobj) {
 
             cnfobj.limits = {};
             
-            //time limits set for kad tools
-            cnfobj.limits.refresh =  (config.limits && config.limits.refresh) || 3600;
-            cnfobj.limits.replicate = (config.limits && config.limits.replicate) || 3600;
-            cnfobj.limits.republish = (config.limits && config.limits.republish) || 86400;
-            cnfobj.limits.expire = (config.limits && config.limits.expire) || 86405;
-            cnfobj.limits.timeout = (config.limits && config.limits.timeout) || 5;
+            // time limits set for kad tools
+            // the defult values like 3600 are in seconds so needs to get the milliseconds here
+            cnfobj.limits.refresh = (config.limits && config.limits.refresh && config.limits.refresh >= 3600) ? (config.limits.refresh * 1000) : 3600 * 1000;
+            cnfobj.limits.replicate = (config.limits && config.limits.replicate && config.limits.replicate >= 3600 ) ? (config.limits.replicate * 1000) : 3600 * 1000;
+            cnfobj.limits.republish = (config.limits && config.limits.republish && config.limits.republish >= 43200) ? (config.limits.republish * 1000) : 86400 * 1000;
+            cnfobj.limits.expire = (config.limits && config.limits.expire && config.limits.expire >= 43201) ? (config.limits.expire * 1000) : 86405 * 1000;
+            cnfobj.limits.timeout = (config.limits && config.limits.timeout && config.limits.timeout >= 4) ? (config.limits.timeout * 1000) : 5 * 1000;
 
             // Validate the configuration file. There are some configurations disallowed. Throw an exception here if we detect such invalid configuration
             var seedcfarr = config.modules.filter(function (item) {
