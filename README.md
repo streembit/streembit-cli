@@ -145,7 +145,7 @@ The format is
 ```
 The host and port where the seed node listen for connections.
 
-The "Limits" section of the configuration determines time interval values of various KAD operations.< br />
+The "Limits" section of the configuration determines time interval values of various KAD operations.<br />
 "Limits" intervals (values are in seconds):
 
 refresh: Interval for performing router refresh, Default value is 3600
