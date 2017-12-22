@@ -279,6 +279,39 @@ describe("Account module test lib/account", function () {
         });
     });
 
+    describe("Test accountpk()", function () {
+
+        it("should be defined", function () {
+            let acc_pk = account.accountpk;
+
+            assert.isDefined(acc_pk);
+        });
+
+        it("should neither null nor undefined", function () {
+            let acc_pk = account.accountpk;
+
+            assert.exists(acc_pk);
+        });
+
+        it("should be truthy", function () {
+            let acc_pk = account.accountpk;
+
+            assert.isOk(acc_pk);
+        });
+
+        it("should be a string", function () {
+            let acc_pk = account.accountpk;
+
+            assert.isString(acc_pk);
+        });
+
+        it("should not be an empty string", function () {
+            let acc_pk = account.accountpk;
+
+            assert.notEqual(acc_pk, '');
+        });
+    });
+
     describe("Test User Initialization", function () {
 
         it("should neither null nor undefined", function () {
