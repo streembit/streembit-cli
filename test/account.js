@@ -200,6 +200,12 @@ describe("Account module test lib/account", function () {
             assert.isOk(public_key);
         });
 
+        it("should be a string", function () {
+            let public_key = account.public_key;
+
+            assert.isString(public_key);
+        });
+
         it("should not be an empty string", function () {
             let public_key = account.public_key;
 
