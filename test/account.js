@@ -167,6 +167,12 @@ describe("Account module test lib/account", function () {
             assert.isOk(private_key_hex);
         });
 
+        it("should be a string", function () {
+            let private_key_hex = account.private_key_hex;
+
+            assert.isString(private_key_hex);
+        });
+
         it("should not be an empty string", function () {
             let private_key_hex = account.private_key_hex;
 
