@@ -317,7 +317,7 @@ describe("Account module test lib/account", function () {
         it("should set ppkikey value to null", function () {
             account.clear();
 
-            assert.equal(account.ppkikey, null);
+            assert.isNull(account.ppkikey);
         });
     });
 });
