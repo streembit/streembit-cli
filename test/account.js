@@ -213,6 +213,39 @@ describe("Account module test lib/account", function () {
         });
     });
 
+    describe("Test bs58pk()", function () {
+
+        it("should be defined", function () {
+            let bs58pk_key = account.bs58pk;
+
+            assert.isDefined(bs58pk_key);
+        });
+
+        it("should neither null nor undefined", function () {
+            let bs58pk_key = account.bs58pk;
+
+            assert.exists(bs58pk_key);
+        });
+
+        it("should be truthy", function () {
+            let bs58pk_key = account.bs58pk;
+
+            assert.isOk(bs58pk_key);
+        });
+
+        it("should be a string", function () {
+            let bs58pk_key = account.bs58pk;
+
+            assert.isString(bs58pk_key);
+        });
+
+        it("should not be an empty string", function () {
+            let bs58pk_key = account.bs58pk;
+
+            assert.notEqual(bs58pk_key, '');
+        });
+    });
+
     describe("Test User Initialization", function () {
 
         it("should neither null nor undefined", function () {
