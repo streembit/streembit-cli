@@ -246,6 +246,39 @@ describe("Account module test lib/account", function () {
         });
     });
 
+    describe("Test public_key_hash()", function () {
+
+        it("should be defined", function () {
+            let pk_hash = account.public_key_hash;
+
+            assert.isDefined(pk_hash);
+        });
+
+        it("should neither null nor undefined", function () {
+            let pk_hash = account.public_key_hash;
+
+            assert.exists(pk_hash);
+        });
+
+        it("should be truthy", function () {
+            let pk_hash = account.public_key_hash;
+
+            assert.isOk(pk_hash);
+        });
+
+        it("should be a string", function () {
+            let pk_hash = account.public_key_hash;
+
+            assert.isString(pk_hash);
+        });
+
+        it("should not be an empty string", function () {
+            let pk_hash = account.public_key_hash;
+
+            assert.notEqual(pk_hash, '');
+        });
+    });
+
     describe("Test User Initialization", function () {
 
         it("should neither null nor undefined", function () {
