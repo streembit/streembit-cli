@@ -38,6 +38,7 @@ var streembit_config = (function (cnfobj) {
     var m_seeds = null;
     var m_usertype = null;
     var m_account_name = null;
+    var m_database_key = null;
     var m_net = null;
     var m_users = null;
     var m_limits = null;
@@ -152,6 +153,16 @@ var streembit_config = (function (cnfobj) {
         }
     });
 
+    Object.defineProperty(cnfobj, "database_key", {
+        get: function () {
+            return m_database_key;
+        },
+
+        set: function (value) {
+            m_database_key = value;
+        }
+    });
+
     Object.defineProperty(cnfobj, "net", {
         get: function () {
             return m_net;
@@ -223,6 +234,7 @@ var streembit_config = (function (cnfobj) {
                 return callback("account is missing from the configuration file.");
             }
             cnfobj.account = config.account;
+            cnfobj.database_key = config.database_key;
 
             cnfobj.users = config.users;
 

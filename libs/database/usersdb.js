@@ -20,7 +20,8 @@ Copyright (C) 2017 The Streembit software development team
 */
 
 const db = require("streembit-db").instance;
-const dbnamekey = "streembitsql";
+const res = require('../../resolvedir');
+const config = require("libs/config");
 
 'use strict';
 
@@ -30,6 +31,7 @@ class UsersDb {
     }
 
     get database() {
+        const dbnamekey = config.database_key;
         if (!this.m_database) {
             this.m_database = db.databases[dbnamekey];
         }
