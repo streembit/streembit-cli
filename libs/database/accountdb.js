@@ -32,8 +32,7 @@ class AccountsDb {
 
     get database () {
         const dbnamekey = config.database_key;
-        console.log("AAAAAAAA");
-        console.log(dbnamekey);
+
         if (!this.m_database) {
             this.m_database = dbinstance.databases[dbnamekey];
         }
