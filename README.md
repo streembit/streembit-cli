@@ -29,6 +29,7 @@ A typical configuration file is the following:
  {
     "account": "my_streembit_account",
     "password": "abcdefghjk123456789",
+    "database_name": "streembitsql",
     "seeds": [],
     "transport": {
         "protocol": "http",
@@ -121,6 +122,8 @@ A typical configuration file is the following:
 Account: This is the account name stored in the local SQLITE database. The Streembit UI identifies this node by this account name
 
 Password: To decrypt account information in the SQLITE database. For development purpose and make easy to develop the software define this password in the config file. In production, provide this password from the command line using the --pasword (or -s) command line switch. See "node streembit.js --help" for more command line arguments.
+
+The "database_name" field: This is the SQLITE database name. Default value is "streembitsql". You may change it for production or for testing purpose. For using different databases in production or testing.
 
 The "transport" field:
 
