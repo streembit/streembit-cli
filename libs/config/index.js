@@ -294,6 +294,11 @@ var streembit_config = (function (cnfobj) {
 
             var password = argv_password;
 
+            if (password) {
+                cnfobj.password = password;
+                return callback();
+            }
+
             if (!password && config.password) {
                 //  check the config file
                 cnfobj.password = config.password;  
