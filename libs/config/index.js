@@ -38,7 +38,7 @@ var streembit_config = (function (cnfobj) {
     var m_seeds = null;
     var m_usertype = null;
     var m_account_name = null;
-    var m_database_key = null;
+    var m_database_name = null;
     var m_net = null;
     var m_users = null;
     var m_limits = null;
@@ -153,13 +153,13 @@ var streembit_config = (function (cnfobj) {
         }
     });
 
-    Object.defineProperty(cnfobj, "database_key", {
+    Object.defineProperty(cnfobj, "database_name", {
         get: function () {
-            return m_database_key;
+            return m_database_name;
         },
 
         set: function (value) {
-            m_database_key = value;
+            m_database_name = value;
         }
     });
 
@@ -234,7 +234,11 @@ var streembit_config = (function (cnfobj) {
                 return callback("account is missing from the configuration file.");
             }
             cnfobj.account = config.account;
-            cnfobj.database_key = config.database_key;
+
+            if (!config.database_name) {
+                return callback("database_name is missing from the configuration file.");
+            }
+            cnfobj.database_name = config.database_name;
 
             cnfobj.users = config.users;
 
@@ -289,6 +293,7 @@ var streembit_config = (function (cnfobj) {
             assert(cnfobj.blockchain_config && cnfobj.blockchain_config.hasOwnProperty("run"), "Invalid blockchain configuration section");
 
             var password = argv_password;
+
             if (!password && config.password) {
                 //  check the config file
                 cnfobj.password = config.password;  

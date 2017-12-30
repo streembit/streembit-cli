@@ -31,7 +31,7 @@ class IoTDevicesDb {
     }
 
     get database () {
-        const dbnamekey = config.database_key;
+        const dbnamekey = config.database_name;
         if (!this.m_database) {
             this.m_database = dbinstance.databases[dbnamekey];
         }

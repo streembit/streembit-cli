@@ -31,7 +31,7 @@ class UsersDb {
     }
 
     get database() {
-        const dbnamekey = config.database_key;
+        const dbnamekey = config.database_name;
         if (!this.m_database) {
             this.m_database = db.databases[dbnamekey];
         }
