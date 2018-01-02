@@ -1,5 +1,4 @@
 const dbinstance = require("streembit-db").instance;
-const res = require('../../resolvedir');
 const config = require("libs/config");
 
 class database {
