@@ -7,6 +7,9 @@ class database {
     }
 
     get database () {
+        if(!config.database_name){
+            throw new Error("database_name is missing from the configuration file.");
+        }
         const dbnamekey = config.database_name;
 
         if (!this.m_database) {
