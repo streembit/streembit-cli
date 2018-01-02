@@ -21,21 +21,12 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const dbinstance = require("streembit-db").instance;
 const res = require('../../resolvedir');
-const config = require("libs/config");
+const database = require("libs/database/database");
 
-class IoTDevicesDb {
+class IoTDevicesDb extends database{
     constructor() {
-        this.m_database = 0;
-    }
-
-    get database () {
-        const dbnamekey = config.database_name;
-        if (!this.m_database) {
-            this.m_database = dbinstance.databases[dbnamekey];
-        }
-        return this.m_database;
+        super();
     }
 
     devices() {

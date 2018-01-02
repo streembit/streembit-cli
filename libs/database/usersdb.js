@@ -19,23 +19,14 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-const db = require("streembit-db").instance;
 const res = require('../../resolvedir');
-const config = require("libs/config");
+const database = require("libs/database/database");
 
 'use strict';
 
-class UsersDb {
+class UsersDb extends database{
     constructor() {
-        this.m_database = 0;
-    }
-
-    get database() {
-        const dbnamekey = config.database_name;
-        if (!this.m_database) {
-            this.m_database = db.databases[dbnamekey];
-        }
-        return this.m_database;
+        super();
     }
 
     getall(callback) {
