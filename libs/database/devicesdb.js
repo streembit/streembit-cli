@@ -21,7 +21,6 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const res = require('../../resolvedir');
 const database = require("libs/database/database");
 
 class IoTDevicesDb extends database{

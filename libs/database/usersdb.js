@@ -19,7 +19,6 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-const res = require('../../resolvedir');
 const database = require("libs/database/database");
 
 'use strict';
