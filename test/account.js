@@ -390,6 +390,21 @@ describe("Account module test lib/account", function () {
         });
     });
 
+    describe("Test init()", function () {
+
+        it("should define the config.account value", function (done) {
+            config.init(account_config.port, account_config.host, account_config.password, function () {
+                database.init(dbschema, function () {
+                    account.init(function () {
+
+                        assert.exists(config.account);
+                        done();
+                    })
+                });
+            });
+        });
+    });
+
     describe("Test create_account()", function () {
 
         it("should have a ppkikey value", function (done) {
