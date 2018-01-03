@@ -390,7 +390,7 @@ describe("Account module test lib/account", function () {
         });
     });
 
-    describe("Test init()", function () {
+    describe("Test create_account()", function () {
 
         it("should have a ppkikey value", function (done) {
             config.init(account_config.port, account_config.host, account_config.password, function () {
@@ -416,7 +416,7 @@ describe("Account module test lib/account", function () {
             });
         });
 
-        it("should have a connsymmkey value", function (done) {
+        it("should have a accountname value", function (done) {
             config.init(account_config.port, account_config.host, account_config.password, function () {
                 database.init(dbschema, function () {
                     account.create_account(account_config.account, account_config.password, function () {
@@ -452,4 +452,5 @@ describe("Account module test lib/account", function () {
             });
         });
     });
+
 });
