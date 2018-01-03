@@ -5,6 +5,9 @@ const createHash = require('create-hash');
 const res = require('../resolvedir');
 const Account = require('libs/account');
 const ecckey = require('libs/crypto');
+const config = require("libs/config");
+const dbschema = require("dbschematest");
+var database = require("streembit-db").instance;
 const account_config = require('./account_config.json');
 //const peerutils = require("libs/peernet/peerutils");
 //const stutils = require("libs/utils");
@@ -384,6 +387,69 @@ describe("Account module test lib/account", function () {
             account.clear();
 
             assert.isNull(account.ppkikey);
+        });
+    });
+
+    describe("Test init()", function () {
+
+        it("should have a ppkikey value", function (done) {
+            config.init(account_config.port, account_config.host, account_config.password, function () {
+                database.init(dbschema, function () {
+                    account.create_account(account_config.account, account_config.password, function () {
+
+                        assert.exists(account.ppkikey);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it("should have a connsymmkey value", function (done) {
+            config.init(account_config.port, account_config.host, account_config.password, function () {
+                database.init(dbschema, function () {
+                    account.create_account(account_config.account, account_config.password, function () {
+
+                        assert.exists(account.connsymmkey);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it("should have a connsymmkey value", function (done) {
+            config.init(account_config.port, account_config.host, account_config.password, function () {
+                database.init(dbschema, function () {
+                    account.create_account(account_config.account, account_config.password, function () {
+
+                        assert.exists(account.accountname);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it("should have a public_key_hash value", function (done) {
+            config.init(account_config.port, account_config.host, account_config.password, function () {
+                database.init(dbschema, function () {
+                    account.create_account(account_config.account, account_config.password, function () {
+
+                        assert.exists(account.public_key_hash);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it("should have a bs58pk value", function (done) {
+            config.init(account_config.port, account_config.host, account_config.password, function () {
+                database.init(dbschema, function () {
+                    account.create_account(account_config.account, account_config.password, function () {
+
+                        assert.exists(account.bs58pk);
+                        done();
+                    });
+                });
+            });
         });
     });
 });
