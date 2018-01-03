@@ -390,6 +390,21 @@ describe("Account module test lib/account", function () {
         });
     });
 
+    describe("Test addToDB()", function () {
+
+        it("should set the value of error object undefined", function (done) {
+            config.init(account_config.port, account_config.host, account_config.password, function () {
+                database.init(dbschema, function () {
+                    account.create_account(account_config.account, account_config.password, function (err) {
+
+                        assert.isUndefined(err);
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
     describe("Test init()", function () {
 
         it("should define the config.account value", function (done) {
