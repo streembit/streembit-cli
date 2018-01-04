@@ -8,6 +8,7 @@ const ecckey = require('libs/crypto');
 const config = require("libs/config");
 const dbschema = require("dbschematest");
 const database = require("streembit-db").instance;
+const Database = require("libs/database/accountdb");
 const account_config = require('./account_config.json');
 //const peerutils = require("libs/peernet/peerutils");
 //const stutils = require("libs/utils");
@@ -470,9 +471,30 @@ describe("Account module test lib/account", function () {
         });
     });
 
+    describe("Test load_account()", function () {
+
+        it("should execute account_load()", function (done) {
+
+            account.init(function () {
+
+                let db = new Database();
+
+                db.data(account_config.account, function (err, data) {
+
+                    account.load_account(account_config, data, account_config.password, function () {
+
+                        console.log("account_load() executed");
+                        done();
+                    });
+
+                });
+            })
+        });
+    });
+
     describe("Test load()", function () {
 
-        it("should execute", function (done) {
+        it("should execute load()", function (done) {
 
             account.load(account_config.account, account_config.password, function () {
                 console.log("load() executed");
