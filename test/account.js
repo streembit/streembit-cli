@@ -16,8 +16,15 @@ const account_config = require('./account_config.json');
 describe("Account module test lib/account", function () {
     var account;
 
-    before(function () {
+    before(function (done) {
         account = new Account();
+
+        config.init(account_config.port, account_config.host, account_config.password, function () {
+            database.init(dbschema, function () {
+
+                done();
+            });
+        });
     });
 
     describe("Test Constructor initialization", function () {
@@ -61,16 +68,16 @@ describe("Account module test lib/account", function () {
             let m_publickey = account_config.publickey;
             ppkikey_value.keyFromPrivate(m_publickey, 'hex');
             account.ppkikey = ppkikey_value;
-            
+
             assert.isDefined(account.ppkikey);
         });
 
         it("should neither null nor undefined", function () {
             let ppkikey_value = account.ppkikey;
-            
+
             assert.exists(ppkikey_value);
         });
-        
+
         it("should not be an empty string", function () {
             let ppkikey_value = account.ppkikey;
 
@@ -164,7 +171,7 @@ describe("Account module test lib/account", function () {
             assert.exists(private_key_hex);
         });
 
-        it("should be truthy" , function () {
+        it("should be truthy", function () {
             let private_key_hex = account.private_key_hex;
 
             assert.isOk(private_key_hex);
@@ -393,92 +400,72 @@ describe("Account module test lib/account", function () {
     describe("Test addToDB()", function () {
 
         it("should set the value of error object undefined", function (done) {
-            config.init(account_config.port, account_config.host, account_config.password, function () {
-                database.init(dbschema, function () {
-                    account.create_account(account_config.account, account_config.password, function (err) {
 
-                        assert.isUndefined(err);
-                        done();
-                    });
-                });
+            account.create_account(account_config.account, account_config.password, function (err) {
+
+                assert.isUndefined(err);
+                done();
             });
+
         });
     });
 
     describe("Test init()", function () {
 
         it("should define the config.account value", function (done) {
-            config.init(account_config.port, account_config.host, account_config.password, function () {
-                database.init(dbschema, function () {
-                    account.init(function () {
 
-                        assert.exists(config.account);
-                        done();
-                    })
-                });
-            });
+            account.init(function () {
+
+                assert.exists(config.account);
+                done();
+            })
         });
     });
 
     describe("Test create_account()", function () {
 
         it("should have a ppkikey value", function (done) {
-            config.init(account_config.port, account_config.host, account_config.password, function () {
-                database.init(dbschema, function () {
-                    account.create_account(account_config.account, account_config.password, function () {
 
-                        assert.exists(account.ppkikey);
-                        done();
-                    });
-                });
+            account.create_account(account_config.account, account_config.password, function () {
+
+                assert.exists(account.ppkikey);
+                done();
             });
         });
 
         it("should have a connsymmkey value", function (done) {
-            config.init(account_config.port, account_config.host, account_config.password, function () {
-                database.init(dbschema, function () {
-                    account.create_account(account_config.account, account_config.password, function () {
 
-                        assert.exists(account.connsymmkey);
-                        done();
-                    });
-                });
+            account.create_account(account_config.account, account_config.password, function () {
+
+                assert.exists(account.connsymmkey);
+                done();
             });
         });
 
         it("should have a accountname value", function (done) {
-            config.init(account_config.port, account_config.host, account_config.password, function () {
-                database.init(dbschema, function () {
-                    account.create_account(account_config.account, account_config.password, function () {
 
-                        assert.exists(account.accountname);
-                        done();
-                    });
-                });
+            account.create_account(account_config.account, account_config.password, function () {
+
+                assert.exists(account.accountname);
+                done();
             });
         });
 
         it("should have a public_key_hash value", function (done) {
-            config.init(account_config.port, account_config.host, account_config.password, function () {
-                database.init(dbschema, function () {
-                    account.create_account(account_config.account, account_config.password, function () {
 
-                        assert.exists(account.public_key_hash);
-                        done();
-                    });
-                });
+            account.create_account(account_config.account, account_config.password, function () {
+
+                assert.exists(account.public_key_hash);
+                done();
             });
         });
 
         it("should have a bs58pk value", function (done) {
-            config.init(account_config.port, account_config.host, account_config.password, function () {
-                database.init(dbschema, function () {
-                    account.create_account(account_config.account, account_config.password, function () {
 
-                        assert.exists(account.bs58pk);
-                        done();
-                    });
-                });
+            account.create_account(account_config.account, account_config.password, function () {
+
+                assert.exists(account.bs58pk);
+                done();
             });
         });
     });
@@ -486,15 +473,12 @@ describe("Account module test lib/account", function () {
     describe("Test load()", function () {
 
         it("should execute", function (done) {
-            config.init(account_config.port, account_config.host, account_config.password, function () {
-                database.init(dbschema, function () {
-                    account.load(account_config.account, account_config.password, function () {
-                        console.log("load() executed");
-                        done();
-                    })
-                });
-            });
+
+            account.load(account_config.account, account_config.password, function () {
+                console.log("load() executed");
+                done();
+            })
+
         });
     });
-
 });
