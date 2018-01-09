@@ -70,6 +70,11 @@ class Users {
         return user;
     }
 
+    delete_user(userid) {
+        var db = new Database();
+        return db.delete_user(userid);
+    }
+
     populate() {
         return new Promise((resolve, reject) => {
             var db = new Database();

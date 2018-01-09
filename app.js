@@ -215,6 +215,59 @@ module.exports.list_users = function () {
     ); 
 }
 
+module.exports.delete_user = function () {
+    // get the password from the command prompt
+    utils.prompt_for_userid(function (err, userid) {
+        if (err) {
+            return console.log(err.message || err);
+        }
+
+        //delete the user id
+        async.waterfall(
+            [
+                function (callback) {
+                    config.init_account_params(callback);
+                },
+                function (callback) {
+                    if (!config.password) {
+                        return callback("Invalid password");
+                    }
+
+                    database.init(dbschema, callback);
+                },
+                function (callback) {
+                    try {
+                        var users = new Users();
+                        users.init(callback);
+                    }
+                    catch (e) {
+                        callback("Users init error: " + e.message);
+                    }
+                }
+            ],
+            function (err, result) {
+                if (err) {
+                    return console.log(err.message || err);
+                }   
+
+                console.log("deleting user ID: " + userid);
+
+                var users = new Users();
+                users.delete_user(userid).then(
+                    () => {
+                        console.log("User was deleted from the database");
+                    })
+                    .catch(
+                        (err) => {
+                            console.log("Deleting user failed: " + err.message || err);
+                        }
+                    );              
+            }
+        ); 
+
+    });
+}
+
 
 module.exports.backup = function() {
     console.log("app backup account data");

@@ -66,6 +66,31 @@ const kad = require('libs/kad');
 
         },
 
+        prompt_for_userid: function (callback) {
+            // show the prompt if the password was not supplied in the cmd line argument nor in the config file
+            var schema = {
+                properties: {
+                    userid: {
+                        description: 'Enter the user ID to be deleted',
+                        type: 'integer',  
+                        message: 'The user ID must be am integer',
+                        required: true
+                    },
+                }
+            };
+
+            prompt.message = "";
+
+            // Since there is no password was provided start the command prompt
+            // Get the password from the user via the command prompt
+            prompt.start();
+            prompt.get(schema, function (err, result) {
+                var userid = result.userid;
+                callback(null, userid);
+            });
+
+        },
+
         is_ipaddress: function(address) {
             var ipPattern = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/; // /^(\d{ 1, 3 })\.(\d { 1, 3 })\.(\d { 1, 3 })\.(\d { 1, 3 })$/;   
             var valid = ipPattern.test(address);

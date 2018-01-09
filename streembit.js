@@ -42,6 +42,7 @@ program
     .option('-b, --backup', 'Backup node data')
     .option('-c, --changepwd', 'Change password')
     .option('-u, --users', 'List users')
+    .option('-r, --deluser', 'Delete user')
     .parse(process.argv);
 
 
@@ -57,6 +58,9 @@ try {
     }
     else if (program.users) {
         app.list_users();
+    }
+    else if (program.deluser) {
+        app.delete_user();
     }
     else {
         app(program.port, program.ip, program.password);

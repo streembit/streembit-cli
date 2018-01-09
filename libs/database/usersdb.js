@@ -85,6 +85,20 @@ class UsersDb extends database{
         );
     }
 
+    delete_user(userid) {
+        return new Promise(
+            (resolve, reject) => {
+                let sql = "DELETE FROM users WHERE userid=?"
+                this.database.run(sql, [userid], (err) => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve();
+                });
+            }
+        );
+    }
+
 }
 
 module.exports = UsersDb;
