@@ -340,43 +340,53 @@ class Account {
             return callback("Invalid account config data. The account field must exists in the configuration file.");
         }
 
-        var db = new Database();
-        db.data(
-            account,
-            (err, data) => {
-                if (err) {
-                    return callback("Account database error: " + (err.message || err));
-                }
+        try {
+            var db = new Database();
+            db.data(
+                account,
+                (err, data) => {
+                    if (err) {
+                        return callback("Account database error: " + (err.message || err));
+                    }
 
-                var password = config.password;
-                if (!data) {
-                    // the account does not exists -> set it up
-                    this.create_account(account, password, callback);
+                    var password = config.password;
+                    if (!data) {
+                        // the account does not exists -> set it up
+                        this.create_account(account, password, callback);
+                    }
+                    else {
+                        this.load_account(account, data, password, callback);
+                    }
                 }
-                else {
-                    this.load_account(account, data, password, callback);
-                }
-            }
-        );
+            );
+        }
+        catch (err) {
+            callback(err);
+        }
     }
 
     load(password, account, callback) {
         // get the account details from the database
-        var db = new Database();
-        db.data(
-            account,
-            (err, data) => {
-                if (err) {
-                    return callback("Account database error: " + (err.message || err));
-                }
+        try {
+            var db = new Database();
+            db.data(
+                account,
+                (err, data) => {
+                    if (err) {
+                        return callback("Account database error: " + (err.message || err));
+                    }
 
-                if (!data) {
-                    return callback("Data for account " + account + " doesn't exists in the account database");
+                    if (!data) {
+                        return callback("Data for account " + account + " doesn't exists in the account database");
+                    }
+
+                    this.load_account(account, data, password, callback);
                 }
-     
-                this.load_account(account, data, password, callback);            
-            }
-        );
+            );
+        }
+        catch (err) {
+            callback(err);
+        }
     }
 }
 

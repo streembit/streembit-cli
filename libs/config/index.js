@@ -336,6 +336,11 @@ var streembit_config = (function (cnfobj) {
             var iotconf = iot_confarr && iot_confarr.length ? iot_confarr[0] : 0;
             cnfobj.iot_config = iotconf;
 
+            if (!config.database_name) {
+                return callback("database_name is missing from the configuration file.");
+            }
+            cnfobj.database_name = config.database_name;
+
             if (config.password) {
                 //  check the config file
                 cnfobj.password = config.password;

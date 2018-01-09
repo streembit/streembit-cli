@@ -151,7 +151,7 @@ module.exports.display_data = function () {
                     return callback("Invalid password");
                 }
 
-                database.init(__dirname, callback);
+                database.init(dbschema, callback);
             },
             function (callback) {
                 var account = new Account();
@@ -178,6 +178,43 @@ module.exports.display_data = function () {
 module.exports.changepwd = function() {
     console.log("app change password");
 }
+
+module.exports.list_users = function () {
+    console.log("list users");
+    async.waterfall(
+        [
+            function (callback) {
+                config.init_account_params(callback);
+            },
+            function (callback) {
+                if (!config.password) {
+                    return callback("Invalid password");
+                }
+
+                database.init(dbschema, callback);
+            },
+            function (callback) {
+                try {
+                    var users = new Users();
+                    users.init(callback);
+                }
+                catch (e) {
+                    callback("Users init error: " + e.message);
+                }
+            }
+        ],
+        function (err, result) {
+            if (err) {
+                return console.log(err.message || err);
+            }
+
+            var users = new Users();
+            var list = users.list();
+            console.log(util.inspect(list));
+        }
+    ); 
+}
+
 
 module.exports.backup = function() {
     console.log("app backup account data");

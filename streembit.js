@@ -41,6 +41,7 @@ program
     .option('-d, --data', 'Print node ID')
     .option('-b, --backup', 'Backup node data')
     .option('-c, --changepwd', 'Change password')
+    .option('-u, --users', 'List users')
     .parse(process.argv);
 
 
@@ -53,6 +54,9 @@ try {
     }
     else if (program.changepwd) {
         app.changepwd();
+    }
+    else if (program.users) {
+        app.list_users();
     }
     else {
         app(program.port, program.ip, program.password);
