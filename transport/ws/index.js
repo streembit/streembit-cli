@@ -13,182 +13,33 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Z Pardi 
 Copyright (C) 2016 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
-
 */
 
 'use strict';
 
 const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
+const config = require("libs/config");
 const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
 const WebSocket = require('ws');
-const util = require("util");
-const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
-const createHmac = require('create-hmac');
+const IoTWsHandler = require('./handler_iot');
+const SrvcWsHandler = require('./handler_srvc');
 
 class WsServer {
     constructor(port, max_connections) {
         this.port = port;
-        this.max_connections = max_connections || 150; 
-        this.list_of_sessions = new Map();
-        this.list_of_devices = new Map();
-    }
-
-    format_error(txn, err) {
-        var errobj = { txn: txn, error: "" };
-        if (!err) {
-            errobj.error = "ws error";
-        }
-        else {
-            var msg = err.message ? err.message : (typeof err == "string" ? err : "ws error");
-            errobj.error = msg;
-        }
-        return JSON.stringify(errobj);
-    }
-
-    authorize(message) {
-
-        return true;
-    }
-
-    send(ws, msg) {
-        try {
-            ws.send(msg)
-        }
-        catch (err) {
-            logger.error("ws send error: %j", err)
-        }
-    }
-
-    auth_client(jwt, ws) {
-        try {
-            if (!jwt) {
-                throw new Error("no WS auth jwt presented");
-            }
-
-            var res = msgvalidator.verify_wsjwt(jwt);
-
-            this.list_of_sessions.set(res.pkhash, { token: res.token, ws: ws });
-            logger.debug("user session created for pkhash: " + res.pkhash);
-
-            if (res.devices && Array.isArray(res.devices)) {
-                res.devices.forEach(
-                    (device) => {
-                        this.list_of_devices.set(device, res.pkhash);
-                    }
-                );
-            }
-
-            return {
-                payload: {
-                    authenticated: true
-                }
-            };
-        }
-        catch (err) {
-            throw err;
-        }
-    }
-
-    validate_user(message) {     
-        if (!message.pkhash || !message.hmacdigest || !message.txn) {
-            throw new Error("invalid authentication fields");
-        }
-
-        var usersession = this.list_of_sessions.get(message.pkhash);
-        if (!usersession) {
-            throw new Error("invalid user WS session");
-        }
-        var token = usersession.token;
-        if ( !token ) {
-            throw new Error("invalid authentication token data");
-        }
-
-        // validate the hmac
-        var hmac = createHmac('sha256', token);
-        hmac.update(message.txn);
-        var hmacdigest = hmac.digest('hex');
-
-        if (hmacdigest != message.hmacdigest) {
-            throw new Error("invalid authentication secret");
-        }
-
-        // the message is valid, check if the deviceid is registered
-        var deviceid = message.id;
-        if (deviceid) {
-            if (!this.list_of_devices.has(deviceid)) {
-                this.list_of_devices.set(deviceid, message.pkhash);
-            }
-        }
-
-        //console.log("message.hmacdigest: " + message.hmacdigest + " computed hmacdigest: " + hmacdigest);    
+        this.max_connections = max_connections || 100000;   
+        this.wsmode = config.wsmode;
+        this.handler = null;
     }
 
     processmsg(ws, request) {
-        var message = 0;
         try {
-            message = JSON.parse(request);
-            if (!message) {
-                throw new Error("invalid payload");
-            }
-
-            if (message.auth ) {
-                if (!message.jwt) {
-                    throw new Error("invalid auth payload");
-                }
-
-                var resdata = this.auth_client(message.jwt, ws);
-                resdata.txn = message.txn;
-                var response = JSON.stringify(resdata);
-                ws.send(response);
-
-                //
-            }
-            else {
-                // validate the user sent a valid token                
-                this.validate_user(message);
-
-                events.iotmsg(
-                    message,
-                    (err, data) => {
-                        try {
-                            if (err) {
-                                throw new Error(err.message || err);
-                            }
-
-                            if (!data) {
-                                throw new Error("the device ONIOTEVENT handler returned an invalid data");
-                            }
-
-                            data.txn = message.txn;
-                            var response = JSON.stringify(data);
-                            ws.send(response);
-                        }
-                        catch (err) {
-                            try {
-                                var errmsg = this.format_error(message.txn, err);
-                                ws.send(errmsg);
-                                logger.error("ONIOTEVENT return handling error %j", errmsg)
-                            }
-                            catch (e) {
-                            }
-                        }
-                    }
-                );
-            }
+            this.handler.processmsg(ws, request);
         }
         catch (err) {
-            try {
-                var errmsg = this.format_error((message && message.txn ? message.txn : 0), err);
-                ws.send(errmsg);
-                logger.error("sent to client ws error %j", errmsg)
-            }
-            catch (e) {
-            }           
+            logger.error("WS processmsg error %j", errmsg)   
         }
     }
  
@@ -197,54 +48,45 @@ class WsServer {
             ws.on('message', (message) => {
                 this.processmsg(ws, message);
             });
-
-            // check if the connection was authorized
-
-            //  ws.terminate()
-
-            //
         }
         catch (err) {
-            logger.error("ws on_connection error: " + err.message);
+            logger.error("WS on_connection error: " + err.message);
         }
     }
 
-    handle_server_messages() {
-        try {
-            events.on(
-                iotdefinitions.EVENT_NOTIFY_USERS,
-                (id, data) => {
-                    try {
-                        let pkhash = this.list_of_devices.get(id);
-                        if (pkhash) {
-                            let session = this.list_of_sessions.get(pkhash);
-                            if (session) {
-                                let ws = session.ws;
-                                if (ws && ws.readyState === WebSocket.OPEN) {
-                                    let response = JSON.stringify(data);
-                                    ws.send(response);
-                                }
-                                else {
-                                    // TODO report this closed connection
-                                }
-                            }
-                        }
-                    }
-                    catch (err) {
-                        logger.error("ws shandle_server_messages() event handler error: " + err.message);
-                    }
-                }
-            );
+
+    handler_factory() {
+        var obj;
+        if (this.wsmode == constants.WSMODE_SRVC) {
+            obj = new SrvcWsHandler();
         }
-        catch (err) {
-            logger.error("ws shandle_server_messages() error: " + err.message);
+        else if (this.wsmode == constants.WSMODE_IOT) {
+            obj = new IoTWsHandler();
         }
+        else {
+            throw new Error(this.wsmode + " WS handler is not implemented");
+        }
+
+        // must implement the on_send and processmsg funcitons
+        if (!obj || !obj.on_send || !obj.processmsg) {
+            throw new Error(this.wsmode + " invalid WS handler");
+        }
+
+        return obj;
     }
 
     init(callback) {
         try {
 
-            logger.info("Starting ws server");  
+            if (this.wsmode == constants.WSMODE_NONE) {
+                logger.info("Not starting WS server");                
+                return callback();
+            }
+
+            logger.info("Starting WS, wsmode: " + this.wsmode);  
+
+            // must create the handler, the type of handler depends on the WS mode
+            this.handler = this.handler_factory();
             
             const wsserver = new WebSocket.Server(
                 {
@@ -275,19 +117,19 @@ class WsServer {
                 logger.error('ws error: %s', e.message);
             });
 
-            wsserver.on('listening', function (e) {
-                logger.info('ws server listening');
+            wsserver.on('listening', (e) => {
+                logger.info('WS is listening on port ' + this.port);
             });
 
-            // listen to messages from the devices, etc. to the client
-            this.handle_server_messages();
+            // listen to messages from any modules of the application to the client
+            this.handler.on_send();
 
             callback();
 
             //
         }
         catch (err) {
-            callback("ws server init error: " + err.message);
+            callback("WS server init error: " + err.message);
         }
     }
 }

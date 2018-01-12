@@ -42,6 +42,7 @@ var streembit_config = (function (cnfobj) {
     var m_net = null;
     var m_users = null;
     var m_limits = null;
+    var m_wsmode = null;
 
     Object.defineProperty(cnfobj, "password", {
         get: function () {
@@ -100,6 +101,16 @@ var streembit_config = (function (cnfobj) {
 
         set: function (value) {
             m_blockchain_config = value;
+        }
+    });
+
+    Object.defineProperty(cnfobj, "wsmode", {
+        get: function () {
+            return m_wsmode;
+        },
+
+        set: function (value) {
+            m_wsmode = value;
         }
     });
 
@@ -292,6 +303,21 @@ var streembit_config = (function (cnfobj) {
             //throw an exception if the BC run config entry is missing
             assert(cnfobj.blockchain_config && cnfobj.blockchain_config.hasOwnProperty("run"), "Invalid blockchain configuration section");
 
+            // set the wsmode, it could be either none, srvc (service mode) or iot (IoT mode)
+            var wsm = constants.WSMODE_NONE;
+            if (seedconf && seedconf.run) {
+                wsm = constants.WSMODE_SRVC;
+            }
+            else if (bcconf && bcconf.run) {
+                wsm = constants.WSMODE_SRVC;
+            }
+            else if (iotconf && iotconf.run) {
+                wsm = constants.WSMODE_IOT;
+            }
+
+            cnfobj.wsmode = wsm;
+
+            // set the password
             var password = argv_password;
 
             if (password) {

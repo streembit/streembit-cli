@@ -1,5 +1,5 @@
 ﻿/*
-
+ 
 This file is part of Streembit application. 
 Streembit is an open source project to create a real time communication system for humans and machines. 
 
@@ -13,42 +13,37 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Z Pardi 
 Copyright (C) 2016 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
-
 */
 
 'use strict';
 
+class WsHandler{
+    constructor() {
+        this.list_of_sessions = new Map();
+    }
 
-var constants = {
-    DEFAULT_STREEMBIT_PORT: 32320,
-    DEFAULT_TRANSPORT: "http",
-    USERTYPE_HUMAN: "human",
-    USERTYPE_DEVICE: "device",
-    KADNET: "kadnet",
-    CLIENTNET: "clientnet",
+    // event handler to send messages back to the client
+    on_send() {
+    }
 
-    TASK_PUBLISHACCOUNT: "publish_account",
-    TASK_INFORM_CONTACTS: "inform_contacts",
+    // handles messages from the client
+    processmsg(ws, request) {
+    }
 
-    DBSTREEMBIT: "streembit_database",
-    DBACCOUNTS: "accounts_database",
-    DBIOT: "iot_database",
-    DBBCAPP: "bcapp_database",
-    DBBLOCKS: "blocks_database",
-    DBTXN: "txn_database",
-    DBTEMP: "temp_database",
+    format_error(txn, err) {
+        var errobj = { txn: txn, error: "" };
+        if (!err) {
+            errobj.error = "ws error";
+        }
+        else {
+            var msg = err.message ? err.message : (typeof err == "string" ? err : "ws error");
+            errobj.error = msg;
+        }
+        return JSON.stringify(errobj);
+    }
+}
 
-    RESPONSETIMEOUT: 10000,
 
-    WSMODE_NONE: 0,
-    WSMODE_SRVC: 1,
-    WSMODE_IOT: 2,
-
-    ONSENDTOWSCLIENT: "on_send_to_ws_client"
-
-};
-
-module.exports = constants;
+module.exports = WsHandler;
