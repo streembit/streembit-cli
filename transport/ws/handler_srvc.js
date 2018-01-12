@@ -13,7 +13,7 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Copyright (C) 2016 The Streembit software development team
+Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 */
 
@@ -57,17 +57,8 @@ class SrvcWsHandler extends Wshandler {
             var publickey = message.publickey;
             var pkhash = message.pkhash;
 
-            //socket.streembit_account = account;
-            //clients.set_account_socket(account, { publickey: publickey, socketid: socket.id, socket: socket, contacts: [] });
-            //// add to the database
-            //storage.contact_save(account, publickey, pkhash, transport, address, port, ctype, function (err) {
-            //    if (err) {
-            //        return callback("error in adding contact to database");
-            //    }
-
-            //    callback();
-            //    logger.debug("ws register_account from: " + account);
-            //});
+            // TODO add here the piece that saves the client's data in the SQLITE database
+            // so add a new SQLITE table, function to save, etc.
 
             var token = secrand.randomBuffer(16).toString("hex");
             this.list_of_sessions.set(message.pkhash, { token: token, ws: ws });
