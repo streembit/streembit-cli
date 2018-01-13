@@ -30,9 +30,6 @@ const Users = require("libs/users");
 const async = require("async");
 const Account = require("libs/account");
 const config = require("libs/config");
-// Debug. delete asap
-const WsDb = require("libs/database/wsdb");
-
 
 class TaskManager {
 
@@ -59,7 +56,7 @@ class TaskManager {
 
             var peernet = new PeerNet();
 
-            function send_to_contact(contact, next) {
+            var send_to_contact = function(contact, next) {
                 try {
                     peernet.inform_contact(crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash, symcryptkey, transport, address, port, type, function (err) {
                         if (err) {
@@ -105,7 +102,7 @@ class TaskManager {
         peernet.publish_account(symcryptkey, pubkeyhash, public_key, transport, address, port, type, account_name, callback);
     }
 
-    async on_application_init() {
+    on_application_init() {
         logger.debug("on_application_init");
     }
 
@@ -145,7 +142,3 @@ class TaskManager {
 }
 
 module.exports = TaskManager;
-
-
-
-
