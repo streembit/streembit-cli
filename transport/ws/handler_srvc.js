@@ -28,6 +28,7 @@ const WebSocket = require('ws');
 const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
 const createHmac = require('create-hmac');
 const secrand = require('secure-random');
+const WsDb = require("libs/database/wsdb");
 
 
 // 
@@ -47,32 +48,34 @@ class SrvcWsHandler extends Wshandler {
         }
     }
 
-    register(ws, message) {
+    async register(ws, message) {
+        if (!message.publickey || !message.pkhash || !message.account) {
+            return Promise.reject(new Error("invalid parameter at WS peer"));
+        }
+
+        const token = secrand.randomBuffer(16).toString("hex");
+        this.list_of_sessions.set(message.pkhash, { token: token, ws: ws });
+
+        logger.debug("user session created for pkhash: " + message.pkhash);
+
         try {
-            if (!message.publickey || !message.pkhash || !message.account) {
-                throw new Error("invalid parameter at WS peer");
-            }
-
-            var account = message.account;
-            var publickey = message.publickey;
-            var pkhash = message.pkhash;
-
             // TODO add here the piece that saves the client's data in the SQLITE database
             // so add a new SQLITE table, function to save, etc.
+            const wsdb = new WsDb();
+            try {
+                await wsdb.add_client(message.pkhash, message.publickey, token, 'true', message.account);
+                const response = { result: 0, txn: message.txn, payload: { token: token }};
+                ws.send(JSON.stringify(response));
+            } catch (err) {
+                return Promise.reject(new Error(err.message));
+            }
 
-            var token = secrand.randomBuffer(16).toString("hex");
-            this.list_of_sessions.set(message.pkhash, { token: token, ws: ws });
-            logger.debug("user session created for pkhash: " + message.pkhash);
-
-            var msg = { result: 0, txn: message.txn, payload: { token: token }};
-            var response = JSON.stringify(msg);
-            ws.send(response);
-
-            //
-        }
-        catch (err) {            
+            return Promise.resolve();
+        } catch (err) {
             this.senderror(ws, message, err.message);
             logger.error("SrvcWsHandler register error: " + err.message);
+
+            return Promise.reject(new Error(err.message));
         }
     }
 

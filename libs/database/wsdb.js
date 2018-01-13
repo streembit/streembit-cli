@@ -31,7 +31,7 @@ class WsDb extends database {
     getall(callback) {
         return new Promise(
             (resolve, reject) => {
-                var query = "SELECT * FROM wsclients";
+                const query = "SELECT * FROM wsclients";
                 this.database.all(query, [], (err, rows) => {
                     if (err) {
                         return reject(err.message);
@@ -45,7 +45,7 @@ class WsDb extends database {
     get_client(pkhash) {
         return new Promise(
             (resolve, reject) => {
-                var query = "SELECT * FROM wsclients WHERE pkhash=?";
+                const query = "SELECT * FROM wsclients WHERE pkhash=?";
                 this.database.get(query, [pkhash], (err, row) => {
                     if (err) {
                         return reject(err.message);
@@ -59,7 +59,7 @@ class WsDb extends database {
     add_client(pkhash, publickey, token, isactive, account) {
         return new Promise(
             (resolve, reject) => {
-                let sql = "INSERT INTO users(pkhash, publickey, token, isactive, account, time_updated) VALUES (?,?,?,?,?,?)"
+                const sql = "INSERT INTO wsclients(pkhash, publickey, token, isactive, account, time_updated) VALUES (?,?,?,?,?,?)"
                 this.database.run(sql, [pkhash, publickey, token, isactive, account, (+new Date)], (err) => {
                     if (err) {
                         return reject(err.message);
@@ -74,7 +74,7 @@ class WsDb extends database {
     get_clients() {
         return new Promise(
             (resolve, reject) => {
-                var query = "SELECT * FROM wsclients";
+                const query = "SELECT * FROM wsclients";
                 this.database.all(query, [], (err, rows) => {
                     if (err) {
                         return reject(err.message);
@@ -88,7 +88,7 @@ class WsDb extends database {
     delete_client(clientid) {
         return new Promise(
             (resolve, reject) => {
-                let sql = "DELETE FROM wsclients WHERE clientid=?"
+                const sql = "DELETE FROM wsclients WHERE clientid=?"
                 this.database.run(sql, [clientid], (err) => {
                     if (err) {
                         return reject(err.message);
