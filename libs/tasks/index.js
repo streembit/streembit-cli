@@ -30,6 +30,8 @@ const Users = require("libs/users");
 const async = require("async");
 const Account = require("libs/account");
 const config = require("libs/config");
+// Debug. delete asap
+const WsDb = require("libs/database/wsdb");
 
 
 class TaskManager {
@@ -103,7 +105,7 @@ class TaskManager {
         peernet.publish_account(symcryptkey, pubkeyhash, public_key, transport, address, port, type, account_name, callback);
     }
 
-    on_application_init() {
+    async on_application_init() {
         logger.debug("on_application_init");
     }
 

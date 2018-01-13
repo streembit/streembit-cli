@@ -63,7 +63,12 @@ class SrvcWsHandler extends Wshandler {
             // so add a new SQLITE table, function to save, etc.
             const wsdb = new WsDb();
             try {
-                await wsdb.add_client(message.pkhash, message.publickey, token, 'true', message.account);
+                const the_client = await wsdb.get_client(message.pkhash);
+                if (typeof the_client === 'undefined') {
+                    await wsdb.add_client(message.pkhash, message.publickey, token, 1, message.account);
+                } else {
+                    await wsdb.update_client(message.pkhash, { token: token, isactive: 1 })
+                }
                 const response = { result: 0, txn: message.txn, payload: { token: token }};
                 ws.send(JSON.stringify(response));
             } catch (err) {
