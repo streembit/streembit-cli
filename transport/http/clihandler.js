@@ -24,13 +24,24 @@ const constants = require("libs/constants");
 const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const events = require("streembit-util").events;
-const appinfo = require("libs/appinfo");
+const clientsrvc = require("libs/clientsrvc");
 
 // 
 // Service WS handler
 //
 class ClientRequestHandler  {
     constructor() {
+    }
+
+    handle_exception(data, err) {
+        try {
+            if (data && data.res && data.res.end && data.res.end == "function") {
+                this.senderror(data.res, err);
+            }
+        }
+        catch (err) {
+            logger.error("handle_exception() error: " + err.message);
+        }
     }
 
     senderror(res, err) {
@@ -80,18 +91,32 @@ class ClientRequestHandler  {
         }
     }
 
+    //
+    //  Returns the list of peers that handles WebSocket connections. 
+    //  Users on the Streembit network can get services from WS enabled peers such as facilitating video calls (via WebRTC signalling).
+    //  This function returns the list of WS peers that serves the users. 
+    //
+    getwspeers(req, res, message) {
+        try {
+            var result = clientsrvc.getwspeers();
+            if (!result) {
+                throw new Error("failed to get wsinfo")
+            }
+            this.sendcomplete(res, result);
+        }
+        catch (err) {
+            senderror(res, err);
+            logger.error("getwsinfo() error: " + err.message);
+        }
+    }
 
     getwsinfo(req, res) {
         try {
-            var wsport = 0;
-            if (config.transport && config.transport.ws && config.transport.ws.port) {
-                wsport = config.transport.ws.port;
+            var result = clientsrvc.getwsinfo();
+            if (!result) {
+                throw new Error("failed to get wsinfo")
             }
 
-            var clientcount = appinfo.wsclientcount;
-            var available = appinfo.wsavailable;
-
-            var result = { wsport: wsport, clientcount: clientcount, available: available };
             this.sendcomplete(res, result);
         }
         catch (err) {
@@ -119,7 +144,9 @@ class ClientRequestHandler  {
 
             switch (type) {
                 case "getwsinfo":
-                    this.getwsinfo(req, res);
+                case "getwspeers":
+                    // a funciton with the same name as the type must exists
+                    this[type](req, res, message);
                     break;
                 default:
                     this.sendbadrequest(res);
@@ -127,6 +154,7 @@ class ClientRequestHandler  {
             }
         }
         catch (err) {
+            this.handle_exception(data, err);
             logger.error("handle_request() error: " + err.message);
         }
     }

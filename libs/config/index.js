@@ -39,7 +39,6 @@ var streembit_config = (function (cnfobj) {
     var m_usertype = null;
     var m_account_name = null;
     var m_database_name = null;
-    var m_net = null;
     var m_users = null;
     var m_limits = null;
     var m_wsmode = null;
@@ -171,16 +170,6 @@ var streembit_config = (function (cnfobj) {
 
         set: function (value) {
             m_database_name = value;
-        }
-    });
-
-    Object.defineProperty(cnfobj, "net", {
-        get: function () {
-            return m_net;
-        },
-
-        set: function (value) {
-            m_net = value;
         }
     });
 

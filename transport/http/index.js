@@ -71,19 +71,9 @@ class HTTPTransport {
     };
 
     static iskadmsg(message) {
-        if (!message || !message.type) {
-            // this could be a KAD message, other messages must have a type
-            return true;
-        }
-
-        switch (message.type) {
-            case "PUT":
-            case "GET":
-            case "PING":
-                return true;                
-            default:
-                return false;
-        }
+        // KAD messages don't have a type field, other messages must have a string type field
+        var iskad = !(message && message.type && typeof message.type == "string");
+        return iskad;
     }
 
     // 
@@ -100,8 +90,14 @@ class HTTPTransport {
                 throw new Error("invalid payload");
             }
 
-            var message = JSON.parse(payload);
+            var message;
+            try {
+                message = JSON.parse(payload);
+            }
+            catch (err) { }
+
             if (HTTPTransport.iskadmsg(message)) {
+                // this message will be picked up by the KAD HTTP transport which listens on this event
                 var msgid = HTTPTransport.newid;
                 events.peermsg(
                     payload,
@@ -115,7 +111,12 @@ class HTTPTransport {
                 );
             }
             else {
-                // this is a client request
+                // must be a valid message when it is a client (not KAD) message
+                if (!message) {
+                    throw new Error("invalid message");
+                }
+
+                // this is a client request, the HTTP client request handler will get it
                 var data = {
                     req: req,
                     res: res,
