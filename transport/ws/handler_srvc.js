@@ -13,6 +13,7 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
+Author: Streembit team
 Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 */
@@ -29,7 +30,7 @@ const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
 const createHmac = require('create-hmac');
 const secrand = require('secure-random');
 const WsDb = require("libs/database/wsdb");
-
+const appinfo = require('libs/appinfo');
 
 // 
 // Service WS handler
@@ -37,6 +38,7 @@ const WsDb = require("libs/database/wsdb");
 class SrvcWsHandler extends Wshandler {
     constructor() {
         super();
+        this.database = new WsDb();
     }
 
     senderror(ws, message, err) {
@@ -48,39 +50,39 @@ class SrvcWsHandler extends Wshandler {
         }
     }
 
-    async register(ws, message) {
+    register(ws, message) {
         if (!message.publickey || !message.pkhash || !message.account) {
-            return Promise.reject(new Error("invalid parameter at WS peer"));
+            return Promise.reject(new Error("invalid parameter at WS register"));
         }
 
-        const token = secrand.randomBuffer(16).toString("hex");
-        this.list_of_sessions.set(message.pkhash, { token: token, ws: ws });
+        let token = secrand.randomBuffer(16).toString("hex");
+        this.list_of_sessions.set(message.pkhash, { token: token, ws: ws, lastseen: Date.now() });
+        // set the id (use the token) at the WS object
+        ws.clienttoken = token;
 
-        logger.debug("user session created for pkhash: " + message.pkhash);
+        logger.debug("user session created for pkhash: " + message.pkhash + " token: " + token);
 
         try {
-            // TODO add here the piece that saves the client's data in the SQLITE database
-            // so add a new SQLITE table, function to save, etc.
-            const wsdb = new WsDb();
-            try {
-                const the_client = await wsdb.get_client(message.pkhash);
-                if (typeof the_client === 'undefined') {
-                    await wsdb.add_client(message.pkhash, message.publickey, token, 1, message.account);
-                } else {
-                    await wsdb.update_client(message.pkhash, { token: token, isactive: 1 })
+            this.database.register(message.pkhash, message.publickey, token, message.account)
+            .then(
+                () => {
+                    let response = { result: 0, txn: message.txn, payload: { token: token } };
+                    ws.send(JSON.stringify(response));
                 }
-                const response = { result: 0, txn: message.txn, payload: { token: token }};
-                ws.send(JSON.stringify(response));
-            } catch (err) {
-                return Promise.reject(new Error(err.message));
-            }
+            )
+            .catch(
+                (err) => {
+                    this.senderror(ws, message, (err && err.message) || "db register error");
+                    logger.error("SrvcWsHandler register error: " + err.message);
+                }
+            );
 
-            return Promise.resolve();
-        } catch (err) {
+        }
+        catch (err) {
             this.senderror(ws, message, err.message);
             logger.error("SrvcWsHandler register error: " + err.message);
 
-            return Promise.reject(new Error(err.message));
+            //return Promise.reject(new Error(err.message));
         }
     }
 
@@ -111,18 +113,22 @@ class SrvcWsHandler extends Wshandler {
         try {
             let pkhash = this.list_of_devices.get(id);
             if (pkhash) {
-                let session = this.list_of_sessions.get(pkhash);
-                if (session) {
-                    let ws = session.ws;
-                    if (ws && ws.readyState === WebSocket.OPEN) {
-                        let response = JSON.stringify(data);
-                        ws.send(response);
-                    }
-                    else {
-                        // TODO report this closed connection
-                    }
-                }
+                return;
             }
+
+            let session = this.list_of_sessions.get(pkhash);
+            if (session) {
+                let ws = session.ws;
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    let response = JSON.stringify(data);
+                    ws.send(response);
+                }
+                else {
+                    // TODO report this closed connection
+                    this.list_of_sessions.delete(pkhash);
+                    ws.terminate();
+                }
+            }            
         }
         catch (err) {
             logger.error("WS send_wsclient() event handler error: " + err.message);

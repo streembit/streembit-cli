@@ -13,15 +13,13 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Z Pardi 
-Copyright (C) 2016 The Streembit software development team
+Author: Streembit team
+Copyright (C) 2017 ZoVolt Ltd
 -------------------------------------------------------------------------------------------------------------------------
 
 */
 
-
 'use strict';
-
 
 const crypto = require('crypto');
 const ecckey = require('libs/crypto');

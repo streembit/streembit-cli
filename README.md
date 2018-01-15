@@ -36,7 +36,8 @@ A typical configuration file is the following:
         "host": "192.168.0.10",
         "port": 32321,
         "ws": {
-            "port": 32318
+            "port": 32318,
+			"maxconn":  10000
         }
     },
     "limits": {
@@ -55,9 +56,6 @@ A typical configuration file is the following:
             "name": "client",
             "run": false,
             "account": "",
-            "wshandler": {},
-            "is_private": false,
-            "storage": {},
             "contacts": []
         },
         {

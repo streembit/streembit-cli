@@ -24,7 +24,8 @@ const http = require('http');
 const https = require('https');
 const events = require("streembit-util").events;
 const logger = require("streembit-util").logger;
-const constants = require("../../libs/constants");
+const constants = require("libs/constants");
+const ClientRequestHandler = require("./clihandler");
 
 
 // create agents to enable http persistent connections:
@@ -69,6 +70,71 @@ class HTTPTransport {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
     };
 
+    static iskadmsg(message) {
+        if (!message || !message.type) {
+            // this could be a KAD message, other messages must have a type
+            return true;
+        }
+
+        switch (message.type) {
+            case "PUT":
+            case "GET":
+            case "PING":
+                return true;                
+            default:
+                return false;
+        }
+    }
+
+    // 
+    // route the message
+    // 
+    static routemsg(payload, req, res) {
+        try {
+            //console.log(payload);
+            if (!res || !res.end) {
+                return logger.error("HTTPTransport routemsg error: invalid res object");
+            }
+
+            if (!payload) {
+                throw new Error("invalid payload");
+            }
+
+            var message = JSON.parse(payload);
+            if (HTTPTransport.iskadmsg(message)) {
+                var msgid = HTTPTransport.newid;
+                events.peermsg(
+                    payload,
+                    req,
+                    res,
+                    msgid,
+                    (id, replymsg) => {
+                        // TODO handle here the completion of the message
+                        // if the response object is not closed return status 200
+                    }
+                );
+            }
+            else {
+                // this is a client request
+                var data = {
+                    req: req,
+                    res: res,
+                    message: message
+                };
+                events.emit(constants.ONCLIENTREQUEST, data);
+            }
+        }
+        catch (err) {
+            // bad request
+            try {
+                res.statusCode = 405;
+                res.end();
+            }
+            catch (e){ }
+            logger.error("HTTPTransport routemsg error: " + err.message);
+        }
+    }
+
     handler(req, res) {
         try {
             var payload = '';
@@ -97,23 +163,7 @@ class HTTPTransport {
 
             //request end
             req.on('end', ()=> {
-                try {
-                    ////console.log(payload);
-                    var msgid = HTTPTransport.newid; 
-                    events.peermsg(
-                        payload,
-                        req,
-                        res,
-                        msgid,
-                        (id, replymsg) => {
-                            // TODO handle here the completion of the message
-                            // if the response object is not closed return status 200
-                        }
-                    );
-                }
-                catch (err) {
-                    logger.error("HTTPTransport events.peermsg error: " + err.message);
-                }
+                HTTPTransport.routemsg(payload, req, res);
             });
         }
         catch (err) {
@@ -194,6 +244,11 @@ class HTTPTransport {
             this.islistening = true;
             done();
         });
+
+        var clihandler = new ClientRequestHandler();
+        clihandler.on_request();
+
+        //
     }
 
     close(callback) {

@@ -59,33 +59,41 @@ class WsDb extends database {
     add_client(pkhash, publickey, token, isactive, account) {
         return new Promise(
             (resolve, reject) => {
-                const query = "INSERT INTO wsclients(pkhash, publickey, token, isactive, account, time_updated) VALUES (?,?,?,?,?,?)"
-                this.database.run(query, [pkhash, publickey, token, isactive, account, (+new Date)], (err) => {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve();
-                });
+                try {
+                    const query = "INSERT INTO wsclients(pkhash, publickey, token, isactive, account, time_updated) VALUES (?,?,?,?,?,?)"
+                    this.database.run(query, [pkhash, publickey, token, isactive, account, (+new Date)], (err) => {
+                        if (err) {
+                            return reject(err.message);
+                        }
+                        resolve();
+                    });
+                }
+                catch (err) {
+                    reject(err.message);
+                }
             }
         );
     }
 
-    update_client(pkhash, params) {
+    update_client(pkhash, token, isactive) {
         return new Promise(
             (resolve, reject) => {
-                const para_keys = Object.keys(params);
-                const para_vals = Object.values(params);
-                if (!params || para_keys.length < 1) {
-                    return reject("No update parameters specified");
-                }
-                let query = "UPDATE wsclients SET " +para_keys.join(' = ?, ')+ " = ?, time_updated = ? WHERE pkhash = ?";
-                para_vals.push((+new Date), pkhash);
-                this.database.run(query, para_vals, err => {
-                    if (err) {
-                        return reject(err.message);
+                try {
+                    if (!pkhash || !token) {
+                        throw new Error("invalid update_client parameters ad WS db.")
                     }
-                    resolve();
-                })
+
+                    let query = "UPDATE wsclients SET token = ?, isactive = ?, time_updated = ? WHERE pkhash = ?";
+                    this.database.run(query, [token, isactive, (+new Date), pkhash], err => {
+                        if (err) {
+                            return reject(err.message);
+                        }
+                        resolve();
+                    })
+                }
+                catch (err) {
+                    reject(err.message);
+                }
             }
         );
     }
@@ -104,28 +112,11 @@ class WsDb extends database {
         );
     }
 
-    /*
-    * Get WS clients count from DB
-    * applying options parameters and grouping
-    * @function
-    * @param {Object} params: parameters to filter
-    * @param {Array} groupby: parameters to group counts
-    * @returns {Promise}
-    */
-    get_clients_count(params = null, groupby = null) {
+    get_activeclients_count() {
         return new Promise(
             (resolve, reject) => {
-                let query = "SELECT COUNT(*) as total FROM wsclients";
-                let params_q = [];
-                if (params) {
-                    query += " WHERE " +Object.keys(params).join(' = ? AND ')+ " = ?";
-                    params_q = Object.values(params);
-                }
-                if (groupby) {
-                    query += " GROUP BY " +groupby.join(', ');
-                    query = query.replace(/SELECT COUNT/, `SELECT ${groupby.join(', ')}, COUNT`);
-                }
-                this.database.all(query, params_q, (err, row) => {
+                let query = "SELECT COUNT(clientid) as total FROM wsclients WHERE isactive = 1;";
+                this.database.all(query, [], (err, row) => {
                     if (err) {
                         return reject(err.message);
                     }
@@ -147,6 +138,37 @@ class WsDb extends database {
                 });
             }
         );
+    }
+
+    async register(pkhash, publickey, token, account) {
+        if (!publickey || !pkhash || !account) {
+            return Promise.reject(new Error("invalid parameter at wsdb register"));
+        }
+
+        try {
+            const client = await this.get_client(pkhash);
+            if (!client) {
+                try {
+                    await this.add_client(pkhash, publickey, token, 1, account);
+                }
+                catch (err) {
+                    return Promise.reject(new Error(err.message));
+                }
+            }
+            else {
+                try {
+                    await this.update_client(pkhash, token, 1);
+                }
+                catch (err) {
+                    return Promise.reject(new Error(err.message));
+                }
+            }
+
+            return Promise.resolve();
+        }
+        catch (err) {
+            return Promise.reject(new Error(err.message));
+        }
     }
 
 }

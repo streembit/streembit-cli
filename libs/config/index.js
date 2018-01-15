@@ -235,7 +235,9 @@ var streembit_config = (function (cnfobj) {
             cnfobj.transport.host = ip;
 
             // set the ws port
-            cnfobj.transport.ws.port = config.transport.ws.port;
+            cnfobj.transport.ws.port = config.transport.ws.port || constants.DEFAULT_WS_PORT;
+            // set the ws max connection 
+            cnfobj.transport.ws.maxconn = config.transport.ws.maxconn || constants.DEFAULT_WS_MAXCONN;
 
             cnfobj.seeds = config.seeds;
 

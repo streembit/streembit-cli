@@ -95,7 +95,7 @@ HTTPTransport.prototype._open = function (done) {
                     return res.end(buffer);
                 }
 
-                // make sure it is a buffer
+                // make sure it is a string
                 if (data && typeof data != "string") {
                     data = JSON.stringify(data);
                 }

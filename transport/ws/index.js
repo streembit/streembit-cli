@@ -13,6 +13,7 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
+Author: Streembit team
 Copyright (C) 2017 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 */
@@ -25,13 +26,21 @@ const logger = require("streembit-util").logger;
 const WebSocket = require('ws');
 const IoTWsHandler = require('./handler_iot');
 const SrvcWsHandler = require('./handler_srvc');
+const appinfo = require('libs/appinfo');
 
 class WsServer {
     constructor(port, max_connections) {
+        if (!port || !max_connections) {
+            throw new Error("invalid WsServer start parameters")
+        }
         this.port = port;
-        this.max_connections = max_connections || 100000;   
+        this.max_connections = max_connections;   
+        // update the appinfo maxconn
+        appinfo.wsmaxconn = this.max_connections;
+
         this.wsmode = config.wsmode;
         this.handler = null;
+        this.wsserver = null;
     }
 
     processmsg(ws, request) {
@@ -43,17 +52,6 @@ class WsServer {
         }
     }
  
-    on_connection(ws) {
-        try {         
-            ws.on('message', (message) => {
-                this.processmsg(ws, message);
-            });
-        }
-        catch (err) {
-            logger.error("WS on_connection error: " + err.message);
-        }
-    }
-
 
     handler_factory() {
         var obj;
@@ -75,6 +73,76 @@ class WsServer {
         return obj;
     }
 
+    canconnect() {
+        var count = 0; 
+        if (this.wsserver.clients && this.wsserver.clients.size) {
+            count = this.wsserver.clients.size;
+        }
+        return count < this.max_connections;
+    }
+
+    removeclient(ws) {
+        try {
+            // update the AppInfo
+            appinfo.wsclientcount = this.wsserver.clients.size;
+
+            var token = (ws && ws.clienttoken) ? ws.clienttoken : "";
+            if (!token) {
+                // the clienttoken must exist to identify the socket
+                return;
+            }
+
+            var pkhash;
+            for (var [key, value] of this.handler.list_of_sessions) {
+                if (value.token == ws.clienttoken) {
+                    pkhash = key;
+                }
+            }
+
+            if (pkhash) {
+                this.handler.list_of_sessions.delete(pkhash);
+                logger.debug("ws client removed token: " + token);
+            }
+
+            //
+        }
+        catch (err) {
+            logger.error("WS removeclient error: %j", err);
+        }
+    }
+
+    monitor() {
+        setInterval(
+            () => {
+                if (!this.wsserver || !this.wsserver.clients || this.wsserver.clients.size == 0) {
+                    return;
+                }
+
+                this.wsserver.clients.forEach(
+                    (ws) => {
+                        if (ws.isAlive === false) {
+                            try {
+                                ws.terminate();
+                            }
+                            catch (err) { }
+                            try {
+                                this.removeclient(ws);
+                            }
+                            catch (err) { }
+                            // update the AppInfo
+                            appinfo.wsclientcount = this.wsserver.clients.size;
+                            logger.debug("inactive WS client removed");
+                        }
+                        else {
+                            ws.isAlive = false;
+                            ws.ping(() => { });
+                        }
+                    }
+                );
+            },
+            30000);
+    }
+
     init(callback) {
         try {
 
@@ -88,19 +156,42 @@ class WsServer {
             // must create the handler, the type of handler depends on the WS mode
             this.handler = this.handler_factory();
             
-            const wsserver = new WebSocket.Server(
+            this.wsserver = new WebSocket.Server(
                 {
                     port: this.port
                 }
             );
 
             // set the connection handler
-            wsserver.on('connection', (ws) => {
-                try {             
+            this.wsserver.on('connection', (ws) => {
+                try {  
+                    // upon connection set the AppInfo wsclientcount variable
+                    appinfo.wsclientcount = this.wsserver.clients.size;
+
+                    var available = this.canconnect();
+                    appinfo.wsavailable = available;
+                    if (!available) {
+                        // close the connection and don't setup the event handlers
+                        return ws.terminate();
+                    }
+                    
                     //console.log("ws client connected");
                     ws.on('message', (message) => {
                         this.processmsg(ws, message);
                     });
+
+                    ws.on('close', () => {
+                        this.removeclient(ws);
+                    });
+
+                    ws.on('error', () => {
+                        this.removeclient(ws);
+                    });
+
+                    ws.on('pong', function() {
+                        this.isAlive = true;
+                    });
+
                     //
                 }
                 catch (err) {
@@ -108,21 +199,26 @@ class WsServer {
                 }
             });
 
-            wsserver.on('close', function() {
+            this.wsserver.on('close', function() {
                 //TODO signal the app that the server was closed
                 logger.info("Web socket server was closed");
             });
 
-            wsserver.on('error', function(e) {
+            this.wsserver.on('error', function(e) {
                 logger.error('ws error: %s', e.message);
             });
 
-            wsserver.on('listening', (e) => {
+            this.wsserver.on('listening', (e) => {
                 logger.info('WS is listening on port ' + this.port);
             });
 
             // listen to messages from any modules of the application to the client
             this.handler.on_send();
+
+            // start the monitor
+            this.monitor();
+
+            appinfo.wsavailable = true;
 
             callback();
 

@@ -43,6 +43,7 @@ const HttpTransport = require("./transport/http");
 const WebSocket = require("./transport/ws");
 const ServicesHandler = require("./services");
 const dbschema = require("./dbschema");
+const constants = require("libs/constants");
 
 // initialize the logger
 module.exports = exports = function (port, ip, password) {
@@ -105,8 +106,9 @@ module.exports = exports = function (port, ip, password) {
                     }
                 },
                 function (callback) {
-                    let port = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : 32318;
-                    let wsserver = new WebSocket(port);
+                    let port = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;
+                    let maxconn = config.transport && config.transport.ws && config.transport.ws.maxconn ? config.transport.ws.maxconn : constants.DEFAULT_WS_MAXCONN;
+                    let wsserver = new WebSocket(port, maxconn);
                     wsserver.init(callback);
                 },      
                 function (callback) {
