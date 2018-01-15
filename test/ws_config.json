@@ -1,0 +1,36 @@
+{
+    "password": "qawsedrf",
+    "port": "32318",
+    "host": "127.0.0.1",
+    "database": "streembitsqltest",
+    "dbname": "streembittest",
+    "wsclients": [
+        {
+            "clientid": 1,
+            "pkhash": "GcNkbtzWYKpsn94UWjDajs6b1Ra9MPKu",
+            "publickey": "d8b74829703e123351624461f5e0e634",
+            "token": "",
+            "isactive": 1,
+            "account": "cl_1",
+            "time_updated": 1516018000000
+        },
+        {
+            "clientid": 2,
+            "pkhash": "3EWtDkLx6Zc8pLg48xzUAzy4U84YZMDmi",
+            "publickey": "2e2ea6699ce8ec00b8255158620d0a54",
+            "token": "",
+            "isactive": 1,
+            "account": "cl_2",
+            "time_updated": 1515000000000
+        },
+        {
+            "clientid": 3,
+            "pkhash": "b586a5e7f57e4e5c9b79998ec2c980ba",
+            "publickey": "2f1c3d1dac3c4f5b2b38567459d6c430",
+            "token": "",
+            "isactive": 1,
+            "account": "cl_3",
+            "time_updated": 1515200000000
+        }
+    ]
+}

@@ -28,20 +28,6 @@ class WsDb extends database {
         super();
     }
 
-    getall(callback) {
-        return new Promise(
-            (resolve, reject) => {
-                const query = "SELECT * FROM wsclients";
-                this.database.all(query, [], (err, rows) => {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve(rows);
-                });
-            }
-        );
-    }
-
     get_client(pkhash) {
         return new Promise(
             (resolve, reject) => {
@@ -130,7 +116,21 @@ class WsDb extends database {
         return new Promise(
             (resolve, reject) => {
                 const query = "DELETE FROM wsclients WHERE clientid=?"
-                this.database.run(query, [clientid], (err) => {
+                this.database.run(query, [clientid], err => {
+                    if (err) {
+                        return reject(err.message);
+                    }
+                    resolve();
+                });
+            }
+        );
+    }
+
+    delete_all_clients() {
+        return new Promise(
+            (resolve, reject) => {
+                const query = "DELETE FROM wsclients"
+                this.database.run(query, [], err => {
                     if (err) {
                         return reject(err.message);
                     }
@@ -147,21 +147,14 @@ class WsDb extends database {
 
         try {
             const client = await this.get_client(pkhash);
-            if (!client) {
-                try {
+            try {
+                if (!client) {
                     await this.add_client(pkhash, publickey, token, 1, account);
-                }
-                catch (err) {
-                    return Promise.reject(new Error(err.message));
-                }
-            }
-            else {
-                try {
+                } else {
                     await this.update_client(pkhash, token, 1);
                 }
-                catch (err) {
-                    return Promise.reject(new Error(err.message));
-                }
+            } catch (err) {
+                return Promise.reject(new Error(err.message));
             }
 
             return Promise.resolve();

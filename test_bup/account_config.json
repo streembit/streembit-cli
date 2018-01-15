@@ -1,0 +1,8 @@
+{
+  "account": "streembit_example_account",
+  "password": "abcdefghjk123456789",
+  "publickey": "streembit_example_publickey",
+  "connsymmkey": "streembit_example_connsymmkey",
+  "port": "32321",
+  "host": "127.0.0.1"
+}

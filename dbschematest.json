@@ -165,6 +165,46 @@
                         "notnull": true
                     }
                 ]
+            },
+            {
+                "name": "wsclients",
+                "columns": [
+                    {
+                        "name": "clientid",
+                        "datatype": "integer",
+                        "pkey": true
+                    },
+                    {
+                        "name": "pkhash",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "publickey",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "token",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "isactive",
+                        "datatype": "integer",
+                        "notnull": true
+                    },
+                    {
+                        "name": "account",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "time_updated",
+                        "datatype": "integer",
+                        "notnull": true
+                    }
+                ]
             }
         ],
         "indexes": [
@@ -185,6 +225,12 @@
                 "name": "idxBcutxoTxid",
                 "table": "bcutxo",
                 "column": "txid"
+            },
+            {
+                "unique": true,
+                "name": "idxWsClientsPkhash",
+                "table": "wsclients",
+                "column": "pkhash"
             }
         ]
     }
