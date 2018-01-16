@@ -1,7 +1,12 @@
 {
     "password": "qawsedrf",
-    "port": "32318",
+    "port": "32321",
     "host": "127.0.0.1",
+    "database": "streembitsqltest",
+    "dbname": "streembittest",
+    "ws": {
+        "port": 32318
+    },
     "wsclients": [
         {
             "clientid": 1,
@@ -20,6 +25,23 @@
             "isactive": 1,
             "account": "cl_2",
             "time_updated": 1515000000000
+        },
+        {
+            "clientid": 3,
+            "pkhash": "b586a5e7f57e4e5c9b79998ec2c980ba",
+            "publickey": "2f1c3d1dac3c4f5b2b38567459d6c430",
+            "token": "",
+            "isactive": 1,
+            "account": "cl_3",
+            "time_updated": 1515200000000
+        }
+    ],
+    "accounts": [
+        {
+            "accountid": 1,
+            "account": "streembit_example_account",
+            "accountpk": "abcdefghjk123456789",
+            "cipher": "wJy63JaGeKaB36Mnd"
         }
     ]
 }

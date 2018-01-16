@@ -222,6 +222,12 @@
             },
             {
                 "unique": true,
+                "name": "idxAccountsAccountid",
+                "table": "accounts",
+                "column": "accountid"
+            },
+            {
+                "unique": true,
                 "name": "idxBcutxoTxid",
                 "table": "bcutxo",
                 "column": "txid"
