@@ -104,7 +104,7 @@ module.exports.validate = function (message, callback) {
     try {
         logger.debug('validate');
 
-        if (!message || (!message.method && !message.type)){
+        if (!message || (!message.method && !message.type && !message.action)){
             return callback(new Error('Invalid message detected at validate'));
         }
 
@@ -117,7 +117,7 @@ module.exports.validate = function (message, callback) {
 
             params = message.params.item;
         }
-        else if (message.type) {
+        else if (message.type || message.action) {
             params = message;
         }
 

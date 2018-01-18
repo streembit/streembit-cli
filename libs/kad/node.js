@@ -156,7 +156,8 @@ Node.prototype.connect = function (contact, callback) {
             aggressiveCache: true
         }),
         this._router.refreshBucketsBeyondClosest.bind(this._router)
-    ], function (err) {
+    ],
+    function (err) {
         if (err) {
             return done(err);
         }
@@ -268,9 +269,15 @@ Node.prototype._putValidatedKeyValue = function (item, callback) {
 
     this._router.findNode(item.key, function (err, contacts) {
         if (err) {
+            // regardless of the error put it to the local database
+            try {
+                node._storage.put(item.key, JSON.stringify(item), function () { });
+            }
+            catch (err) { }
             node._log.warn('failed to find nodes, reason: %s', err.message);
-            callback('failed to find nodes, reason: ' + err.message ? err.message : err);
-            return node._storage.put(item.key, JSON.stringify(item), function () { });
+            //  the node is not connected to any peers, this is not an error but the warning must be monitored
+            //  TODO: handle the warning
+            return callback();
         }
 
         if (contacts.length === 0) {

@@ -41,7 +41,6 @@ function put(message, callback) {
 }
 
 module.exports = (msg, callback) => {
-
     try {
         switch (msg.type) {
             case "PUT":
@@ -55,4 +54,6 @@ module.exports = (msg, callback) => {
         callback("peer msg handler error, " + err.message);
     }
 };
+
+module.exports.put = put;
 

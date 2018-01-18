@@ -31,6 +31,7 @@ const createHmac = require('create-hmac');
 const secrand = require('secure-random');
 const WsDb = require("libs/database/wsdb");
 const appinfo = require('libs/appinfo');
+const peersrvc = require('libs/peernet/msghandlers/peer');
 
 // 
 // Service WS handler
@@ -47,6 +48,32 @@ class SrvcWsHandler extends Wshandler {
             ws.send(errmsg);
         }
         catch (e) {
+        }
+    }
+
+    put(ws, message) {
+        try {
+            peersrvc.put(message, (err) => {
+                try {
+                    if (err) {
+                        return this.senderror(ws, message, err);
+                    }
+
+                    let response = { result: 0, txn: message.txn };
+                    ws.send(JSON.stringify(response));
+                }
+                catch (xerr) {
+                    try {
+                        this.senderror(ws, message, xerr.message);
+                        logger.error("SrvcWsHandler put error: " + xerr.message);
+                    }
+                    catch (e) { }
+                }
+            });
+        }
+        catch (e) {
+            this.senderror(ws, message, e.message);
+            logger.error("SrvcWsHandler put error: " + e.message);
         }
     }
 
@@ -81,8 +108,6 @@ class SrvcWsHandler extends Wshandler {
         catch (err) {
             this.senderror(ws, message, err.message);
             logger.error("SrvcWsHandler register error: " + err.message);
-
-            //return Promise.reject(new Error(err.message));
         }
     }
 
@@ -97,7 +122,8 @@ class SrvcWsHandler extends Wshandler {
 
             switch (message.action) {
                 case "register":
-                    this.register(ws, message);
+                case "put":
+                    this[message.action](ws, message);
                     break;
                 default:
                     //TODO report this client as it is sending a bogus message, another 3 bogus message and blacklist it
