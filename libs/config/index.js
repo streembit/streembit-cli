@@ -245,7 +245,7 @@ var streembit_config = (function (cnfobj) {
             cnfobj.users = config.users;
 
             cnfobj.limits = {};
-            
+
             // time limits set for kad tools
             // the defult values like 3600 are in seconds so needs to get the milliseconds here
             cnfobj.limits.refresh = (config.limits && config.limits.refresh && config.limits.refresh >= 3600) ? (config.limits.refresh * 1000) : 3600 * 1000;
