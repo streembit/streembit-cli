@@ -163,7 +163,9 @@ class HTTPTransport {
             });
 
             //request end
-            req.on('end', ()=> {
+            req.on('end', () => {
+                res.header("Access-Control-Allow-Origin", "*");
+                res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
                 HTTPTransport.routemsg(payload, req, res);
             });
         }
