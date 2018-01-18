@@ -89,7 +89,7 @@ function verify_signature(params, callback) {
         }
 
         //  passed the validation -> add to the network
-        logger.debug('validation for msgtype: ' + payload.data.type + '  is OK');
+        logger.debug('validation for msgtype: ' + payload.data.type + ' is OK');
 
         //node._log.debug('data: %j', params);
         callback(null, true);

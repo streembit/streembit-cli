@@ -274,9 +274,9 @@ Node.prototype._putValidatedKeyValue = function (item, callback) {
                 node._storage.put(item.key, JSON.stringify(item), function () { });
             }
             catch (err) { }
-            node._log.warn('failed to find nodes, reason: %s', err.message);
-            //  the node is not connected to any peers, this is not an error but the warning must be monitored
-            //  TODO: handle the warning
+            node._log.debug('failed to find nodes, reason: %s', err.message);
+            //  the node is not connected to any peers, this is not an error but this edbug message must be monitored
+            //  TODO: handle the above debug message
             return callback();
         }
 
