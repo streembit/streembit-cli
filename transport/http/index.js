@@ -63,7 +63,7 @@ class HTTPTransport {
             this.protocol.createServer(handler);
     }
 
-    add_crossorigin_headers (req, res) {
+    static add_crossorigin_headers (req, res) {
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
         res.setHeader('Access-Control-Allow-Methods', '*');
         res.setHeader('Access-Control-Allow-Headers', '*');
@@ -141,9 +141,7 @@ class HTTPTransport {
             var payload = '';
             var message = null;
 
-            if (this.cors) {
-                this.add_crossorigin_headers(req, res);
-            }
+            HTTPTransport.add_crossorigin_headers(req, res);
 
             if (req.method === 'OPTIONS') {
                 return res.end();
@@ -164,8 +162,6 @@ class HTTPTransport {
 
             //request end
             req.on('end', () => {
-                res.header("Access-Control-Allow-Origin", "*");
-                res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
                 HTTPTransport.routemsg(payload, req, res);
             });
         }
