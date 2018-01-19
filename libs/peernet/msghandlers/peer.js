@@ -25,7 +25,22 @@ const logger = require("streembit-util").logger;
 const kad = require("libs/peernet/kad");
 const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
 
-function put(message, callback) {
+function dhtget(message, callback) {
+    logger.debug("get value for peer");
+
+    //msgvalidator.validate(message, function (e) {
+    //    if (e) {
+    //        return callback(e);
+    //    }
+
+        var key = message.key;
+        var kadnet = new kad.KadHandler();
+        kadnet.get(key, callback);
+
+    //});
+}
+
+function dhtput(message, callback) {
     logger.debug("PUT for peer");
 
     msgvalidator.validate(message, function (e) {
@@ -44,7 +59,7 @@ module.exports = (msg, callback) => {
     try {
         switch (msg.type) {
             case "PUT":
-                put(msg, callback);
+                dhtput(msg, callback);
                 break;
             default:
                 return callback("Invalid message type");
@@ -55,5 +70,6 @@ module.exports = (msg, callback) => {
     }
 };
 
-module.exports.put = put;
+module.exports.put = dhtput;
+module.exports.get = dhtget;
 

@@ -51,7 +51,77 @@ class SrvcWsHandler extends Wshandler {
         }
     }
 
-    put(ws, message) {
+    peermsg(ws, message) {
+        try {
+            if (!message || !message.contact || !message.contact.pkhash) {
+                throw new Error( "invalid message parameters at WS peermsg");
+            }
+
+            let pkhash = message.contact.pkhash;
+            let session = this.list_of_sessions.get(pkhash);
+            if (!session) {
+                throw new Error("no contact session exists at WS peermsg for " + message.contact.pkhash);
+            }
+
+            let contactws = session.ws;
+            if (!contactws || contactws.readyState != WebSocket.OPEN) {
+                // TODO report this closed connection
+                this.list_of_sessions.delete(pkhash);
+                contactws.terminate();
+                throw new Error("closed contact WS connection at WS peermsg");
+            }
+
+            // forward it to the contact
+            let peermessage = JSON.stringify({ type: "PEERMSG", contact: message.contact, payload: message.payload });
+            contactws.send(peermessage);
+
+            // reply to the sender client
+            let response = { result: 0, txn: message.txn };
+            ws.send(JSON.stringify(response));
+
+            //
+        }
+        catch (err) {
+            this.senderror(ws, message, err.message);
+            logger.error("SrvcWsHandler peermsg error: " + err.message);
+        }
+    }
+
+    dhtget(ws, message) {
+        // TODO: if this is a request that want to get a contact offer which format is key: contact1/contact2 & value:the_offer 
+        // then we need to verify that contact2 is indeed the the WS client who sends this request. 
+        // In order to verify the WS client must sign the message, so this request should be a JWT.
+        // We must do this as the WS peer only should return contact offer to the designated user By verifying the signature 
+        // we can determine whether or not the WS client is the designated user i.e. user2
+        //
+        
+        try {
+            logger.debug("WS dhtget txn: " + message.txn);
+            peersrvc.get(message, (err, value) => {
+                try {
+                    if (err) {
+                        return this.senderror(ws, message, err);
+                    }
+
+                    let response = { result: 0, txn: message.txn, payload: { value: value }};
+                    ws.send(JSON.stringify(response));
+                }
+                catch (xerr) {
+                    try {
+                        this.senderror(ws, message, xerr.message);
+                        logger.error("SrvcWsHandler put error: " + xerr.message);
+                    }
+                    catch (e) { }
+                }
+            });
+        }
+        catch (e) {
+            this.senderror(ws, message, e.message);
+            logger.error("SrvcWsHandler put error: " + e.message);
+        }
+    }
+
+    dhtput(ws, message) {
         try {
             peersrvc.put(message, (err) => {
                 try {
@@ -78,18 +148,18 @@ class SrvcWsHandler extends Wshandler {
     }
 
     register(ws, message) {
-        if (!message.publickey || !message.pkhash || !message.account) {
-            return Promise.reject(new Error("invalid parameter at WS register"));
-        }
-
-        let token = secrand.randomBuffer(16).toString("hex");
-        this.list_of_sessions.set(message.pkhash, { token: token, ws: ws, lastseen: Date.now() });
-        // set the id (use the token) at the WS object
-        ws.clienttoken = token;
-
-        logger.debug("user session created for pkhash: " + message.pkhash + " token: " + token);
-
         try {
+            if (!message.publickey || !message.pkhash || !message.account) {
+                return this.senderror(ws, message, "invalid message parameters at WS register");
+            }
+
+            let token = secrand.randomBuffer(16).toString("hex");
+            this.list_of_sessions.set(message.pkhash, { token: token, ws: ws, lastseen: Date.now() });
+            // set the id (use the token) at the WS object
+            ws.clienttoken = token;
+
+            logger.debug("user session created for pkhash: " + message.pkhash + " token: " + token);
+
             this.database.register(message.pkhash, message.publickey, token, message.account)
             .then(
                 () => {
@@ -122,7 +192,9 @@ class SrvcWsHandler extends Wshandler {
 
             switch (message.action) {
                 case "register":
-                case "put":
+                case "dhtput":
+                case "dhtget":
+                case "peermsg":
                     this[message.action](ws, message);
                     break;
                 default:

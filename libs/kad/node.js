@@ -237,13 +237,19 @@ Node.prototype.get = function (key, callback) {
     self._router.findValue(key, function (err, value) {
         if (err) {
             self._log.warn('failed to get value from peers, reason: %s', err.message);
-            self._log.info('checking local storage for items at key %s', key);
+            self._log.debug('checking local storage for items at key %s', key);
 
             return self._storage.get(key, function (err, item) {
                 if (!err && item) {
                     callback(null, JSON.parse(item).value);
-                } else {
-                    callback(err);
+                }
+                else {
+                    if (err) {
+                        callback(err);
+                    }
+                    else {
+                        callback("failed to get item from DHT and storage");
+                    }
                 }
             });
         }
