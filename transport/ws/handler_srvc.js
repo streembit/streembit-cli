@@ -181,6 +181,22 @@ class SrvcWsHandler extends Wshandler {
         }
     }
 
+    ping(ws, message) {
+        let pong;
+        console.log('ponging...');
+        if (!message.pkhash || !message.token) {
+            pong = { pong: 0, error: 'request denied' };
+        } else {
+            const session = this.list_of_sessions.get(message.pkhash);
+            pong = session ? { pong: 1 } : { pong: 0, error: 'Invalid session' };
+        }
+
+        try {
+            console.log('sending pong', pong);
+            ws.send(JSON.stringify(pong));
+        } catch (e) {}
+    }
+
     // handles messages from the client
     processmsg(ws, request) {
         try {
@@ -195,6 +211,7 @@ class SrvcWsHandler extends Wshandler {
                 case "dhtput":
                 case "dhtget":
                 case "peermsg":
+                case "ping":
                     this[message.action](ws, message);
                     break;
                 default:
@@ -234,7 +251,7 @@ class SrvcWsHandler extends Wshandler {
     }
 
     on_send() {
-        try {    
+        try {
             events.on(
                 constants.ONSENDTOWSCLIENT,
                 (id, data) => {
