@@ -182,19 +182,19 @@ class SrvcWsHandler extends Wshandler {
     }
 
     ping(ws, message) {
-        let pong;
-        console.log('ponging...');
-        if (!message.pkhash || !message.token) {
-            pong = { pong: 0, error: 'request denied' };
-        } else {
-            const session = this.list_of_sessions.get(message.pkhash);
-            pong = session ? { pong: 1 } : { pong: 0, error: 'Invalid session' };
-        }
 
+        if (!message.pkhash || !message.token) {
+            return this.senderror(ws, message, "invalid message parameters at WS ping");
+        }
         try {
-            console.log('sending pong', pong);
+            const session = this.list_of_sessions.get(message.pkhash);
+            const pong = { result: 0, txn: message.txn, payload: { pong: (session ? 1 : 0) } };
+
             ws.send(JSON.stringify(pong));
-        } catch (e) {}
+        } catch (err) {
+            this.senderror(ws, message, err.message);
+            logger.error("SrvcWsHandler ping error: " +err.message);
+        }
     }
 
     // handles messages from the client
