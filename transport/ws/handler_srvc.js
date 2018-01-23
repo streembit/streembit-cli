@@ -51,7 +51,7 @@ class SrvcWsHandler extends Wshandler {
         }
     }
 
-    peermsg(ws, message) {
+    async peermsg(ws, message) {
         try {
             if (!message || !message.contact || !message.contact.pkhash) {
                 throw new Error( "invalid message parameters at WS peermsg");
@@ -60,7 +60,8 @@ class SrvcWsHandler extends Wshandler {
             let pkhash = message.contact.pkhash;
             let session = this.list_of_sessions.get(pkhash);
             if (!session) {
-                throw new Error("no contact session exists at WS peermsg for " + message.contact.pkhash);
+                const client = await this.database.get_client(message.contact.pkhash);
+                throw new Error("no contact session exists at WS peermsg for " +( client ? client.account+ "," : "" )+  "key hash:" +message.contact.pkhash);
             }
 
             let contactws = session.ws;
@@ -79,7 +80,6 @@ class SrvcWsHandler extends Wshandler {
             let response = { result: 0, txn: message.txn };
             ws.send(JSON.stringify(response));
 
-            //
         }
         catch (err) {
             this.senderror(ws, message, err.message);

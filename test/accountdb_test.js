@@ -27,10 +27,6 @@ describe("AccountDB database module libs/database/accountdb", function () {
         });
     });
 
-    after(function() {
-        sq3.close();
-    });
-
     describe("AccountDB: get and add records", function () {
         it('should use accountdb.add to add new account', function (done) {
             return accountdb.add(account1.account, account1.accountpk, account1.cipher, (err, row) => {
