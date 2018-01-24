@@ -44,6 +44,7 @@
         "sprintf-js": "^1.1.1",
         "sqlite3": "^3.1.13",
         "streembit-db": "git+https://github.com/streembit/streembit-db.git",
+        "streembit-errcodes": "git+https://github.com/streembit/streembit-errcodes.git",
         "streembit-util": "git+https://github.com/streembit/streembit-util.git",
         "through": "^2.3.8",
         "uuid": "^3.1.0",

@@ -20,6 +20,8 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
+const errcodes = require('streembit-errcodes');
+
 class WsHandler{
     constructor() {
         this.list_of_sessions = new Map();
@@ -33,16 +35,45 @@ class WsHandler{
     processmsg(ws, request) {
     }
 
-    format_error(txn, err) {
-        var errobj = { txn: txn, error: "" };
-        if (!err) {
-            errobj.error = "ws error";
+    format_error(txn, errcode, err) {
+
+        if (!errcode || errcode < 1 || errcode >= errcodes.MAX_ERROR_CODE) {
+            // this is an invalid error code, send a valid one
+            errcode = errcode.WS;
         }
-        else {
-            var msg = err.message ? err.message : (typeof err == "string" ? err : "ws error");
-            errobj.error = msg;
+
+        var errobj = {
+            txn: txn,
+            error: errcode,
+            msg: ''
+        };
+
+
+        // try to get a valid message
+        try {
+            if (err) {
+                if (typeof err == "number" && err > 0 || err < errcodes.MAX_ERROR_CODE) {
+                    // the error is a errcode
+                    errobj.msg = err;
+                }
+                else if (err.message) {
+                    // this is most likely an Error object that has a message property
+                    errobj.msg = err.message;
+                }
+                else {
+                    if (typeof err == "string") {
+                        errobj.msg = err;
+                    }
+                    else {
+                        // don't try to populate anymore the error message
+                    }
+                }
+            }            
         }
-        return JSON.stringify(errobj);
+        catch (e) { }
+
+        var errmsg = JSON.stringify(errobj);
+        return errmsg;
     }
 }
 

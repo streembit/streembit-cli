@@ -25,6 +25,8 @@ const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const events = require("streembit-util").events;
 const clientsrvc = require("libs/clientsrvc");
+const errcodes = require('streembit-errcodes');
+
 
 // 
 // Service WS handler
@@ -33,22 +35,40 @@ class ClientRequestHandler  {
     constructor() {
     }
 
-    handle_exception(data, err) {
+    senderror(res, errcode, err) {
         try {
-            if (data && data.res && data.res.end && data.res.end == "function") {
-                this.senderror(data.res, err);
-            }
-        }
-        catch (err) {
-            logger.error("handle_exception() error: " + err.message);
-        }
-    }
 
-    senderror(res, err) {
-        try {
-            var errmsg = JSON.stringify({ error: err.message ? err.message : err });
+            if (!errcode || errcode < 1 || errcode >= errcodes.MAX_ERROR_CODE) {
+                // this is an invalid error code, send a valid one
+                errcode = errcode.HTTP;
+            }
+
+            var errobj = {
+                error: errcode,
+                msg: ''
+            };
+
+            // try to get a valid message
+            try {
+                if (err) {
+                    if (err.message) {
+                        errobj.msg = err.message
+                    }
+                }
+                else {
+                    if (typeof err == "string") {
+                        errobj.msg = err;
+                    }
+                    else {
+                        errobj.msg = "" + err; // convert to string
+                    }
+                }
+            }
+            catch (e) { }
+
+            var errmsg = JSON.stringify(errobj);
             var buffer = new Buffer(errmsg);
-            res.statusCode = 500;
+            res.statusCode = 200;
             res.end(buffer);
         }
         catch (err) {
@@ -105,7 +125,7 @@ class ClientRequestHandler  {
             this.sendcomplete(res, result);
         }
         catch (err) {
-            senderror(res, err);
+            this.senderror(res, errcodes.HTTP_NOWSPEERS, err);
             logger.error("getwsinfo() error: " + err.message);
         }
     }
@@ -120,7 +140,7 @@ class ClientRequestHandler  {
             this.sendcomplete(res, result);
         }
         catch (err) {
-            senderror(res, err);
+            this.senderror(res, errcodes.HTTP_NOWSINFO, err);
             logger.error("getwsinfo() error: " + err.message);
         }
     }
@@ -132,9 +152,10 @@ class ClientRequestHandler  {
             var req = data.req;
             var res = data.res;            
             if (!res || !res.end || typeof res.end != "function") {
-                // invalid response object
+                // invalid response object, cannot continue as there is no transport to send back anything
                 return;
             }
+
             var message = data.message;
             if (!message || !message.type) {
                 sendbadrequest(res);
@@ -154,7 +175,7 @@ class ClientRequestHandler  {
             }
         }
         catch (err) {
-            this.handle_exception(data, err);
+            this.senderror(data.res, errcodes.HTTP_HANDLEREQUEST, err);
             logger.error("handle_request() error: " + err.message);
         }
     }

@@ -32,6 +32,7 @@ const secrand = require('secure-random');
 const WsDb = require("libs/database/wsdb");
 const appinfo = require('libs/appinfo');
 const peersrvc = require('libs/peernet/msghandlers/peer');
+const errcodes = require('streembit-errcodes');
 
 // 
 // Service WS handler
@@ -42,26 +43,25 @@ class SrvcWsHandler extends Wshandler {
         this.database = new WsDb();
     }
 
-    senderror(ws, message, err) {
+    senderror(ws, message, errcode, err) {
         try {
-            var errmsg = super.format_error((message && message.txn ? message.txn : 0), err);
+            var errmsg = super.format_error((message && message.txn ? message.txn : 0), errcode, err);
             ws.send(errmsg);
         }
         catch (e) {
         }
     }
 
-    async peermsg(ws, message) {
+    peermsg(ws, message) {
         try {
             if (!message || !message.contact || !message.contact.pkhash) {
-                throw new Error( "invalid message parameters at WS peermsg");
+                return this.senderror(ws, message, errcodes.WS_PEERMSG, errcodes.BADPARAM);
             }
 
             let pkhash = message.contact.pkhash;
             let session = this.list_of_sessions.get(pkhash);
             if (!session) {
-                const client = await this.database.get_client(message.contact.pkhash);
-                throw new Error("no contact session exists at WS peermsg for " +( client ? client.account+ "," : "" )+  "key hash:" +message.contact.pkhash);
+                return this.senderror(ws, message, errcodes.WS_CONTACT_SESSION);
             }
 
             let contactws = session.ws;
@@ -82,7 +82,7 @@ class SrvcWsHandler extends Wshandler {
 
         }
         catch (err) {
-            this.senderror(ws, message, err.message);
+            this.senderror(ws, message, errcodes.WS_PEERMSG, err.message);
             logger.error("SrvcWsHandler peermsg error: " + err.message);
         }
     }
@@ -100,7 +100,7 @@ class SrvcWsHandler extends Wshandler {
             peersrvc.get(message, (err, value) => {
                 try {
                     if (err) {
-                        return this.senderror(ws, message, err);
+                        return this.senderror(ws, message, errcodes.WS_DHTGET, err);
                     }
 
                     let response = { result: 0, txn: message.txn, payload: { value: value }};
@@ -108,7 +108,7 @@ class SrvcWsHandler extends Wshandler {
                 }
                 catch (xerr) {
                     try {
-                        this.senderror(ws, message, xerr.message);
+                        this.senderror(ws, message, errcodes.WS_DHTGET, xerr.message);
                         logger.error("SrvcWsHandler put error: " + xerr.message);
                     }
                     catch (e) { }
@@ -116,7 +116,7 @@ class SrvcWsHandler extends Wshandler {
             });
         }
         catch (e) {
-            this.senderror(ws, message, e.message);
+            this.senderror(ws, message, errcodes.WS_DHTGET,  e.message);
             logger.error("SrvcWsHandler put error: " + e.message);
         }
     }
@@ -126,7 +126,7 @@ class SrvcWsHandler extends Wshandler {
             peersrvc.put(message, (err) => {
                 try {
                     if (err) {
-                        return this.senderror(ws, message, err);
+                        return this.senderror(ws, message, errcodes.WS_DHTPUT, err);
                     }
 
                     let response = { result: 0, txn: message.txn };
@@ -134,7 +134,7 @@ class SrvcWsHandler extends Wshandler {
                 }
                 catch (xerr) {
                     try {
-                        this.senderror(ws, message, xerr.message);
+                        this.senderror(ws, message, errcodes.WS_DHTPUT, xerr.message);
                         logger.error("SrvcWsHandler put error: " + xerr.message);
                     }
                     catch (e) { }
@@ -142,7 +142,7 @@ class SrvcWsHandler extends Wshandler {
             });
         }
         catch (e) {
-            this.senderror(ws, message, e.message);
+            this.senderror(ws, message, errcodes.WS_DHTPUT, e.message);
             logger.error("SrvcWsHandler put error: " + e.message);
         }
     }
@@ -150,7 +150,7 @@ class SrvcWsHandler extends Wshandler {
     register(ws, message) {
         try {
             if (!message.publickey || !message.pkhash || !message.account) {
-                return this.senderror(ws, message, "invalid message parameters at WS register");
+                return this.senderror(ws, message, errcodes.WS_REGISTER, errcodes.BADPARAM);
             }
 
             let token = secrand.randomBuffer(16).toString("hex");
@@ -169,14 +169,14 @@ class SrvcWsHandler extends Wshandler {
             )
             .catch(
                 (err) => {
-                    this.senderror(ws, message, (err && err.message) || "db register error");
+                    this.senderror(ws, message, errcodes.WS_REGISTER, (err && err.message) || "database register error");
                     logger.error("SrvcWsHandler register error: " + err.message);
                 }
             );
 
         }
         catch (err) {
-            this.senderror(ws, message, err.message);
+            this.senderror(ws, message, errcodes.WS_REGISTER, err.message);
             logger.error("SrvcWsHandler register error: " + err.message);
         }
     }
@@ -184,15 +184,17 @@ class SrvcWsHandler extends Wshandler {
     ping(ws, message) {
 
         if (!message.pkhash || !message.token) {
-            return this.senderror(ws, message, "invalid message parameters at WS ping");
+            return this.senderror(ws, message, errcodes.WS_PING, errcodes.BADPARAM);
         }
+
         try {
             const session = this.list_of_sessions.get(message.pkhash);
             const pong = { result: 0, txn: message.txn, payload: { pong: (session ? 1 : 0) } };
 
             ws.send(JSON.stringify(pong));
-        } catch (err) {
-            this.senderror(ws, message, err.message);
+        }
+        catch (err) {
+            this.senderror(ws, message, errcodes.WS_PING, err.message);
             logger.error("SrvcWsHandler ping error: " +err.message);
         }
     }
