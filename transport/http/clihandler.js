@@ -111,6 +111,16 @@ class ClientRequestHandler  {
         }
     }
 
+    ping(req, res, message) {
+        try {
+            this.sendcomplete(res, { result: 0 });
+        }
+        catch (err) {
+            this.senderror(res, errcodes.HTTP_HANDLEREQUEST, err);
+            logger.error("ping() error: " + err.message);
+        }
+    }
+
     //
     //  Returns the list of peers that handles WebSocket connections. 
     //  Users on the Streembit network can get services from WS enabled peers such as facilitating video calls (via WebRTC signalling).
@@ -164,6 +174,7 @@ class ClientRequestHandler  {
             var type = message.type;
 
             switch (type) {
+                case "ping":
                 case "getwsinfo":
                 case "getwspeers":
                     // a funciton with the same name as the type must exists
