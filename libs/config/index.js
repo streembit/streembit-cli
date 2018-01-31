@@ -206,7 +206,10 @@ var streembit_config = (function (cnfobj) {
 
             cnfobj.log = config.log;
 
-            cnfobj.transport.protocol = config.transport.protocol;
+            // set the ssl flag
+            cnfobj.transport.ssl = config.transport.ssl;
+            cnfobj.transport.cert = config.transport.cert;
+            cnfobj.transport.key = config.transport.key;
 
             var ipport = argv_port ? argv_port : 0;
             if (!ipport) {

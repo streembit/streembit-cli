@@ -20,6 +20,8 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
+const https = require('https');
+const fs = require('fs');
 const constants = require("libs/constants");
 const config = require("libs/config");
 const logger = require("streembit-util").logger;
@@ -155,12 +157,21 @@ class WsServer {
 
             // must create the handler, the type of handler depends on the WS mode
             this.handler = this.handler_factory();
-            
-            this.wsserver = new WebSocket.Server(
-                {
-                    port: this.port
-                }
-            );
+
+            if (config.transport.ssl) {
+                const options = {
+                    key: fs.readFileSync(config.transport.key),
+                    cert: fs.readFileSync(config.transport.cert)
+                };
+                const server = https.createServer(options);
+                this.wsserver = new WebSocket.Server({ server });
+                server.listen(this.port, () => {
+                    logger.info("HTTPS server for WS handler is listening on port " + this.port);
+                });
+            }
+            else {
+                this.wsserver = new WebSocket.Server({ port: this.port });
+            }
 
             // set the connection handler
             this.wsserver.on('connection', (ws) => {

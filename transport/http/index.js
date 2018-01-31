@@ -22,11 +22,12 @@ Copyright (C) 2017 The Streembit software development team
 
 const http = require('http');
 const https = require('https');
+const fs = require('fs');
 const events = require("streembit-util").events;
 const logger = require("streembit-util").logger;
 const constants = require("libs/constants");
+const config = require("libs/config");
 const ClientRequestHandler = require("./clihandler");
-
 
 // create agents to enable http persistent connections:
 var httpagent = new http.Agent({keepAlive: true, keepAliveMsecs: 25000});
@@ -40,8 +41,8 @@ class HTTPTransport {
     constructor(options) {
         this.cors = options && !!options.cors;
         this.sslopts = options && options.ssl ? options.ssl : 0;
-        this.protocol = this.sslopts ? https : http;
-        this.agent = this.sslopts ? httpsagent : httpagent;
+        this.protocol = config.transport.ssl ? https : http;
+        this.agent = config.transport.ssl ? httpsagent : httpagent;
         this.server = 0;
         this.port = options.port || constants.DEFAULT_STREEMBIT_PORT;
         this.islistening = false;
@@ -58,9 +59,16 @@ class HTTPTransport {
 
 
     create_server(handler) {
-        return this.sslopts ?
-            this.protocol.createServer(this.sslopts, handler) :
-            this.protocol.createServer(handler);
+        if (config.transport.ssl) {
+            const options = {
+                key: fs.readFileSync(config.transport.key),
+                cert: fs.readFileSync(config.transport.cert)
+            };
+            return https.createServer(options, handler);
+        }
+        else {
+            return http.createServer(handler);
+        }
     }
 
     static add_crossorigin_headers (req, res) {
@@ -209,7 +217,13 @@ class HTTPTransport {
                 method: 'POST'
             };
 
-            var req = http.request(options, handleResponse);
+            var req;
+            if (config.transport.ssl) {
+                req = https.request(options, handleResponse);
+            }
+            else {
+                req = http.request(options, handleResponse);
+            }
 
             req.setNoDelay(true); // disable the tcp nagle algorithm
 
@@ -228,26 +242,32 @@ class HTTPTransport {
     }
 
     init(done) {
-        this.server = this.create_server(this.handler);
+        try {
+            this.server = this.create_server(this.handler);
 
-        this.server.on(
-            'connection',
-            (socket) => {
-                // disable the tcp nagle algorithm on the newly accepted socket:
-                socket.setNoDelay(true);
-            }
-        );
+            this.server.on(
+                'connection',
+                (socket) => {
+                    // disable the tcp nagle algorithm on the newly accepted socket:
+                    socket.setNoDelay(true);
+                }
+            );
 
-        this.server.listen(this.port, () => {
-            logger.info('Http transport listening on port ' + this.port);
-            this.islistening = true;
-            done();
-        });
+            this.server.listen(this.port, () => {
+                var protocol = config.transport.ssl ? "HTTPS" : "HTTP";
+                logger.info(protocol + ' transport listening on port ' + this.port);
+                this.islistening = true;
+                done();
+            });
 
-        var clihandler = new ClientRequestHandler();
-        clihandler.on_request();
+            var clihandler = new ClientRequestHandler();
+            clihandler.on_request();
 
-        //
+            //
+        }
+        catch (err) {
+            done(err);
+        }
     }
 
     close(callback) {

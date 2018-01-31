@@ -64,3 +64,4 @@ db/sqlite/streembit/streembit.db
 db/leveldb/streembit/CURRENT
 /config*.json
 /*.temp.js
+/ssl
