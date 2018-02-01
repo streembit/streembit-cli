@@ -172,32 +172,27 @@ class SrvcWsHandler extends Wshandler {
                     try {
                         const account = new Account();
                         const peernet = new PeerNet();
-                        account.load(config.password, config.account, function (err) {
-                            if (err) {
-                                throw(new Error(err));
-                            }
 
+                        const buffer = new Buffer(account.public_key, 'hex');
+                        const rmd160buffer = createHash('rmd160').update(buffer).digest();
+                        const signature = bs58check.encode(rmd160buffer);
+                        const jwt_plain = {
+                            token: token,
+                            data: {
+                                pkhash: message.pkhash,
+                                time: Date.now()
+                            },
+                            sign: signature,
+                            public_key: account.bs58pk
+                        };
 
-                            const buffer = new Buffer(account.public_key, 'hex');
-                            const rmd160buffer = createHash('rmd160').update(buffer).digest();
-                            const signature = bs58check.encode(rmd160buffer);
-                            const jwt_plain = {
-                                token: token,
-                                data: {
-                                    pkhash: message.pkhash,
-                                    time: Date.now()
-                                },
-                                sign: signature,
-                                public_key: account.bs58pk
-                            };
+                        const id = peernet.create_id();
+                        const jwt = peermsg.create_jwt_token(account.cryptokey, id, JSON.stringify(jwt_plain), null, null, account.bs58pk, null, null);
 
-                            const id = peernet.create_id();
-                            const jwt = peermsg.create_jwt_token(account.cryptokey, id, JSON.stringify(jwt_plain), null, null, account.bs58pk, null, null);
+                        const response = { result: 0, txn: message.txn, payload: jwt };
 
-                            const response = { result: 0, txn: message.txn, payload: jwt };
+                        ws.send(JSON.stringify(response));
 
-                            ws.send(JSON.stringify(response));
-                        });
                     }
                     catch (err) {
                         throw(new Error(err));
