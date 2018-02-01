@@ -139,12 +139,19 @@ class KadHandler {
             host: config.transport.host,
             port: config.transport.port,
             publickey: bs58pk
-        };
+        };       
 
         var contact = kad.contacts.StreembitContact(contact_param);
         logger.info('this contact object: ' + contact.toString());
 
-        var transport = kad.transports.HTTP(contact, { logger: logger, peermsgrcv: options.peermsgrcv});
+        var httpopts = {
+            logger: logger,
+            peermsgrcv: options.peermsgrcv
+        };
+        if (config.transport.ssl) {
+            httpopts.ssl = true;
+        }
+        var transport = kad.transports.HTTP(contact, httpopts);
         transport.after('open', function (next) {
             // exit middleware stack if contact is blacklisted
             logger.info('TCP peer connection is opened');

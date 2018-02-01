@@ -202,19 +202,22 @@ HTTPTransport.prototype._send = function(data, contact) {
     return this.receive(null);
   }
 
-  var req = self._protocol.request(
-      {
-        hostname: contact.host,
-        port: contact.port,
-        method: 'POST',
-        agent: self._agent
-      },
-      handleResponse
-  );
+  var opts = {
+      hostname: contact.host,
+      port: contact.port,
+      method: 'POST',
+      agent: self._agent
+  };
+  if (this._sslopts) {
+      opts.rejectUnauthorized = false;
+  }
+
+  var req = self._protocol.request(opts, handleResponse );
 
   req.setNoDelay(true); // disable the tcp nagle algorithm
 
   req.on('error', function (err) {
+    self._log.error('HTTP _send req error: ' + err.message);
     self.receive(null);
   });
 
