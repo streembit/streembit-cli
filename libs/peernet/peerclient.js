@@ -57,6 +57,7 @@ class PeerClient{
         var errormsg = null;
 
         function write(seed, cb) {
+            logger.info(`RMTP sending message for ${key} to seed ${seed.host}:${seed.port}`);
             HTTPTransport.write(message, seed, function (err, msg) {
                 var complete = false;
                 if (err) {
@@ -84,4 +85,4 @@ class PeerClient{
     }
 }
 
-module.exports = PeerClient
+module.exports = PeerClient;

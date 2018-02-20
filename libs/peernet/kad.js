@@ -70,6 +70,7 @@ class KadHandler {
                 throw new Error("the KAD node is not initialized")
             }
 
+            logger.info("RMTP put to node");
             this.node.put(key, value, callback);
         }
         catch (err) {

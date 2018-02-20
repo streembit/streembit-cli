@@ -45,6 +45,8 @@ function handle_msg(message, callback) {
             return callback();
         }
 
+        logger.info(`RMTP message ${message.method} received`);
+
         var method = message.method.toLowerCase(message.method);
         switch (method) {
             case "store":
