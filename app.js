@@ -43,6 +43,7 @@ const HttpTransport = require("./transport/http");
 const WebSocket = require("./transport/ws");
 const ServicesHandler = require("./services");
 const dbschema = require("./dbschema");
+const WhitelistDB = require("libs/database/whitelistdb");
 const constants = require("libs/constants");
 
 // initialize the logger
@@ -175,11 +176,11 @@ module.exports.display_data = function () {
         }
     ); 
 
-}
+};
 
 module.exports.changepwd = function() {
     console.log("app change password");
-}
+};
 
 module.exports.list_users = function () {
     console.log("list users");
@@ -215,7 +216,7 @@ module.exports.list_users = function () {
             console.log(util.inspect(list));
         }
     ); 
-}
+};
 
 module.exports.delete_user = function () {
     // get the password from the command prompt
@@ -268,7 +269,7 @@ module.exports.delete_user = function () {
         ); 
 
     });
-}
+};
 
 
 module.exports.backup = function() {
@@ -338,4 +339,95 @@ module.exports.backup = function() {
             console.log("Backup file account.json was created in the data directory");
         }
     ); 
-}
+};
+
+module.exports.whitelist_update = function (pkey, rm) {
+    async.waterfall(
+        [
+            function (callback) {
+                config.init_account_params(callback);
+            },
+            function (callback) {
+                if (!config.password) {
+                    return callback("Invalid password");
+                }
+
+                database.init(dbschema, callback);
+            },
+            function (callback) {
+                const db = new WhitelistDB();
+                callback(null, db);
+            }
+        ],
+        function (err, wlDb) {
+            if (err) {
+                return console.log(err.message || err);
+            }
+
+            pkey = pkey.replace(/["']/g, '');
+
+            console.log("updating whitelist: " +pkey);
+
+            if (!rm) {
+                wlDb.add_rule(pkey, 1).then(
+                    () => {
+                        console.log("Whitelist rule was added");
+                    })
+                    .catch(
+                        (err) => {
+                            console.log("Error adding whitelist rule: " +err);
+                        }
+                    );
+            }
+            else {
+                wlDb.delete_rule(pkey).then(
+                    () => {
+                        console.log("Whitelist rule was deleted");
+                    })
+                    .catch(
+                        (err) => {
+                            console.log("Error deleting whitelist rule: " +err);
+                        }
+                    );
+            }
+        }
+    );
+};
+
+module.exports.get_wl = function () {
+    async.waterfall(
+        [
+            function (callback) {
+                config.init_account_params(callback);
+            },
+            function (callback) {
+                if (!config.password) {
+                    return callback("Invalid password");
+                }
+
+                database.init(dbschema, callback);
+            },
+            function (callback) {
+                const db = new WhitelistDB();
+                callback(null, db);
+            }
+        ],
+        function (err, wlDb) {
+            if (err) {
+                return console.log(err.message || err);
+            }
+
+
+            wlDb.get_rules().then(
+                (res) => {
+                    console.log(res);
+                })
+                .catch(
+                    (err) => {
+                        console.log("Error adding whitelist rule: " +err);
+                    }
+                );
+
+        }
+    );
+};

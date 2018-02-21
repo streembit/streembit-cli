@@ -205,6 +205,31 @@
                         "notnull": true
                     }
                 ]
+            },
+            {
+                "name": "whitelist",
+                "columns": [
+                    {
+                        "name": "wlid",
+                        "datatype": "integer",
+                        "pkey": true
+                    },
+                    {
+                        "name": "publickey",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "isactive",
+                        "datatype": "integer",
+                        "notnull": true
+                    },
+                    {
+                        "name": "time_updated",
+                        "datatype": "integer",
+                        "notnull": true
+                    }
+                ]
             }
         ],
         "indexes": [
@@ -231,6 +256,12 @@
                 "name": "idxWsClientsPkhash",
                 "table": "wsclients",
                 "column": "pkhash"
+            },
+            {
+                "unique": true,
+                "name": "idxWhitelistPublicKey",
+                "table": "whitelist",
+                "column": "publickey"
             }
         ]
     }

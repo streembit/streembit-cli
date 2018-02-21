@@ -42,7 +42,9 @@ program
     .option('-b, --backup', 'Backup node data')
     .option('-c, --changepwd', 'Change password')
     .option('-u, --users', 'List users')
-    .option('-r, --deluser', 'Delete user')
+    .option('-r, --deluser [pkey]', 'Delete user')
+    .option('-w, --whitelist [pkey]', 'Add/Remove a user to/from whitelist')
+    .option('-a, --addpk [pkey]', 'Add/Remove a user to/from whitelist')
     .parse(process.argv);
 
 
@@ -58,6 +60,18 @@ try {
     }
     else if (program.users) {
         app.list_users();
+    }
+    else if (program.whitelist) {
+        if (!program.addpk && !program.deluser) {
+            throw new Error('-w command option requires user private key being provided')
+        } else if (
+            (program.addpk && program.addpk.length < 64) ||
+            (program.deluser && program.deluser.length < 64)
+        ) {
+            throw new Error('Invalid public key');
+        }
+
+        app.whitelist_update(program.addpk || program.deluser, !!program.deluser);
     }
     else if (program.deluser) {
         app.delete_user();
