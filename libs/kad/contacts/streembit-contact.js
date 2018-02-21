@@ -85,7 +85,7 @@ StreembitContact.prototype._createNodeID = function () {
 * Generate a user-friendly string for the contact
 */
 StreembitContact.prototype.toString = function () {
-    return this.host + ':' + this.port;
+    return this.publickey;
 };
 
 module.exports = StreembitContact;
