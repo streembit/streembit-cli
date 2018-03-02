@@ -124,7 +124,7 @@ Password: To decrypt account information in the SQLITE database. For development
 
 The "database_name" field: This is the SQLITE database name. Default value is "streembitsql". You may change it for production or for testing purpose. For using different databases in production or testing.
 
-When the "cmdinput" field is true the application can recieve commands via the terminal.
+When the "cmdinput" field is true the application can recieve commands via the terminal. Also, when the "cmdinput" field is true the terminal logs are disabled and only file based log is enabled.
 
 The "transport" field:
 
