@@ -22,22 +22,22 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-var program = require('commander');
-var path = require('path');
-var fs = require('fs');
-var crypto = require('crypto');
-var levelup = require('levelup');
-var async = require('async');
-var util = require('util');
-var assert = require('assert');
-var logger = require("streembit-util").logger;
-var AppsHandler = require("apps");
-var database = require("streembit-db").instance;
-var config = require('libs/config');
-var utils = require("libs/utils");
-var Account = require("libs/account");
-var Tasks = require("libs/tasks");
-var events = require("streembit-util").events;
+const program = require('commander');
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+const levelup = require('levelup');
+const async = require('async');
+const util = require('util');
+const assert = require('assert');
+const logger = require("streembit-util").logger;
+const AppsHandler = require("apps");
+const database = require("streembit-db").instance;
+const config = require('libs/config');
+const utils = require("libs/utils");
+const Account = require("libs/account");
+const Tasks = require("libs/tasks");
+const events = require("streembit-util").events;
 const Users = require("libs/users");
 const HttpTransport = require("./transport/http");
 const WebSocket = require("./transport/ws");
@@ -62,7 +62,12 @@ module.exports = exports = function (port, ip, password) {
                 function (callback) {
                     try {
                         var loglevel = config.log && config.log.level ? config.log.level : "debug";
-                        logger.init(loglevel);
+                        if (config.cmdinput) {
+                            logger.init(loglevel, null, ['file']);
+                        } else {
+                            logger.init(loglevel);
+                        }
+
                         callback();
                     }
                     catch (e) {

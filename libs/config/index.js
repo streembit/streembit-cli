@@ -27,6 +27,7 @@ var utils = require("libs/utils");
 var constants = require("libs/constants");
 
 var streembit_config = (function (cnfobj) {
+    var m_cmdinput = null;
     var m_seed_config = null;
     var m_client_config = null;
     var m_iot_config = null;
@@ -60,6 +61,16 @@ var streembit_config = (function (cnfobj) {
 
         set: function (value) {
             m_ipaddress = value;
+        }
+    });
+
+    Object.defineProperty(cnfobj, "cmdinput", {
+        get: function () {
+            return m_cmdinput;
+        },
+
+        set: function (value) {
+            m_cmdinput = value;
         }
     });
 
@@ -230,6 +241,8 @@ var streembit_config = (function (cnfobj) {
             cnfobj.transport.ws.port = config.transport.ws.port || constants.DEFAULT_WS_PORT;
             // set the ws max connection 
             cnfobj.transport.ws.maxconn = config.transport.ws.maxconn || constants.DEFAULT_WS_MAXCONN;
+
+            cnfobj.cmdinput = config.cmdinput;
 
             cnfobj.seeds = config.seeds;
 
