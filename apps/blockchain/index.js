@@ -22,11 +22,9 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-const merkle = require("./merkle");
 const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const prompt = require("prompt");
-const CmdHandler = require("../cmd");
 
 
 class BlockchainHandler {
@@ -93,7 +91,7 @@ class BlockchainHandler {
                 cmd: {
                     description: 'Enter blockchain command',
                     type: 'string',
-                    pattern: /^[a-z 0-9]{2,60}$/i,
+                    pattern: /^[a-z0-9 \/\\\#&%@\._\$#&%@\+\-]{6,}$/i,
                     message: 'Invalid command',
                     required: true
                 },
@@ -113,10 +111,18 @@ class BlockchainHandler {
                 throw new Error(err);
             }
 
-            const cix = this.validCmd.indexOf(result.cmd) > -1;
+            const inp_r = result.cmd.split(/[\s]+/);
+            const cmd = inp_r[0];
+            const params = inp_r.slice(1);
+            const cix = this.validCmd.indexOf(inp_r[0]) > -1;
 
             if (cix) {
-                await this[`do${result.cmd.charAt(0).toUpperCase()}${result.cmd.slice(1)}`]();
+                try {
+                    await this[`do${inp_r[0].charAt(0).toUpperCase()}${inp_r[0].slice(1)}`](...params);
+                } catch (err) {
+                    logger.error(err);
+                    console.error('\x1b[31m%s\x1b[0m', '{error}:', err);
+                }
             }
 
             this.helper(!cix);
@@ -124,13 +130,607 @@ class BlockchainHandler {
         });
     }
 
-    doBackupwallet() {
-        return new Promise((res, rej) => {
-            setTimeout(() => {
-                console.log('backupwallet');
-                res();
-            }, 2000);
+    doBackupwallet(destination) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateDestination(destination)) {
+                return reject('Destination folder invalid');
+            }
+
+            console.log('backupwallet');
+            resolve();
         });
+    }
+
+    doCreaterawtransaction(txs, bills) {
+        return new Promise((resolve, reject) => {
+            try {
+                txs = JSON.parse(txs);
+                bills = JSON.parse(bills);
+            } catch (err) {
+                return reject(err.message);
+            }
+
+            if (!txs.length || !bills.length) {
+                return reject('Omitted params found');
+            }
+
+            txs.some(tx => {
+                if (!this.validateTxid(tx.txid) || !isNumber(tx.vout)) {
+                    reject('Invalid TX found ' +JSON.stringify(tx));
+                    return true;
+                }
+            });
+            Object.keys(bills).some(address => {
+                if (!this.validateAddress(address)) {
+                    reject('Invalid address found ' +address);
+                    return true;
+                }
+            });
+            Object.values(bills).some(amount => {
+                if (isNaN(amount)) {
+                    reject('Invalid amount found ' +amount);
+                    return true;
+                }
+            });
+
+            console.log('createrawtransaction');
+            resolve();
+        });
+    }
+
+    doDecoderawtransaction(hex) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateHex(hex)) {
+                reject('Invalid hex string');
+            }
+
+            console.log('decoderawtransaction');
+            resolve();
+        });
+    }
+
+    doDumpprivkey(address) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAddress(address)) {
+                reject('Invalid Address provided');
+            }
+
+            console.log('dumpprivkey');
+            resolve();
+        });
+    }
+
+    doDumpwallet(destination) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateDestination(destination)) {
+                return reject('Filename invalid');
+            }
+
+            console.log('dumpwallet');
+            resolve();
+        });
+    }
+
+    doEncryptwallet(passphrase) {
+        return new Promise((resolve, reject) => {
+            if (!this.validatePhrase(passphrase)) {
+                return reject('Invalid passphrase');
+            }
+
+            console.log('encryptwallet');
+            resolve();
+        });
+    }
+
+    doGetaccount(address) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAddress(address)) {
+                return reject('Invalid address');
+            }
+
+            console.log('getaccount');
+            resolve();
+        });
+    }
+
+    doGetaccountaddress(account) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAccount(account)) {
+                return reject('Invalid account');
+            }
+
+            console.log('getaccountaddress');
+            resolve();
+        });
+    }
+
+    doGetaddressesbyaccount(account) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAccount(account)) {
+                return reject('Invalid account');
+            }
+
+            console.log('getaddressesbyaccount');
+            resolve();
+        });
+    }
+
+    doGetbalance(account, minconf = 1) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAccount(account)) {
+                console.log('getbalance total available');
+            } else {
+                console.log('getbalance for account');
+            }
+
+            console.log('getbalance');
+            resolve();
+        });
+    }
+
+    doGetblock(hash) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateHash(hash)) {
+                return reject('Invalid hash');
+            }
+
+            console.log('getblock');
+            resolve();
+        });
+    }
+
+    doGetblockcount() {
+        return new Promise((resolve, reject) => {
+
+            console.log('getblockcount');
+            resolve();
+        });
+    }
+
+    doGetblockhash(index) {
+        return new Promise((resolve, reject) => {
+            if (isNaN(index)) {
+                return reject('Invalid index');
+            }
+
+            console.log('getblockhash');
+            resolve();
+        });
+    }
+
+    doGetinfo() {
+        return new Promise((resolve, reject) => {
+
+            console.log('getinfo');
+            resolve();
+        });
+    }
+
+    doGetnewaddress(account) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAccount(account)) {
+                console.log('getnewaddress');
+            } else {
+                console.log('getnewaddress credited to ' +account);
+            }
+
+            resolve();
+        });
+    }
+
+    doGetrawtransaction(txid, verbose = 0) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateTxid(txid)) {
+                return reject('Invalid Transaction ID');
+            }
+            if (isNaN(verbose)) {
+                verbose = 0;
+            }
+
+            console.log('getrawtransaction');
+            resolve();
+        });
+    }
+
+    doGetreceivedbyaccount(account, minconf = 1) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAccount(account)) {
+                return reject('Invalid account');
+            }
+            if (isNaN(minconf)) {
+                minconf = 1;
+            }
+
+            console.log('getreceivedbyaccount');
+            resolve();
+        });
+    }
+
+    doGetreceivedbyaddress(address, minconf = 1) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAddress(address)) {
+                return reject('Invalid address');
+            }
+            if (isNaN(minconf)) {
+                minconf = 1;
+            }
+
+            console.log('getreceivedbyaddress');
+            resolve();
+        });
+    }
+
+    doGettransaction(txid) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateTxid(txid)) {
+                return reject('Invalid transaction ID');
+            }
+
+            console.log('gettransaction');
+            resolve();
+        });
+    }
+
+    doGettxout(txid, n, includemempool = true) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateTxid(txid)) {
+                return reject('Invalid transaction ID');
+            } else if (!isNumber(n)) {
+                return reject('Invalid n');
+            }
+            if (!isBoolean(includemempool)) {
+                includemempool = true;
+            }
+
+            console.log('gettxout');
+            resolve();
+        });
+    }
+
+    doImportprivkey(pvk, label, rescan = true) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateKey(pvk)) {
+                return reject('Invalid private key');
+            } else if (!/^[a-z0-9_\.\-]{2,}$/.test(label)) {
+                return reject('Invalid n');
+            }
+            if (!isBoolean(rescan)) {
+                rescan = true;
+            }
+
+            console.log('importprivkey');
+            resolve();
+        });
+    }
+
+    doListaccounts(minconf = 1) {
+        return new Promise((resolve, reject) => {
+            if (isNaN(minconf)) {
+                minconf = 1;
+            }
+
+            console.log('listaccounts');
+            resolve();
+        });
+    }
+
+    doListreceivedbyaccount(minconf = 1, includeempty = false) {
+        return new Promise((resolve, reject) => {
+            if (isNaN(minconf)) {
+                minconf = 1;
+            }
+            if (!isBoolean(includeempty)) {
+                includeempty = true;
+            }
+
+            console.log('listreceivedbyaccount');
+            resolve();
+        });
+    }
+
+    doListreceivedbyaddress(minconf = 1, includeempty = false) {
+        return new Promise((resolve, reject) => {
+            if (isNaN(minconf)) {
+                minconf = 1;
+            }
+            if (!isBoolean(includeempty)) {
+                includeempty = true;
+            }
+
+            console.log('listreceivedbyaddress');
+            resolve();
+        });
+    }
+
+    doListsinceblock(blockhash, target_confirmations) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateHash(blockhash)) {
+                return reject('Invalid hash');
+            }
+            // target_confirmations ??
+
+            console.log('gettransaction');
+            resolve();
+        });
+    }
+
+    doListtransactions(account, count = 0, from = 0) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAccount(account)) {
+                return reject('Invalid account');
+            }
+            if (isNaN(count)) {
+                count = 0;
+            }
+            if (isNaN(from)) {
+                from = 0;
+            }
+
+            console.log('listtransactions');
+            resolve();
+        });
+    }
+
+    doListunspent(minconf = 1, maxconf = 999999) {
+        return new Promise((resolve, reject) => {
+            if (isNaN(minconf)) {
+                minconf = 1;
+            }
+            if (!isNaN(maxconf)) {
+                maxconf = true;
+            }
+    
+            console.log('listunspent');
+            resolve();
+        });
+    }
+
+    doListlockunspent() {
+        return new Promise((resolve, reject) => {
+            console.log('listlockunspent');
+            resolve();
+        });
+    }
+
+    doLockunspent(unlock) {
+        return new Promise((resolve, reject) => {
+            if (!Array.isArray(unlock)) {
+                return reject('Invalid unlock object supplied');
+            }
+
+            console.log('lockunspent');
+            resolve();
+        });
+    }
+
+    doSendfrom(fromaccount, tobitcoinaddress, amount, minconf = 1, comment, comment_to) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAccount(fromaccount)) {
+                return reject('Invalid account');
+            }
+            if (!this.validateAddress(tobitcoinaddress)) {
+                return reject('Invalid address');
+            }
+            if (isNaN(amount)) {
+                return reject('Invalid amount');
+            }
+            if (!this.validatePhrase(comment)) {
+                comment = '';
+            }
+            if (!this.validatePhrase(comment_to)) {
+                comment_to = '';
+            }
+            if (isNaN(minconf)) {
+                minconf = 1;
+            }
+
+            console.log('sendfrom');
+            resolve();
+        });
+    }
+
+    doSendmany(fromaccount, addresses, minconf = 1, comment) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAccount(fromaccount)) {
+                return reject('Invalid account');
+            }
+            try {
+                addresses = JSON.parse(addresses);
+            } catch (e) {
+                return reject(e.message);
+            }
+            if (!this.validatePhrase(comment)) {
+                comment = '';
+            }
+            if (isNaN(minconf)) {
+                minconf = 1;
+            }
+
+            console.log('sendmany');
+            resolve();
+        });
+    }
+
+    doSendrawtransaction(hex) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateHex(hex)) {
+                return reject('Invalid hex string');
+            }
+
+            console.log('sendrawtransaction');
+            resolve();
+        });
+    }
+
+    doSendtoaddress(bitcoinaddress, amount, comment, comment_to) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAddress(bitcoinaddress)) {
+                return reject('Invalid address');
+            }
+            if (isNaN(amount)) {
+                return reject('Invalid amount');
+            }
+            if (!this.validatePhrase(comment)) {
+                comment = '';
+            }
+            if (!this.validatePhrase(comment_to)) {
+                comment_to = '';
+            }
+
+            console.log('sendrawtransaction');
+            resolve();
+        });
+    }
+
+    doSetaccount(bitcoinaddress, account) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAddress(bitcoinaddress)) {
+                return reject('Invalid address');
+            }
+            if (!this.validateAccount(account)) {
+                return reject('Invalid account');
+            }
+
+            console.log('setaccount');
+            resolve();
+        });
+    }
+
+    doSettxfee(amount) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAccount(account)) {
+                return reject('Invalid account');
+            }
+
+            console.log('settxfee');
+            resolve();
+        });
+    }
+
+    doSignmessage(bitcoinaddress, message) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAddress(bitcoinaddress)) {
+                return reject('Invalid address');
+            }
+            if (!this.validatePhrase(message)) {
+                return reject('Invalid message');
+            }
+
+            console.log('signmessage');
+            resolve();
+        });
+    }
+
+    doSignrawtransaction(hex, txs, pkeys) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateHex(hex)) {
+                return reject('Invalid hex string');
+            }
+            try {
+                txs = JSON.parse(txs);
+                pkeys = JSON.parse(pkeys);
+            } catch (e) {
+                return reject(e.message);
+            }
+
+            if (!txs.length || !pkeys.length) {
+                return reject('Omitted params found');
+            }
+
+            txs.some(tx => {
+                if (!this.validateTxid(tx.txid) || !isNumber(tx.vout) || !this.validateKey(tx.scriptPubKey)) {
+                    reject('Invalid TX found ' +JSON.stringify(tx));
+                    return true;
+                }
+            });
+            pkeys.some(pk => {
+                if (!this.validateKey(pk)) {
+                    reject('Invalid private key found ' +pk);
+                    return true;
+                }
+            });
+
+            console.log('signrawtransaction');
+            resolve();
+        });
+    }
+
+    doSubmitblock(hex, params = {}) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateHex(hex)) {
+                return reject('Invalid hex string');
+            }
+            if (params.length) {
+                try {
+                    params = JSON.parse(params);
+                } catch (e) {
+                    return reject('Invalid params supplied');
+                }
+            }
+
+            console.log('submitblock');
+            resolve();
+        });
+    }
+
+    doValidateaddress(bitcoinaddress) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAddress(bitcoinaddress)) {
+                return reject('Invalid address');
+            }
+
+            console.log('validateaddress');
+            resolve();
+        });
+    }
+
+    doVerifymessage(bitcoinaddress, signature, message) {
+        return new Promise((resolve, reject) => {
+            if (!this.validateAddress(bitcoinaddress)) {
+                return reject('Invalid address');
+            }
+            if (!this.validateHash(signature)) {
+                return reject('Invalid signature');
+            }
+            if (!this.validatePhrase(message)) {
+                return reject('Invalid message');
+            }
+
+            console.log('verifymessage');
+            resolve();
+        });
+    }
+
+    validateTxid(txid) {
+        return txid && /^[a-z0-9]{16,}$/i.test(txid);
+    }
+
+    validateAddress(address) {
+        return /^[a-z0-9]{26,35}$/.test(address);
+    }
+
+    validateDestination(destination) {
+        return destination && /^[a-z0-9\/\\\\._\$#&%@\-]{4,}$/i.test(destination);
+    }
+
+    validatePhrase(passphrase) {
+        return passphrase && /^[a-z0-9 ]{4,}$/i.test(passphrase);
+    }
+
+    validateAccount(account) {
+        return account && /^[a-z0-9 _\.\-]{3,}$/i.test(account);
+    }
+
+    validateKey(pvk) {
+        return pvk && /^[a-z0-9]{8,}$/i.test(pvk);
+    }
+
+    validateHash(hash) {
+        return hash && /^[a-z0-9]$/i.test(hash);
+    }
+
+    validateHex(hex) {
+        return hex && /^[a-f0-9]{20,}$/.test(hex);
     }
 
     helper(show) {
@@ -178,7 +778,7 @@ class BlockchainHandler {
             console.log(' validateaddress', '<bitcoinaddress>');
             console.log(' verifymessage', '<bitcoinaddress> <signature> <message>');
             console.log('\x1b[30m', '-------------------');
-            console.groupEnd('');
+            console.groupEnd();
         }
     }
 }
