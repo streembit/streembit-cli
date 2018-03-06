@@ -111,7 +111,7 @@ class BlockchainHandler {
                 throw new Error(err);
             }
 
-            const inp_r = result.cmd.split(/[\s]+/);
+            const inp_r = result.cmd.split(/\s+/);
             const cmd = inp_r[0];
             const params = inp_r.slice(1);
             const cix = this.validCmd.indexOf(inp_r[0]) > -1;
@@ -144,6 +144,8 @@ class BlockchainHandler {
     doCreaterawtransaction(txs, bills) {
         return new Promise((resolve, reject) => {
             try {
+                txs = Buffer.from(txs, 'hex');
+                bills = Buffer.from(bills, 'hex');
                 txs = JSON.parse(txs);
                 bills = JSON.parse(bills);
             } catch (err) {
@@ -154,24 +156,27 @@ class BlockchainHandler {
                 return reject('Omitted params found');
             }
 
-            txs.some(tx => {
-                if (!this.validateTxid(tx.txid) || !isNumber(tx.vout)) {
-                    reject('Invalid TX found ' +JSON.stringify(tx));
+            if (txs.some(tx => {
+                if (!this.validateTxid(tx.txid) || isNaN(tx.vout)) {
                     return true;
                 }
-            });
-            Object.keys(bills).some(address => {
+            })) {
+                return reject('Invalid TX found in transactions object');
+            }
+            if (Object.keys(bills).some(address => {
                 if (!this.validateAddress(address)) {
-                    reject('Invalid address found ' +address);
                     return true;
                 }
-            });
-            Object.values(bills).some(amount => {
+            })) {
+                return reject('Invalid address found in addresses object');
+            }
+            if (Object.values(bills).some(amount => {
                 if (isNaN(amount)) {
-                    reject('Invalid amount found ' +amount);
                     return true;
                 }
-            });
+            })) {
+                return reject('Invalid amount found in addresses object');
+            }
 
             console.log('createrawtransaction');
             resolve();
@@ -262,6 +267,9 @@ class BlockchainHandler {
             } else {
                 console.log('getbalance for account');
             }
+            if (!Number.isInteger(minconf)) {
+                minconf = 1;
+            }
 
             console.log('getbalance');
             resolve();
@@ -289,7 +297,7 @@ class BlockchainHandler {
 
     doGetblockhash(index) {
         return new Promise((resolve, reject) => {
-            if (isNaN(index)) {
+            if (!Number.isInteger(index)) {
                 return reject('Invalid index');
             }
 
@@ -323,7 +331,7 @@ class BlockchainHandler {
             if (!this.validateTxid(txid)) {
                 return reject('Invalid Transaction ID');
             }
-            if (isNaN(verbose)) {
+            if (!Number.isInteger(verbose)) {
                 verbose = 0;
             }
 
@@ -337,7 +345,7 @@ class BlockchainHandler {
             if (!this.validateAccount(account)) {
                 return reject('Invalid account');
             }
-            if (isNaN(minconf)) {
+            if (!Number.isInteger(minconf)) {
                 minconf = 1;
             }
 
@@ -351,7 +359,7 @@ class BlockchainHandler {
             if (!this.validateAddress(address)) {
                 return reject('Invalid address');
             }
-            if (isNaN(minconf)) {
+            if (!Number.isInteger(minconf)) {
                 minconf = 1;
             }
 
@@ -375,7 +383,7 @@ class BlockchainHandler {
         return new Promise((resolve, reject) => {
             if (!this.validateTxid(txid)) {
                 return reject('Invalid transaction ID');
-            } else if (!isNumber(n)) {
+            } else if (isNaN(n)) {
                 return reject('Invalid n');
             }
             if (!isBoolean(includemempool)) {
@@ -392,7 +400,7 @@ class BlockchainHandler {
             if (!this.validateKey(pvk)) {
                 return reject('Invalid private key');
             } else if (!/^[a-z0-9_\.\-]{2,}$/.test(label)) {
-                return reject('Invalid n');
+                return reject('Invalid label');
             }
             if (!isBoolean(rescan)) {
                 rescan = true;
@@ -405,7 +413,7 @@ class BlockchainHandler {
 
     doListaccounts(minconf = 1) {
         return new Promise((resolve, reject) => {
-            if (isNaN(minconf)) {
+            if (!Number.isInteger(minconf)) {
                 minconf = 1;
             }
 
@@ -416,7 +424,7 @@ class BlockchainHandler {
 
     doListreceivedbyaccount(minconf = 1, includeempty = false) {
         return new Promise((resolve, reject) => {
-            if (isNaN(minconf)) {
+            if (!Number.isInteger(minconf)) {
                 minconf = 1;
             }
             if (!isBoolean(includeempty)) {
@@ -430,7 +438,7 @@ class BlockchainHandler {
 
     doListreceivedbyaddress(minconf = 1, includeempty = false) {
         return new Promise((resolve, reject) => {
-            if (isNaN(minconf)) {
+            if (!Number.isInteger(minconf)) {
                 minconf = 1;
             }
             if (!isBoolean(includeempty)) {
@@ -473,11 +481,11 @@ class BlockchainHandler {
 
     doListunspent(minconf = 1, maxconf = 999999) {
         return new Promise((resolve, reject) => {
-            if (isNaN(minconf)) {
+            if (!Number.isInteger(minconf)) {
                 minconf = 1;
             }
-            if (!isNaN(maxconf)) {
-                maxconf = true;
+            if (!Number.isInteger(maxconf)) {
+                maxconf = 999999;
             }
     
             console.log('listunspent');
@@ -487,6 +495,7 @@ class BlockchainHandler {
 
     doListlockunspent() {
         return new Promise((resolve, reject) => {
+
             console.log('listlockunspent');
             resolve();
         });
@@ -494,8 +503,14 @@ class BlockchainHandler {
 
     doLockunspent(unlock) {
         return new Promise((resolve, reject) => {
+            try {
+                unlock = Buffer.from(unlock, 'hex');
+                unlock = JSON.parse(unlock);
+            } catch (e) {
+                return reject(e.message);
+            }
             if (!Array.isArray(unlock)) {
-                return reject('Invalid unlock object supplied');
+                return reject('Invalid unlock hex supplied');
             }
 
             console.log('lockunspent');
@@ -514,14 +529,14 @@ class BlockchainHandler {
             if (isNaN(amount)) {
                 return reject('Invalid amount');
             }
+            if (!Number.isInteger(minconf)) {
+                minconf = 1;
+            }
             if (!this.validatePhrase(comment)) {
                 comment = '';
             }
             if (!this.validatePhrase(comment_to)) {
                 comment_to = '';
-            }
-            if (isNaN(minconf)) {
-                minconf = 1;
             }
 
             console.log('sendfrom');
@@ -535,15 +550,30 @@ class BlockchainHandler {
                 return reject('Invalid account');
             }
             try {
+                addresses = Buffer.from(addresses, 'hex');
                 addresses = JSON.parse(addresses);
             } catch (e) {
                 return reject(e.message);
             }
-            if (!this.validatePhrase(comment)) {
-                comment = '';
+            if (Object.keys(addresses).some(address => {
+                if (!this.validateAddress(address)) {
+                    return true;
+                }
+            })) {
+                return reject('Invalid address value in addresses object');
+            }
+            if (Object.values(addresses).some(amount => {
+                if (isNaN(amount)) {
+                    return true;
+                }
+            })) {
+                return reject('Invalid amount value in addresses object');
             }
             if (isNaN(minconf)) {
                 minconf = 1;
+            }
+            if (!this.validatePhrase(comment)) {
+                comment = '';
             }
 
             console.log('sendmany');
@@ -598,8 +628,8 @@ class BlockchainHandler {
 
     doSettxfee(amount) {
         return new Promise((resolve, reject) => {
-            if (!this.validateAccount(account)) {
-                return reject('Invalid account');
+            if (isNaN(amount)) {
+                return reject('Invalid amount');
             }
 
             console.log('settxfee');
@@ -627,6 +657,8 @@ class BlockchainHandler {
                 return reject('Invalid hex string');
             }
             try {
+                txs = Buffer.from(txs, 'hex');
+                pkeys = Buffer.from(pkeys, 'hex');
                 txs = JSON.parse(txs);
                 pkeys = JSON.parse(pkeys);
             } catch (e) {
@@ -637,34 +669,37 @@ class BlockchainHandler {
                 return reject('Omitted params found');
             }
 
-            txs.some(tx => {
-                if (!this.validateTxid(tx.txid) || !isNumber(tx.vout) || !this.validateKey(tx.scriptPubKey)) {
-                    reject('Invalid TX found ' +JSON.stringify(tx));
+            if (txs.some(tx => {
+                if (!this.validateTxid(tx.txid) || isNaN(tx.vout) || !this.validateKey(tx.scriptPubKey)) {
                     return true;
                 }
-            });
-            pkeys.some(pk => {
+            })) {
+                return reject('Invalid TX found in transactions object');
+            }
+            if (pkeys.some(pk => {
                 if (!this.validateKey(pk)) {
-                    reject('Invalid private key found ' +pk);
                     return true;
                 }
-            });
+            })) {
+                return reject('Invalid private key found in private keys object');
+            }
 
             console.log('signrawtransaction');
             resolve();
         });
     }
 
-    doSubmitblock(hex, params = {}) {
+    doSubmitblock(hex, params = '') {
         return new Promise((resolve, reject) => {
             if (!this.validateHex(hex)) {
                 return reject('Invalid hex string');
             }
             if (params.length) {
                 try {
+                    params = Buffer.from(params, 'hex');
                     params = JSON.parse(params);
                 } catch (e) {
-                    return reject('Invalid params supplied');
+                    return reject(e.message);
                 }
             }
 
@@ -714,6 +749,12 @@ class BlockchainHandler {
     }
 
     validatePhrase(passphrase) {
+        try {
+            passphrase = Buffer.from(passphrase, 'hex');
+        } catch (e) {
+            return false;
+        }
+
         return passphrase && /^[a-z0-9 ]{4,}$/i.test(passphrase);
     }
 
