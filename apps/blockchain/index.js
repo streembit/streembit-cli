@@ -26,6 +26,7 @@ const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const prompt = require("prompt");
 
+const isBoolean = val => 'boolean' === typeof val;
 
 class BlockchainHandler {
     constructor(cmd, callback) {
