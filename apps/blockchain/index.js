@@ -91,7 +91,7 @@ class BlockchainHandler {
                 cmd: {
                     description: 'Enter blockchain command',
                     type: 'string',
-                    pattern: /^[a-z0-9 \/\\\#&%@\._\$#&%@\+\-]{6,}$/i,
+                    pattern: /^[a-z0-9 \/\\\#&%@\.,:_\$#&%@\+\-]{6,}$/i,
                     message: 'Invalid command',
                     required: true
                 },
@@ -739,7 +739,11 @@ class BlockchainHandler {
     }
 
     validateHex(hex) {
-        hex = Buffer.from(hex, 'hex');
+        try {
+            hex = Buffer.from(hex, 'hex');
+        } catch (e) {
+            return false;
+        }
 
         return !!hex.length;
     }
