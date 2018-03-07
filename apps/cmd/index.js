@@ -24,7 +24,7 @@ Copyright (C) 2016 The Streembit software development team
 
 const logger = require('streembit-util').logger;
 const config = require('libs/config');
-const BlockchainHandler = require('../blockchain');
+const BlockchainCmds = require('../blockchain/cmds');
 const prompt = require('prompt');
 
 
@@ -66,7 +66,7 @@ class CmdHandler {
                 try {
                     switch (result.cmd) {
                         case 'bc':
-                            const blockchain = new BlockchainHandler(this, callback);
+                            const blockchain = new BlockchainCmds(this, callback);
                             blockchain.run();
                             break;
                         default:
@@ -82,6 +82,10 @@ class CmdHandler {
         catch (err) {
             callback("CMD handler error: " + err.message);
         }
+    }
+
+    stop() {
+        prompt.stop();
     }
 
     helper() {

@@ -25,6 +25,7 @@ const logger = require("streembit-util").logger;
 const seed = require("./seed");
 const client = require("./client");
 const iot = require("./iot");
+const BlockchainHandler = require("./blockchain");
 const CmdHandler = require("./cmd");
 const async = require('async');
 
@@ -43,6 +44,10 @@ class ModulesHandler {
                 }),
                 async.reflect(function (callback) {
                     iot.run(callback);
+                }),
+                async.reflect(function (callback) {
+                    var blockchain = new BlockchainHandler();
+                    blockchain.run(callback);
                 }),
                 async.reflect(function (callback) {
                     const cmd = new CmdHandler();

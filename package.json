@@ -53,6 +53,9 @@
         "xml2js": "~0.1.14"
     },
     "scripts": {
-        "test": "mocha"
+        "test": "mocha test/cmdhandler_test"
+    },
+    "devDependencies": {
+        "test-console": "1.1.0"
     }
 }
