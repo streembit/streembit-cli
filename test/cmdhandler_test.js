@@ -20,18 +20,17 @@ Copyright (C) 2016 The Streembit software development team
 
 const assert = require('chai').assert;
 const logger = require('streembit-util').logger;
-const stdout = require('test-console').stdout;
-const prompt = require('prompt');
+const capcon = require('capture-console');
 
 const res = require('../resolvedir');
 const config_json = require('../config');
 const config = require('libs/config');
 const CmdHandler = require('apps/cmd');
-const BlockchainHandler = require('apps/blockchain');
+const BlockchainCmds = require('apps/blockchain/cmds');
 
 
-describe("CMD input", function () {
-    let out, cmd, inspect;
+describe("CMD Handler", function () {
+    let stdout, out, cmd, bc;
 
     before(function(done) {
         config.init(config_json.transport.port, config_json.transport.host, config_json.password, () => {
@@ -41,29 +40,589 @@ describe("CMD input", function () {
         })
     });
 
+    describe("Blockchain Commands, validation", function () {
+        const plainTxt = "Eeny meeny miny moe Catch a tiger by the toe";
+
+        before(function() {
+            bc = new BlockchainCmds(cmd, err => { out = err }, { name: 'blockchain', run: true });
+        });
+
+        it("should validate HEX values", function () {
+            const validHex = "a9f98243d3c1bdff8ea4bbc14874e971ac6fc63ce7542efaa2baae0981029846";
+
+            assert.isTrue(bc.validateHex(validHex));
+            assert.isFalse(bc.validateHex(plainTxt));
+        });
+
+        it("should validate plain text", function () {
+            assert.isTrue(bc.validatePlainText(plainTxt));
+            assert.isFalse(bc.validatePlainText(plainTxt+ " `exe` me<.*>"));
+        });
+
+        it("should validate path names", function () {
+            const path = 'C:\\Users\\Domingo\\Docs\\_save_.dat';
+            const path2 = '/Users/domingo/docs/save\ _me\ -files/';
+            const path3 = 'mal<script>/?vilian%/`$boyz`/';
+
+            assert.isTrue(bc.validateDestination(path));
+            assert.isTrue(bc.validateDestination(path2));
+            assert.isFalse(bc.validateDestination(path3));
+        });
+    });
+
+    describe("Blockchain Commands", function () {
+        const plainTxt = "Eeny meeny miny moe Catch a tiger by the toe";
+        const validHex = "a9f98243d3c1bdff8ea4bbc14874e971ac6fc63ce7542efaa2baae0981029846";
+        const destination = "/Users/domingo/docs/save\ _me\ -files/";
+        const txid_vout_obj = "5B7B2274786964223A223533373437323635363536643632363937343230363236633666363336623633363836313639366532303637363536653635373336393733323036323663366636333662222C22766F7574223A307D2C7B2274786964223A2261353639373163326665646138313931626166646633383932313936623138366532653833313131346138326562363136663963646335333265316566623965222C22766F7574223A317D5D";
+        const txid_vout_scrpubkey_obj = "5B7B2274786964223A223533373437323635363536643632363937343230363236633666363336623633363836313639366532303637363536653635373336393733323036323663366636333662222C22766F7574223A312C227363726970745075624B6579223A2239656662316532653533646339633666363165623832346131313331653865323836623139363231383966336664626139313831646166656332373136396135227D2C7B2274786964223A2261353639373163326665646138313931626166646633383932313936623138366532653833313131346138326562363136663963646335333265316566623965222C22766F7574223A322C227363726970745075624B6579223A223533373437323635363536643632363937343230363236633666363336623633363836313639366532303637363536653635373336393733323036323663366636333662227D5D";
+        const addr_amt_r = "7B2261396639383234336433633162646666386561346262633134383734653937316163366663363363653735343265666161326261616530393831303239383436223A312E3233342C2237363830616465633865616263616261633637366265396538333835346164653062643232636462223A327D";
+        const addr_r = "5B2261396639383234336433633162646666386561346262633134383734653937316163366663363363653735343265666161326261616530393831303239383436222C2237363830616465633865616263616261633637366265396538333835346164653062643232636462225D";
+
+        before(function() {
+            bc = new BlockchainCmds(cmd, err => { out = err }, { name: 'blockchain', run: true });
+        });
+
+        it("backupwallet command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doBackupwallet(destination).then(res => {
+                    assert.equal(res, 'backupwallet');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("createrawtransaction command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doCreaterawtransaction(txid_vout_obj, addr_amt_r).then(res => {
+                    assert.equal(res, 'createrawtransaction');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("decoderawtransaction command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doDecoderawtransaction(validHex).then(res => {
+                    assert.equal(res, 'decoderawtransaction');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("dumpprivkey command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doDumpprivkey(validHex).then(res => {
+                    assert.equal(res, 'dumpprivkey');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("dumpwallet command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doDumpwallet(destination).then(res => {
+                    assert.equal(res, 'dumpwallet');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("encryptwallet command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doEncryptwallet(plainTxt).then(res => {
+                    assert.equal(res, 'encryptwallet');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getaccount command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetaccount(validHex).then(res => {
+                    assert.equal(res, 'getaccount');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getaccountaddress command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetaccountaddress(plainTxt).then(res => {
+                    assert.equal(res, 'getaccountaddress');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getaddressesbyaccount command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetaddressesbyaccount(plainTxt).then(res => {
+                    assert.equal(res, 'getaddressesbyaccount');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getbalance command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetbalance(plainTxt).then(res => {
+                    assert.equal(res, 'getbalance for account');
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                });
+                bc.doGetbalance().then(res => {
+                    assert.equal(res, 'getbalance total available');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getblock command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetblock(validHex).then(res => {
+                    assert.equal(res, 'getblock');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getblockcount command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetblockcount().then(res => {
+                    assert.equal(res, 'getblockcount');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getblockhash command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetblockhash(123).then(res => {
+                    assert.equal(res, 'getblockhash');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getinfo command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetinfo().then(res => {
+                    assert.equal(res, 'getinfo');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getnewaddress command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetnewaddress().then(res => {
+                    assert.equal(res, 'getnewaddress');
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                });
+                bc.doGetnewaddress(plainTxt).then(res => {
+                    assert.equal(res, 'getnewaddress credited to ' +plainTxt);
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getrawtransaction command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetrawtransaction(validHex).then(res => {
+                    assert.equal(res, 'getrawtransaction');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getrawtransaction command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetreceivedbyaccount(plainTxt).then(res => {
+                    assert.equal(res, 'getreceivedbyaccount');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("getreceivedbyaddress command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGetreceivedbyaddress(validHex).then(res => {
+                    assert.equal(res, 'getreceivedbyaddress');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("gettransaction command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGettransaction(validHex).then(res => {
+                    assert.equal(res, 'gettransaction');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("gettxout command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doGettxout(validHex, 10, true).then(res => {
+                    assert.equal(res, 'gettxout');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("importprivkey command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doImportprivkey(validHex, plainTxt, true).then(res => {
+                    assert.equal(res, 'importprivkey');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("listaccounts command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doListaccounts().then(res => {
+                    assert.equal(res, 'listaccounts');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("listreceivedbyaccount command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doListreceivedbyaccount().then(res => {
+                    assert.equal(res, 'listreceivedbyaccount');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("listreceivedbyaddress command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doListreceivedbyaddress().then(res => {
+                    assert.equal(res, 'listreceivedbyaddress');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("listsinceblock command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doListsinceblock(validHex).then(res => {
+                    assert.equal(res, 'listsinceblock');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("listtransactions command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doListtransactions(plainTxt).then(res => {
+                    assert.equal(res, 'listtransactions');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("listunspent command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doListunspent().then(res => {
+                    assert.equal(res, 'listunspent');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("listlockunspent command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doListlockunspent().then(res => {
+                    assert.equal(res, 'listlockunspent');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("lockunspent command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doLockunspent(txid_vout_obj).then(res => {
+                    assert.equal(res, 'lockunspent');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("sendfrom command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doSendfrom(plainTxt, validHex, 4, 2).then(res => {
+                    assert.equal(res, 'sendfrom');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("sendmany command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doSendmany(plainTxt, addr_r, 5).then(res => {
+                    assert.equal(res, 'sendmany');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("sendrawtransaction command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doSendrawtransaction(validHex).then(res => {
+                    assert.equal(res, 'sendrawtransaction');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("sendtoaddress command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doSendtoaddress(validHex, 6).then(res => {
+                    assert.equal(res, 'sendtoaddress');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("setaccount command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doSetaccount(validHex, plainTxt).then(res => {
+                    assert.equal(res, 'setaccount');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("settxfee command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doSettxfee(7).then(res => {
+                    assert.equal(res, 'settxfee');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("signmessage command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doSignmessage(validHex, plainTxt).then(res => {
+                    assert.equal(res, 'signmessage');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("signrawtransaction command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doSignrawtransaction(validHex, txid_vout_scrpubkey_obj, addr_r).then(res => {
+                    assert.equal(res, 'signrawtransaction');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("submitblock command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doSubmitblock(validHex, addr_r).then(res => {
+                    assert.equal(res, 'submitblock');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("validateaddress command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doValidateaddress(validHex).then(res => {
+                    assert.equal(res, 'validateaddress');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+
+        it("verifymessage command", function (done) {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.doVerifymessage(validHex, validHex, plainTxt).then(res => {
+                    assert.equal(res, 'verifymessage');
+                    done();
+                }).catch(err => {
+                    assert.isNotOk(err, 'Promise error');
+                    done();
+                });
+            });
+        });
+    });
+
     describe("CmdHandler: command prompt", function () {
         it("should not show logger strings in console", function () {
-            inspect = stdout.inspect();
-            logger.debug('Running CMD tests');
-            assert.isEmpty(inspect.output);
-            inspect.restore();
+            stdout = capcon.interceptStdout(function capture() {
+                logger.debug('Running CMD tests');
+            });
+
+            assert.isEmpty(stdout);
         });
 
-        it("should start blockchain commands handler", function () {
+        it('should show initial command prompt', function () {
+            stdout = capcon.interceptStdout(function capture() {
+                cmd.run(()=>{});
+            });
 
+            assert.include(stdout, 'Enter');
+        });
+    });
+
+    describe("Blockchain handler init", function () {
+
+        before(function() {
+            bc = new BlockchainCmds(cmd, err => { out = err }, { name: 'blockchain', run: true });
         });
 
-        // Keep it the last one
-        it('should show initial command prompt', function (done) {
-            inspect = stdout.inspect();
-            cmd.run(()=>{});
+        after(function () {
             setTimeout(() => {
-                out = inspect.output;
-                inspect.restore();
-                assert.include(out.join(), 'Enter');
-                prompt.stop();
-                done();
-            }, 1000);
+                process.emit("SIGINT");
+            }, 200);
+        });
+
+        it("should have an array of valid commands", function () {
+            assert.isArray(bc.validCmd);
+            assert.isAtLeast(bc.validCmd.length, 10);
+        });
+
+        it("should not start blockchain commands handler if blockchain config has run key set to false", function () {
+            bc.active = false;
+            bc.run();
+
+            assert.include(out, 'error:');
+        });
+
+        it("should show command prompt for blockchain commands", function () {
+            bc.active = true;
+            stdout = capcon.interceptStdout(function capture() {
+                bc.run();
+            });
+
+            assert.include(stdout, 'Enter');
         });
     });
 });

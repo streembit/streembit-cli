@@ -22,16 +22,18 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const prompt = require("prompt");
 
 const isBoolean = val => 'boolean' === typeof val;
 
+
 class BlockchainHandler {
-    constructor(cmd, callback) {
+    constructor(cmd, callback, bc_config) {
         this.cmd = cmd;
         this.cb = callback;
+        this.active = bc_config.run;
+
         this.validCmd = [
             'backupwallet',
             'createrawtransaction',
@@ -77,7 +79,7 @@ class BlockchainHandler {
     }
 
     run() {
-        if (!config.blockchain_config.run) {
+        if (!this.active) {
             return this.cb("Command line interface error: BC module is not active");
         }
 
@@ -127,7 +129,8 @@ class BlockchainHandler {
                 }
 
                 try {
-                    await this[`do${cmd.charAt(0).toUpperCase()}${cmd.slice(1)}`](...params);
+                    const result = await this[`do${cmd.charAt(0).toUpperCase()}${cmd.slice(1)}`](...params);
+                    console.log(result);
                 } catch (err) {
                     logger.error(err);
                     console.error('\x1b[31m%s\x1b[0m', '{error}:', err);
@@ -145,8 +148,7 @@ class BlockchainHandler {
                 return reject('Destination folder invalid');
             }
 
-            console.log('backupwallet');
-            resolve();
+            resolve('backupwallet');
         });
     }
 
@@ -160,8 +162,7 @@ class BlockchainHandler {
             } catch (err) {
                 return reject(err.message);
             }
-
-            if (!txs.length || !bills.length) {
+            if (!txs.length || !Object.keys(bills).length) {
                 return reject('Omitted params found');
             }
 
@@ -187,8 +188,7 @@ class BlockchainHandler {
                 return reject('Invalid amount found in addresses object');
             }
 
-            console.log('createrawtransaction');
-            resolve();
+            resolve('createrawtransaction');
         });
     }
 
@@ -198,8 +198,7 @@ class BlockchainHandler {
                 reject('Invalid hex string');
             }
 
-            console.log('decoderawtransaction');
-            resolve();
+            resolve('decoderawtransaction');
         });
     }
 
@@ -209,8 +208,7 @@ class BlockchainHandler {
                 reject('Invalid Address provided');
             }
 
-            console.log('dumpprivkey');
-            resolve();
+            resolve('dumpprivkey');
         });
     }
 
@@ -220,8 +218,7 @@ class BlockchainHandler {
                 return reject('Filename invalid');
             }
 
-            console.log('dumpwallet');
-            resolve();
+            resolve('dumpwallet');
         });
     }
 
@@ -231,8 +228,7 @@ class BlockchainHandler {
                 return reject('Invalid passphrase');
             }
 
-            console.log('encryptwallet');
-            resolve();
+            resolve('encryptwallet');
         });
     }
 
@@ -242,8 +238,7 @@ class BlockchainHandler {
                 return reject('Invalid address');
             }
 
-            console.log('getaccount');
-            resolve();
+            resolve('getaccount');
         });
     }
 
@@ -253,8 +248,7 @@ class BlockchainHandler {
                 return reject('Invalid account');
             }
 
-            console.log('getaccountaddress');
-            resolve();
+            resolve('getaccountaddress');
         });
     }
 
@@ -264,24 +258,20 @@ class BlockchainHandler {
                 return reject('Invalid account');
             }
 
-            console.log('getaddressesbyaccount');
-            resolve();
+            resolve('getaddressesbyaccount');
         });
     }
 
     doGetbalance(account, minconf = 1) {
         return new Promise((resolve, reject) => {
-            if (!this.validatePlainText(account)) {
-                console.log('getbalance total available');
-            } else {
-                console.log('getbalance for account');
-            }
             if (!Number.isInteger(minconf)) {
                 minconf = 1;
             }
-
-            console.log('getbalance');
-            resolve();
+            if (!this.validatePlainText(account)) {
+                resolve('getbalance total available');
+            } else {
+                resolve('getbalance for account');
+            }
         });
     }
 
@@ -291,16 +281,14 @@ class BlockchainHandler {
                 return reject('Invalid hash');
             }
 
-            console.log('getblock');
-            resolve();
+            resolve('getblock');
         });
     }
 
     doGetblockcount() {
         return new Promise((resolve, reject) => {
 
-            console.log('getblockcount');
-            resolve();
+            resolve('getblockcount');
         });
     }
 
@@ -310,28 +298,24 @@ class BlockchainHandler {
                 return reject('Invalid index');
             }
 
-            console.log('getblockhash');
-            resolve();
+            resolve('getblockhash');
         });
     }
 
     doGetinfo() {
         return new Promise((resolve, reject) => {
 
-            console.log('getinfo');
-            resolve();
+            resolve('getinfo');
         });
     }
 
     doGetnewaddress(account) {
         return new Promise((resolve, reject) => {
             if (!this.validatePlainText(account)) {
-                console.log('getnewaddress');
+                resolve('getnewaddress');
             } else {
-                console.log('getnewaddress credited to ' +account);
+                resolve('getnewaddress credited to ' +account);
             }
-
-            resolve();
         });
     }
 
@@ -344,8 +328,7 @@ class BlockchainHandler {
                 verbose = 0;
             }
 
-            console.log('getrawtransaction');
-            resolve();
+            resolve('getrawtransaction');
         });
     }
 
@@ -358,8 +341,7 @@ class BlockchainHandler {
                 minconf = 1;
             }
 
-            console.log('getreceivedbyaccount');
-            resolve();
+            resolve('getreceivedbyaccount');
         });
     }
 
@@ -372,8 +354,7 @@ class BlockchainHandler {
                 minconf = 1;
             }
 
-            console.log('getreceivedbyaddress');
-            resolve();
+            resolve('getreceivedbyaddress');
         });
     }
 
@@ -383,8 +364,7 @@ class BlockchainHandler {
                 return reject('Invalid transaction ID');
             }
 
-            console.log('gettransaction');
-            resolve();
+            resolve('gettransaction');
         });
     }
 
@@ -399,8 +379,7 @@ class BlockchainHandler {
                 includemempool = true;
             }
 
-            console.log('gettxout');
-            resolve();
+            resolve('gettxout');
         });
     }
 
@@ -416,8 +395,7 @@ class BlockchainHandler {
                 rescan = true;
             }
 
-            console.log('importprivkey');
-            resolve();
+            resolve('importprivkey');
         });
     }
 
@@ -427,8 +405,7 @@ class BlockchainHandler {
                 minconf = 1;
             }
 
-            console.log('listaccounts');
-            resolve();
+            resolve('listaccounts');
         });
     }
 
@@ -441,8 +418,7 @@ class BlockchainHandler {
                 includeempty = true;
             }
 
-            console.log('listreceivedbyaccount');
-            resolve();
+            resolve('listreceivedbyaccount');
         });
     }
 
@@ -455,8 +431,7 @@ class BlockchainHandler {
                 includeempty = true;
             }
 
-            console.log('listreceivedbyaddress');
-            resolve();
+            resolve('listreceivedbyaddress');
         });
     }
 
@@ -467,8 +442,7 @@ class BlockchainHandler {
             }
             // target_confirmations ??
 
-            console.log('gettransaction');
-            resolve();
+            resolve('listsinceblock');
         });
     }
 
@@ -484,8 +458,7 @@ class BlockchainHandler {
                 from = 0;
             }
 
-            console.log('listtransactions');
-            resolve();
+            resolve('listtransactions');
         });
     }
 
@@ -497,17 +470,15 @@ class BlockchainHandler {
             if (!Number.isInteger(maxconf)) {
                 maxconf = 999999;
             }
-    
-            console.log('listunspent');
-            resolve();
+
+            resolve('listunspent');
         });
     }
 
     doListlockunspent() {
         return new Promise((resolve, reject) => {
 
-            console.log('listlockunspent');
-            resolve();
+            resolve('listlockunspent');
         });
     }
 
@@ -523,8 +494,7 @@ class BlockchainHandler {
                 return reject('Invalid unlock hex supplied');
             }
 
-            console.log('lockunspent');
-            resolve();
+            resolve('lockunspent');
         });
     }
 
@@ -543,12 +513,11 @@ class BlockchainHandler {
                 minconf = 1;
             }
 
-            console.log('sendfrom');
-            resolve();
+            resolve('sendfrom');
         });
     }
 
-    doSendmany(fromaccount, addresses, minconf = 1) {
+    doSendmany(fromaccount, addresses, amount, minconf = 1) {
         return new Promise((resolve, reject) => {
             if (!this.validatePlainText(fromaccount)) {
                 return reject('Invalid account');
@@ -559,26 +528,21 @@ class BlockchainHandler {
             } catch (e) {
                 return reject(e.message);
             }
-            if (Object.keys(addresses).some(address => {
+            if (!addresses.length) {
+                return reject('Invalid addresses');
+            }
+            if (addresses.some(address => {
                 if (!this.validateHex(address)) {
                     return true;
                 }
             })) {
                 return reject('Invalid address value in addresses object');
             }
-            if (Object.values(addresses).some(amount => {
-                if (isNaN(amount)) {
-                    return true;
-                }
-            })) {
-                return reject('Invalid amount value in addresses object');
-            }
             if (isNaN(minconf)) {
                 minconf = 1;
             }
 
-            console.log('sendmany');
-            resolve();
+            resolve('sendmany');
         });
     }
 
@@ -588,8 +552,7 @@ class BlockchainHandler {
                 return reject('Invalid hex string');
             }
 
-            console.log('sendrawtransaction');
-            resolve();
+            resolve('sendrawtransaction');
         });
     }
 
@@ -602,8 +565,7 @@ class BlockchainHandler {
                 return reject('Invalid amount');
             }
 
-            console.log('sendrawtransaction');
-            resolve();
+            resolve('sendtoaddress');
         });
     }
 
@@ -616,8 +578,7 @@ class BlockchainHandler {
                 return reject('Invalid account');
             }
 
-            console.log('setaccount');
-            resolve();
+            resolve('setaccount');
         });
     }
 
@@ -627,8 +588,7 @@ class BlockchainHandler {
                 return reject('Invalid amount');
             }
 
-            console.log('settxfee');
-            resolve();
+            resolve('settxfee');
         });
     }
 
@@ -641,8 +601,7 @@ class BlockchainHandler {
                 return reject('Invalid message');
             }
 
-            console.log('signmessage');
-            resolve();
+            resolve('signmessage');
         });
     }
 
@@ -665,7 +624,8 @@ class BlockchainHandler {
             }
 
             if (txs.some(tx => {
-                if (!this.validateHex(tx.txid) || !Number.isInteger(tx.vout) || !this.validatehex(tx.scriptPubKey)) {
+                if (!this.validateHex(tx.txid) || !Number.isInteger(tx.vout) || !this.validateHex(tx.scriptPubKey)) {
+                    console.log(tx)
                     return true;
                 }
             })) {
@@ -679,8 +639,7 @@ class BlockchainHandler {
                 return reject('Invalid private key found in private keys object');
             }
 
-            console.log('signrawtransaction');
-            resolve();
+            resolve('signrawtransaction');
         });
     }
 
@@ -698,8 +657,7 @@ class BlockchainHandler {
                 }
             }
 
-            console.log('submitblock');
-            resolve();
+            resolve('submitblock');
         });
     }
 
@@ -709,8 +667,7 @@ class BlockchainHandler {
                 return reject('Invalid address');
             }
 
-            console.log('validateaddress');
-            resolve();
+            resolve('validateaddress');
         });
     }
 
@@ -725,14 +682,13 @@ class BlockchainHandler {
             if (!this.validatePlainText(message)) {
                 return reject('Invalid message');
             }
-            
-            console.log('verifymessage');
-            resolve();
+
+            resolve('verifymessage');
         });
     }
 
     validateDestination(destination) {
-        return destination && /^[a-z0-9\/\\\\._\$#&%@\-]{4,}$/i.test(destination);
+        return destination && /^[a-z0-9\/ :\\\\._\$#@\-]{4,}$/i.test(destination);
     }
 
     validatePlainText(passphrase) {
@@ -740,13 +696,15 @@ class BlockchainHandler {
     }
 
     validateHex(hex) {
+        let hex_b;
+
         try {
-            hex = Buffer.from(hex, 'hex');
+            hex_b = Buffer.from(hex, 'hex');
         } catch (e) {
             return false;
         }
 
-        return !!hex.length;
+        return hex === hex_b.toString('hex');
     }
 
     helper(show) {

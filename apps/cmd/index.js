@@ -66,7 +66,7 @@ class CmdHandler {
                 try {
                     switch (result.cmd) {
                         case 'bc':
-                            const blockchain = new BlockchainCmds(this, callback);
+                            const blockchain = new BlockchainCmds(this, callback, config.blockchain_config);
                             blockchain.run();
                             break;
                         default:
