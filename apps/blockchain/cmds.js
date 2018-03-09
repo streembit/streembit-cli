@@ -114,32 +114,36 @@ class BlockchainHandler {
                 throw new Error(err);
             }
 
-            const inp_r = result.cmd.split(/\s+/);
-            const cmd = inp_r[0];
-            const cix = this.validCmd.indexOf(inp_r[0]) > -1;
+            this.processInput(result.cmd);
+        });
+    }
 
-            if (cix) {
-                let params = inp_r.slice(1);
-                if (cmd === 'encryptwallet') {
-                    params = [ params.join(' ') ];
-                } else if (cmd === 'signmessage') {
-                    params = [ params[0] || null, params[1] ? params.slice(1).join(' ') : null ];
-                } else if (cmd === 'verifymessage') {
-                    params = [ params[0] || null, params[1] || null, params[2] ? params.slice(2).join(' ') : null ];
-                }
+    async processInput(inp) {
+        const inp_r = inp.split(/\s+/);
+        const cmd = inp_r[0];
+        const cix = this.validCmd.indexOf(inp_r[0]) > -1;
 
-                try {
-                    const result = await this[`do${cmd.charAt(0).toUpperCase()}${cmd.slice(1)}`](...params);
-                    console.log(result);
-                } catch (err) {
-                    logger.error(err);
-                    console.error('\x1b[31m%s\x1b[0m', '{error}:', err);
-                }
+        if (cix) {
+            let params = inp_r.slice(1);
+            if (cmd === 'encryptwallet') {
+                params = [ params.join(' ') ];
+            } else if (cmd === 'signmessage') {
+                params = [ params[0] || null, params[1] ? params.slice(1).join(' ') : null ];
+            } else if (cmd === 'verifymessage') {
+                params = [ params[0] || null, params[1] || null, params[2] ? params.slice(2).join(' ') : null ];
             }
 
-            this.helper(!cix);
-            this.run();
-        });
+            try {
+                const result = await this[`do${cmd.charAt(0).toUpperCase()}${cmd.slice(1)}`](...params);
+                console.log(result);
+            } catch (err) {
+                logger.error(err);
+                console.error('\x1b[31m%s\x1b[0m', '{error}:', err);
+            }
+        }
+
+        this.helper(!cix);
+        this.run();
     }
 
     doBackupwallet(destination) {

@@ -63,24 +63,28 @@ class CmdHandler {
                     return callback(err);
                 }
 
-                try {
-                    switch (result.cmd) {
-                        case 'bc':
-                            const blockchain = new BlockchainCmds(this, callback, config.blockchain_config);
-                            blockchain.run();
-                            break;
-                        default:
-                            this.helper();
-                            this.run(callback);
-                            break;
-                    }
-                } catch (e) {
-                    callback(e);
-                }
+                this.processInput(result.cmd);
             });
         }
         catch (err) {
             callback("CMD handler error: " + err.message);
+        }
+    }
+
+    processInput(inp, callback) {
+        try {
+            switch (inp) {
+                case 'bc':
+                    const blockchain = new BlockchainCmds(this, callback, config.blockchain_config);
+                    blockchain.run();
+                    break;
+                default:
+                    this.helper();
+                    this.run(callback);
+                    break;
+            }
+        } catch (e) {
+            callback(e);
         }
     }
 

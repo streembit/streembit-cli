@@ -89,8 +89,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'backupwallet');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(new Error(err));
                 });
             });
         });
@@ -101,8 +100,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'createrawtransaction');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(new Error(err));
                 });
             });
         });
@@ -113,8 +111,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'decoderawtransaction');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(new Error(err));
                 });
             });
         });
@@ -125,8 +122,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'dumpprivkey');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(new Error(err));
                 });
             });
         });
@@ -137,8 +133,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'dumpwallet');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(new Error(err));
                 });
             });
         });
@@ -149,8 +144,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'encryptwallet');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(new Error(err));
                 });
             });
         });
@@ -161,8 +155,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getaccount');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(new Error(err));
                 });
             });
         });
@@ -173,8 +166,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getaccountaddress');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(new Error(err));
                 });
             });
         });
@@ -185,8 +177,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getaddressesbyaccount');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -202,8 +193,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getbalance total available');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -214,8 +204,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getblock');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -226,8 +215,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getblockcount');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -238,8 +226,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getblockhash');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -250,8 +237,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getinfo');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -261,14 +247,13 @@ describe("CMD Handler", function () {
                 bc.doGetnewaddress().then(res => {
                     assert.equal(res, 'getnewaddress');
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
+                    done(err);
                 });
                 bc.doGetnewaddress(plainTxt).then(res => {
                     assert.equal(res, 'getnewaddress credited to ' +plainTxt);
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -279,8 +264,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getrawtransaction');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -291,8 +275,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getreceivedbyaccount');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -303,8 +286,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'getreceivedbyaddress');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -315,8 +297,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'gettransaction');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -327,8 +308,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'gettxout');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -339,8 +319,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'importprivkey');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -351,8 +330,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'listaccounts');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -363,8 +341,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'listreceivedbyaccount');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -375,8 +352,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'listreceivedbyaddress');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -387,8 +363,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'listsinceblock');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -399,8 +374,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'listtransactions');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -411,8 +385,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'listunspent');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -423,8 +396,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'listlockunspent');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -435,8 +407,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'lockunspent');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -447,8 +418,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'sendfrom');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -459,8 +429,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'sendmany');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -471,8 +440,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'sendrawtransaction');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -483,8 +451,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'sendtoaddress');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -495,8 +462,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'setaccount');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -507,8 +473,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'settxfee');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -519,8 +484,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'signmessage');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -531,8 +495,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'signrawtransaction');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -543,8 +506,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'submitblock');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -555,8 +517,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'validateaddress');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -567,8 +528,7 @@ describe("CMD Handler", function () {
                     assert.equal(res, 'verifymessage');
                     done();
                 }).catch(err => {
-                    assert.isNotOk(err, 'Promise error');
-                    done();
+                    done(err);
                 });
             });
         });
@@ -581,6 +541,14 @@ describe("CMD Handler", function () {
             });
 
             assert.isEmpty(stdout);
+        });
+
+        it('should show help for invalid input', function () {
+            stdout = capcon.interceptStdout(function capture() {
+                cmd.processInput('not-a-command', ()=>{});
+            });
+
+            assert.include(stdout, 'Streembit Commands:');
         });
 
         it('should show initial command prompt', function () {
@@ -614,6 +582,14 @@ describe("CMD Handler", function () {
             bc.run();
 
             assert.include(out, 'error:');
+        });
+
+        it("should show help for invalid input", function () {
+            stdout = capcon.interceptStdout(function capture() {
+                bc.processInput('not-a-command');
+            });
+
+            assert.include(stdout, 'Blockchain Commands:');
         });
 
         it("should show command prompt for blockchain commands", function () {
