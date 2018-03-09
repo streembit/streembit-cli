@@ -190,18 +190,32 @@ class AccountCmds {
     }
 
     validatePassword(pwd) {
-        return pwd && /^[a-z0-9._\$\^%\*\(\)\[\]=!\?\+#@\-]{6,20}$/i.test(pwd);
+        if (!(pwd && /^[a-z0-9._\$\^%\*\(\)\[\]=!\?\+#@\-]{6,20}$/i.test(pwd)) ||
+            pwd.replace(/[^a-z]/gi, '').length < 2 ||
+            pwd.replace(/[^0-9]/g, '').length < 1
+        ) {
+            return false;
+        }
+
+        return true;
     }
 
     validateAccountName(txt) {
-        return txt && /^[a-z0-9_\-]{4,64}$/i.test(txt);
+        if (!(txt && /^[a-z0-9_\-]{4,64}$/i.test(txt)) ||
+                txt.replace(/[^a-z]/gi, '').length < 2 ||
+                txt.replace(/[^0-9]/g, '').length < 1
+        ) {
+            return false;
+        }
+
+        return true;
     }
 
     helper() {
         console.group('\x1b[32m', "\nAccount Commands:");
         console.log('\x1b[30m', '-------------------');
-        console.log('\x1b[34m', 'password', '<password> plain text. no spaces');
-        console.log('\x1b[34m', 'account', '<account> plain text. no special chars, no spaces');
+        console.log('\x1b[34m', 'password', 'no arguments');
+        console.log('\x1b[34m', 'account', '<account> plain text. allowed chars: alphanums, digits, underscores, dashes');
         console.log('\x1b[30m', '-------------------');
         console.groupEnd();
     }

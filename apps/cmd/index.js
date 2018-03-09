@@ -85,7 +85,7 @@ class CmdHandler {
                     const blockchainCmd = new BlockchainCmdHandler(this, callback, config.blockchain_config);
                     blockchainCmd.run();
                     break;
-                case 'account':
+                case 'ac':
                     const accountCmd = new AccountCmds(this, callback);
                     accountCmd.run();
                     break;
