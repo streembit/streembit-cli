@@ -46,7 +46,7 @@ class ModulesHandler {
                     iot.run(callback);
                 }),
                 async.reflect(function (callback) {
-                    var blockchain = new BlockchainHandler();
+                    const blockchain = new BlockchainHandler();
                     blockchain.run(callback);
                 }),
                 async.reflect(function (callback) {

@@ -28,7 +28,7 @@ const prompt = require("prompt");
 const isBoolean = val => 'boolean' === typeof val;
 
 
-class BlockchainHandler {
+class BlockchainCmds {
     constructor(cmd, callback, bc_config) {
         this.cmd = cmd;
         this.cb = callback;
@@ -83,12 +83,12 @@ class BlockchainHandler {
             return this.cb("Command line interface error: BC module is not active");
         }
 
-        logger.info("Run blockchain handler");
+        logger.info("Run blockchain commands handler");
 
-        this.init();
+        this.command();
     }
 
-    init() {
+    command() {
         const schema = {
             properties: {
                 cmd: {
@@ -114,7 +114,8 @@ class BlockchainHandler {
                 throw new Error(err);
             }
 
-            this.processInput(result.cmd);
+            await this.processInput(result.cmd);
+            this.command();
         });
     }
 
@@ -143,7 +144,6 @@ class BlockchainHandler {
         }
 
         this.helper(!cix);
-        this.run();
     }
 
     doBackupwallet(destination) {
@@ -761,4 +761,4 @@ class BlockchainHandler {
     }
 }
 
-module.exports = BlockchainHandler;
+module.exports = BlockchainCmds;

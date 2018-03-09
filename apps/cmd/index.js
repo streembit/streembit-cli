@@ -24,12 +24,19 @@ Copyright (C) 2016 The Streembit software development team
 
 const logger = require('streembit-util').logger;
 const config = require('libs/config');
-const BlockchainCmds = require('../blockchain/cmds');
+const BlockchainCmdHandler = require('../blockchain/cmds');
+const AccountCmds = require('libs/account/cmds');
 const prompt = require('prompt');
 
 
 class CmdHandler {
-    constructor() {}
+    constructor() {
+        if (!config.cmdinput) {
+            this.run = () => {
+                logger.info('Commands interface is not active');
+            };
+        }
+    }
 
     run(callback) {
         try {
@@ -56,14 +63,14 @@ class CmdHandler {
                     if (err.message === 'canceled') { // ^C
                         // shut down cmd prompt gracefully
                         console.log("\nCMD input has been terminated by user");
-                        prompt.stop();
+                        this.stop();
                         return callback();
                     }
 
                     return callback(err);
                 }
 
-                this.processInput(result.cmd);
+                this.processInput(result.cmd, callback);
             });
         }
         catch (err) {
@@ -75,8 +82,12 @@ class CmdHandler {
         try {
             switch (inp) {
                 case 'bc':
-                    const blockchain = new BlockchainCmds(this, callback, config.blockchain_config);
-                    blockchain.run();
+                    const blockchainCmd = new BlockchainCmdHandler(this, callback, config.blockchain_config);
+                    blockchainCmd.run();
+                    break;
+                case 'account':
+                    const accountCmd = new AccountCmds(this, callback);
+                    accountCmd.run();
                     break;
                 default:
                     this.helper();

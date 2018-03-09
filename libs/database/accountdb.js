@@ -63,6 +63,51 @@ class AccountsDb extends database{
         );
     }
 
+    update_password(account, password) {
+        return new Promise(
+            (resolve, reject) => {
+                try {
+                    if (!account || !password) {
+                        throw new Error("Omitted parameter.")
+                    }
+
+                    const query = "UPDATE accounts SET password = ? WHERE account = ?";
+                    this.database.run(query, [password, account], err => {
+                        if (err) {
+                            return reject(err.message);
+                        }
+                        resolve();
+                    })
+                }
+                catch (err) {
+                    reject(err.message);
+                }
+            }
+        );
+    }
+
+    update_account_name(new_name, old_name) {
+        return new Promise(
+            (resolve, reject) => {
+                try {
+                    if (!new_name || !old_name) {
+                        throw new Error("Omitted parameter.");
+                    }
+
+                    const query = "UPDATE accounts SET account = ? WHERE account = ?";
+                    this.database.run(query, [new_name, old_name], err => {
+                        if (err) {
+                            return reject(err.message);
+                        }
+                        resolve();
+                    })
+                }
+                catch (err) {
+                    reject(err);
+                }
+            }
+        );
+    }
 }
 
 module.exports = AccountsDb;
