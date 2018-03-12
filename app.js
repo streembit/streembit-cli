@@ -78,6 +78,15 @@ module.exports = exports = function (port, ip, password) {
                     database.init(dbschema, callback);
                 },
                 function (callback) {
+                    try {
+                        var account = new Account();
+                        account.init(callback)
+                    }
+                    catch (e) {
+                        callback("Account init error: " + e.message);
+                    }
+                },
+                function (callback) {
                     var options = {
                         port: config.transport.port
                     };
@@ -91,15 +100,6 @@ module.exports = exports = function (port, ip, password) {
                     }
                     catch (e) {
                         callback("Task init error: " + e.message);
-                    }
-                },
-                function (callback) {
-                    try {
-                        var account = new Account();
-                        account.init(callback)
-                    }
-                    catch (e) {
-                        callback("Account init error: " + e.message);
                     }
                 },
                 function (callback) {
@@ -298,7 +298,7 @@ module.exports.backup = function() {
             },
             function (callback) {
                 var account = new Account();
-                account.load(config.password, config.account,function (err) {
+                account.load(config.password, config.account, function (err) {
                     if (err) {
                         return callback(err);
                     }

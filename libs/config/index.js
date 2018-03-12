@@ -324,33 +324,9 @@ var streembit_config = (function (cnfobj) {
 
             cnfobj.wsmode = wsm;
 
-            // set the password
-            var password = argv_password;
-
-            if (password) {
-                cnfobj.password = password;
-                return callback();
-            }
-
-            if (!password && config.password) {
-                //  check the config file
-                cnfobj.password = config.password;  
-                return callback();
-            }
-
-            // get the password from the command prompt
-            utils.prompt_for_password(function (err, pwd) {
-                if (err) {
-                    return callback(err);
-                }
-
-                cnfobj.password = pwd;
-                callback();
-            });
-            
+            return callback();
         }
         catch (err) {
-            console.log(err.message);
             callback(err.message);
         }
     };
@@ -374,22 +350,7 @@ var streembit_config = (function (cnfobj) {
             }
             cnfobj.database_name = config.database_name;
 
-            if (config.password) {
-                //  check the config file
-                cnfobj.password = config.password;
-                return callback();
-            }
-
-            // get the password from the command prompt
-            utils.prompt_for_password(function (err, pwd) {
-                if (err) {
-                    return callback(err);
-                }
-
-                cnfobj.password = pwd;
-                callback();
-            });
-
+            return callback();
         }
         catch (err) {
             callback(err.message);

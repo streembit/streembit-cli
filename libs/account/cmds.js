@@ -120,17 +120,24 @@ class AccountCmds {
             const schema = {
                 properties: {
                     old_pwd: {
-                        description: 'Enter old password',
+                        description: 'Old password',
                         type: 'string',
                         pattern: /^[a-z0-9 ._\$\^%\*\(\)\[\]=!\?\+#@\-]{6,}$/i,
                         message: 'Input does not look valid',
                         required: true
                     },
                     new_pwd: {
-                        description: 'Enter new password',
+                        description: 'New password',
                         type: 'string',
+                        hidden: true,
                         pattern: /^[a-z0-9 ._\$\^%\*\(\)\[\]=!\?\+#@\-]{6,}$/i,
                         message: 'Input does not look valid',
+                        required: true
+                    },
+                    conf_new_pwd: {
+                        description: 'Confirm new password',
+                        type: 'string',
+                        hidden: true,
                         required: true
                     },
                 }
@@ -151,15 +158,18 @@ class AccountCmds {
 
                 const acc = new Account();
 
-                const old_pwd_sha256hex = acc.getCryptPassword(result.old_pwd);
+                const old_pwd_sha256hex = acc.getCryptPassword(result.old_pwd, this.account.account);
                 if (this.account.password !== old_pwd_sha256hex) {
-                   reject(new Error('Old password do not match'));
+                   return reject(new Error('Old password do not match'));
                 }
                 if (!this.validatePassword(result.new_pwd)) {
-                    reject(new Error('Unacceptable new password. Tip: (6,20) alphanum, special char with no less/greater-than, no tilde/back quote'));
+                    return reject(new Error('Unacceptable new password. Tip: (6,20) alphanum, special char with no comma, less/greater-than, no tilde/back quote'));
+                }
+                if (result.new_pwd !== result.conf_new_pwd) {
+                    return reject(new Error('Password confirmation failed'));
                 }
 
-                const new_pwd_sha256hex = acc.getCryptPassword(result.new_pwd);
+                const new_pwd_sha256hex = acc.getCryptPassword(result.new_pwd, this.account.account);
                 try {
                     await this.accountDb.update_password(this.account, new_pwd_sha256hex);
                     config.password = new_pwd_sha256hex;

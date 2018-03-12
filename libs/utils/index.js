@@ -44,7 +44,12 @@ const kad = require('libs/kad');
             var schema = {
                 properties: {
                     password: {
-                        hidden: true
+                        description: 'Enter password',
+                        type: 'string',
+                        hidden: true,
+                        pattern: /^[a-z0-9._\$\^%\*\(\)\[\]=!\?\+#@\-]{6,20}$/i,
+                        message: 'Password does not look valid',
+                        required: true
                     }
                 }
             };
@@ -56,10 +61,10 @@ const kad = require('libs/kad');
             prompt.start();
             prompt.get(schema, function (err, result) {
                 var password = result.password.trim();
-                if (!password) {
-                    callback(new Error("Invalid password was entered. Enter the password! Spaces are not allowed in the password"));
-                }
-                else{
+                 if (!password) {
+                     callback(new Error("Invalid password was entered. Enter the password! Allowed chars: alphanum, special chars with exception of comma, less/greater-than, tilde, backquote"));
+                 }
+                 else{
                     callback(null, password);
                 }
             });

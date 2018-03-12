@@ -28,6 +28,11 @@
                         "notnull": true
                     },
                     {
+                        "name": "password",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
                         "name": "cipher",
                         "datatype": "text",
                         "notnull": true

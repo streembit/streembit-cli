@@ -28,6 +28,7 @@ const secrand = require('secure-random');
 const config = require("libs/config");
 const Database = require("libs/database/accountdb");
 const peermsg = require("libs/message");
+const utils = require("libs/utils");
 const logger = require("streembit-util").logger;
 
 let instance = null;
@@ -108,11 +109,12 @@ class Account {
         return pwdhex;
     }
 
-    addToDB(cipher, callback) {
-        var database = new Database()
+    addToDB(password, cipher, callback) {
+        var database = new Database();
         database.add(
             this.accountname,
             this.accountpk,
+            password,
             cipher,
             (err) => {
                 if (err) {
@@ -159,10 +161,16 @@ class Account {
 
             this.accountname = account;
 
-            this.addToDB(cipher_context, (err) => {
+            this.addToDB(symcrypt_key, cipher_context, (err) => {
+                if (err) {
+                    callback(err);
+                }
+
                 logger.info("New account pkhash: " + this.public_key_hash);
                 logger.info("New account bs58pk: " + this.bs58pk);
-                callback(err);
+
+                config.password = symcrypt_key;
+                callback();
             });
         }
         catch (err) {
@@ -177,12 +185,12 @@ class Account {
                 return callback("Invalid parameters, the data and password parameterss are required");
             }
 
-            var symcrypt_key = this.getCryptPassword(password);
+            //var symcrypt_key = this.getCryptPassword(password);
 
             // decrypt the cipher
             var plain_text;
             try {
-                plain_text = peermsg.aes256decrypt(symcrypt_key, data.cipher);
+                plain_text = peermsg.aes256decrypt(password, data.cipher);
             }
             catch (err) {
                 if (err.message && err.message.indexOf("decrypt") > -1) {
@@ -347,13 +355,25 @@ class Account {
                         return callback("Account database error: " + (err.message || err));
                     }
 
-                    var password = config.password;
-                    if (!data) {
-                        // the account does not exists -> set it up
-                        this.create_account(account, password, callback);
+                    if (!data || !data.password) {
+                        // if started as a pm2 process kill it
+                        if (typeof process.env.PM2_HOME !== 'undefined') {
+                            logger.error('Account was not created before and process started as a sevice');
+                            process.exit(1);
+                        }
+
+                        // get the password from the command prompt
+                        utils.prompt_for_password((err, pwd) => {
+                            if (err) {
+                                return callback(err);
+                            }
+
+                            this.create_account(account, pwd, callback);
+                        });
                     }
                     else {
-                        this.load_account(account, data, password, callback);
+                        config.password = data.password;
+                        this.load_account(account, data, data.password, callback);
                     }
                 }
             );
@@ -363,7 +383,7 @@ class Account {
         }
     }
 
-    load(password, account, callback) {
+    load(account, callback) {
         // get the account details from the database
         try {
             var db = new Database();
@@ -378,7 +398,7 @@ class Account {
                         return callback("Data for account " + account + " doesn't exists in the account database");
                     }
 
-                    this.load_account(account, data, password, callback);
+                    this.load_account(account, data, data.password, callback);
                 }
             );
         }
@@ -387,6 +407,5 @@ class Account {
         }
     }
 }
-
 
 module.exports = Account;

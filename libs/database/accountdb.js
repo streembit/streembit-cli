@@ -38,7 +38,7 @@ class AccountsDb extends database{
         );
     }
 
-    add(account, accountpk, cipher, cb) {
+    add(account, accountpk, password, cipher, cb) {
         if (!account) {
             return cb("Invalid account data.");
         }
@@ -51,8 +51,8 @@ class AccountsDb extends database{
         }
 
         this.database.run(
-            "INSERT INTO accounts (account,accountpk,cipher) VALUES (?,?,?)",
-            [account, accountpk, cipher],
+            "INSERT INTO accounts (account,accountpk,password,cipher) VALUES (?,?,?,?)",
+            [account, accountpk, password, cipher],
             (err) => {
                 if (err) {
                     return cb(err);

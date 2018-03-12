@@ -187,7 +187,7 @@ class HTTPTransport {
                 return callback("http write data must be string");
             }
 
-            function handleResponse(res) {
+            var handleResponse = function handleResponse(res) {
                 var payload = '';
                 var status = res.statusCode;
                 var statusmsg = res.statusMessage;
