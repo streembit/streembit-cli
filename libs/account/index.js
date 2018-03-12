@@ -128,6 +128,26 @@ class Account {
         );
     }
 
+    genCipher(smk) {
+        // get an entropy for the ECC key
+        var rndstr = secrand.randomBuffer(32).toString("hex");
+        var entropy = createHash("sha256").update(rndstr).digest("hex");
+
+        // create ECC key
+        var key = new ecckey();
+        key.generateKey(entropy);
+
+        //  encrypt the account data
+        var user_context = {
+            "privatekey": key.privateKeyHex,
+            "timestamp": Date.now()
+        };
+
+        this.ppkikey = key;
+
+        return peermsg.aes256encrypt(smk, JSON.stringify(user_context));
+    }
+
     create_account(account, password, callback) {
         try {
             if (!password)
@@ -136,24 +156,9 @@ class Account {
             if (!account)
                 throw new Error("create_account invalid account parameter");
 
-            var symcrypt_key = this.getCryptPassword(password);
+            var symcrypt_key = this.getCryptPassword(password, account);
 
-            // get an entropy for the ECC key
-            var rndstr = secrand.randomBuffer(32).toString("hex");
-            var entropy = createHash("sha256").update(rndstr).digest("hex");
-
-            // create ECC key
-            var key = new ecckey();
-            key.generateKey(entropy);
-
-            //  encrypt the account data
-            var user_context = {
-                "privatekey": key.privateKeyHex,
-                "timestamp": Date.now()
-            };
-            var cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
-
-            this.ppkikey = key;
+            var cipher_context = this.genCipher(symcrypt_key);
 
             var skrnd = secrand.randomBuffer(32).toString("hex");
             var skhash = createHash("sha256").update(skrnd).digest("hex");
@@ -169,6 +174,7 @@ class Account {
                 logger.info("New account pkhash: " + this.public_key_hash);
                 logger.info("New account bs58pk: " + this.bs58pk);
 
+                config.account = account;
                 config.password = symcrypt_key;
                 callback();
             });
@@ -179,9 +185,9 @@ class Account {
         }
     };
 
-    load_account(account, data, password, callback) {
+    load_account(data, callback) {
         try {
-            if (!data || !password) {
+            if (!data) {
                 return callback("Invalid parameters, the data and password parameterss are required");
             }
 
@@ -190,7 +196,7 @@ class Account {
             // decrypt the cipher
             var plain_text;
             try {
-                plain_text = peermsg.aes256decrypt(password, data.cipher);
+                plain_text = peermsg.aes256decrypt(data.password, data.cipher);
             }
             catch (err) {
                 if (err.message && err.message.indexOf("decrypt") > -1) {
@@ -230,7 +236,7 @@ class Account {
             logger.info("loaded pkhash: " + this.public_key_hash);
             logger.info("loaded bs58pk: " + this.bs58pk);
 
-            this.accountname = account;
+            this.accountname = data.account;
 
             // the account exists and the encrypted entropy is correct!
             callback();
@@ -341,15 +347,15 @@ class Account {
 
     init(callback) {
         // get the account details from the database
-        var account = config.account;
-        if (!account) {
-            return callback("Invalid account config data. The account field must exists in the configuration file.");
-        }
+        // var account = config.account;
+        // if (!account) {
+        //     return callback("Invalid account config data. The account field must exists in the configuration file.");
+        // }
 
         try {
             var db = new Database();
             db.data(
-                account,
+                1,
                 (err, data) => {
                     if (err) {
                         return callback("Account database error: " + (err.message || err));
@@ -368,12 +374,13 @@ class Account {
                                 return callback(err);
                             }
 
-                            this.create_account(account, pwd, callback);
+                            this.create_account('streembit-cli', pwd, callback);
                         });
                     }
                     else {
+                        config.account = data.account;
                         config.password = data.password;
-                        this.load_account(account, data, data.password, callback);
+                        this.load_account(data, callback);
                     }
                 }
             );
@@ -383,22 +390,22 @@ class Account {
         }
     }
 
-    load(account, callback) {
+    load(aid, callback) {
         // get the account details from the database
         try {
             var db = new Database();
             db.data(
-                account,
+                aid,
                 (err, data) => {
                     if (err) {
                         return callback("Account database error: " + (err.message || err));
                     }
 
                     if (!data) {
-                        return callback("Data for account " + account + " doesn't exists in the account database");
+                        return callback("Data for account " + data.account + " doesn't exists in the account database");
                     }
 
-                    this.load_account(account, data, data.password, callback);
+                    this.load_account(data, callback);
                 }
             );
         }

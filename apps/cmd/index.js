@@ -107,7 +107,7 @@ class CmdHandler {
         console.log('-------------------');
         console.group('\x1b[34m', 'Streembit Commands:');
         console.log('bc', '-- Blockchain commands');
-        console.log('account', '-- User accounts commands');
+        console.log('ac', '-- User accounts commands');
         // etc
         console.groupEnd();
         console.log('-------------------');

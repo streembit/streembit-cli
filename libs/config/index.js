@@ -248,10 +248,10 @@ var streembit_config = (function (cnfobj) {
 
             cnfobj.usertype = config.usertype || constants.USERTYPE_HUMAN;
 
-            if (!config.account) {
-                return callback("account is missing from the configuration file.");
-            }
-            cnfobj.account = config.account;
+            // if (!config.account) {
+            //     return callback("account is missing from the configuration file.");
+            // }
+            // cnfobj.account = config.account;
 
             if (!config.database_name) {
                 return callback("database_name is missing from the configuration file.");

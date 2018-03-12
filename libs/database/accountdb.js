@@ -28,10 +28,10 @@ class AccountsDb extends database{
         super();
     }
 
-    data(account, cbfn) {
+    data(aid, cbfn) {
         this.database.get(
-            "SELECT * FROM accounts WHERE account=?",
-            [account],
+            "SELECT * FROM accounts WHERE accountid=?",
+            [aid],
             function (err, row) {
                 cbfn(err, row);            
             }
@@ -53,7 +53,7 @@ class AccountsDb extends database{
         this.database.run(
             "INSERT INTO accounts (account,accountpk,password,cipher) VALUES (?,?,?,?)",
             [account, accountpk, password, cipher],
-            (err) => {
+            function (err) {
                 if (err) {
                     return cb(err);
                 }
@@ -63,44 +63,48 @@ class AccountsDb extends database{
         );
     }
 
-    update_password(account, password) {
+    update_password(aid, accountpk, password, cipher) {
         return new Promise(
             (resolve, reject) => {
                 try {
-                    if (!account || !password) {
+                    if (!aid || !password) {
                         throw new Error("Omitted parameter.")
                     }
 
-                    const query = "UPDATE accounts SET password = ? WHERE account = ?";
-                    this.database.run(query, [password, account], err => {
-                        if (err) {
-                            return reject(err.message);
-                        }
-                        resolve();
-                    })
+                    this.database.run(
+                        "UPDATE accounts SET accountpk = ?, password = ?, cipher = ? WHERE accountid = ?",
+                        [accountpk, password, cipher, aid],
+                        function (err) {
+                            if (err) {
+                                return reject(err);
+                            }
+                            resolve();
+                        });
                 }
                 catch (err) {
-                    reject(err.message);
+                    reject(err);
                 }
             }
         );
     }
 
-    update_account_name(new_name, old_name) {
+    update_account_name(new_name, aid) {
         return new Promise(
             (resolve, reject) => {
                 try {
-                    if (!new_name || !old_name) {
+                    if (!new_name || !aid) {
                         throw new Error("Omitted parameter.");
                     }
 
-                    const query = "UPDATE accounts SET account = ? WHERE account = ?";
-                    this.database.run(query, [new_name, old_name], err => {
-                        if (err) {
-                            return reject(err.message);
-                        }
-                        resolve();
-                    })
+                    this.database.run(
+                        "UPDATE accounts SET account = ? WHERE accountid = ?",
+                        [new_name, aid],
+                        function (err) {
+                            if (err) {
+                                return reject(err.message);
+                            }
+                            resolve();
+                        });
                 }
                 catch (err) {
                     reject(err);

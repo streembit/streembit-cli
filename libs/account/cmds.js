@@ -40,7 +40,7 @@ class AccountCmds {
 
     run() {
         logger.info("Run account commands handler");
-        this.accountDb.data(config.account, (err, data) => {
+        this.accountDb.data(1, (err, data) => {
             if (err) {
                 return this.cb("Account database error: " + (err.message || err));
             }
@@ -156,9 +156,10 @@ class AccountCmds {
                    return reject(err);
                 }
 
-                const acc = new Account();
+                let acc = new Account();
 
                 const old_pwd_sha256hex = acc.getCryptPassword(result.old_pwd, this.account.account);
+
                 if (this.account.password !== old_pwd_sha256hex) {
                    return reject(new Error('Old password do not match'));
                 }
@@ -170,11 +171,25 @@ class AccountCmds {
                 }
 
                 const new_pwd_sha256hex = acc.getCryptPassword(result.new_pwd, this.account.account);
+
+                const cipher = acc.genCipher(new_pwd_sha256hex);
+
                 try {
-                    await this.accountDb.update_password(this.account, new_pwd_sha256hex);
-                    config.password = new_pwd_sha256hex;
-                    this.account.password = new_pwd_sha256hex;
-                    resolve();
+                    await this.accountDb.update_password(this.account.accountid, acc.accountpk, new_pwd_sha256hex, cipher);
+                    this.accountDb.data(1, (err, data) => {
+                        if (err) {
+                            return reject(new Error(err));
+                        }
+
+                        acc.load_account(data, err => {
+                            if (err) {
+                                return reject(new Error(err));
+                            }
+                            config.password = new_pwd_sha256hex;
+                            this.account.password = new_pwd_sha256hex;
+                            resolve();
+                        })
+                    });
                 } catch (err) {
                     reject(err);
                 }
@@ -189,7 +204,7 @@ class AccountCmds {
             }
 
             try {
-                await this.accountDb.update_account_name(this.account.account, name);
+                await this.accountDb.update_account_name(this.account.accountid, name);
                 config.account = name;
                 this.account.account = name;
                 resolve();

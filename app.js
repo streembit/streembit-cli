@@ -163,7 +163,7 @@ module.exports.display_data = function () {
             },
             function (callback) {
                 var account = new Account();
-                account.load(config.password, config.account, callback);
+                account.load(1, callback);
             }
         ],
         function (err, result) {
@@ -298,7 +298,7 @@ module.exports.backup = function() {
             },
             function (callback) {
                 var account = new Account();
-                account.load(config.password, config.account, function (err) {
+                account.load(1, function (err) {
                     if (err) {
                         return callback(err);
                     }

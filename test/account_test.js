@@ -413,7 +413,7 @@ describe("Account module test lib/account", function () {
 
         it("should execute load()", function (done) {
 
-            account.load(account_config.account, account_config.account, function () {
+            account.load(1, function () {
                 console.log("load() executed");
                 done();
             })
