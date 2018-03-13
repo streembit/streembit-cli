@@ -35,8 +35,15 @@ describe("AccountDB database module libs/database/accountdb", function () {
             })
         });
 
-        it("should use accountdb.data to get account by account name", function () {
-            return accountdb.data(account1.account, (err, row) => {
+        it("should use accountdb.data to get first account", function () {
+            return accountdb.data((err, row) => {
+                assert.isUndefined(err);
+                assert.equal(row.accountpk, account1.accountpk);
+            })
+        });
+
+        it("should use accountdb.databyname to get account by account name", function () {
+            return accountdb.databyname(account1.account, (err, row) => {
                 assert.isUndefined(err);
                 assert.equal(row.accountpk, account1.accountpk);
             })

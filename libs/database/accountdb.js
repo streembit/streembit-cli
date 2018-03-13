@@ -28,12 +28,22 @@ class AccountsDb extends database{
         super();
     }
 
-    data(aid, cbfn) {
+    data(cbfn) {
         this.database.get(
-            "SELECT * FROM accounts WHERE accountid=?",
-            [aid],
+            "SELECT * FROM accounts ORDER BY ROWID ASC LIMIT 1",
+            [],
             function (err, row) {
                 cbfn(err, row);            
+            }
+        );
+    }
+
+    databyname(account, cbfn) {
+        this.database.get(
+            "SELECT * FROM accounts WHERE account=?",
+            [account],
+            function (err, row) {
+                cbfn(err, row);
             }
         );
     }
@@ -88,11 +98,11 @@ class AccountsDb extends database{
         );
     }
 
-    update_account_name(new_name, aid) {
+    update_account_name(aid, new_name) {
         return new Promise(
             (resolve, reject) => {
                 try {
-                    if (!new_name || !aid) {
+                    if (!new_name || isNaN(aid)) {
                         throw new Error("Omitted parameter.");
                     }
 

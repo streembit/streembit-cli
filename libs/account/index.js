@@ -346,16 +346,9 @@ class Account {
     }
 
     init(callback) {
-        // get the account details from the database
-        // var account = config.account;
-        // if (!account) {
-        //     return callback("Invalid account config data. The account field must exists in the configuration file.");
-        // }
-
-        try {
-            var db = new Database();
+       try {
+            const db = new Database();
             db.data(
-                1,
                 (err, data) => {
                     if (err) {
                         return callback("Account database error: " + (err.message || err));
@@ -364,7 +357,7 @@ class Account {
                     if (!data || !data.password) {
                         // if started as a pm2 process kill it
                         if (typeof process.env.PM2_HOME !== 'undefined') {
-                            logger.error('Account was not created before and process started as a sevice');
+                            logger.error('Account was not created before and process started as a service');
                             process.exit(1);
                         }
 
@@ -395,14 +388,13 @@ class Account {
         try {
             var db = new Database();
             db.data(
-                aid,
                 (err, data) => {
                     if (err) {
                         return callback("Account database error: " + (err.message || err));
                     }
 
                     if (!data) {
-                        return callback("Data for account " + data.account + " doesn't exists in the account database");
+                        return callback("Data for account " + aid + " doesn't exists in the account database");
                     }
 
                     this.load_account(data, callback);

@@ -40,7 +40,7 @@ class AccountCmds {
 
     run() {
         logger.info("Run account commands handler");
-        this.accountDb.data(1, (err, data) => {
+        this.accountDb.data((err, data) => {
             if (err) {
                 return this.cb("Account database error: " + (err.message || err));
             }
@@ -176,7 +176,7 @@ class AccountCmds {
 
                 try {
                     await this.accountDb.update_password(this.account.accountid, acc.accountpk, new_pwd_sha256hex, cipher);
-                    this.accountDb.data(1, (err, data) => {
+                    this.accountDb.data((err, data) => {
                         if (err) {
                             return reject(new Error(err));
                         }
@@ -227,8 +227,7 @@ class AccountCmds {
 
     validateAccountName(txt) {
         if (!(txt && /^[a-z0-9_\-]{4,64}$/i.test(txt)) ||
-                txt.replace(/[^a-z]/gi, '').length < 2 ||
-                txt.replace(/[^0-9]/g, '').length < 1
+                txt.replace(/[^a-z]/gi, '').length < 2
         ) {
             return false;
         }
@@ -240,7 +239,7 @@ class AccountCmds {
         console.group('\x1b[32m', "\nAccount Commands:");
         console.log('\x1b[30m', '-------------------');
         console.log('\x1b[34m', 'password', 'no arguments');
-        console.log('\x1b[34m', 'account', '<account> plain text. allowed chars: alphanums, digits, underscores, dashes');
+        console.log('\x1b[34m', 'account', '<account> plain text. allowed chars: alphanums, underscores, dashes');
         console.log('\x1b[30m', '-------------------');
         console.groupEnd();
     }
