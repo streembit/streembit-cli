@@ -28,6 +28,10 @@ class AccountsDb extends database{
         super();
     }
 
+    setDB(db) {
+        this.database = db;
+    }
+
     data(cbfn) {
         this.database.get(
             "SELECT * FROM accounts ORDER BY ROWID ASC LIMIT 1",

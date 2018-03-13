@@ -13,7 +13,7 @@ describe("AccountDB database module libs/database/accountdb", function () {
     const sq3 = new sqlite3.Database(`db/sqlite/${ws_config.dbname}/${ws_config.dbname}.db`, sqlite3.OPEN_READWRITE);
 
     before(function (done) {
-        config.init(ws_config.port, ws_config.host, ws_config.password, function() {
+        config.init(ws_config.port, ws_config.host, function() {
             config.database_name = ws_config.database;
             database.init(dbschema, async function () {
                 accountdb = new Database();

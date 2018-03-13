@@ -212,7 +212,7 @@ var streembit_config = (function (cnfobj) {
     };
 
 
-    cnfobj.init = function (argv_port, argv_ip, argv_password, callback) {
+    cnfobj.init = function (argv_port, argv_ip, callback) {
         try {
 
             cnfobj.log = config.log;

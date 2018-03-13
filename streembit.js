@@ -77,7 +77,7 @@ try {
         app.delete_user();
     }
     else {
-        app(program.port, program.ip, program.password);
+        app(program.port, program.ip);
     }
 }
 catch (e) {

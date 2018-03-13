@@ -26,14 +26,24 @@ const res = require('../resolvedir');
 const config_json = require('../config');
 const config = require('libs/config');
 const CmdHandler = require('apps/cmd');
+const peermsg = require("libs/message");
 const BlockchainCmds = require('apps/blockchain/cmds');
+const AccountCmds = require('libs/account/cmds');
+
+const dbschema = require("dbschematest");
+const database = require("streembit-db").instance;
+const sqlite3 = require('sqlite3').verbose();
+const crypto = require('crypto');
+const ecckey = require('libs/crypto');
+const createHash = require('create-hash');
+const secrand = require('secure-random');
 
 
-describe("CMD Handler", function () {
-    let stdout, out, cmd, bc;
+describe("CMD Handlers", function () {
+    let stdout, out, cmd, bc, ac;
 
     before(function(done) {
-        config.init(config_json.transport.port, config_json.transport.host, config_json.password, () => {
+        config.init(config_json.transport.port, config_json.transport.host, () => {
             cmd = new CmdHandler();
             logger.init('debug', null, ['file']);
             done();
@@ -560,7 +570,113 @@ describe("CMD Handler", function () {
         });
     });
 
-    describe("Blockchain handler init", function () {
+    describe("Account commands handler init", function() {
+        let run_account_tests = true, pk = null;
+        const sq3 = new sqlite3.Database('db/sqlite/streembittest/streembittest.db', sqlite3.OPEN_READWRITE);
+
+        const genCipher = function genCipher(smk) {
+            // get an entropy for the ECC key
+            var rndstr = secrand.randomBuffer(32).toString("hex");
+            var entropy = createHash("sha256").update(rndstr).digest("hex");
+
+            // create ECC key
+            var key = new ecckey();
+            key.generateKey(entropy);
+
+            //  encrypt the account data
+            var user_context = {
+                "privatekey": key.privateKeyHex,
+                "timestamp": Date.now()
+            };
+
+            pk = key.pkrmd160hash;
+
+            return peermsg.aes256encrypt(smk, JSON.stringify(user_context));
+        }
+
+        before(function(done) {
+            database.init(dbschema, async function () {
+                ac = new AccountCmds(cmd, err => { out = err });
+                await sq3.run("DELETE FROM accounts", []);
+
+                const account = 'test';
+                let password = 'puzs550rd';
+                const salt = createHash('sha256').update(password).digest('hex');
+                password = createHash('sha256').update(salt).digest('hex');
+                const cipher = genCipher(password);
+
+                await sq3.run(
+                    "INSERT INTO accounts (account,accountpk,password,cipher) VALUES (?,?,?,?)",
+                    [account, pk, password, cipher]
+                );
+                await sq3.get(
+                        "SELECT * FROM accounts ORDER BY ROWID ASC LIMIT 1",
+                        [],
+                        function (err, row) {
+                            ac.account = row;
+                        }
+                    );
+                ac.accountDb.setDB(sq3);
+                done();
+            });
+        });
+
+        it("should show a command prompt", function() {
+            stdout = capcon.interceptStdout(function capture() {
+                ac.command();
+            });
+
+            if (stdout.toLowerCase().includes('not initialized')) {
+                run_account_tests = false;
+                assert.isNotOk(run_account_tests, "account was not initialized yet");
+            } else {
+                assert.include(stdout, 'Enter');
+            }
+        });
+
+        if (run_account_tests) {
+            it("should validate input for account name", function() {
+                const validchars = "abcdefghijklm_nopqrstuvwxyz-ABCDEFGHIJKLM-NOPQRSTUVWXYZ0_123456789";
+                const name = Array(12).join().split(',').map(() => validchars.charAt(Math.floor(Math.random() * validchars.length))).join('');
+                assert.isTrue(ac.validateAccountName(name));
+                assert.isFalse(ac.validateAccountName('in<val:'));
+            });
+
+            it("should validate password input", function() {
+                assert.isTrue(ac.validatePassword('p#a-S8w_*D'));
+                assert.isFalse(ac.validatePassword('pa<sW/r`d'));
+            });
+
+            it("should change account name", function(done) {
+                ac.changeAccountName('name').then(err => {
+                    if (err) {
+                        assert.isNotOk(err, 'It must not throw on valid account name');
+                        done();
+                    }
+
+                    sq3.get(
+                        "SELECT * FROM accounts ORDER BY ROWID ASC LIMIT 1",
+                        [],
+                        function (err, row) {
+                            assert.equal(row.account, 'name');
+                            done();
+                        }
+                    );
+                });
+            });
+
+            it("should prompt for password", function(done) {
+                stdout = capcon.interceptStdout(async function capture() {
+                    await ac.changePassword();
+                });
+
+                assert.include(stdout.toLowerCase(), 'old password');
+                done();
+            });
+        }
+    });
+
+    describe("Blockchain commands handler init", function () {
 
         before(function() {
             bc = new BlockchainCmds(cmd, err => { out = err }, { name: 'blockchain', run: true });
@@ -579,9 +695,11 @@ describe("CMD Handler", function () {
 
         it("should not start blockchain commands handler if blockchain config has run key set to false", function () {
             bc.active = false;
-            bc.run();
+            stdout = capcon.interceptStdout(function capture() {
+                bc.run();
+            });
 
-            assert.include(out, 'error:');
+            assert.include(stdout, 'error:');
         });
 
         it("should show help for invalid input", function () {

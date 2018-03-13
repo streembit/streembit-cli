@@ -80,6 +80,7 @@ class BlockchainCmds {
 
     run() {
         if (!this.active) {
+            console.log("Command line interface error: BC module is not active");
             return this.cb("Command line interface error: BC module is not active");
         }
 

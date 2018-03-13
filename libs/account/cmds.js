@@ -44,6 +44,9 @@ class AccountCmds {
             if (err) {
                 return this.cb("Account database error: " + (err.message || err));
             }
+            if (typeof data === 'undefined') {
+                return this.cb("Account was not initialized");
+            }
 
             this.account = data;
             this.command();
@@ -86,18 +89,18 @@ class AccountCmds {
 
         try {
             switch (cmd) {
-                case 'password':
-                    try {
-                        await this.changePassword();
-                        console.log('\x1b[32m%s\x1b[0m', 'new password activated');
-                    } catch (err) {
-                        throw new Error(err.message);
-                    }
-                    break;
                 case 'account':
                     try {
                         await this.changeAccountName(inp_r[1]);
                         console.log('\x1b[32m%s\x1b[0m', 'account name successfully changed');
+                    } catch (err) {
+                        throw new Error(err.message);
+                    }
+                    break;
+                case 'password':
+                    try {
+                        await this.changePassword();
+                        console.log('\x1b[32m%s\x1b[0m', 'new password successfully activated');
                     } catch (err) {
                         throw new Error(err.message);
                     }
@@ -115,6 +118,23 @@ class AccountCmds {
         }
     }
 
+    changeAccountName(name) {
+        return new Promise(async (resolve, reject) => {
+            if (!this.validateAccountName(name)) {
+                return reject(new Error('Error: Unacceptable account name. Tip (4,64): alphanum, digit, underscore, dash'));
+            }
+
+            try {
+                await this.accountDb.update_account_name(this.account.accountid, name);
+                config.account = name;
+                this.account.account = name;
+                resolve();
+            } catch (err) {
+                reject(new Error(err.message));
+            }
+        });
+    }
+
     changePassword() {
         return new Promise((resolve, reject) => {
             const schema = {
@@ -122,7 +142,7 @@ class AccountCmds {
                     old_pwd: {
                         description: 'Old password',
                         type: 'string',
-                        pattern: /^[a-z0-9 ._\$\^%\*\(\)\[\]=!\?\+#@\-]{6,}$/i,
+                        pattern: /^[a-z0-9 ._\$\^%\*\+#@\-]{6,}$/i,
                         message: 'Input does not look valid',
                         required: true
                     },
@@ -130,7 +150,7 @@ class AccountCmds {
                         description: 'New password',
                         type: 'string',
                         hidden: true,
-                        pattern: /^[a-z0-9 ._\$\^%\*\(\)\[\]=!\?\+#@\-]{6,}$/i,
+                        pattern: /^[a-z0-9 ._\$\^%\*\+#@\-]{6,}$/i,
                         message: 'Input does not look valid',
                         required: true
                     },
@@ -197,25 +217,8 @@ class AccountCmds {
         });
     }
 
-    changeAccountName(name) {
-        return new Promise(async (resolve, reject) => {
-            if (!this.validateAccountName(name)) {
-                return reject(new Error('Unacceptable account name. Tip (4,64): alphanum, digit, underscore, dash'));
-            }
-
-            try {
-                await this.accountDb.update_account_name(this.account.accountid, name);
-                config.account = name;
-                this.account.account = name;
-                resolve();
-            } catch (err) {
-                reject(new Error(err.message));
-            }
-        });
-    }
-
     validatePassword(pwd) {
-        if (!(pwd && /^[a-z0-9._\$\^%\*\(\)\[\]=!\?\+#@\-]{6,20}$/i.test(pwd)) ||
+        if (!(pwd && /^[a-z0-9._\$\^%\*\+#@\-]{6,20}$/i.test(pwd)) ||
             pwd.replace(/[^a-z]/gi, '').length < 2 ||
             pwd.replace(/[^0-9]/g, '').length < 1
         ) {

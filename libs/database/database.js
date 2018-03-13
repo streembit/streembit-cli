@@ -17,6 +17,10 @@ class database {
         }
         return this.m_database;
     }
+
+    set database (db) {
+        this.m_database = db;
+    }
 }
 
 module.exports = database;
