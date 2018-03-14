@@ -15,19 +15,20 @@ const account_config = require('./account_config.json');
 //const constants = require("libs/constants");
 
 describe("Account module test lib/account", function () {
-    var account;
+    let account;
+    const password = 'pass550rd';
 
     before(function (done) {
         account = new Account();
         config.init(account_config.port, account_config.host, function () {
             database.init(dbschema, function () {
-
                 done();
             });
         });
     });
 
     describe("Test Constructor initialization", function () {
+
         it("should set the m_key to null", function () {
             assert.equal(account.m_key, null);
         });
@@ -42,10 +43,10 @@ describe("Account module test lib/account", function () {
     describe("Account name", function () {
 
         it("should set a value to m_accountname", function () {
-            account.accountname = account_config.account;
+            account.accountname = 'test';
             let account_name = account.accountname;
 
-            assert.equal(account_name, account_config.account);
+            assert.equal(account_name, 'test');
         });
 
         it("should neither null nor undefined", function () {
@@ -346,20 +347,20 @@ describe("Account module test lib/account", function () {
     describe("Test password encryption", function () {
 
         it("should neither empty nor undefined", function () {
-            let pwd_encrypt = account.getCryptPassword(account_config.password);
+            let pwd_encrypt = account.getCryptPassword(password);
 
             assert.exists(pwd_encrypt);
         });
 
         it("should be a string", function () {
-            let pwd_encrypt = account.getCryptPassword(account_config.password);
+            let pwd_encrypt = account.getCryptPassword(password);
 
             assert.isString(pwd_encrypt);
         });
 
         it("should match with the encrypted password", function () {
-            let pwd_encrypt = account.getCryptPassword(account_config.password);
-            let salt = createHash('sha256').update(account_config.password).digest('hex');
+            let pwd_encrypt = account.getCryptPassword(password);
+            let salt = createHash('sha256').update(password).digest('hex');
             let pwdhex = createHash('sha256').update(salt).digest('hex');
 
             assert.equal(pwd_encrypt, pwdhex);
@@ -397,23 +398,22 @@ describe("Account module test lib/account", function () {
         });
     });
 
+
     describe("Test init()", function () {
 
-        it("should define the config.account value", function (done) {
-
-            account.init(config.password, function () {
-
-                assert.exists(config.account);
+        it("should execute init()", function (done) {
+            account.init(password, function () {
+                console.log("init() executed");
                 done();
             })
+
         });
     });
 
     describe("Test load()", function () {
 
         it("should execute load()", function (done) {
-
-            account.load(config.password, function () {
+            account.load(password, function () {
                 console.log("load() executed");
                 done();
             })

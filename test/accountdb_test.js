@@ -8,7 +8,7 @@ const config = require("libs/config");
 const ws_config = require('./test_config.json');
 
 describe("AccountDB database module libs/database/accountdb", function () {
-    let accountdb, account1;
+    let accountdb, account1, password;
 
     const sq3 = new sqlite3.Database(`db/sqlite/${ws_config.dbname}/${ws_config.dbname}.db`, sqlite3.OPEN_READWRITE);
 
@@ -19,6 +19,7 @@ describe("AccountDB database module libs/database/accountdb", function () {
                 accountdb = new Database();
 
                 account1 = ws_config.accounts[0];
+                password = 'pass550rd';
 
                 await sq3.run('DELETE FROM accounts', (err, state) => {});
 
@@ -29,7 +30,7 @@ describe("AccountDB database module libs/database/accountdb", function () {
 
     describe("AccountDB: get and add records", function () {
         it('should use accountdb.add to add new account', function (done) {
-            return accountdb.add(account1.account, account1.accountpk, account1.cipher, (err, row) => {
+            return accountdb.add(account1.account, account1.accountpk, password, account1.cipher, (err, row) => {
                 assert.isUndefined(err);
                 done();
             })
