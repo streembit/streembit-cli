@@ -332,11 +332,7 @@ var streembit_config = (function (cnfobj) {
 
     cnfobj.init_account_params = function (callback) {
         try {
-            if (!config.account) {
-                return callback("account is missing from the configuration file.");
-            }
 
-            cnfobj.account = config.account;
             cnfobj.users = config.users;
             var iot_confarr = config.modules.filter(function (item) {
                 return item.name == "iot";

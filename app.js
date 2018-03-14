@@ -233,11 +233,11 @@ module.exports.delete_user = function (password) {
                     config.init_account_params(callback);
                 },
                 function (callback) {
-                    const account = new Account();
-                    account.load(passwordm );
+                    database.init(dbschema, callback);
                 },
                 function (callback) {
-                    database.init(dbschema, callback);
+                    const account = new Account();
+                    account.load(password, callback);
                 },
                 function (callback) {
                     try {
@@ -283,7 +283,7 @@ module.exports.backup = function(password) {
             },
             function (callback) {
                 try {
-                    database.init(__dirname, callback);
+                    database.init(dbschema, callback);
                 }
                 catch (err) {
                     callback(err);
@@ -339,7 +339,7 @@ module.exports.backup = function(password) {
     ); 
 };
 
-module.exports.whitelist_update = function (pkey, rm) {
+module.exports.whitelist_update = function (password, pkey, rm) {
     async.waterfall(
         [
             function (callback) {

@@ -29,7 +29,6 @@ const res = require('./resolvedir');
 const program = require('commander');
 const app = require('app');
 const utils = require("libs/utils");
-const logger = require("streembit-util").logger;
 
 
 // show the command prompt when the user type --help
@@ -55,7 +54,6 @@ try {
         console.log('\x1b[31m%s\x1b[0m', 'Error:', 'Password required! Restart the app with --pwd PASSWORD or --pwd=PASSWORD');
         process.exit(1);
     }
-
     if (program.data) {
         app.display_data(program.pwd);
     }
@@ -67,7 +65,7 @@ try {
     }
     else if (program.whitelist) {
         if (!program.addpk && !program.deluser) {
-            throw new Error('-w command option requires user private key being provided')
+            throw new Error('-w command option requires user private key being provided');
         } else if (
             (program.addpk && program.addpk.length < 64) ||
             (program.deluser && program.deluser.length < 64)
@@ -75,7 +73,7 @@ try {
             throw new Error('Invalid public key');
         }
 
-        app.whitelist_update(program.addpk || program.deluser, !!program.deluser);
+        app.whitelist_update(program.pwd, program.addpk || program.deluser, !!program.deluser);
     }
     else if (program.deluser) {
         app.delete_user(program.pwd);
