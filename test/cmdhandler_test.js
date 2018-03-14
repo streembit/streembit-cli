@@ -29,6 +29,7 @@ const CmdHandler = require('apps/cmd');
 const peermsg = require("libs/message");
 const BlockchainCmds = require('apps/blockchain/cmds');
 const AccountCmds = require('libs/account/cmds');
+const Account = require('libs/account');
 
 const dbschema = require("dbschematest");
 const database = require("streembit-db").instance;
@@ -571,7 +572,7 @@ describe("CMD Handlers", function () {
     });
 
     describe("Account commands handler init", function() {
-        let run_account_tests = true, pk = null;
+        let run_account_tests = true, pk = null, account = new Account();
         const sq3 = new sqlite3.Database('db/sqlite/streembittest/streembittest.db', sqlite3.OPEN_READWRITE);
 
         const genCipher = function genCipher(smk) {
@@ -599,7 +600,7 @@ describe("CMD Handlers", function () {
                 ac = new AccountCmds(cmd, err => { out = err });
                 await sq3.run("DELETE FROM accounts", []);
 
-                const account = 'test';
+                const account_name = 'test';
                 let password = 'puzs550rd';
                 const salt = createHash('sha256').update(password).digest('hex');
                 password = createHash('sha256').update(salt).digest('hex');
@@ -607,7 +608,7 @@ describe("CMD Handlers", function () {
 
                 await sq3.run(
                     "INSERT INTO accounts (account,accountpk,password,cipher) VALUES (?,?,?,?)",
-                    [account, pk, password, cipher]
+                    [account_name, pk, password, cipher]
                 );
                 await sq3.get(
                         "SELECT * FROM accounts ORDER BY ROWID ASC LIMIT 1",
@@ -638,13 +639,13 @@ describe("CMD Handlers", function () {
             it("should validate input for account name", function() {
                 const validchars = "abcdefghijklm_nopqrstuvwxyz-ABCDEFGHIJKLM-NOPQRSTUVWXYZ0_123456789";
                 const name = Array(12).join().split(',').map(() => validchars.charAt(Math.floor(Math.random() * validchars.length))).join('');
-                assert.isTrue(ac.validateAccountName(name));
-                assert.isFalse(ac.validateAccountName('in<val:'));
+                assert.isTrue(account.validateAccountName(name));
+                assert.isFalse(account.validateAccountName('in<val:'));
             });
 
             it("should validate password input", function() {
-                assert.isTrue(ac.validatePassword('p#a-S8w_*D'));
-                assert.isFalse(ac.validatePassword('pa<sW/r`d'));
+                assert.isTrue(account.validatePassword('p#a-S8w_*D'));
+                assert.isFalse(account.validatePassword('pa<sW/r`d'));
             });
 
             it("should change account name", function(done) {

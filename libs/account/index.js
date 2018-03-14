@@ -156,17 +156,16 @@ class Account {
             if (!account)
                 throw new Error("create_account invalid account parameter");
 
-            var symcrypt_key = this.getCryptPassword(password, account);
-
-            var cipher_context = this.genCipher(symcrypt_key);
-
-            var skrnd = secrand.randomBuffer(32).toString("hex");
-            var skhash = createHash("sha256").update(skrnd).digest("hex");
+            const password_hash = createHash('sha256').update(password).digest('hex');
+            const symcrypt_key = this.getCryptPassword(password);
+            const cipher_context = this.genCipher(symcrypt_key);
+            const skrnd = secrand.randomBuffer(32).toString("hex");
+            const skhash = createHash("sha256").update(skrnd).digest("hex");
             this.connsymmkey = skhash;    
 
             this.accountname = account;
 
-            this.addToDB(symcrypt_key, cipher_context, (err) => {
+            this.addToDB(password_hash, cipher_context, (err) => {
                 if (err) {
                     callback(err);
                 }
@@ -175,7 +174,6 @@ class Account {
                 logger.info("New account bs58pk: " + this.bs58pk);
 
                 config.account = account;
-                config.password = symcrypt_key;
                 callback();
             });
         }
@@ -185,18 +183,17 @@ class Account {
         }
     };
 
-    load_account(data, callback) {
+    load_account(password, data, callback) {
         try {
             if (!data) {
                 return callback("Invalid parameters, the data and password parameterss are required");
             }
 
-            //var symcrypt_key = this.getCryptPassword(password);
-
             // decrypt the cipher
-            var plain_text;
+            let plain_text;
             try {
-                plain_text = peermsg.aes256decrypt(data.password, data.cipher);
+                const symcrypt_key = this.getCryptPassword(password);
+                plain_text = peermsg.aes256decrypt(symcrypt_key, data.cipher);
             }
             catch (err) {
                 if (err.message && err.message.indexOf("decrypt") > -1) {
@@ -254,7 +251,7 @@ class Account {
 
             var account = user.account;
 
-            var pbkdf2 = this.getCryptPassword(password, account);
+            var pbkdf2 = this.getCryptPassword(password);
 
             // decrypt the cipher
             var plain_text;
@@ -324,7 +321,7 @@ class Account {
             }
 
 
-            var symcrypt_key = this.getCryptPassword(password, account);
+            var symcrypt_key = this.getCryptPassword(password);
             var user_context = {
                 "privatekey": this.ppkikey.privateKeyHex,
                 "connsymmkey": this.connsymmkey,
@@ -345,8 +342,12 @@ class Account {
         this.ppkikey = null;
     }
 
-    init(callback) {
+    init(password, callback) {
        try {
+           if (!this.validatePassword(password)) {
+               return callback("Application level error: Invalid password");
+           }
+
             const db = new Database();
             db.data(
                 (err, data) => {
@@ -354,26 +355,17 @@ class Account {
                         return callback("Account database error: " + (err.message || err));
                     }
 
-                    if (!data || !data.password) {
-                        // if started as a pm2 process kill it
-                        if (typeof process.env.PM2_HOME !== 'undefined') {
-                            logger.error('Account was not created before and process started as a service');
-                            process.exit(1);
-                        }
-
-                        // get the password from the command prompt
-                        utils.prompt_for_password((err, pwd) => {
-                            if (err) {
-                                return callback(err);
-                            }
-
-                            this.create_account('streembit-cli', pwd, callback);
-                        });
+                    if (!data) {
+                        this.create_account('streembit-cli', password, callback);
                     }
                     else {
+                        const password_hash = createHash('sha256').update(password).digest('hex');
+                        if (password_hash !== data.password) {
+                            return callback("Account initialization error: Invalid password");
+                        }
+
                         config.account = data.account;
-                        config.password = data.password;
-                        this.load_account(data, callback);
+                        this.load_account(password, data, callback);
                     }
                 }
             );
@@ -383,7 +375,7 @@ class Account {
         }
     }
 
-    load(aid, callback) {
+    load(password, callback) {
         // get the account details from the database
         try {
             var db = new Database();
@@ -394,16 +386,42 @@ class Account {
                     }
 
                     if (!data) {
-                        return callback("Data for account " + aid + " doesn't exists in the account database");
+                        return callback("Data for account doesn't exists in the account database");
                     }
 
-                    this.load_account(data, callback);
+                    const password_hash = createHash('sha256').update(password).digest('hex');
+                    if (password_hash !== data.password) {
+                        return callback("Error: Invalid password");
+                    }
+
+                    this.load_account(password, data, callback);
                 }
             );
         }
         catch (err) {
             callback(err);
         }
+    }
+
+    validatePassword(pwd) {
+        if (!(pwd && /^[a-z0-9._\$\^%\*\+#@\-]{6,20}$/i.test(pwd)) ||
+            pwd.replace(/[^a-z]/gi, '').length < 2 ||
+            pwd.replace(/[^0-9]/g, '').length < 1
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
+    validateAccountName(txt) {
+        if (!(txt && /^[a-z0-9_\-]{4,64}$/i.test(txt)) ||
+            txt.replace(/[^a-z]/gi, '').length < 2
+        ) {
+            return false;
+        }
+
+        return true;
     }
 }
 

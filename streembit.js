@@ -29,13 +29,15 @@ const res = require('./resolvedir');
 const program = require('commander');
 const app = require('app');
 const utils = require("libs/utils");
+const logger = require("streembit-util").logger;
 
 
 // show the command prompt when the user type --help
 // and get the configuration values from the command prompt
 program
     .version(version)
-    .option('-s, --password [value]', 'Password (secret) to protect the private key')
+    .option('-pwd, --pwd [pwd]', 'Password (secret) to protect the private key')
+    .option('-pm2, --pm2', 'PM2 or service/daemon mode')
     .option('-i, --ip [value]', 'IP address for the Streembit seed')
     .option('-p, --port <num>', 'Port for the Streembit client', utils.parse_ipport)
     .option('-d, --data', 'Print node ID')
@@ -49,17 +51,19 @@ program
 
 
 try {
+    if (!program.pwd || typeof program.pwd !== 'string' || program.pwd.length < 6) {
+        console.log('\x1b[31m%s\x1b[0m', 'Error:', 'Password required! Restart the app with --pwd PASSWORD or --pwd=PASSWORD');
+        process.exit(1);
+    }
+
     if (program.data) {
-        app.display_data();
+        app.display_data(program.pwd);
     }
     else if (program.backup) {
-        app.backup();
-    }
-    else if (program.changepwd) {
-        app.changepwd();
+        app.backup(program.pwd);
     }
     else if (program.users) {
-        app.list_users();
+        app.list_users(program.pwd);
     }
     else if (program.whitelist) {
         if (!program.addpk && !program.deluser) {
@@ -74,10 +78,10 @@ try {
         app.whitelist_update(program.addpk || program.deluser, !!program.deluser);
     }
     else if (program.deluser) {
-        app.delete_user();
+        app.delete_user(program.pwd);
     }
     else {
-        app(program.port, program.ip);
+        app(program.port, program.ip, program.pwd);
     }
 }
 catch (e) {

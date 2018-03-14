@@ -23,7 +23,7 @@ Copyright (C) 2016 The Streembit software development team
 
 var assert = require('assert');
 var config = require('config');
-var utils = require("libs/utils");
+const program = require('commander');
 var constants = require("libs/constants");
 
 var streembit_config = (function (cnfobj) {
@@ -214,7 +214,6 @@ var streembit_config = (function (cnfobj) {
 
     cnfobj.init = function (argv_port, argv_ip, callback) {
         try {
-
             cnfobj.log = config.log;
 
             // set the ssl flag
@@ -242,7 +241,7 @@ var streembit_config = (function (cnfobj) {
             // set the ws max connection 
             cnfobj.transport.ws.maxconn = config.transport.ws.maxconn || constants.DEFAULT_WS_MAXCONN;
 
-            cnfobj.cmdinput = config.cmdinput;
+            cnfobj.cmdinput = config.cmdinput && !program.pm2;
 
             cnfobj.seeds = config.seeds;
 

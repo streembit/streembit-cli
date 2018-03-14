@@ -24,6 +24,7 @@ Copyright (C) 2016 The Streembit software development team
 
 const logger = require("streembit-util").logger;
 const prompt = require("prompt");
+const createHash = require('create-hash');
 
 const AccountDb = require("libs/database/accountdb");
 const Account = require("libs/account");
@@ -34,6 +35,7 @@ class AccountCmds {
     constructor(cmd, callback) {
         this.cmd = cmd;
         this.cb = callback;
+        this.acc = new Account();
         this.accountDb = new AccountDb();
         this.account = null;
     }
@@ -59,7 +61,7 @@ class AccountCmds {
                 cmd: {
                     description: 'Enter account command',
                     type: 'string',
-                    pattern: /^[a-z0-9 ._\$\^%\*\(\)\[\]=!\?\+#@\-]{6,}$/i,
+                    pattern: /^[a-z0-9 ._\$\^%\*\(\)\[\]=!\?\+#@\-]{2,}$/i,
                     message: 'Invalid command',
                     required: true
                 },
@@ -105,6 +107,7 @@ class AccountCmds {
                         throw new Error(err.message);
                     }
                     break;
+                case 'help':
                 default:
                     this.helper();
                     break;
@@ -120,7 +123,7 @@ class AccountCmds {
 
     changeAccountName(name) {
         return new Promise(async (resolve, reject) => {
-            if (!this.validateAccountName(name)) {
+            if (!this.acc.validateAccountName(name)) {
                 return reject(new Error('Error: Unacceptable account name. Tip (4,64): alphanum, digit, underscore, dash'));
             }
 
@@ -176,36 +179,34 @@ class AccountCmds {
                    return reject(err);
                 }
 
-                let acc = new Account();
-
-                const old_pwd_sha256hex = acc.getCryptPassword(result.old_pwd, this.account.account);
+                const old_pwd_sha256hex = createHash('sha256').update(result.old_pwd).digest('hex');
 
                 if (this.account.password !== old_pwd_sha256hex) {
                    return reject(new Error('Old password do not match'));
                 }
-                if (!this.validatePassword(result.new_pwd)) {
+                if (!this.acc.validatePassword(result.new_pwd)) {
                     return reject(new Error('Unacceptable new password. Tip: (6,20) alphanum, special char with no comma, less/greater-than, no tilde/back quote'));
                 }
                 if (result.new_pwd !== result.conf_new_pwd) {
                     return reject(new Error('Password confirmation failed'));
                 }
 
-                const new_pwd_sha256hex = acc.getCryptPassword(result.new_pwd, this.account.account);
-
-                const cipher = acc.genCipher(new_pwd_sha256hex);
+                const new_pwd_sha256hex = createHash('sha256').update(result.new_pwd).digest('hex');
+                const symcrypt_key = this.acc.getCryptPassword(result.new_pwd);
+                const cipher = this.acc.genCipher(symcrypt_key);
 
                 try {
-                    await this.accountDb.update_password(this.account.accountid, acc.accountpk, new_pwd_sha256hex, cipher);
+                    await this.accountDb.update_password(this.account.accountid, this.acc.accountpk, new_pwd_sha256hex, cipher);
                     this.accountDb.data((err, data) => {
                         if (err) {
                             return reject(new Error(err));
                         }
 
-                        acc.load_account(data, err => {
+                        this.acc.load_account(result.new_pwd, data, err => {
                             if (err) {
                                 return reject(new Error(err));
                             }
-                            config.password = new_pwd_sha256hex;
+
                             this.account.password = new_pwd_sha256hex;
                             resolve();
                         })
@@ -215,27 +216,6 @@ class AccountCmds {
                 }
             });
         });
-    }
-
-    validatePassword(pwd) {
-        if (!(pwd && /^[a-z0-9._\$\^%\*\+#@\-]{6,20}$/i.test(pwd)) ||
-            pwd.replace(/[^a-z]/gi, '').length < 2 ||
-            pwd.replace(/[^0-9]/g, '').length < 1
-        ) {
-            return false;
-        }
-
-        return true;
-    }
-
-    validateAccountName(txt) {
-        if (!(txt && /^[a-z0-9_\-]{4,64}$/i.test(txt)) ||
-                txt.replace(/[^a-z]/gi, '').length < 2
-        ) {
-            return false;
-        }
-
-        return true;
     }
 
     helper() {

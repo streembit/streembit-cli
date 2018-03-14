@@ -46,14 +46,15 @@ console.log("homedir: %s", homedir);
 pm2.connect(function (err) {
     if (err) {
         console.error(err);
-        process.exit(2);
+        process.exit(1);
     }
     
     var cwd_value = homedir;
 
     var pm2config = {
         name    : "streembit",
-        script  : 'streembit.js',         
+        script  : 'streembit.js',
+        args    : [ ...process.argv.slice(2), '--pm2' ],
         cwd     : cwd_value
     };
     

@@ -47,7 +47,7 @@ const WhitelistDB = require("libs/database/whitelistdb");
 const constants = require("libs/constants");
 
 // initialize the logger
-module.exports = exports = function (port, ip) {
+module.exports = exports = function (port, ip, password) {
     try {
         async.waterfall(
             [
@@ -79,8 +79,8 @@ module.exports = exports = function (port, ip) {
                 },
                 function (callback) {
                     try {
-                        var account = new Account();
-                        account.init(callback)
+                        const account = new Account();
+                        account.init(password, callback);
                     }
                     catch (e) {
                         callback("Account init error: " + e.message);
@@ -147,7 +147,7 @@ module.exports = exports = function (port, ip) {
     }
 };
 
-module.exports.display_data = function () {
+module.exports.display_data = function (password) {
 
     async.waterfall(
         [
@@ -155,15 +155,11 @@ module.exports.display_data = function () {
                 config.init_account_params(callback);
             },
             function (callback) {
-                if (!config.password) {
-                    return callback("Invalid password");
-                }
-
                 database.init(dbschema, callback);
             },
             function (callback) {
-                var account = new Account();
-                account.load(1, callback);
+                const account = new Account();
+                account.load(password, callback);
             }
         ],
         function (err, result) {
@@ -171,7 +167,7 @@ module.exports.display_data = function () {
                 return console.log(err.message || err);
             }
 
-            var account = new Account();
+            const account = new Account();
             //print the node ID
             console.log("accountname: %s", account.accountname);
             console.log("node ID: %s", account.accountpk);
@@ -187,7 +183,7 @@ module.exports.changepwd = function() {
     console.log("app change password");
 };
 
-module.exports.list_users = function () {
+module.exports.list_users = function (password) {
     console.log("list users");
     async.waterfall(
         [
@@ -195,11 +191,11 @@ module.exports.list_users = function () {
                 config.init_account_params(callback);
             },
             function (callback) {
-                if (!config.password) {
-                    return callback("Invalid password");
-                }
-
                 database.init(dbschema, callback);
+            },
+            function (callback) {
+                const account = new Account();
+                account.load(password, callback);
             },
             function (callback) {
                 try {
@@ -223,7 +219,7 @@ module.exports.list_users = function () {
     ); 
 };
 
-module.exports.delete_user = function () {
+module.exports.delete_user = function (password) {
     // get the password from the command prompt
     utils.prompt_for_userid(function (err, userid) {
         if (err) {
@@ -237,10 +233,10 @@ module.exports.delete_user = function () {
                     config.init_account_params(callback);
                 },
                 function (callback) {
-                    if (!config.password) {
-                        return callback("Invalid password");
-                    }
-
+                    const account = new Account();
+                    account.load(passwordm );
+                },
+                function (callback) {
                     database.init(dbschema, callback);
                 },
                 function (callback) {
@@ -277,7 +273,7 @@ module.exports.delete_user = function () {
 };
 
 
-module.exports.backup = function() {
+module.exports.backup = function(password) {
     console.log("app backup account data");
 
     async.waterfall(
@@ -286,9 +282,6 @@ module.exports.backup = function() {
                 config.init_account_params(callback);
             },
             function (callback) {
-                if (!config.password) {
-                    return callback("Invalid password");
-                }
                 try {
                     database.init(__dirname, callback);
                 }
@@ -297,8 +290,8 @@ module.exports.backup = function() {
                 }
             },
             function (callback) {
-                var account = new Account();
-                account.load(1, function (err) {
+                const account = new Account();
+                account.load(password, function (err) {
                     if (err) {
                         return callback(err);
                     }
@@ -353,11 +346,11 @@ module.exports.whitelist_update = function (pkey, rm) {
                 config.init_account_params(callback);
             },
             function (callback) {
-                if (!config.password) {
-                    return callback("Invalid password");
-                }
-
                 database.init(dbschema, callback);
+            },
+            function (callback) {
+                const account = new Account();
+                account.load(password, callback);
             },
             function (callback) {
                 const db = new WhitelistDB();
@@ -399,18 +392,18 @@ module.exports.whitelist_update = function (pkey, rm) {
     );
 };
 
-module.exports.get_wl = function () {
+module.exports.get_wl = function (password) {
     async.waterfall(
         [
             function (callback) {
                 config.init_account_params(callback);
             },
             function (callback) {
-                if (!config.password) {
-                    return callback("Invalid password");
-                }
-
                 database.init(dbschema, callback);
+            },
+            function (callback) {
+                const account = new Account();
+                account.load(password, callback);
             },
             function (callback) {
                 const db = new WhitelistDB();

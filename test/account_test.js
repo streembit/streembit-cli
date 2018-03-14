@@ -401,7 +401,7 @@ describe("Account module test lib/account", function () {
 
         it("should define the config.account value", function (done) {
 
-            account.init(function () {
+            account.init(config.password, function () {
 
                 assert.exists(config.account);
                 done();
@@ -413,7 +413,7 @@ describe("Account module test lib/account", function () {
 
         it("should execute load()", function (done) {
 
-            account.load(1, function () {
+            account.load(config.password, function () {
                 console.log("load() executed");
                 done();
             })
