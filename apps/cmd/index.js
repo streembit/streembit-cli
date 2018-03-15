@@ -24,8 +24,9 @@ Copyright (C) 2016 The Streembit software development team
 
 const logger = require('streembit-util').logger;
 const config = require('libs/config');
-const BlockchainCmdHandler = require('../blockchain/cmds');
+const BlockchainCmd = require('../blockchain/cmds');
 const AccountCmds = require('libs/account/cmds');
+const UsersCmds = require('libs/users/cmds');
 const prompt = require('prompt');
 
 
@@ -82,12 +83,16 @@ class CmdHandler {
         try {
             switch (inp) {
                 case 'bc':
-                    const blockchainCmd = new BlockchainCmdHandler(this, callback, config.blockchain_config);
+                    const blockchainCmd = new BlockchainCmd(this, callback, config.blockchain_config);
                     blockchainCmd.run();
                     break;
                 case 'ac':
                     const accountCmd = new AccountCmds(this, callback);
                     accountCmd.run();
+                    break;
+                case 'usr':
+                    const usersCmd = new UsersCmds(this, callback);
+                    usersCmd.run();
                     break;
                 default:
                     this.helper();
@@ -106,8 +111,9 @@ class CmdHandler {
     helper() {
         console.log('-------------------');
         console.group('\x1b[34m', 'Streembit Commands:');
-        console.log('bc', '-- Blockchain commands');
-        console.log('ac', '-- User accounts commands');
+        console.log('bc', ' -- Blockchain commands');
+        console.log('ac', ' -- Account management commands');
+        console.log('usr', ' -- Users management commands');
         // etc
         console.groupEnd();
         console.log('-------------------');

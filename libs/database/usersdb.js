@@ -28,11 +28,13 @@ class UsersDb extends database{
         super();
     }
 
-    getall(callback) {
+    getall() {
         return new Promise(
             (resolve, reject) => {
-                var query = "SELECT * FROM users";
-                this.database.all(query, [], (err, rows) => {
+                this.database.all(
+                    "SELECT * FROM users",
+                    [],
+                    function(err, rows) {
                     if (err) {
                         return reject(err.message);
                     }
@@ -42,11 +44,13 @@ class UsersDb extends database{
         );
     }
 
-    get_user(pkhash) {
+    get_user(pk) {
         return new Promise(
             (resolve, reject) => {
-                var query = "SELECT * FROM users WHERE pkhash=?";
-                this.database.get(query, [pkhash], (err, row) => {
+                this.database.get(
+                    "SELECT * FROM users WHERE pkhash = ? OR publickey = ?",
+                    [pk,pk],
+                    function(err, row) {
                     if (err) {
                         return reject(err.message);
                     }
@@ -59,8 +63,10 @@ class UsersDb extends database{
     add_user(pkhash, publickey, username, isadmin, settings) {
         return new Promise(
             (resolve, reject) => {
-                let sql = "INSERT INTO users(pkhash, publickey, username, isadmin, settings) VALUES (?,?,?,?,?)"
-                this.database.run(sql, [pkhash, publickey, username, isadmin, settings], (err) => {
+                this.database.run(
+                    "INSERT INTO users(pkhash, publickey, username, isadmin, settings) VALUES (?,?,?,?,?)",
+                    [pkhash, publickey, username, isadmin, settings],
+                    function(err) {
                     if (err) {
                         return reject(err.message);
                     }
@@ -70,17 +76,18 @@ class UsersDb extends database{
         );
     }
 
-    
-    get_users() {
+    update_user(pk, user) {
         return new Promise(
             (resolve, reject) => {
-                var query = "SELECT * FROM users";
-                this.database.all(query, [], (err, rows) => {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve(rows);
-                });
+                this.database.run(
+                    `UPDATE users SET ${Object.keys(user).map(v => `${v} = ?`).join(', ')} WHERE pkhash = ? OR publickey = ?`,
+                    [ ...Object.values(user), pk, pk ],
+                    function(err) {
+                        if (err) {
+                            return reject(err.message);
+                        }
+                        resolve();
+                    });
             }
         );
     }
@@ -88,7 +95,7 @@ class UsersDb extends database{
     delete_user(userid) {
         return new Promise(
             (resolve, reject) => {
-                let sql = "DELETE FROM users WHERE userid=?"
+                let sql = "DELETE FROM users WHERE userid = ?"
                 this.database.run(sql, [userid], (err) => {
                     if (err) {
                         return reject(err.message);

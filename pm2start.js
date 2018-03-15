@@ -20,11 +20,10 @@ Copyright (C) 2016 The Streembit software development team
 */
 
 
-var async = require("async");
-var pm2 = require('pm2');
-var config = require('./config');
+const pm2 = require('pm2');
+const config = require('./config');
 
-var homedir;
+let homedir;
 
 try {
     if (config.homedir) {
@@ -48,26 +47,24 @@ pm2.connect(function (err) {
         console.error(err);
         process.exit(1);
     }
-    
-    var cwd_value = homedir;
 
-    var pm2config = {
-        name    : "streembit",
+    const pm2config = {
+        name    : 'streembit',
         script  : 'streembit.js',
         args    : [ ...process.argv.slice(2), '--pm2' ],
-        cwd     : cwd_value
+        cwd     : homedir
     };
     
     pm2.start(
-        pm2config, 
+        pm2config,
         function (err, apps) {
             if (err) {
                 return console.log("pm2.start error: %j", err);
             }
             
             console.log("pm2.start complete");
-            process.exit(0);      
+            process.exit(0);
         }
-    );    
+    );
     
 });

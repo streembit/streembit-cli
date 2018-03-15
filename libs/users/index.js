@@ -45,7 +45,7 @@ class Users {
     }
 
     set users(value) {
-        instance.m_users = value;
+        instance.m_users[value.pkhash] = value;
     }
 
     list() {
@@ -75,13 +75,19 @@ class Users {
         return db.delete_user(userid);
     }
 
+    add_user(user) {
+        return new Promise((resolve, reject) => {
+
+        });
+    }
+
     populate() {
         return new Promise((resolve, reject) => {
             var db = new Database();
             db.getall().then(
                 (rows) => {
                     rows.forEach(function (item) {
-                        instance.users.set(item.pkhash, item);
+                        instance.users.set(item);
                     });
                     resolve();
                 })
@@ -102,7 +108,7 @@ class Users {
 
             var db = new Database();
 
-            const dbusers = await db.get_users();
+            const dbusers = await db.getall();
 
             for (let i = 0; i < cnfusers.length; i++) {
                 try {
@@ -147,16 +153,16 @@ class Users {
         }
     }
 
-    async init(callback) { 
+    async init(callback) {
 
-        try {
-            logger.debug("creating users in the database");
-            var cnfusers = config.users;           
-            await this.syncusers(cnfusers);
-        }
-        catch (err) {
-            return callback("users init syncusers error: " + err.message);
-        }
+        // try {
+        //     logger.debug("creating users in the database");
+        //     var cnfusers = config.users;
+        //     await this.syncusers(cnfusers);
+        // }
+        // catch (err) {
+        //     return callback("users init syncusers error: " + err.message);
+        // }
 
         try {
             await this.populate();                
@@ -169,11 +175,36 @@ class Users {
 
         //
     }
+
+    validateUsername(username) {
+        return /^[a-z0-9_-]{0,40}$/i.test(username);
+    }
+
+    validatePk(pk) {
+        if (!pk || pk.length) {
+            return true;
+        }
+        return pk && /^[a-f0-9]{32,64}$/i.test(pk);
+    }
+
+    validate10(val) {
+        return /^[0-1]{0,1}$/.test(val);
+    }
+
+    validateJSON(json) {
+        if (!json.length) {
+            return true;
+        }
+
+        try {
+            JSON.parse(json);
+        } catch (e) {
+            return false;
+        }
+
+        return true;
+    }
 }
 
 
 module.exports = Users;
-
-
-
-

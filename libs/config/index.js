@@ -257,8 +257,6 @@ var streembit_config = (function (cnfobj) {
             }
             cnfobj.database_name = config.database_name;
 
-            cnfobj.users = config.users;
-
             cnfobj.limits = {};
 
             // time limits set for kad tools
@@ -333,7 +331,6 @@ var streembit_config = (function (cnfobj) {
     cnfobj.init_account_params = function (callback) {
         try {
 
-            cnfobj.users = config.users;
             var iot_confarr = config.modules.filter(function (item) {
                 return item.name == "iot";
             });
