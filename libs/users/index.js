@@ -45,11 +45,11 @@ class Users {
     }
 
     set users(value) {
-        instance.m_users[value.pkhash] = value;
+        instance.m_users.set(value.pkhash, value);
     }
 
     list() {
-        var list = [];
+        let list = [];
         this.users.forEach(
             (item, key) => {
                 list.push(item);
@@ -70,6 +70,10 @@ class Users {
         return user;
     }
 
+    get_user_bypkhash(pkhash) {
+        return this.users.get(pkhash);
+    }
+
     delete_user(userid) {
         var db = new Database();
         return db.delete_user(userid);
@@ -85,9 +89,9 @@ class Users {
         return new Promise((resolve, reject) => {
             var db = new Database();
             db.getall().then(
-                (rows) => {
+                rows => {
                     rows.forEach(function (item) {
-                        instance.users.set(item);
+                        instance.users = item;
                     });
                     resolve();
                 })
@@ -155,25 +159,14 @@ class Users {
 
     async init(callback) {
 
-        // try {
-        //     logger.debug("creating users in the database");
-        //     var cnfusers = config.users;
-        //     await this.syncusers(cnfusers);
-        // }
-        // catch (err) {
-        //     return callback("users init syncusers error: " + err.message);
-        // }
-
         try {
-            await this.populate();                
+            await this.populate();
         }
         catch (err) {
             return callback("users populate error: " + err.message);
         }            
 
-        callback();   
-
-        //
+        callback();
     }
 
     validateUsername(username) {
@@ -181,7 +174,7 @@ class Users {
     }
 
     validatePk(pk) {
-        if (!pk || pk.length) {
+        if (!pk || !pk.length) {
             return true;
         }
         return pk && /^[a-f0-9]{32,64}$/i.test(pk);

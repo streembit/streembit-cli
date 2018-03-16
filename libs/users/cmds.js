@@ -148,9 +148,7 @@ class UsersCmds {
         }
     }
 
-    async addUser() {
-        const users = await this.usersDb.getall();
-
+    addUser() {
         return new Promise((resolve, reject) => {
             console.log('\x1b[34m%s\x1b[0m', 'Hint:','Username, Admin and Settings are optional. Hit [enter] to bypass');
             prompt.start();
@@ -166,45 +164,54 @@ class UsersCmds {
 
                 let { username, pk, isadmin, settings } = result;
 
-                if (!pk || !pk.length) {
-                    return reject(new Error('Private key is mandatory'));
-                }
-
-                if (users.some(u =>
-                        {
-                            if (u.publickey === pk) {
-                                return true;
-                            }
-                        }
-                    )
-                ) {
-                    return reject(new Error('This private key is already in the database'));
-                }
-
-
-                if (!username || !username.length) {
-                    username = '';
-                }
-                if (!isadmin || !isadmin.length) {
-                    isadmin = 0;
-                }
-                if (!settings || !settings.length) {
-                    settings = '{}';
-                }
-
-                const buffer = new Buffer(pk, 'hex');
-                const rmd160buffer = createHash('rmd160').update(buffer).digest();
-                const pkhash = bs58check.encode(rmd160buffer);
-
                 try {
-                    await this.usersDb.add_user(pkhash, pk, username, isadmin, settings);
+                    await this.processAddUser(username, pk, isadmin, settings);
+                    resolve();
                 } catch (err) {
-                    reject(new Error(err));
+                    reject(err);
                 }
-
-                resolve();
             });
         });
+    }
+
+    async processAddUser(username, pk, isadmin, settings) {
+        const users = await this.usersDb.getall();
+
+        if (!pk || !pk.length) {
+            throw new Error('Private key is mandatory');
+        }
+
+        if (users.some(u =>
+                {
+                    if (u.publickey === pk) {
+                        return true;
+                    }
+                }
+            )
+        ) {
+            throw new Error('This private key is already in the database');
+        }
+
+
+        if (!username || !username.length) {
+            username = '';
+        }
+        if (!isadmin || !isadmin.length) {
+            isadmin = 0;
+        }
+        if (!settings || !settings.length) {
+            settings = '{}';
+        }
+
+        const buffer = new Buffer(pk, 'hex');
+        const rmd160buffer = createHash('rmd160').update(buffer).digest();
+        const pkhash = bs58check.encode(rmd160buffer);
+
+        try {
+            await this.usersDb.add_user(pkhash, pk, username, isadmin, settings);
+        } catch (err) {
+            throw new Error(err);
+        }
     }
 
     updateUser(update_pk) {

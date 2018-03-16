@@ -214,6 +214,7 @@ module.exports.list_users = function (password) {
 
             var users = new Users();
             var list = users.list();
+            console.log("\nUsers:");
             console.log(util.inspect(list));
         }
     ); 

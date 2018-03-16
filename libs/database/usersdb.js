@@ -28,6 +28,10 @@ class UsersDb extends database{
         super();
     }
 
+    setDB(db) {
+        this.database = db;
+    }
+
     getall() {
         return new Promise(
             (resolve, reject) => {

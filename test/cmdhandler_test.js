@@ -30,6 +30,8 @@ const peermsg = require("libs/message");
 const BlockchainCmds = require('apps/blockchain/cmds');
 const AccountCmds = require('libs/account/cmds');
 const Account = require('libs/account');
+const UsersCmds = require('libs/users/cmds');
+const Users = require('libs/users');
 
 const dbschema = require("dbschematest");
 const database = require("streembit-db").instance;
@@ -41,7 +43,7 @@ const secrand = require('secure-random');
 
 
 describe("CMD Handlers", function () {
-    let stdout, out, cmd, bc, ac;
+    let stdout, out, cmd, bc, ac, usr;
 
     before(function(done) {
         config.init(config_json.transport.port, config_json.transport.host, () => {
@@ -571,7 +573,7 @@ describe("CMD Handlers", function () {
         });
     });
 
-    describe("Account commands handler init", function() {
+    describe("Account commands handler", function() {
         let run_account_tests = true, pk = null, account = new Account();
         const sq3 = new sqlite3.Database('db/sqlite/streembittest/streembittest.db', sqlite3.OPEN_READWRITE);
 
@@ -615,14 +617,14 @@ describe("CMD Handlers", function () {
                         [],
                         function (err, row) {
                             ac.account = row;
+                            ac.accountDb.setDB(sq3);
+                            done();
                         }
                     );
-                ac.accountDb.setDB(sq3);
-                done();
             });
         });
 
-        it("should show a command prompt", function() {
+        it("should show the account commands prompt", function() {
             stdout = capcon.interceptStdout(function capture() {
                 ac.command();
             });
@@ -677,7 +679,78 @@ describe("CMD Handlers", function () {
         }
     });
 
-    describe("Blockchain commands handler init", function () {
+    describe("User commands handler", function () {
+        const username = 'test',
+            pk = '5810cc4e420e391775396d912b7356bee60658ea38ce89ceec4d223dd2fd3803',
+            users = new Users(),
+            sq3 = new sqlite3.Database('db/sqlite/streembittest/streembittest.db', sqlite3.OPEN_READWRITE);
+
+        let userlist;
+
+        before(function() {
+            database.init(dbschema, async function () {
+                usr = new UsersCmds(cmd, err => { out = err });
+                await sq3.run("DELETE FROM users", []);
+                usr.usersDb.setDB(sq3);
+            });
+        });
+
+        it("should show the users prompt", function () {
+            stdout = capcon.interceptStdout(function capture() {
+                usr.run();
+            });
+
+            assert.include(stdout, 'Enter');
+        });
+
+        it("should have a schema for add/update prompt", function () {
+            assert.isObject(usr.add_update_schema);
+            assert.isTrue(usr.add_update_schema.hasOwnProperty('properties'));
+            try {
+                assert.hasAllKeys(usr.properties, ['username', 'pk', 'isadmin', 'settings']);
+            } catch (e) {}
+        });
+
+        it("should validate username", function() {
+            assert.isTrue(users.validateUsername(username));
+            assert.isFalse(users.validateUsername(username+ 'i^v@[i)'));
+        });
+
+        it("should validate 1/0 input (used for isadmin)", function () {
+            assert.isTrue(users.validate10(1));
+            assert.isTrue(users.validate10(0));
+            assert.isFalse(users.validate10(2));
+            assert.isFalse(users.validate10('naN'));
+        });
+
+        it("should validate public key", function () {
+            assert.isTrue(users.validatePk(pk));
+
+            const pk_inv1 = pk.replace(/[e123]/g, 'X');
+            const pk_inv2 = pk.split('').slice(0,30).join('');
+            assert.isFalse(users.validatePk(pk_inv1));
+            assert.isFalse(users.validatePk(pk_inv2));
+        });
+
+        it("should validate JSON string", function () {
+            assert.isTrue(users.validateJSON(''));
+            assert.isTrue(users.validateJSON('[{"fst":1,"snd":2,"thd":3},{"thd":3,"snd":2,"fst":1}]'));
+            assert.isFalse(users.validateJSON(username));
+            assert.isFalse(users.validateJSON([{fst:1,snd:2,thd:3}, {thd:3, snd:2, fst:1}]));
+        });
+
+        it("should add a user to database", async function () {
+            await usr.processAddUser(username, pk, '', '');
+            userlist = await usr.usersDb.getall();
+            assert.isTrue(userlist.some(u => {
+                if (u.publickey === pk) {
+                    return true;
+                }
+            }));
+        });
+    });
+
+    describe("Blockchain commands handler", function () {
 
         before(function() {
             bc = new BlockchainCmds(cmd, err => { out = err }, { name: 'blockchain', run: true });
