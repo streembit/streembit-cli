@@ -30,17 +30,6 @@ const program = require('commander');
 const app = require('app');
 const utils = require("libs/utils");
 
-
-function validatePk(pk) {
-    if (!pk || !pk.length) {
-        return true;
-    }
-    return pk && /^[a-f0-9]{32,64}$/i.test(pk);
-}
-
-console.log(validatePk('bee60658ea38ce89ceec4d223dd2fd3803'));
-process.exit(0);
-
 // show the command prompt when the user type --help
 // and get the configuration values from the command prompt
 program
