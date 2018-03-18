@@ -27,8 +27,6 @@ A typical configuration file is the following:
  
  ```json
  {
-    "account": "my_streembit_account",
-    "password": "abcdefghjk123456789",
     "database_name": "streembitsql",
 	"cmdinput": false,
     "seeds": [],
@@ -180,7 +178,7 @@ The "account" field can be anything, such as "seed1".
 The "seeds" field of the config is an empty array. 
 Run the application, with
 ```bash
-$ node streembit
+$ node streembit --pwd PASSWORD 
 ```
 The console and the log files should display a warning log "there are no seeds defined, the node is not connected to any seeds" which indicates there are no seeds defined.
 
