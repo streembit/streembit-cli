@@ -359,7 +359,10 @@ class Account {
                         this.create_account('streembit-cli', password, callback);
                     }
                     else {
+                        logger.debug("pwd : %s", password);
                         const password_hash = createHash('sha256').update(password).digest('hex');
+                        logger.debug("param pwd hash: %s", password_hash);
+                        logger.debug("dbase pwd hash: %s", data.password);
                         if (password_hash !== data.password) {
                             return callback("Account initialization error: Invalid password");
                         }
@@ -390,6 +393,8 @@ class Account {
                     }
 
                     const password_hash = createHash('sha256').update(password).digest('hex');
+                    logger.debug("param pwd hash: %s", password_hash);
+                    logger.debug("dbase pwd hash: %s", data.password);
                     if (password_hash !== data.password) {
                         return callback("Error: Invalid password");
                     }
