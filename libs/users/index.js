@@ -177,11 +177,12 @@ class Users {
         if (!pk || !pk.length) {
             return true;
         }
-        return pk && /^[a-f0-9]{32,64}$/i.test(pk);
+        return pk && /^[a-f0-9]{128,256}$/i.test(pk);
     }
 
     validate10(val) {
-        return /^[0-1]{0,1}$/.test(val);
+        var valid = /^[0-1]{0,1}$/.test(val);
+        return valid;
     }
 
     validateJSON(json) {

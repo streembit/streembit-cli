@@ -50,7 +50,7 @@ class UsersCmds {
                     description: 'Public Key',
                     type: 'string',
                     conform: value => this.users.validatePk(value),
-                    message: 'Invalid public key. We expect a hex string (32,64)',
+                    message: 'Invalid public key. We expect a hex string (128,256)',
                 },
                 isadmin: {
                     description: 'Admin [1,0] (default 0)',
@@ -150,7 +150,7 @@ class UsersCmds {
 
     addUser() {
         return new Promise((resolve, reject) => {
-            console.log('\x1b[34m%s\x1b[0m', 'Hint:','Username, Admin and Settings are optional. Hit [enter] to bypass');
+            console.log('\x1b[34m%s\x1b[0m', 'Hint:','Username, Public Key, Admin and Settings are optional. Hit [enter] to bypass');
             prompt.start();
 
             prompt.get(this.add_update_schema, async (err, result) => {
@@ -189,16 +189,16 @@ class UsersCmds {
                 }
             )
         ) {
-            throw new Error('This private key is already in the database');
+            throw new Error('This public key is already in the database');
         }
 
 
         if (!username || !username.length) {
             username = '';
         }
-        if (!isadmin || !isadmin.length) {
-            isadmin = 0;
-        }
+
+        var admin = isadmin == 1 ? isadmin : 0;
+
         if (!settings || !settings.length) {
             settings = '{}';
         }
@@ -208,7 +208,7 @@ class UsersCmds {
         const pkhash = bs58check.encode(rmd160buffer);
 
         try {
-            await this.usersDb.add_user(pkhash, pk, username, isadmin, settings);
+            await this.usersDb.add_user(pkhash, pk, username, admin, settings);
         } catch (err) {
             throw new Error(err);
         }

@@ -273,8 +273,12 @@ var streembit_config = (function (cnfobj) {
             });
             var seedconf = seedcfarr && seedcfarr.length ? seedcfarr[0] : 0;
             cnfobj.seed_config = seedconf;
-            //throw an exception if the seed config entry is missing
-            assert(cnfobj.seed_config && cnfobj.seed_config.hasOwnProperty("run"), "Invalid seed configuration section");
+            if (!cnfobj.seed_config) {
+                cnfobj.seed_config = {run: false}
+            }
+            if (!cnfobj.seed_config.hasOwnProperty("run")) {
+                cnfobj.seed_config.run = false;
+            }
             var isseed = cnfobj.seed_config.run;
 
             var iot_confarr = config.modules.filter(function (item) {
