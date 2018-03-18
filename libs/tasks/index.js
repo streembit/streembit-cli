@@ -36,9 +36,9 @@ class TaskManager {
     constructor() {
     }
 
-    inform_contacts(payload) {
+    inform_users(payload) {
         try {
-            logger.debug("start inform_contacts");
+            logger.debug("start inform_users");
 
             var account = new Account();
             var pubkey_hash = account.public_key_hash;
@@ -76,12 +76,17 @@ class TaskManager {
             var users = new Users();
             var list = users.list();
 
+            if (!list || list.length == 0) {
+                logger.info("No user is configured. To enable users connect to this gateway you must add users to the application");
+                return;
+            }
+
             async.eachSeries(list, send_to_contact, function () {
-                logger.debug("inform_contacts ended. error count: " + error_count );
+                logger.debug("inform_users ended. error count: " + error_count );
             });
         }
         catch (err) {
-            logger.error("inform_contacts error: " + err.message);
+            logger.error("inform_users error: " + err.message);
         }
     }
 
@@ -118,7 +123,7 @@ class TaskManager {
                             this.publish_account();
                             break;
                         case constants.TASK_INFORM_CONTACTS:
-                            this.inform_contacts(payload);
+                            this.inform_users(payload);
                             break;
                         default:
                             break;

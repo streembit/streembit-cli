@@ -282,8 +282,13 @@ var streembit_config = (function (cnfobj) {
             });
             var iotconf = iot_confarr && iot_confarr.length ? iot_confarr[0] : 0;
             cnfobj.iot_config = iotconf;
-            //throw an exception if the IoT run config entry is missing
-            assert(cnfobj.iot_config && cnfobj.iot_config.hasOwnProperty("run"), "Invalid IoT configuration section");
+            if (!cnfobj.iot_config) {
+                cnfobj.iot_config = {}
+            }
+            if (!cnfobj.iot_config.hasOwnProperty("run")) {
+                cnfobj.iot_config.run = false;
+            }
+
             if (isseed && cnfobj.iot_config.run) {
                 throw new Error("Invalid configuration. IoT handler cannot run when the seed is configured to run");
             }
@@ -293,8 +298,12 @@ var streembit_config = (function (cnfobj) {
             });
             var clientconf = clientcfarr && clientcfarr.length ? clientcfarr[0] : 0;
             cnfobj.client_config = clientconf;
-            //throw an exception if the Client run config entry is missing
-            assert(cnfobj.client_config && cnfobj.client_config.hasOwnProperty("run"), "Invalid client configuration section");
+            if (!cnfobj.client_config) {
+                cnfobj.client_config = {}
+            }
+            if (!cnfobj.client_config.hasOwnProperty("run")) {
+                cnfobj.client_config.run = false;
+            }
             if (isseed && cnfobj.client_config.run) {
                 throw new Error("Invalid configuration. Client handler cannot run when the seed is configured to run");
             }
@@ -304,8 +313,12 @@ var streembit_config = (function (cnfobj) {
             });
             var bcconf = blockchain_confarr && blockchain_confarr.length ? blockchain_confarr[0] : 0;
             cnfobj.blockchain_config = bcconf;
-            //throw an exception if the BC run config entry is missing
-            assert(cnfobj.blockchain_config && cnfobj.blockchain_config.hasOwnProperty("run"), "Invalid blockchain configuration section");
+            if (!cnfobj.blockchain_config) {
+                cnfobj.blockchain_config = {}
+            }
+            if (!cnfobj.blockchain_config.hasOwnProperty("run")) {
+                cnfobj.blockchain_config.run = false;
+            }
 
             // set the wsmode, it could be either none, srvc (service mode) or iot (IoT mode)
             var wsm = constants.WSMODE_NONE;
