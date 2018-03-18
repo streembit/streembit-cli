@@ -345,7 +345,7 @@ class Account {
     init(password, callback) {
        try {
            if (!this.validatePassword(password)) {
-               return callback("Application level error: Invalid password");
+               return callback("Password syntax validation error: Invalid password, the password must be at least 6 characters long, must include both lower case and upper case characters, a number and special character.");
            }
 
             const db = new Database();
@@ -359,10 +359,10 @@ class Account {
                         this.create_account('streembit-cli', password, callback);
                     }
                     else {
-                        logger.debug("pwd : %s", password);
+                        //logger.debug("pwd : %s", password);
                         const password_hash = createHash('sha256').update(password).digest('hex');
-                        logger.debug("param pwd hash: %s", password_hash);
-                        logger.debug("dbase pwd hash: %s", data.password);
+                        //logger.debug("param pwd hash: %s", password_hash);
+                        //logger.debug("dbase pwd hash: %s", data.password);
                         if (password_hash !== data.password) {
                             return callback("Account initialization error: Invalid password");
                         }
@@ -393,8 +393,6 @@ class Account {
                     }
 
                     const password_hash = createHash('sha256').update(password).digest('hex');
-                    logger.debug("param pwd hash: %s", password_hash);
-                    logger.debug("dbase pwd hash: %s", data.password);
                     if (password_hash !== data.password) {
                         return callback("Error: Invalid password");
                     }
