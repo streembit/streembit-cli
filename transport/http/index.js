@@ -219,6 +219,8 @@ class HTTPTransport {
 
             var req;
             if (config.transport.ssl) {
+                options.strictSSL = false;
+                options.rejectUnauthorized = false;
                 logger.debug("HTTPS.request to " + target.host + ":" + target.port );
                 req = https.request(options, handleResponse);
             }
