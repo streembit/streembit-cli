@@ -161,14 +161,13 @@ module.exports.verify_wsjwt = function (msg, callback) {
         throw new Error("authentication failed, invalid iss field in the payload");
     }
 
-    // TODO check if this public key is in the user list;
-    var user = get_user(payload.iss);
+    var bs58buffer = bs58check.decode(payload.iss);
+    var publickey = bs58buffer.toString("hex");
+    var user = get_user(publickey);
     if (!user) {
         throw new Error("authentication failed, user definition doesn't exist ");
     }
 
-    var bs58buffer = bs58check.decode(payload.iss);
-    var publickey = bs58buffer.toString("hex");
     var decoded = peermsg.decode(msg, publickey);
     if (!decoded || !decoded.data) {
         throw new Error("authentication failed, invalid encoded payload");

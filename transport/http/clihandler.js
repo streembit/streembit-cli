@@ -26,7 +26,7 @@ const logger = require("streembit-util").logger;
 const events = require("streembit-util").events;
 const clientsrvc = require("libs/clientsrvc");
 const errcodes = require('streembit-errcodes');
-
+const peersrvc = require('libs/peernet/msghandlers/peer');
 
 // 
 // Service WS handler
@@ -140,6 +140,31 @@ class ClientRequestHandler  {
         }
     }
 
+    dhtput(req, res, message) {
+        try {
+            peersrvc.put(message, (err) => {
+                try {
+                    if (err) {
+                        return this.senderror(res, errcodes.WS_DHTPUT, err);
+                    }
+
+                    this.sendcomplete(res, { result: 0 });
+                }
+                catch (xerr) {
+                    try {
+                        this.senderror(res, errcodes.WS_DHTPUT, xerr.message);
+                        logger.error("dhtput peersrvc put error: " + xerr.message);
+                    }
+                    catch (e) { }
+                }
+            });
+        }
+        catch (e) {
+            this.senderror(res, errcodes.HTTP_HANDLEREQUEST, err);
+            logger.error("dhtput() error: " + err.message);
+        }
+    }
+
     getwsinfo(req, res) {
         try {
             var result = clientsrvc.getwsinfo();
@@ -177,6 +202,7 @@ class ClientRequestHandler  {
                 case "ping":
                 case "getwsinfo":
                 case "getwspeers":
+                case "dhtput":
                     // a funciton with the same name as the type must exists
                     this[type](req, res, message);
                     break;

@@ -47,7 +47,7 @@ class PeerClient{
         var seeds = utils.shuffle(config.seeds);
 
         var data = {
-            type: "PUT",
+            type: "dhtput",
             key: key,
             value: value
         };
@@ -57,7 +57,6 @@ class PeerClient{
         var errormsg = null;
 
         function write(seed, cb) {
-            logger.info(`RMTP sending message for ${key} to seed ${seed.host}:${seed.port}`);
             HTTPTransport.write(message, seed, function (err, msg) {
                 var complete = false;
                 if (err) {

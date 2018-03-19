@@ -116,39 +116,36 @@ class PeerNet {
         }
     }
 
-    inform_contact(crypto_key, account, user_pkhash, user_public_key, contact_bs58public_key, contact_pkey_hash, connsymmkey, transport, address, port, type, cbfunc) {
+    inform_contact(crypto_key, account, user_pkhash, user_public_key, contact_public_key, contact_pkey_hash, connsymmkey, transport, address, port, type, cbfunc) {
         try {
             if (!cbfunc || typeof cbfunc != "function") {
-                throw new Error("publish_contact error: invalid callback parameter")
+                throw new Error("inform_contact error: invalid callback parameter")
             }
 
             if (!transport ) {
-                return cbfunc("publish_contact error: invalid transport parameter");
+                return cbfunc("inform_contact error: invalid transport parameter");
             }
 
             if (!user_pkhash || !user_public_key || !address || !type ) {
-                return cbfunc("publish_contact error: invalid user parameters");
+                return cbfunc("inform_contact error: invalid user parameters");
             }
 
-            if (!contact_bs58public_key  ) {
-                return cbfunc("publish_contact error: invalid contact parameters");
+            if (!contact_public_key  ) {
+                return cbfunc("inform_contact error: invalid contact public key parameter");
             }
 
             if ( !connsymmkey) {
-                return cbfunc("publish_contact error: invalid connsymmkey parameters");
+                return cbfunc("inform_contact error: invalid connsymmkey parameters");
             }
 
-            // decode the contact's rmd160 key
-            var buffer = bs58check.decode(contact_bs58public_key);
-            var contact_public_key = buffer.toString("hex");
-
-            var hexbuffer = new Buffer(contact_public_key, 'hex');
-            var rmd160buffer = createHash('rmd160').update(hexbuffer).digest();
+            var pkey_hexbuffer = new Buffer(contact_public_key, 'hex');
+            var rmd160buffer = createHash('rmd160').update(pkey_hexbuffer).digest();
             var contact_pkhash = bs58check.encode(rmd160buffer);
-            var check_pkhash = rmd160buffer.toString("hex");
-            if (contact_pkey_hash != check_pkhash) {
-                return cbfunc("publish_contact error: invalid contact pkey hash parameter");
+            if (contact_pkey_hash != contact_pkhash) {
+                return cbfunc("inform_contact error: contact pkeyhash mismatch");
             }
+
+            var contact_bs58public_key = bs58check.encode(pkey_hexbuffer);
 
             //  publish the public keys so this client can communicate with the devices
             //  via direct peer to peer messaging as well
