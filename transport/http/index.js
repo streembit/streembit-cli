@@ -64,6 +64,9 @@ class HTTPTransport {
                 key: fs.readFileSync(config.transport.key),
                 cert: fs.readFileSync(config.transport.cert)
             };
+            if (config.transport.ca) {
+                options.ca = fs.readFileSync(config.transport.ca);
+            }
             return https.createServer(options, handler);
         }
         else {

@@ -220,6 +220,7 @@ var streembit_config = (function (cnfobj) {
             cnfobj.transport.ssl = config.transport.ssl;
             cnfobj.transport.cert = config.transport.cert;
             cnfobj.transport.key = config.transport.key;
+            cnfobj.transport.ca = config.transport.ca;
 
             var ipport = argv_port ? argv_port : 0;
             if (!ipport) {
