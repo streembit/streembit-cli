@@ -183,9 +183,7 @@ OR
 $ node streembit --pwd=PASSWORD 
 ```
 In a case you start a pm2 instance of the app you should also provide a valid password
-```bash
-$ node pm2start --pwd=PASSWORD
-```
+
 The console and the log files should display a warning log "there are no seeds defined, the node is not connected to any seeds" which indicates there are no seeds defined.
 
 2) In step 2, clone streembit-cli to an other directory (or copy the existing one). This will be the second seed of the Kademlia network. Set the port to 32322. Since this is a TCP listening port it must be different than the port of seed 1 node. 
