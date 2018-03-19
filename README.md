@@ -209,19 +209,23 @@ The FIND_NODE messages indicates that the Kademlia network is formed.
 
 Once the Kademlia network is operational the Streembit UI application can connect to the network.
 
-##Command line interface
+## Command line interface
 
-Set the "cmdinput" field to true in the config.json to intiate the command line handler which accept commands from the terminal. Once the application is initialized there is a command prompt: "Enter command type:"
+Set the "cmdinput" field to true in the config.json configuration file to intiate the command line handler. The command line handler accepts commands from the terminal. In "cmdinput" mode once the application is initialized there is a command prompt displayed: "Enter command type:"
 
 **Add user**
 
-  Enter the "usr" command type at the command prompt.
+Enter the "usr" command type at the command prompt.
 
 ```bash
 $ usr
 ```
 
-The "Enter users command:" prompt will appear. Enter add to the command prompt.
+The "Enter users command:" prompt will appear. Enter "add" to the command prompt.
+
+```bash
+$ add
+```
 
 Answer the prompt by typing the user name, public key, whether or not the user is an admin (1 or 0 value). The public key is the long PKI public key format that you can get from the Public key column of the "Account/network info" view, accessbile from the "Tools" menu at the Streembit UI application.
 
