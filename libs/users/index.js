@@ -166,6 +166,16 @@ class Users {
             return callback("users populate error: " + err.message);
         }            
 
+        var namesarr = [];
+        this.users.forEach(
+            (value, key) => {
+                namesarr.push(value.username);
+            }
+        );
+
+        var list = namesarr.length ? namesarr.join() : "-";
+        logger.info("Users: " + list);
+
         callback();
     }
 
