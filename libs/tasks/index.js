@@ -43,9 +43,11 @@ class TaskManager {
             var account = new Account();
             var pubkey_hash = account.public_key_hash;
             var public_key = account.bs58pk;
+            // TODO resolve the address 
             var address = config.transport.host;
-            var port = config.transport.port;
-            var transport = constants.DEFAULT_TRANSPORT;
+            // send the WS port
+            var port = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;;
+            var transport = constants.DEFAULT_WSSTRANSPORT;
             var type = config.usertype;
             var pubkeyhash = account.public_key_hash;
             var symcryptkey = account.connsymmkey;
@@ -58,7 +60,9 @@ class TaskManager {
 
             var send_to_contact = function(contact, next) {
                 try {
-                    peernet.inform_contact(crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash, symcryptkey, transport, address, port, type, function (err) {
+                    peernet.inform_contact(
+                        crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash,
+                        symcryptkey, transport, address, port, type, function (err) {
                         if (err) {
                             var msg = "send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err);
                             logger.error(msg);                            

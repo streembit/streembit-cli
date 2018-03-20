@@ -24,6 +24,7 @@ Copyright (C) 2016 The Streembit software development team
 
 var constants = {
     DEFAULT_TRANSPORT: "http",
+    DEFAULT_WSSTRANSPORT: "wss",
     DEFAULT_STREEMBIT_PORT: 32319,
     DEFAULT_WS_PORT: 32320,
     DEFAULT_WS_MAXCONN: 10000,
