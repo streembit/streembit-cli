@@ -82,13 +82,13 @@ HTTPTransport.prototype._open = function (done) {
     this.requesthandler = function (payload, req, res) {
         try {
 
-            function create_error_buffer(err) {
+            const create_error_buffer =function create_error_buffer(err) {
                 var errmsg = JSON.stringify({ error: err.message ? err.message : err });
                 var buffer = new Buffer(errmsg);
                 return buffer;
             }
 
-            function complete(err, data) {
+            const complete = function complete(err, data) {
                 if (err) {
                     res.statusCode = 500;
                     var buffer = create_error_buffer(err);

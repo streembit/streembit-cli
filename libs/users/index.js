@@ -187,7 +187,7 @@ class Users {
         if (!pk || !pk.length) {
             return true;
         }
-        return pk && /^[a-f0-9]{128,256}$/i.test(pk);
+        return pk && /^[a-f0-9]{64,256}$/i.test(pk);
     }
 
     validate10(val) {
