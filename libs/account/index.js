@@ -407,7 +407,7 @@ class Account {
     }
 
     validatePassword(pwd) {
-        if (!(pwd && /^[a-z0-9._\$\^%\*\+#@\-]{6,20}$/i.test(pwd)) ||
+        if (!(pwd && /^[a-z0-9._\$\^%\*\+#@\-]{6,40}$/i.test(pwd)) ||
             pwd.replace(/[^a-z]/gi, '').length < 2 ||
             pwd.replace(/[^0-9]/g, '').length < 1
         ) {
