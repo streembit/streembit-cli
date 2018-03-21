@@ -160,7 +160,6 @@ class WsDb extends database {
             return Promise.resolve();
         }
         catch (err) {
-            console.log('ERROR:', err);
             return Promise.reject(new Error(typeof err === 'string' ? err : err.message));
         }
     }

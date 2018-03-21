@@ -32,6 +32,7 @@ const ZigbeeDevice = require('apps/iot/device/zigbee/device');
 const TrackingEvent = require('apps/iot/device/tracking_event');
 const iotdefinitions = require("apps/iot/definitions");
 const async = require('async');
+const WebSocket = require("transport/ws");
 
 class IoTHandler {
     constructor() {
@@ -631,9 +632,11 @@ class IoTHandler {
         try {
             // start the websocket server
             let conf = config.iot_config;
-            let port = conf.wsport ? conf.wsport : 32318;
-            let wsserver = new WebSocket(port);
+            let port = conf.wsport || 32326;
+            let maxconn = conf.wsmaxconn || 10000;
+            let wsserver = new WebSocket(port, maxconn);
             wsserver.init();
+            console.log('DWSINIT', callback.toString())
             callback();
         }
         catch (err) {
@@ -704,7 +707,7 @@ class IoTHandler {
 class IoTRunner {
     constructor() { }
 
-    static run(callback) {       
+    static run(callback) {
 
         try {
             let conf = config.iot_config;
@@ -721,10 +724,10 @@ class IoTRunner {
                     function (cbfn) {
                         iot.initdevices(cbfn);                        
                     },
-                    function (cbfn) {                        
-                        iot.initwshandler(cbfn);
-                    },
-                    function (cbfn) {                        
+                    // function (cbfn) {
+                    //     iot.initwshandler(cbfn);
+                    // },
+                    function (cbfn) {
                         iot.initapp(cbfn);
                     }
                 ],

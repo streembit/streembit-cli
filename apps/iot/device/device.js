@@ -287,7 +287,6 @@ class Device {
                 return callback("The feature handler is not available for the device, feature: " + iotfeature)
             }
         }
-
         switch (payload.cmd) {
             case iotdefinitions.IOTCMD_DEVICE_DETAILS:
                 this.send_device_details(callback);

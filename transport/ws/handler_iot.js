@@ -158,7 +158,6 @@ class IoTWsHandler extends Wshandler {
             // it is not an auth message so the HMAC must match
             // validate whether or not the user sent a valid token                
             this.validate_user(message);
-
             events.iotmsg(
                 message,
                 (err, data) => {
