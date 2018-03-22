@@ -82,6 +82,7 @@ var definitions = {
     IOT_ENABLE_JOIN_RESPONSE: 0x09,
     IOT_DELETE_DEVICE_REQUEST: 0x0a,
     IOT_NEW_DEVICE_JOINED: 0x0b,
+    IOT_REQUEST_USER_LIST: 0x0e,
 
     PROPERTY_HWVERSION: "hwversion",
     PROPERTY_MANUFACTURERNAME: "manufacturername",

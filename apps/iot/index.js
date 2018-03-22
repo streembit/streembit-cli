@@ -32,7 +32,7 @@ const ZigbeeDevice = require('apps/iot/device/zigbee/device');
 const TrackingEvent = require('apps/iot/device/tracking_event');
 const iotdefinitions = require("apps/iot/definitions");
 const async = require('async');
-const WebSocket = require("transport/ws");
+const UsersDb = require("libs/database/usersdb");
 
 class IoTHandler {
     constructor() {
@@ -556,25 +556,25 @@ class IoTHandler {
                     switch (payload.event) {
                         case iotdefinitions.IOT_REQUEST_DEVICES_LIST:
                             this.device_list_response(payload.id, callback);
-                            break
+                            break;
                         case iotdefinitions.IOT_DEVICES_LIST_CONFIGURE:
                             this.device_list_configure(payload.id, payload.list, callback);
-                            break
+                            break;
                         case iotdefinitions.IOT_ALLDEVICES_LIST_REQUEST:
                             this.send_all_devices(payload.id, callback);
-                            break
+                            break;
                         case iotdefinitions.IOT_SET_DEVICE_PERMISSION_REQUEST:
                             this.set_device_permission(payload, callback);
-                            break
+                            break;
                         case iotdefinitions.IOT_ENABLE_JOIN_REQUEST:
                             this.enable_join(payload, callback);
-                            break
+                            break;
                         case iotdefinitions.IOT_DELETE_DEVICE_REQUEST:
                             this.delete_device(payload, callback);
-                            break
+                            break;
                         case iotdefinitions.EVENT_GATEWAY_DATA_REQUEST:
                             this.send_gateway_details(payload, callback);
-                            break
+                            break;
                         default:
                             var device = this.getdevice(payload.id);
                             if (!device) {

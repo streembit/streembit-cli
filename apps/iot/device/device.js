@@ -26,6 +26,8 @@ const logger = require("streembit-util").logger;
 const iotdefinitions = require("apps/iot/definitions");
 const Devices = require("libs/devices");
 const TrackingEvent = require("./tracking_event");
+const Users = require('libs/users');
+
 
 class Device {
 
@@ -42,6 +44,7 @@ class Device {
         this.mcu = device.mcu;
         this.permission = device.permission;
         this.name = device.name;
+        this.users = new Users().users;
 
         this.m_details = {};
         try {
@@ -274,6 +277,15 @@ class Device {
         callback(null, result);
     }
 
+    send_device_users(callback) {
+        const result = {
+            payload: {
+                users: Array.from(this.users.values())
+            }
+        };
+        callback(null, result);
+    }
+
     configure_reports(payload, callback) {
     }
 
@@ -296,7 +308,10 @@ class Device {
                 break;
             case iotdefinitions.IOTCMD_READVALUES:
                 obj.read(payload, callback);
-                break;            
+                break;
+            case iotdefinitions.IOT_REQUEST_USER_LIST:
+                this.send_device_users(callback);
+                break;
             default:
                 callback("invalid command: " + payload.cmd);
                 break;
