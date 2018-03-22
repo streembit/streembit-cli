@@ -42,7 +42,8 @@ function dnsupdate() {
         var crypto_key = account.cryptokey;
 
         var payload = {
-            domain: domain
+            domain: domain,
+            pkeyhash: pkeyhash
         };
 
         var data = peermsg.create_jwt_token(crypto_key, Date.now(), payload, null, null, publickey);
