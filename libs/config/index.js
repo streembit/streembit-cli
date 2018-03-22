@@ -339,6 +339,20 @@ var streembit_config = (function (cnfobj) {
 
             cnfobj.wsmode = wsm;
 
+            // get the dns handler settings
+            var dnsconf = config.modules.filter(function (item) {
+                return item.name == "dns";
+            });
+            if (dnsconf && dnsconf.length) {
+                if (!dnsconf[0].host || !dnsconf[0].port) {
+                    throw new Error("Invalid DNS configuration. Host and port are required");
+                }
+                cnfobj.dns = dnsconf[0];
+            }
+            else{
+                cnfobj.dns = {run: false};
+            }            
+
             return callback();
         }
         catch (err) {

@@ -38,7 +38,6 @@
         "ms": "^2.1.1",
         "pm2": "^1.0.0",
         "prompt": "^1.0.0",
-        "restify": "4.3.2",
         "safe-buffer": "^5.1.1",
         "secure-random": "^1.1.1",
         "serialport": "^5.0.0",

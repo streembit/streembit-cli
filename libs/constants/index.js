@@ -51,7 +51,8 @@ var constants = {
     WSMODE_IOT: 2,
 
     ONSENDTOWSCLIENT: "on_send_to_ws_client",
-    ONCLIENTREQUEST: "on_client_request" 
+    ONCLIENTREQUEST: "on_client_request",
+    ONSETDNS: "on_setdns"
 
 };
 

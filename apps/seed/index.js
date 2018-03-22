@@ -28,11 +28,10 @@ const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const db = require("streembit-db").instance
 const kad = require("libs/peernet/kad");
-const Account = require("libs/account");
 const msghandler = require("libs/peernet/msg");
-var constants = require("libs/constants");
+const constants = require("libs/constants");
 
-module.exports = exports = function (callback) {
+module.exports = function (callback) {
     try {
 
         config.net = constants.KADNET;

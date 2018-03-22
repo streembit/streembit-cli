@@ -27,6 +27,7 @@ const client = require("./client");
 const iot = require("./iot");
 const BlockchainHandler = require("./blockchain");
 const CmdHandler = require("./cmd");
+const dnshandler = require("./dns");
 const async = require('async');
 
 class ModulesHandler {
@@ -48,6 +49,9 @@ class ModulesHandler {
                 async.reflect(function (callback) {
                     const blockchain = new BlockchainHandler();
                     blockchain.run(callback);
+                }),
+                async.reflect(function (callback) {
+                    dnshandler.run(callback);
                 }),
                 async.reflect(function (callback) {
                     const cmd = new CmdHandler();

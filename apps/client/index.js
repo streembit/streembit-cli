@@ -13,8 +13,8 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Z Pardi 
-Copyright (C) 2016 The Streembit software development team
+Author: Streembit team 
+Copyright (C) 2018 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
 */
@@ -26,11 +26,7 @@ const async = require("async");
 const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const peerutils = require("libs/peernet/peerutils");
-const kad = require("libs/peernet/kad");
-const Account = require("libs/account");
-const HTTPTransport=require("transport/http")
 const events = require("streembit-util").events;
-
 
 module.exports = exports = function (callback) {
     try {

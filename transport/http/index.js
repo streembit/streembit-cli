@@ -105,7 +105,8 @@ class HTTPTransport {
             try {
                 message = JSON.parse(payload);
             }
-            catch (err) { }
+            catch (err) {
+            }
 
             if (HTTPTransport.iskadmsg(message)) {
                 // this message will be picked up by the KAD HTTP transport which listens on this event
@@ -181,13 +182,17 @@ class HTTPTransport {
         }
     }
 
-    static write(message, target, callback) {
+    static write(message, target, action, callback) {
         try {
 
             logger.debug("peer transport write");
 
             if (!message  || typeof message != "string") {
                 return callback("http write data must be string");
+            }
+
+            if (!action) {
+                action = '/';
             }
 
             var handleResponse = function handleResponse(res) {
@@ -215,7 +220,7 @@ class HTTPTransport {
 
             var options = {
                 host: target.host,
-                path: '/',
+                path: action,
                 port: target.port,
                 method: 'POST'
             };

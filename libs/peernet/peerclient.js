@@ -57,7 +57,7 @@ class PeerClient{
         var errormsg = null;
 
         function write(seed, cb) {
-            HTTPTransport.write(message, seed, function (err, msg) {
+            HTTPTransport.write(message, seed, "/", function (err, msg) {
                 var complete = false;
                 if (err) {
                     logger.error("HTTPTransport.write error: %j", err);

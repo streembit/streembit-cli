@@ -628,22 +628,6 @@ class IoTHandler {
         );
     }
 
-    initwshandler(callback) {
-        try {
-            // start the websocket server
-            let conf = config.iot_config;
-            let port = conf.wsport || 32326;
-            let maxconn = conf.wsmaxconn || 10000;
-            let wsserver = new WebSocket(port, maxconn);
-            wsserver.init();
-            console.log('DWSINIT', callback.toString())
-            callback();
-        }
-        catch (err) {
-            callback("IoT ws init error: " + err.message);
-        }
-    }
-
     initdevices(callback) {
         var devices = new Devices();
         devices.init(callback);
@@ -724,9 +708,6 @@ class IoTRunner {
                     function (cbfn) {
                         iot.initdevices(cbfn);                        
                     },
-                    // function (cbfn) {
-                    //     iot.initwshandler(cbfn);
-                    // },
                     function (cbfn) {
                         iot.initapp(cbfn);
                     }
