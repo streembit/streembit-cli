@@ -85,6 +85,12 @@ class Users {
         });
     }
 
+    update_user(user) {
+        const db = new Database();
+        delete user.userid;
+        return db.update_user(user.pkhash, user);
+    }
+
     populate() {
         return new Promise((resolve, reject) => {
             var db = new Database();

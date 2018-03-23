@@ -27,6 +27,7 @@ const iotdefinitions = require("apps/iot/definitions");
 const Devices = require("libs/devices");
 const TrackingEvent = require("./tracking_event");
 const Users = require('libs/users');
+const Tasks = require('libs/tasks');
 
 
 class Device {
@@ -286,6 +287,64 @@ class Device {
         callback(null, result);
     }
 
+    update_user(user, callback) {
+        const users = new Users();
+        users.update_user(user)
+            .then(
+                () => users.populate()
+            ).then(
+                () => {
+                    // send inform_users
+                    const tasks = new Tasks();
+                    tasks.inform_users();
+
+                    const result = {
+                        payload: {
+                            result: 'success'
+                        }
+                    };
+                    callback(null, result);
+                }
+            )
+        .catch(err => {
+            const result = {
+                payload: {
+                    result: err.message
+                }
+            };
+            callback(null, result);
+        });
+    }
+
+    delete_user(uid, callback) {
+        const users = new Users();
+        users.delete_user(uid)
+            .then(
+                () => users.populate()
+            ).then(
+                () => {
+                    // send inform_users
+                    const tasks = new Tasks();
+                    tasks.inform_users();
+
+                    const result = {
+                        payload: {
+                            result: 'success'
+                        }
+                    };
+                    callback(null, result);
+                }
+            )
+        .catch(err => {
+            const result = {
+                payload: {
+                    result: err.message
+                }
+            };
+            callback(null, result);
+        });
+    }
+
     configure_reports(payload, callback) {
     }
 
@@ -311,6 +370,12 @@ class Device {
                 break;
             case iotdefinitions.IOT_REQUEST_USER_LIST:
                 this.send_device_users(callback);
+                break;
+            case iotdefinitions.IOTCMD_USER_UPDATE:
+                this.update_user(payload.user, callback);
+                break;
+            case iotdefinitions.IOTCMD_USER_DELETE:
+                this.delete_user(payload.uid, callback);
                 break;
             default:
                 callback("invalid command: " + payload.cmd);
