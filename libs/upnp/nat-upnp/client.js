@@ -19,7 +19,7 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-var nat = require('../nat-upnp');
+var nat = require('../index');
 var async = require('async');
 
 var client = exports;
@@ -29,7 +29,7 @@ function Client(_logger) {
     this.timeout = 1800;
     this.logger = _logger;
 
-    this.logger.debug("upnp client create");
+    this.logger.debug("UPnP client create");
 }
 
 client.create = function create(_logger) {
@@ -62,7 +62,7 @@ Client.prototype.portMapping = function portMapping(options, callback) {
         callback = function () { };
     }
     
-    this.logger.debug("upnp AddPortMapping internal IP: " + options.private + " remote IP: " + options.public);
+    this.logger.debug("UPnP AddPortMapping internal IP: " + options.private + " remote IP: " + options.public);
 
     this.findGateway(function(err, gateway, address, local_address) {
         if (err) {
@@ -260,7 +260,7 @@ Client.prototype.findGateway = function findGateway(callback) {
         clearTimeout(timeout);
 
         // Create gateway
-        self.logger.debug("gateway location: " + info.location + ", gateway address: " + device_addres + ", local address: " + local_address);
+        self.logger.debug("UPnP gateway location: " + info.location + ", gateway address: " + device_addres + ", local address: " + local_address);
         callback(null, nat.device.create(info.location, self.logger), device_addres, local_address);
     });
 };

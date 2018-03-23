@@ -1313,7 +1313,7 @@ class XbeeHandler {
         //console.log("xbee dotasks");
         var currtime = Date.now();
         var lastcheck = this.last_onlinedevice_check;
-        if ((currtime - this.last_onlinedevice_check) > 30000) {
+        if ((currtime - this.last_onlinedevice_check) > 600000) { // TODO: put this value back 30000) {
             //console.log("xbee dotasks run");
             if (!this.is_portopened) {
                 return this.init();

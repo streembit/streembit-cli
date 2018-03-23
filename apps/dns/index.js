@@ -49,7 +49,7 @@ function dnsupdate() {
         var data = peermsg.create_jwt_token(crypto_key, Date.now(), payload, null, null, publickey);
         var message = JSON.stringify({data: data});
 
-        HTTPTransport.write(message, { host: config.dns.host, port: config.dns.port }, "/setdns", (err, msg) => {
+        HTTPTransport.write(message, { host: config.dns.host, port: config.dns.port, protocol: "http" }, "/setdns", (err, msg) => {
             try {
                 if (err) {
                     return logger.error("dnsupdate HTTPTransport.write error: %j", err);
@@ -61,8 +61,8 @@ function dnsupdate() {
                 if (resobj.error) {
                     return logger.error("dnsupdate error: " + resobj.error);
                 }
-                if (resobj.result != 0) {
-                    return logger.error("dnsupdate error: result is not success");
+                if (resobj.status != 0) {
+                    return logger.error("HTTP dnsupdate error: status is not SUCCESS");
                 }
 
                 logger.debug("dnsupdate completed");

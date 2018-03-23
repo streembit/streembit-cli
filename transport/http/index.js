@@ -13,8 +13,8 @@ You should have received a copy of the GNU General Public License along with Str
 If not, see http://www.gnu.org/licenses/.
  
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Z Pardi 
-Copyright (C) 2017 The Streembit software development team
+Author: Streembit team
+Copyright (C) 2018 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------  
 */
 
@@ -225,8 +225,13 @@ class HTTPTransport {
                 method: 'POST'
             };
 
+            var isssl = config.transport.ssl;
+            if (target.protocol == "http" ){
+                isssl = false;
+            }
+
             var req;
-            if (config.transport.ssl) {
+            if (isssl) {
                 options.strictSSL = false;
                 options.rejectUnauthorized = false;
                 logger.debug("HTTPS.request to " + target.host + ":" + target.port );

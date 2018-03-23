@@ -27,10 +27,57 @@ const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const peerutils = require("libs/peernet/peerutils");
 const events = require("streembit-util").events;
+const natupnp = require("libs/upnp");
+
+function upnpProc(callback) {
+    try {
+        var upnpclient = natupnp.createClient(logger);
+        var wsport = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;
+        var httpport = config.transport.port;
+        async.waterfall([
+                (next) => {
+                    upnpclient.portMapping(
+                        {
+                            public: wsport,
+                            private: wsport,
+                            ttl: 0
+                        },
+                        err => next(err)
+                    );
+                },
+                (next) => {
+                    upnpclient.portMapping(
+                        {
+                            public: httpport,
+                            private: httpport,
+                            ttl: 0
+                        },
+                        err => next(err)
+                    );
+                },
+                (next) => {
+                    upnpclient.externalIp(next)
+                }
+            ],
+            (err, ip) => {
+                if (err) {
+                    logger.error(`UPnP procedure error: ${e.message}`);
+                }
+                else {
+                    logger.info(`UPnP set, public IP: ${ip}`);
+                }
+
+                callback();
+        });
+    }
+    catch (e) {
+        logger.error(`UPnP procedure error: ${e.message}`);
+        callback();
+    }
+}
 
 module.exports = exports = function (callback) {
     try {
-
         config.net = constants.CLIENTNET;
 
         var conf = config.client_config;
@@ -38,27 +85,14 @@ module.exports = exports = function (callback) {
             return callback(null, "Config client handler -> not running");
         }
 
-        logger.info("Run streembit client handler, net: " + config.net);
+        logger.info("Run streembit client handler");
 
-        peerutils.discovery(config.transport.host, config.seeds, function (err, host) {
-            try {
-                if (err) {
-                    return callback(err);
-                }
+        upnpProc(() => {
+            logger.info("Client handler started");
+            callback(null, "Client module initialized");
 
-                config.transport.host = host;
-
-                logger.info("Client handler started");
-                callback(null, "Client module initialized");
-
-                // process the tasks following init
-                events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
-
-                //
-            }
-            catch (e) {
-                callback(e.message);
-            }
+            // process the tasks following init
+            events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
         });
 
     }

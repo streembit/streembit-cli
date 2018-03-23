@@ -19,7 +19,7 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-var nat = require('../nat-upnp'),
+var nat = require('../index'),
     request = require('request'),
     url = require('url'),
     xml2js = require('xml2js'),
@@ -131,7 +131,7 @@ Device.prototype.parseDescription = function parseDescription(info) {
 
     function traverseDevices(device) {
         if (!device) {
-            this.logger.debug("upnp invalid device at traverseDevices");
+            this.logger.debug("UPnP invalid device at traverseDevices");
             return;
         }
 
@@ -157,14 +157,14 @@ Device.prototype.parseDescription = function parseDescription(info) {
 Device.prototype.run = function run(action, args, callback) {
     var self = this;
     
-    this.logger.debug("upnp action: " + action);
+    this.logger.debug("UPnP action: " + action);
 
     this.getService(this.services, function(err, info) {
         if (err) {
             return callback(err);
         }
         
-        self.logger.debug("upnp controlURL: " + info.controlURL);
+        self.logger.debug("UPnP controlURL: " + info.controlURL);
 
         var body =  
             '<?xml version="1.0"?>' +
@@ -180,8 +180,6 @@ Device.prototype.run = function run(action, args, callback) {
             '</u:' + action + '>' +
             '</s:Body>' +
             '</s:Envelope>';
-        
-        //self.logger.debug("upnp getService request: " + body);
 
         request({
             method: 'POST',
