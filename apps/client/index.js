@@ -61,7 +61,7 @@ function upnpProc(callback) {
             ],
             (err, ip) => {
                 if (err) {
-                    logger.error(`UPnP procedure error: ${e.message}`);
+                    logger.error(`UPnP procedure error: ${err.message}`);
                 }
                 else {
                     logger.info(`UPnP set, public IP: ${ip}`);

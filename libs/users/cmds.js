@@ -197,7 +197,7 @@ class UsersCmds {
             username = '';
         }
 
-        var admin = isadmin == 1 ? isadmin : 0;
+        const admin = isadmin ? 1 : 0;
 
         if (!settings || !settings.length) {
             settings = '{}';
