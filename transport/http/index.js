@@ -98,6 +98,14 @@ class HTTPTransport {
             }
 
             if (!payload) {
+                // return a success status for the GET request
+                // GET request is only fro health check
+                if (req.method === 'GET') {
+                    res.statusCode = 200;
+                    return res.end();
+                }
+
+                // for POST method the payload must exists
                 throw new Error("invalid payload");
             }
 
@@ -107,6 +115,7 @@ class HTTPTransport {
             }
             catch (err) {
             }
+            
 
             if (HTTPTransport.iskadmsg(message)) {
                 // this message will be picked up by the KAD HTTP transport which listens on this event
@@ -122,8 +131,8 @@ class HTTPTransport {
                     }
                 );
             }
-            else {
-                // must be a valid message when it is a client (not KAD) message
+            else {        
+                // for POST method must be a valid message when it is a client (not KAD) message
                 if (!message) {
                     throw new Error("invalid message");
                 }
@@ -156,11 +165,6 @@ class HTTPTransport {
             HTTPTransport.add_crossorigin_headers(req, res);
 
             if (req.method === 'OPTIONS') {
-                return res.end();
-            }
-
-            if (req.method !== 'POST') {
-                res.statusCode = 400;
                 return res.end();
             }
 
