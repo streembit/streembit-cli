@@ -22,6 +22,9 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
+const bs58check = require('bs58check');
+const createHash = require('create-hash');
+
 const logger = require("streembit-util").logger;
 const async = require("async");
 const config = require("libs/config");
@@ -80,9 +83,13 @@ class Users {
     }
 
     add_user(user) {
-        return new Promise((resolve, reject) => {
+        const db = new Database();
 
-        });
+        const buffer = new Buffer(user.publickey, 'hex');
+        const rmd160buffer = createHash('rmd160').update(buffer).digest();
+        const pkhash = bs58check.encode(rmd160buffer);
+
+        return db.add_user(pkhash, user.publickey, user.username, user.isadmin, user.settings);
     }
 
     update_user(user) {
@@ -96,6 +103,7 @@ class Users {
             var db = new Database();
             db.getall().then(
                 rows => {
+                    instance.m_users = new Map();
                     rows.forEach(function (item) {
                         instance.users = item;
                     });

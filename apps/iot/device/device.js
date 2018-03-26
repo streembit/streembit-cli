@@ -287,6 +287,36 @@ class Device {
         callback(null, result);
     }
 
+    add_user(user, callback) {
+        const users = new Users();
+        users.add_user(user)
+            .then(
+                () => users.populate()
+            ).then(
+                () => {
+                    this.users = new Users().users;
+                    // send inform_users
+                    const tasks = new Tasks();
+                    tasks.inform_users();
+
+                    const result = {
+                        payload: {
+                            result: 'success'
+                        }
+                    };
+                    callback(null, result);
+                }
+            )
+        .catch(err => {
+            const result = {
+                payload: {
+                    result: err.message
+                }
+            };
+            callback(null, result);
+        });
+    }
+
     update_user(user, callback) {
         const users = new Users();
         users.update_user(user)
@@ -294,6 +324,7 @@ class Device {
                 () => users.populate()
             ).then(
                 () => {
+                    this.users = new Users().users;
                     // send inform_users
                     const tasks = new Tasks();
                     tasks.inform_users();
@@ -323,6 +354,7 @@ class Device {
                 () => users.populate()
             ).then(
                 () => {
+                    this.users = new Users().users;
                     // send inform_users
                     const tasks = new Tasks();
                     tasks.inform_users();
@@ -370,6 +402,9 @@ class Device {
                 break;
             case iotdefinitions.IOT_REQUEST_USER_LIST:
                 this.send_device_users(callback);
+                break;
+            case iotdefinitions.IOTCMD_USER_ADD:
+                this.add_user(payload.user, callback);
                 break;
             case iotdefinitions.IOTCMD_USER_UPDATE:
                 this.update_user(payload.user, callback);
