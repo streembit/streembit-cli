@@ -27,7 +27,8 @@ const iotdefinitions = require("apps/iot/definitions");
 const Devices = require("libs/devices");
 const TrackingEvent = require("./tracking_event");
 const Users = require('libs/users');
-const Tasks = require('libs/tasks');
+const events = require("streembit-util").events;
+const constants = require('libs/constants');
 
 
 class Device {
@@ -295,9 +296,9 @@ class Device {
             ).then(
                 () => {
                     this.users = new Users().users;
+
                     // send inform_users
-                    const tasks = new Tasks();
-                    tasks.inform_users();
+                    events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
 
                     const result = {
                         payload: {
@@ -325,9 +326,9 @@ class Device {
             ).then(
                 () => {
                     this.users = new Users().users;
+
                     // send inform_users
-                    const tasks = new Tasks();
-                    tasks.inform_users();
+                    events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
 
                     const result = {
                         payload: {
@@ -355,9 +356,9 @@ class Device {
             ).then(
                 () => {
                     this.users = new Users().users;
+
                     // send inform_users
-                    const tasks = new Tasks();
-                    tasks.inform_users();
+                    events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
 
                     const result = {
                         payload: {
