@@ -242,12 +242,11 @@ $ add
 Answer the prompt by typing the user name, public key, whether or not the user is an admin (1 or 0 value). The public key is the long PKI public key format that you can get from the Public key column of the "Account/network info" view, accessbile from the "Tools" menu at the Streembit UI application.
 
 
-
---Streembit IOT Handler--
+## Streembit IOT Handler
 
 To manage your IoT devices on Streembit a few additional configuration steps are required to be done.
 
--Step 1-
+**Step 1**
 
 Since we are using encrypted connections which appear as WSS and HTTPS, the corresponding configuration is required in the config.json file.
 
@@ -259,7 +258,7 @@ Generate or obtain SSL certificates for your domain and include the certificate 
  - Certificate: ssl/DOMAIN.crt
  - Key: ssl/DOMAIN.key
 
--Step 2-
+**Step 2**
 
 Make sure you modify your config.json according to this example
 
@@ -351,7 +350,7 @@ Make sure you modify your config.json according to this example
 
 Notice that we are using domain names instead of IP addresses for the ssl cert configuration. This is important. Also there must be at least one valid seed, as well as run value in client and iot modules set to 'true'.
 
--Step 3-
+**Step 3**
 
 To allow connection to this IoT CLI instance, a user must be defined and saved in the CLI local database.
 
@@ -371,7 +370,7 @@ add
 ```
 and follow the prompts. Public key is the only mandatory field and you should fill it with your PKI public key which was copied from the UI.
 
--Step 4-
+**Step 4**
 
 Once the user is successfully added, stop the cli app. Open config.json and change "cmdinput" to false.
 
