@@ -241,3 +241,146 @@ $ add
 
 Answer the prompt by typing the user name, public key, whether or not the user is an admin (1 or 0 value). The public key is the long PKI public key format that you can get from the Public key column of the "Account/network info" view, accessbile from the "Tools" menu at the Streembit UI application.
 
+
+
+--Streembit IOT Handler--
+
+To manage your IoT devices on Streembit a few additional configuration steps are required to be done.
+
+-Step 1-
+
+Since we are using encrypted connections which appear as WSS and HTTPS, the corresponding configuration is required in the config.json file.
+
+Generate or obtain SSL certificates for your domain and include the certificate files in the ssl folder.
+
+** Required files **
+
+ - CA: ssl/DOMAIN.ca-bundle.crt
+ - Certificate: ssl/DOMAIN.crt
+ - Key: ssl/DOMAIN.key
+
+-Step 2-
+
+Make sure you modify your config.json according to this example
+
+```json
+{
+   "database_name": "streembitsql",
+   "cmdinput": true,
+   "seeds": [
+		{
+            "host": "seed.streembit.uk",
+            "port": 32319
+        }
+   ],
+   "transport": {
+       "protocol": "http",
+       "host": "aaaaz.streembit.org",
+       "port": 32319,
+	   "ws": {
+           "port": 32320
+       },
+	    "ssl": true,
+		"ca": "ssl/aaaaz.streembit.org.ca-bundle.crt",
+        "cert": "ssl/aaaaz.streembit.org.crt",
+        "key": "ssl/aaaaz.streembit.org.key"
+   },
+   "limits": {
+       "refresh": 3600,
+       "replicate": 3600,
+       "republish": 86400,
+       "expire": 86405,
+       "timeout": 5
+   },
+   "modules": [
+       {
+           "name": "seed",
+           "run": false
+       },
+       {
+           "name": "client",
+           "run": true
+       },
+       {
+           "name": "blockchain",
+           "run": false
+       },
+       {
+           "name": "iot",
+           "run": true,
+           "serialport": "Com3",
+           "protocols": [
+               {
+                   "name": "zigbee",
+                   "chipset": "xbee"
+               },
+               {
+                   "name": "zwave"
+               },
+               {
+                   "name": "6lowpan"
+               }
+           ],
+           "devices": [
+               {
+                   "type": 1,
+                   "protocol": "zigbee",
+                   "mcu": "xbee",
+                   "id": "0013a20041679c00",
+                   "name": "Streembit Hub",
+                   "permission": 1,
+                   "details": {
+                       "manufacturername": "ZoVolt",
+                       "modelidentifier": "ZOVOLT-P2PIOTHUB-01",
+                       "hwversion": "0001",
+                       "protocol": "Zigbee",
+                       "security": "ECC PPKI",
+                       "NFC": true,
+                       "endpoint": 2
+                   }
+               }
+           ]
+       }
+   ],
+   "log": {
+       "level": "debug",
+       "logs_dir": "logs"
+   }
+}
+```
+
+Notice that we are using domain names instead of IP addresses for the ssl cert configuration. This is important. Also there must be at least one valid seed, as well as run value in client and iot modules set to 'true'.
+
+-Step 3-
+
+To allow connection to this IoT CLI instance, a user must be defined and saved in the CLI local database.
+
+In order to do this, open your Streembit UI, open "Tools" > "Account/network info" and copy the public key value.
+
+At the CLI to allow command prompt input set the "cmdinput" parameter to "true". Start the app by entering
+```bash
+$ node streembit --pwd=PASSWORD
+```
+enter
+```bash
+usr
+```
+then
+```bash
+add
+```
+and follow the prompts. Public key is the only mandatory field and you should fill it with your PKI public key which was copied from the UI.
+
+-Step 4-
+
+Once the user is successfully added, stop the cli app. Open config.json and change "cmdinput" to false.
+
+Restart the app with the following command:
+```bash
+$ node streembit --pwd=PASSWORD --data
+```
+Copy the value of the BS58 public key of the hub (must be the last string of the output, or close to the last).
+
+At the UI you must add this Hub to your IoT Hub list. Click on the "IoT Devices" menu item and click on "Create IoT Hub". Enter the IoT device ID. This is usually the Zigbee MAC of your device that sits top on the streembit-cli Raspberry Pi (such as the Zovolt Zigbee gateway). Enter the device name and copy the BS58 public key of the streembit-cli that you gathered in the previous step. Click on Save and the web application should connect to your streembit-cli IoT instance.
+
+The created IoT Hub should appear on the devices view that is accessible from the "My devices" link.
