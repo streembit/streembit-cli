@@ -267,6 +267,18 @@
                 "name": "idxWhitelistPublicKey",
                 "table": "whitelist",
                 "column": "publickey"
+            },
+            {
+                "unique": true,
+                "name": "idxUserName",
+                "table": "users",
+                "column": "username"
+            },
+            {
+                "unique": true,
+                "name": "idxUserPkeyHash",
+                "table": "users",
+                "column": "pkhash"
             }
         ]
     }
