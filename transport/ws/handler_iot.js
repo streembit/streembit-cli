@@ -44,7 +44,10 @@ class IoTWsHandler extends Wshandler {
 
             var res = msgvalidator.verify_wsjwt(jwt);
 
-            this.list_of_sessions.set(res.pkhash, { token: res.token, ws: ws });
+            const sha1st = createHash("sha512").update(res.token).digest("hex");
+            const symmcryptkey = createHash("sha512").update(sha1st).digest("hex");
+
+            this.list_of_sessions.set(res.pkhash, { token: res.token, ws: ws, symmcryptkey: symmcryptkey });
             logger.debug("user session created for pkhash: " + res.pkhash);
 
             if (res.devices && Array.isArray(res.devices)) {
@@ -91,9 +94,7 @@ class IoTWsHandler extends Wshandler {
 
         let data;
         try {
-            const sha1st = createHash("sha512").update(token).digest("hex");
-            const symmcryptkey = createHash("sha512").update(sha1st).digest("hex");
-            const plain_text = peermsg.aes256decrypt(symmcryptkey, message.cipher);
+            const plain_text = peermsg.aes256decrypt(usersession.symmcryptkey, message.cipher);
 
             data = JSON.parse(plain_text);
         }
@@ -124,10 +125,7 @@ class IoTWsHandler extends Wshandler {
             let ws = session.ws;
             if (ws && ws.readyState === WebSocket.OPEN) {
                 try {
-                    const sha1st = createHash("sha512").update(session.token).digest("hex");
-                    const symmcryptkey = createHash("sha512").update(sha1st).digest("hex");
-
-                    data.payload = peermsg.aes256encrypt(symmcryptkey, JSON.stringify(data.payload));
+                    data.payload = peermsg.aes256encrypt(session.symmcryptkey, JSON.stringify(data.payload));
 
                     const response = JSON.stringify(data);
                     ws.send(response);
@@ -158,10 +156,7 @@ class IoTWsHandler extends Wshandler {
                             if (session) {
                                 let ws = session.ws;
                                 if (ws && ws.readyState === WebSocket.OPEN) {
-                                    const sha1st = createHash("sha512").update(session.token).digest("hex");
-                                    const symmcryptkey = createHash("sha512").update(sha1st).digest("hex");
-
-                                    data.payload = peermsg.aes256encrypt(symmcryptkey, data.payload);
+                                    data.payload = peermsg.aes256encrypt(session.symmcryptkey, data.payload);
 
                                     const response = JSON.stringify(data);
                                     ws.send(response);
