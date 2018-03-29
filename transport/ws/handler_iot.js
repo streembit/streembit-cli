@@ -26,7 +26,9 @@ const logger = require("streembit-util").logger;
 const events = require("streembit-util").events;
 const WebSocket = require('ws');
 const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
+const createHash = require('create-hash');
 const createHmac = require('create-hmac');
+const peermsg = require("libs/message");
 
 class IoTWsHandler extends Wshandler {
     constructor() {
@@ -87,15 +89,60 @@ class IoTWsHandler extends Wshandler {
             throw new Error("invalid authentication secret");
         }
 
+        let data;
+        try {
+            const sha1st = createHash("sha512").update(token).digest("hex");
+            const symmcryptkey = createHash("sha512").update(sha1st).digest("hex");
+            const plain_text = peermsg.aes256decrypt(symmcryptkey, message.cipher);
+
+            data = JSON.parse(plain_text);
+        }
+        catch (err) {
+            if (err.message && err.message.indexOf("decrypt") > -1) {
+               throw new Error("Hub message decrypt error");
+            }
+            else {
+                throw new Error("Hub message decode error: " + err.message);
+            }
+        }
+
         // the message is valid, check if the deviceid is registered
-        var deviceid = message.id;
+        var deviceid = data.id;
         if (deviceid) {
             if (!this.list_of_devices.has(deviceid)) {
                 this.list_of_devices.set(deviceid, message.pkhash);
             }
         }
 
-        //console.log("message.hmacdigest: " + message.hmacdigest + " computed hmacdigest: " + hmacdigest);    
+        return data;
+    }
+
+    iotsend(k, data) {
+        let pkhash = this.list_of_devices.get(k);
+        const session = this.list_of_sessions.get(pkhash);
+        if (session) {
+            let ws = session.ws;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                try {
+                    const sha1st = createHash("sha512").update(session.token).digest("hex");
+                    const symmcryptkey = createHash("sha512").update(sha1st).digest("hex");
+
+                    data.payload = peermsg.aes256encrypt(symmcryptkey, JSON.stringify(data.payload));
+
+                    const response = JSON.stringify(data);
+                    ws.send(response);
+                } catch (err) {
+                    console.log(err)
+                }
+            }
+            else {
+                // TODO report this closed connection
+                throw new Error('WebSocket readyState is ' +ws.readyState);
+            }
+        }
+        else {
+            throw new Error('Session not found. device ID: ' +k);
+        }
     }
 
     // event handler to send messages back to the client
@@ -107,21 +154,27 @@ class IoTWsHandler extends Wshandler {
                     try {
                         let pkhash = this.list_of_devices.get(id);
                         if (pkhash) {
-                            let session = this.list_of_sessions.get(pkhash);
+                            const session = this.list_of_sessions.get(pkhash);
                             if (session) {
                                 let ws = session.ws;
                                 if (ws && ws.readyState === WebSocket.OPEN) {
-                                    let response = JSON.stringify(data);
+                                    const sha1st = createHash("sha512").update(session.token).digest("hex");
+                                    const symmcryptkey = createHash("sha512").update(sha1st).digest("hex");
+
+                                    data.payload = peermsg.aes256encrypt(symmcryptkey, data.payload);
+
+                                    const response = JSON.stringify(data);
                                     ws.send(response);
                                 }
                                 else {
                                     // TODO report this closed connection
+                                    throw new Error('WebSocket readyState is ' +ws.readyState);
                                 }
                             }
                         }
                     }
                     catch (err) {
-                        logger.error("ws shandle_server_messages() event handler error: " + err.message);
+                        logger.error("ws handle_server_messages() event handler error: " + err.message);
                     }
                 }
             );
@@ -137,9 +190,11 @@ class IoTWsHandler extends Wshandler {
         }
 
         var resdata = this.auth_client(message.jwt, ws);
+        var session_key = resdata.session_key;
         resdata.txn = message.txn;
-        var response = JSON.stringify(resdata);
-        return ws.send(response);
+
+        var data = JSON.stringify(resdata);
+        return ws.send(data);
     }
 
     // handles messages from the client
@@ -157,9 +212,9 @@ class IoTWsHandler extends Wshandler {
 
             // it is not an auth message so the HMAC must match
             // validate whether or not the user sent a valid token                
-            this.validate_user(message);
+            const msg_data = this.validate_user(message);
             events.iotmsg(
-                message,
+                msg_data,
                 (err, data) => {
                     try {
                         if (err) {
@@ -171,8 +226,8 @@ class IoTWsHandler extends Wshandler {
                         }
 
                         data.txn = message.txn;
-                        var response = JSON.stringify(data);
-                        ws.send(response);
+                        
+                        this.iotsend(msg_data.id, data);
                     }
                     catch (err) {
                         try {

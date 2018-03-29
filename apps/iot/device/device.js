@@ -75,7 +75,9 @@ class Device {
             this.setfeatures();
         }
 
-        this.errors = [];        
+        this.errors = [];
+
+        this.init();
     }
 
     get featuretypes() {
@@ -214,8 +216,7 @@ class Device {
         }
     }
 
-    init() {        
-    }
+    init() {}
 
     get active() {
         return this.m_active;
