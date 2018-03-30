@@ -54,7 +54,8 @@ db/*/*
 db/*/*/*
 
 /.vs/config/applicationhost.config
-
+/.vscode
+.vscode
 
 /typings
 /.idea/
@@ -67,3 +68,4 @@ db/leveldb/streembit/CURRENT
 /ssl
 package-lock.json
 ./package-lock.json
+
