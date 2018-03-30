@@ -1,8 +1,8 @@
-﻿## Connecting the FTDI serial converter to the Zovolt Zigbee gateway
+﻿## Connecting the FTDI serial converter to the Zovolt Zigbee Gateway
 
-The XBEE module of the Zovolt Iot Zigbee gateway can be programmed with an FTDI USB-to_serial breakout board. The FTDI bord can also connect the gateway to the nodejs streembit-cli instance via the PC/laptop via serial line using the PC/laptop USB connector.
+The XBEE module of the Zovolt IoT Zigbee Gateway can be programmed with an FTDI USB-to-Serial breakout board. The FTDI board can also connect the Zovolt Zigbee Gateway to the nodejs streembit-cli instance via serial line using the PC/laptop USB connector when the CLI runs on a PC/laptop.
 
-The pin connection between the FTDI board and the gateway:
+The pin connection between the FTDI board and the Zovolt Zigbee Gateway:
 
 | FTDI			| Gateway-JP1	|
 |---------------|---------------|
