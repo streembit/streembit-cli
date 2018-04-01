@@ -159,7 +159,7 @@ class IoTWsHandler extends Wshandler {
                             if (session) {
                                 let ws = session.ws;
                                 if (ws && ws.readyState === WebSocket.OPEN) {
-                                    logger.debug(`on_send->data.payload: ${data.payload}`);
+                                    logger.debug(`on_send->data.payload: ${util.inspect(data.payload)}`);
                                     data.payload = peermsg.aes256encrypt(session.symmcryptkey, JSON.stringify(data.payload));
 
                                     const response = JSON.stringify(data);
