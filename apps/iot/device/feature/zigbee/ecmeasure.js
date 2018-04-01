@@ -117,8 +117,9 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                 }
             );
 
-            //console.log("ZigbeeEcMeasureFeature on_datareceive_event data: " + util.inspect(data));
+            logger.debug("ZigbeeEcMeasureFeature on_datareceive_event data: " + util.inspect(data));
             if (data.payload.hasOwnProperty("voltage") || data.payload.hasOwnProperty("power_consumption")) {
+                logger.debug("send EVENT_PROPERTY_REPORT");
                 data.payload.event = iotdefinitions.EVENT_PROPERTY_REPORT;
                 super.on_datareceive_event(data, iotdefinitions.EVENT_NOTIFY_USERS);
             }
