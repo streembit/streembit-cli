@@ -175,7 +175,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         logger.debug("ZigbeeEcMeasureFeature send configure report");
         var reports = [];
         // power
-        var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 2;
+        var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x0000, reportable_change = 2;
         reports.push(
             {
                 attribute: attribute,
@@ -187,7 +187,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         );
 
         // voltage
-        attribute = 0x0505, datatype = 0x21, mininterval = 0x01, maxinterval = 0x0030, reportable_change = 10;
+        attribute = 0x0505, datatype = 0x21, mininterval = 0x01, maxinterval = 0x0000, reportable_change = 5;
         reports.push(
             {
                 attribute: attribute,
