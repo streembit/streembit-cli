@@ -423,6 +423,16 @@ class Device {
 
     propread() {
         console.log(">>>>>>>> do_propread <<<<<<<<<<")
+        this.features.forEach(
+            (obj, key) => {
+                try {
+                    obj.propread();
+                }
+                catch (err) {
+                    logger.error(`device  propread() error: ${err.message}`);
+                }
+            }
+        );
     }
 
     disjoin() {
