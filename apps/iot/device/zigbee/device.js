@@ -426,10 +426,10 @@ class ZigbeeDevice extends Device {
 
     propread() {
         logger.debug("Device " + this.id + " create propread event handler");
+
         events.on(
             "feature_property_read_request",
             () => {
-                console.log(">>>>>>>> do_propread <<<<<<<<<<")
                 this.features.forEach(
                     (obj, key) => {
                         try {

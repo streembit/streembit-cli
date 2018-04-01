@@ -306,8 +306,13 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
     propread() {
         try {
             logger.debug("ZigbeeEcMeasureFeature propread()");
-            // do property readings
-            this.readpower();
+            setTimeout(
+                () => {
+                    // do property readings
+                    this.readpower();
+                },
+                1500
+            );
             //
         }
         catch (err) {
