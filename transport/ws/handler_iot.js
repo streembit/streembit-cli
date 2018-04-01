@@ -158,17 +158,20 @@ class IoTWsHandler extends Wshandler {
                             const session = this.list_of_sessions.get(pkhash);
                             if (session) {
                                 let ws = session.ws;
-                                if (ws && ws.readyState === WebSocket.OPEN) {
-                                    logger.debug(`on_send->data.payload: ${util.inspect(data.payload)}`);
-                                    data.payload = peermsg.aes256encrypt(session.symmcryptkey, JSON.stringify(data.payload));
+                                if (ws) {
+                                    if (ws.readyState === WebSocket.OPEN) {
+                                        logger.debug(`on_send->data.payload: ${util.inspect(data.payload)}`);
+                                        data.payload = peermsg.aes256encrypt(session.symmcryptkey, JSON.stringify(data.payload));
 
-                                    const response = JSON.stringify(data);
-                                    ws.send(response);
-                                }
-                                else {
-                                    // TODO report this closed connection
-                                    throw new Error('WebSocket readyState is ' +ws.readyState);
-                                }
+                                        const response = JSON.stringify(data);
+                                        ws.send(response);
+                                    }
+                                    else {
+                                        // the socket was closed, remove the session
+                                        logger.debug(`Remove WS session for ${pkhash}`);
+                                        this.list_of_sessions.delete(pkhash);
+                                    }
+                                }                                
                             }
                         }
                     }

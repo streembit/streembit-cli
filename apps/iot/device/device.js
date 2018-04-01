@@ -274,9 +274,6 @@ class Device {
     send_device_details(callback) {
         var result = {
             payload: this.details
-            //payload: {
-            //    details: this.details
-            //}
         };
         callback(null, result);
     }
