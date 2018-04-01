@@ -154,7 +154,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
     
     bind() {
         var txn = 0x51;
-        logger.debug("ZigbeeOccupancyFeature cluster 0B04, send bind request at endpoint: " + this.cluster_endpoint);
+        logger.debug("ZigbeeEcMeasureFeature cluster 0B04, send bind request at endpoint: " + this.cluster_endpoint);
         var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
         this.transport.send(cmd);
     }
@@ -171,11 +171,30 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         }
     }
 
+    configure_voltage_report() {
+        logger.debug("ZigbeeEcMeasureFeature send configure voltage report");
+        var reports = [];
+        var attribute = 0x0505, datatype = 0x21, mininterval = 0x01, maxinterval = 0x003c, reportable_change = 5;
+        reports.push(
+            {
+                attribute: attribute,
+                datatype: datatype,
+                mininterval: mininterval,
+                maxinterval: maxinterval,
+                reportable_change: reportable_change
+            }
+        );
+
+        var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, CLUSTERID, reports, this.cluster_endpoint);
+        this.transport.send(cmd);
+    }
+
+
     configure_report() {
         logger.debug("ZigbeeEcMeasureFeature send configure report");
         var reports = [];
         // power
-        var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x0000, reportable_change = 2;
+        var attribute = 0x050b, datatype = 0x29, mininterval = 0x01, maxinterval = 0x003c, reportable_change = 2;
         reports.push(
             {
                 attribute: attribute,
@@ -187,7 +206,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         );
 
         // voltage
-        attribute = 0x0505, datatype = 0x21, mininterval = 0x01, maxinterval = 0x0000, reportable_change = 5;
+        attribute = 0x0505, datatype = 0x21, mininterval = 0x01, maxinterval = 0x003c, reportable_change = 5;
         reports.push(
             {
                 attribute: attribute,
@@ -207,6 +226,14 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                 this.read_settings();
             },
             500
+        );
+
+        // try to resend the voltage report, experimental as some devices do not send voltage reports
+        setTimeout(
+            () => {
+                this.configure_voltage_report();
+            },
+            2000
         );
     }
 
