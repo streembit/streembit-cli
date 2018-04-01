@@ -154,6 +154,7 @@ class Device {
                             let feature_obj = require(feature_lib);
                             let feature_handler = new feature_obj(this.id, feature, feature_type, this.transport);
                             if (feature_handler) {
+                                feature_handler.propreadfn = this.propread;
                                 this.features.set(feature_type, feature_handler);
                                 logger.debug("feature " + feature_name + " added to device " + this.id);                                
                             }
@@ -418,6 +419,10 @@ class Device {
                 callback("invalid command: " + payload.cmd);
                 break;
         }
+    }
+
+    propread() {
+        console.log(">>>>>>>> do_propread <<<<<<<<<<")
     }
 
     disjoin() {

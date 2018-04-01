@@ -58,15 +58,23 @@ class ZigbeeSwitchFeature extends SwitchFeature {
             properties.forEach(
                 (item) => {
                     if (item.property == iotdefinitions.PROPERTY_SWITCH_STATUS) {
-                        this.switchstatus = item.value;
-                        logger.debug("ZigbeeSwitchFeature switch status: " + item.value);
-                        let data = {
-                            payload: {
-                                event: iotdefinitions.EVENT_PROPERTY_REPORT,
-                                switch_status: item.value
-                            }
-                        };
-                        super.on_datareceive_event(data, iotdefinitions.EVENT_NOTIFY_USERS);
+                        try {
+                            this.switchstatus = item.value;
+                            logger.debug("ZigbeeSwitchFeature switch status: " + item.value);
+                            let data = {
+                                payload: {
+                                    event: iotdefinitions.EVENT_PROPERTY_REPORT,
+                                    switch_status: item.value
+                                }
+                            };
+                            super.on_datareceive_event(data, iotdefinitions.EVENT_NOTIFY_USERS);
+
+                            // call the associated propread
+                            this.propreadfn();
+                        }
+                        catch (e) {
+                            logger.error(`ZigbeeSwitchFeature handle PROPERTY_SWITCH_STATUS error: ${e.message}`);
+                        }
                     }
                 }
             );

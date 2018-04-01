@@ -67,6 +67,9 @@ class EcMeasureFeature extends IoTFeature {
 
     configure_report() {
     }
+
+    propread() {
+    }
 }
 
 module.exports = EcMeasureFeature;

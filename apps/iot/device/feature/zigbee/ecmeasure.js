@@ -229,12 +229,12 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         );
 
         // try to resend the voltage report, experimental as some devices do not send voltage reports
-        setTimeout(
-            () => {
-                this.configure_voltage_report();
-            },
-            2000
-        );
+        //setTimeout(
+        //    () => {
+        //        this.configure_voltage_report();
+        //    },
+        //    2000
+        //);
     }
 
     on_bind_complete() {
@@ -300,6 +300,18 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         }
         catch (err) {
             callback(err);
+        }
+    }   
+
+    propread() {
+        try {
+            logger.debug("ZigbeeEcMeasureFeature propread()");
+            // do property readings
+            this.readpower();
+            //
+        }
+        catch (err) {
+            logger.error(`ZigbeeEcMeasureFeature propread() error: ${err.message}`);
         }
     }   
 
