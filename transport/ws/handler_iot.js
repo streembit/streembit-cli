@@ -29,6 +29,7 @@ const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
 const createHash = require('create-hash');
 const createHmac = require('create-hmac');
 const peermsg = require("libs/message");
+const util = require("util");
 
 class IoTWsHandler extends Wshandler {
     constructor() {
@@ -196,6 +197,7 @@ class IoTWsHandler extends Wshandler {
     processmsg(ws, request) {
         var message = 0;
         try {
+            logger.debug(`processmsg->request: ${request}`);
             message = JSON.parse(request);
             if (!message) {
                 throw new Error("invalid payload");
@@ -208,6 +210,7 @@ class IoTWsHandler extends Wshandler {
             // it is not an auth message so the HMAC must match
             // validate whether or not the user sent a valid token                
             const msg_data = this.validate_user(message);
+            logger.debug(`processmsg->msg_data: ${util.inspect(msg_data)}`)
             events.iotmsg(
                 msg_data,
                 (err, data) => {
