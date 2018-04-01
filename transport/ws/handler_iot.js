@@ -98,6 +98,8 @@ class IoTWsHandler extends Wshandler {
             const plain_text = peermsg.aes256decrypt(usersession.symmcryptkey, message.cipher);
 
             data = JSON.parse(plain_text);
+            // copy the txn into the message new data structure
+            data.txn = message.txn;
         }
         catch (err) {
             if (err.message && err.message.indexOf("decrypt") > -1) {
