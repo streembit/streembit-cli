@@ -176,6 +176,8 @@ class ZigbeeSwitchFeature extends SwitchFeature {
         setTimeout(
             () => {
                 this.read(payload, callback);
+                // call the associated propread
+                events.emit("feature_property_read_request");
             },
             500
         );
