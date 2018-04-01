@@ -226,7 +226,7 @@ class IoTWsHandler extends Wshandler {
                     }
                     catch (err) {
                         try {
-                            var errmsg = super.format_error(message.txn, err);
+                            var errmsg = super.format_error(message.txn, 0, err);
                             ws.send(errmsg);
                             logger.error("ONIOTEVENT return handling error %j", errmsg)
                         }
@@ -239,7 +239,7 @@ class IoTWsHandler extends Wshandler {
         }
         catch (err) {
             try {
-                var errmsg = super.format_error((message && message.txn ? message.txn : 0), err);
+                var errmsg = super.format_error((message && message.txn ? message.txn : 0), 0, err);
                 ws.send(errmsg);
                 logger.error("sent to client ws error %j", errmsg)
             }
