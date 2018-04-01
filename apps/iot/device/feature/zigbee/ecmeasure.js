@@ -100,19 +100,19 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                     }
                     else if (item.property == iotdefinitions.PROPERTY_POWERMULTIPLIER) {
                         this.power_multiplier = item.value;
-                        logger.debug("PROPERTY_POWERMULTIPLIER: %d", this.power_multiplier);
+                        logger.debug("set PROPERTY_POWERMULTIPLIER: %d", this.power_multiplier);
                     }
                     else if (item.property == iotdefinitions.PROPERTY_POWERDIVISOR) {
                         this.power_divisor = item.value;
-                        logger.debug("PROPERTY_POWERDIVISOR: %d", this.power_divisor);                        
+                        logger.debug("set PROPERTY_POWERDIVISOR: %d", this.power_divisor);                        
                     }
                     else if (item.property == iotdefinitions.PROPERTY_VOLTAGEMULTIPLIER) {
                         this.voltage_multiplier = item.value;
-                        logger.debug("PROPERTY_VOLTAGEMULTIPLIER: %d", this.voltage_multiplier);
+                        logger.debug("set PROPERTY_VOLTAGEMULTIPLIER: %d", this.voltage_multiplier);
                     }
                     else if (item.property == iotdefinitions.PROPERTY_VOLTAGEDIVISOR) {
                         this.voltage_divisor = item.value;
-                        logger.debug("PROPERTY_VOLTAGEDIVISOR: %d", this.voltage_divisor);
+                        logger.debug("set PROPERTY_VOLTAGEDIVISOR: %d", this.voltage_divisor);
                     }
                 }
             );

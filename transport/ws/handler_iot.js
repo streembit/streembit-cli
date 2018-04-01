@@ -200,7 +200,7 @@ class IoTWsHandler extends Wshandler {
     processmsg(ws, request) {
         var message = 0;
         try {
-            logger.debug(`processmsg->request: ${request}`);
+            //logger.debug(`processmsg->request: ${request}`);
             message = JSON.parse(request);
             if (!message) {
                 throw new Error("invalid payload");

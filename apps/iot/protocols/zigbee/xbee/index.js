@@ -476,6 +476,7 @@ class XbeeHandler {
                 }
 
                 if (property_name) {
+                    console.log("property: %s, datatype: %s, value: %d", property_name, sprintf("0x%04x", datatype), value);
                     return {
                         "property": property_name,
                         "value": value
