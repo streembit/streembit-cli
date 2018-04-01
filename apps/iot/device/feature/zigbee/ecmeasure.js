@@ -311,7 +311,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                     // do property readings
                     this.readpower();
                 },
-                1500
+                2500
             );
             //
         }
