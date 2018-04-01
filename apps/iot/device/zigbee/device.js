@@ -424,10 +424,32 @@ class ZigbeeDevice extends Device {
         this.active = false;
     }
 
+    propread() {
+        logger.debug("Device " + this.id + " create propread event handler");
+        events.on(
+            "feature_property_read_request",
+            () => {
+                console.log(">>>>>>>> do_propread <<<<<<<<<<")
+                this.features.forEach(
+                    (obj, key) => {
+                        try {
+                            obj.propread();
+                        }
+                        catch (err) {
+                            logger.error(`device  propread() error: ${err.message}`);
+                        }
+                    }
+                );
+            }
+        );
+    }
+
     init() {
         try {
             // set to inactive
             this.active = false;
+
+            this.propread();
 
             logger.debug("Net address request to " + this.id);
             let cmd = zigbeecmd.netAddressRequest(this.id);

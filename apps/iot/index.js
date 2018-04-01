@@ -150,8 +150,8 @@ class IoTHandler {
             let zigbee_device = new ZigbeeDevice(id, device, transport);
             zigbee_device.on_data_received(payload);
             this.setdevice(device.deviceid, zigbee_device);
-            // start listening on the events
-            zigbee_device.propread();
+
+            //
         }
         else if (protocol == iotdefinitions.ZWAVE) {
             // TODO
