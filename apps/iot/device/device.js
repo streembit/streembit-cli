@@ -154,7 +154,6 @@ class Device {
                             let feature_obj = require(feature_lib);
                             let feature_handler = new feature_obj(this.id, feature, feature_type, this.transport);
                             if (feature_handler) {
-                                feature_handler.propreadfn = this.propread;
                                 this.features.set(feature_type, feature_handler);
                                 logger.debug("feature " + feature_name + " added to device " + this.id);                                
                             }
@@ -422,15 +421,21 @@ class Device {
     }
 
     propread() {
-        console.log(">>>>>>>> do_propread <<<<<<<<<<")
-        this.features.forEach(
-            (obj, key) => {
-                try {
-                    obj.propread();
-                }
-                catch (err) {
-                    logger.error(`device  propread() error: ${err.message}`);
-                }
+        logger.debug("Device " + this.id + " create propread event handler");       
+        events.on(
+            "feature_property_read_request",
+            () => {
+                console.log(">>>>>>>> do_propread <<<<<<<<<<")
+                this.features.forEach(
+                    (obj, key) => {
+                        try {
+                            obj.propread();
+                        }
+                        catch (err) {
+                            logger.error(`device  propread() error: ${err.message}`);
+                        }
+                    }
+                );
             }
         );
     }

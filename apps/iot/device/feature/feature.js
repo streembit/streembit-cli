@@ -55,9 +55,6 @@ class IoTFeature {
         this.isonline = false;
         this.isbindcomplete = false;
         this.isreportcomplete = false;
-
-        // propread callback
-        this.propreadfn = 0;
     }
 
     on_datareceive_event(data, event) {

@@ -28,6 +28,7 @@ const iotdefinitions = require("apps/iot/definitions");
 const SwitchFeature = require("../switch");
 const logger = require("streembit-util").logger;
 const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
+const events = require("streembit-util").events;
 
 let CLUSTERID = 0x0006;
 
@@ -70,7 +71,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
                             super.on_datareceive_event(data, iotdefinitions.EVENT_NOTIFY_USERS);
 
                             // call the associated propread
-                            this.propreadfn();
+                            events.emit("feature_property_read_request");
                         }
                         catch (e) {
                             logger.error(`ZigbeeSwitchFeature handle PROPERTY_SWITCH_STATUS error: ${e.message}`);
