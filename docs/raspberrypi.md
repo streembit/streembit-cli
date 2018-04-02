@@ -20,6 +20,12 @@ sudo raspi-config
 2. Enable serial port: select Interfacing Options. Navigate to Advanced Options/Serial set "No" to “Would you like a login shell to be accessible over serial?” and select "Yes"  to Would you like the serial port hardware to be enabled?" question.
 Refer to the "For latest Jessie version" section at https://hallard.me/enable-serial-port-on-raspberry-pi/
 
+Check the available serial ports and serial port aliases.
+```bash
+ls -l /dev
+```
+ttyS0 should be listed in dev directory.
+
 ## Install the latest Nodejs from source
 
 To take advantage of the latest Node.js framework we suggest you install Node.js from source.
