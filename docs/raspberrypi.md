@@ -154,10 +154,41 @@ Typical IoT module configuration settings in the config.json configuration file.
 Start the streembit application.
 
 ```bash
-node streembit --pwd=YOUR_PASSWORD
+node streembit --pwd=PASSWORD
 ```
 
 The debug logs on the terminal should indicate that the Streeembit application communicates with the Streembit Zigbee Gateway via the serial port.
+
+## Add a Streembit user to the Raspberry Pi
+
+To allow command prompt input set the "cmdinput" parameter to "true" tt the streembit-cli configuration file. Start the app by entering
+
+```bash
+usr
+```
+then
+```bash
+add
+```
+and follow the prompts. Public key is the only mandatory field and you should fill it with your PKI public key which was copied from the UI.
+
+Once the user is successfully added, stop the cli app. Open config.json and change "cmdinput" to false.
+
+Restart the app with the following command:
+```bash
+$ node streembit --pwd=PASSWORD --data
+```
+Copy the value of the BS58 public key of the hub (must be the last string of the output, or close to the last).
+
+Restart the CLI instance in normal mode.
+```bash
+$ node streembit --pwd=PASSWORD 
+```
+
+At the UI you must add this Hub to your IoT Hub list. Click on the "IoT Devices" menu item and click on "Create IoT Hub". Enter the IoT device ID. This is usually the Zigbee MAC of your device that sits top on the streembit-cli Raspberry Pi (such as the Zovolt Zigbee gateway). Enter the device name and copy the BS58 public key of the streembit-cli that you gathered in the previous step. Click on Save and the web application should connect to your streembit-cli IoT instance.
+
+The created IoT Hub should appear on the devices view that is accessible from the "My devices" link.
+
 
 ## Start communicating with Zigbee devices
 

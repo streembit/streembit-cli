@@ -71,7 +71,7 @@ class XbeeHandler {
                 throw new Error("dispatch_datarcv_event() invalid payload");
             }
 
-            //console.log("IOT_DATA_RECEIVED_EVENT")
+            //logger.debug("IOT_DATA_RECEIVED_EVENT")
             var eventname = iotdefinitions.IOT_DATA_RECEIVED_EVENT;
             events.emit(eventname, payload);            
         }
@@ -138,7 +138,7 @@ class XbeeHandler {
 
 
     simple_descriptor_request(address64, address16, data) {
-        //console.log("simple_descriptor_request to " + address64);
+        //logger.debug("simple_descriptor_request to " + address64);
         var txframe = { 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
             destination64: address64,
@@ -154,7 +154,7 @@ class XbeeHandler {
     }
 
     active_endpoint_request(address64, address16, data) {
-        //console.log("active_endpoint_request to " + address64);
+        //logger.debug("active_endpoint_request to " + address64);
         var txframe = { 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
             destination64: address64,
@@ -170,7 +170,7 @@ class XbeeHandler {
     }
 
     match_descriptor_response(address64, address16, data) {
-        //console.log("match_descriptor_response to " + address64);
+        //logger.debug("match_descriptor_response to " + address64);
         var txframe = { // AT Request to be sent to 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
             destination64: address64,
@@ -186,7 +186,7 @@ class XbeeHandler {
     }
 
     simple_basciccluster_request(address64, address16, destenpoint, data) {
-        //console.log("simple_basciccluster_request to " + address64);
+        //logger.debug("simple_basciccluster_request to " + address64);
         var txframe = { // AT Request to be sent to 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
             destination64: address64,
@@ -206,8 +206,8 @@ class XbeeHandler {
     
     handle_cluster_8031 (frame) {
         try {
-            //console.log("handle_cluster_8031");
-            //console.log(util.inspect(frame));
+            //logger.debug("handle_cluster_8031");
+            //logger.debug(util.inspect(frame));
             var clusterId = 0x0031;
 
             var bufflen = frame.data.length;
@@ -230,22 +230,22 @@ class XbeeHandler {
                 var panidbuf = reader.nextBuffer(8);
                 panidbuf.swap64();
                 var panid = panidbuf.toString("hex");
-                //console.log("panidbuf: %s", panid);
+                //logger.debug("panidbuf: %s", panid);
                 var addressbuf = reader.nextBuffer(8);
                 addressbuf.swap64();
                 var address = addressbuf.toString("hex");
-                //console.log("address: %s", address);
+                //logger.debug("address: %s", address);
                 var shortaddrbuf = reader.nextBuffer(2);
                 shortaddrbuf.swap16();
                 var address16 = shortaddrbuf.toString("hex");
-                //console.log("address16: %s", address16);
+                //logger.debug("address16: %s", address16);
 
                 var devinfobuf = reader.nextBuffer(1);
                 var devinfobits = new BitStream(devinfobuf);
                 var device_type = devinfobits.readBits(2);
-                //console.log("device_type: %s", device_type);
+                //logger.debug("device_type: %s", device_type);
                 var iddle_enable = devinfobits.readBits(2);
-                //console.log("iddle_enable: %s", iddle_enable);
+                //logger.debug("iddle_enable: %s", iddle_enable);
                 device.iddle_enable = iddle_enable;
 
                 //Indicates if the neighbor’s receiver is enabled during idle times.
@@ -255,7 +255,7 @@ class XbeeHandler {
 
 
                 var relationship = devinfobits.readBits(3);
-                //console.log("relationship: %s", relationship);
+                //logger.debug("relationship: %s", relationship);
                 device.relationship = relationship;
 
                 //The relationship of the neighbor with the remote device:
@@ -270,7 +270,7 @@ class XbeeHandler {
                 var permitbits = new BitStream(permitbuf);
                 var permitjoin = permitbits.readBits(2);
                 device.permitjoin = permitjoin;
-                //console.log("permitjoin: %s", permitjoin);
+                //logger.debug("permitjoin: %s", permitjoin);
 
                 //Indicates if the neighbor is accepting join requests.
                 //0x0 – Neighbor not accepting joins
@@ -282,7 +282,7 @@ class XbeeHandler {
                 var lqi = reader.nextUInt8();
                 device.depth = depth;
                 device.lqi = lqi;
-                //console.log("depth: %d, lqi: %d", depth, lqi);
+                //logger.debug("depth: %d, lqi: %d", depth, lqi);
                 var address64 = address.toLowerCase();
                 device.address64 = address64;
                 device.address16 = address16;
@@ -313,7 +313,7 @@ class XbeeHandler {
         let endpoint = reader.nextUInt8();
         let profile = reader.nextUInt16LE(); 
         
-        //console.log("address: %s, length: %d, endpoint: %d, profile: %s", sprintf("0x%04x", address), length, endpoint, sprintf("0x%04x", profile));
+        //logger.debug("address: %s, length: %d, endpoint: %d, profile: %s", sprintf("0x%04x", address), length, endpoint, sprintf("0x%04x", profile));
 
         reader.seek(11);
         var count = reader.nextUInt8();
@@ -340,7 +340,7 @@ class XbeeHandler {
         // get the manufacturer & device info 
         setTimeout(
             () => {
-                //console.log("query device info, hardware version");
+                //logger.debug("query device info, hardware version");
                 var endpoint = devices[frame.remote64].endpoints[0];
                 var txn = 0x99;
                 var bcrdata = [0x00, txn, 0x00, 0x03, 0x00]
@@ -351,7 +351,7 @@ class XbeeHandler {
 
         setTimeout(
             () => {
-                //console.log("query device info, manufacturer");
+                //logger.debug("query device info, manufacturer");
                 var endpoint = devices[frame.remote64].endpoints[0];
                 var txn = 0x99;
                 var bcrdata = [0x00, txn, 0x00, 0x04, 0x00]
@@ -362,7 +362,7 @@ class XbeeHandler {
 
         setTimeout(
             () => {
-                //console.log("query device info, model number");
+                //logger.debug("query device info, model number");
                 var endpoint = devices[frame.remote64].endpoints[0];
                 var txn = 0x99;
                 var bcrdata = [0x00, txn, 0x00, 0x05, 0x00]
@@ -379,7 +379,7 @@ class XbeeHandler {
 
         if (this.online_devices.indexOf(frame.remote64) == -1) {
             this.online_devices.push(frame.remote64);
-            console.log(frame.remote64 + " added to online_devices list");
+            logger.debug(`${frame.remote64} added to online_devices list`);
         }
 
         if (!devices[frame.remote64]) {
@@ -409,40 +409,19 @@ class XbeeHandler {
                     "endpoints": endpoints
                 }
             );
-        }
-
-        // reply for each endpoints with 0004 Simple Descriptor Request
-        //async.eachSeries(
-        //    endpoints,
-        //    (endpoint, callback) => {
-        //        var addressbuf = Buffer.from(frame.remote16, 'hex');
-        //        addressbuf.swap16();
-        //        const sdrbuf = Buffer.alloc(4);
-        //        sdrbuf.writeUInt8(0x15, 0); // 0x15 transaction sequence number (arbitrarily chosen)                        
-        //        addressbuf.copy(sdrbuf, 1);
-        //        sdrbuf.writeUInt8(endpoint, 3);
-        //        //console.log("Simple Descriptor Request data: " + util.inspect(sdrbuf));
-        //        this.simple_descriptor_request(frame.remote64, frame.remote16, sdrbuf);       
-        //        callback();
-        //    },
-        //    (err) => {
-        //        if (err) {
-        //            logger.error("async.eachSeries simple_descriptor_request error: %j", err)
-        //        }
-        //    }
-        //);       
+        }    
         
         //
     }
 
     handle_cluster_0b04_01(frame, reader) {
-        console.log(util.inspect(frame));
+        logger.debug(util.inspect(frame));
 
         function read_next_attribute() {
             try {
                 let property_name, value;
                 let attribute = reader.nextUInt16LE();
-                console.log("attribute: %s", sprintf("0x%04x", attribute));
+                logger.debug("attribute: %s", sprintf("0x%04x", attribute));
 
                 let status = reader.nextUInt8();
                 if (status != 0x00) {
@@ -476,7 +455,7 @@ class XbeeHandler {
                 }
 
                 if (property_name) {
-                    console.log("property: %s, datatype: %s, value: %d", property_name, sprintf("0x%04x", datatype), value);
+                    logger.debug(`property: ${property_name} datatype:${datatype}, value: ${value}`);
                     return {
                         "property": property_name,
                         "value": value
@@ -522,7 +501,7 @@ class XbeeHandler {
 
         // get the attributes
         var attribute = reader.nextUInt16LE();
-        //console.log("attribute: %s", sprintf("0x%04x", attribute));
+        //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
         var datatype = reader.nextUInt8();
 
         if (attribute == 0x050b) {             
@@ -557,14 +536,14 @@ class XbeeHandler {
     }
 
     handle_cluster_0b04(frame) {
-        //console.log(util.inspect(frame));
+        //logger.debug(util.inspect(frame));
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
-        //console.log("zcl_command: %s", sprintf("0x%02x", zcl_command));
+        //logger.debug("zcl_command: %s", sprintf("0x%02x", zcl_command));
 
         if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11
-            //console.log(util.inspect(frame));
+            //logger.debug(util.inspect(frame));
             this.handle_cluster_0b04_0a(frame, reader);
         }
         else if (zcl_command == 0x01) {  // ZCL 0x01 Read attributes response 7.2
@@ -577,7 +556,7 @@ class XbeeHandler {
     handle_cluster_0406_0a(frame, reader) {
         // get the attributes
         var attribute = reader.nextUInt16LE();
-        //console.log("attribute: %s", sprintf("0x%04x", attribute));
+        //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
         var datatype = reader.nextUInt8();
 
         if (attribute == 0x0000 && datatype == 0x18) {
@@ -598,20 +577,20 @@ class XbeeHandler {
     }
 
     handle_cluster_0406(frame) {
-        //console.log(util.inspect(frame));
+        //logger.debug(util.inspect(frame));
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
 
         if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11
-            //console.log(util.inspect(frame));
+            //logger.debug(util.inspect(frame));
             this.handle_cluster_0406_0a(frame, reader);
         }
     }
 
     handle_cluster_0402_01(frame, reader) {
         var attribute = reader.nextUInt16LE();
-        //console.log("attribute: %s", sprintf("0x%04x", attribute));
+        //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
 
         var status = reader.nextUInt8();
         if (status != 0) {
@@ -642,7 +621,7 @@ class XbeeHandler {
 
     handle_cluster_0402_0a(frame, reader) {
         var attribute = reader.nextUInt16LE();
-        //console.log("attribute: %s", sprintf("0x%04x", attribute));
+        //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
 
         var datatype = reader.nextUInt8();
         if (datatype != 0x29) {
@@ -672,17 +651,17 @@ class XbeeHandler {
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
-        console.log("cluster 0402 zcl_command: %s", sprintf("0x%02x", zcl_command));
+        logger.debug("cluster 0402 zcl_command: %s", sprintf("0x%02x", zcl_command));
 
         if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11
-            //console.log(util.inspect(frame));
+            //logger.debug(util.inspect(frame));
             this.handle_cluster_0402_0a(frame, reader);
         }
         else if (zcl_command == 0x01) {  // ZCL 0x01 Read attributes response 7.2
             this.handle_cluster_0402_01(frame, reader);
         }          
         else if (zcl_command == 0x07) {  // ZCL 0x07 Configure reporting response 7.8
-            console.log(util.inspect(frame.data));
+            logger.debug(util.inspect(frame.data));
             var status = reader.nextUInt8();
             if (status == 0x00) {
                 this.dispatch_datarcv_event(
@@ -700,13 +679,13 @@ class XbeeHandler {
 
     handle_cluster_0000(frame) {
         try {
-            //console.log(util.inspect(frame));
+            //logger.debug(util.inspect(frame));
 
             var reader = new BufferReader(frame.data);
             reader.seek(1);
             var id = reader.nextUInt8();
             var command = reader.nextUInt8();
-            //console.log("id: %s command %d", id.toString(16), command);
+            //logger.debug("id: %s command %d", id.toString(16), command);
             if (command != 0x01) {
                 return logger.error("handle_cluster_0000() command");
             }
@@ -715,7 +694,7 @@ class XbeeHandler {
                 try {
                     let property_name, value;
                     let attribute = reader.nextUInt16LE();
-                    console.log("attribute: %s", sprintf("0x%04x", attribute));
+                    logger.debug("attribute: %s", sprintf("0x%04x", attribute));
 
                     let status = reader.nextUInt8();
                     if (status != 0x00) {
@@ -796,15 +775,15 @@ class XbeeHandler {
     }
 
     handle_cluster_0020(frame) {
-        //console.log(util.inspect(frame));
+        //logger.debug(util.inspect(frame));
     }
 
     handle_cluster_8034(frame) {
-        //console.log(util.inspect(frame));
+        //logger.debug(util.inspect(frame));
     }
 
     handle_cluster_8021(frame) {
-        //console.log(util.inspect(frame));
+        //logger.debug(util.inspect(frame));
         if (frame.profileId == "0000") {
             // ZDO bind response
             var reader = new BufferReader(frame.data);
@@ -857,15 +836,15 @@ class XbeeHandler {
         valuebuf.swap16();
         var destaddress = valuebuf.readUInt16BE(0);
 
-        //console.log("Match Descriptor Request id: %s, dest: %s", id.toString(16), destaddress.toString(16));
+        //logger.debug("Match Descriptor Request id: %s, dest: %s", id.toString(16), destaddress.toString(16));
 
         valuebuf = reader.nextBuffer(2);
         valuebuf.swap16();
         var requested_profile = valuebuf.readUInt16BE(0);
-        //console.log("requested profile: %s", requested_profile.toString(16));
+        //logger.debug("requested profile: %s", requested_profile.toString(16));
 
         var number_of_input_clusters = reader.nextUInt8();
-        //console.log("number_of_input_clusters: %d", number_of_input_clusters);
+        //logger.debug("number_of_input_clusters: %d", number_of_input_clusters);
 
         // reply with 8006
         const respbuf = Buffer.alloc(6);
@@ -874,7 +853,7 @@ class XbeeHandler {
         respbuf.writeUInt16LE(0x0000, 2); // Indicates the 16-bit address of the responding device, this is the coordinator with address 0x0000
         respbuf.writeUInt8(0x01, 4); // 1 endpoint
         respbuf.writeUInt8(MYENDPOINT, 5); // set endpoint tp 0x02
-        ////console.log("match descriptor response data: " + util.inspect(respbuf));
+
         this.match_descriptor_response(frame.remote64, frame.remote16, respbuf);
 
         this.dispatch_datarcv_event(
@@ -896,7 +875,7 @@ class XbeeHandler {
 
 
         if (devices[frame.remote64] && devices[frame.remote64].endpoints && devices[frame.remote64].endpoints.length) {
-            //console.log("- - - - active endpoint is known for device " + frame.remote64 + " endpoints: " + util.inspect(devices[frame.remote64].endpoints))
+            //logger.debug("- - - - active endpoint is known for device " + frame.remote64 + " endpoints: " + util.inspect(devices[frame.remote64].endpoints))
             return;
         }
 
@@ -907,7 +886,7 @@ class XbeeHandler {
         aerbuf.writeUInt8(0x12, 0); // 0x12 transaction sequence number (arbitrarily chosen)                        
         addressbuf.copy(aerbuf, 1);
         var aerdata = [...aerbuf];
-        //console.log("Active Endpoint Request data: " + util.inspect(aerdata));
+        //logger.debug("Active Endpoint Request data: " + util.inspect(aerdata));
         this.active_endpoint_request(frame.remote64, frame.remote16, aerdata);
     }
 
@@ -915,12 +894,12 @@ class XbeeHandler {
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
-        //console.log("zcl_command: %s", sprintf("0x%02x", zcl_command));
+        //logger.debug("zcl_command: %s", sprintf("0x%02x", zcl_command));
 
         if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11 
             // get the attributes
             var attribute = reader.nextUInt16LE();
-            //console.log("attribute: %s", sprintf("0x%04x", attribute));
+            //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
 
             if (attribute == 0x0000) { // active power 
                 var datatype = reader.nextUInt8();
@@ -947,7 +926,7 @@ class XbeeHandler {
         }
         else if (zcl_command == 0x01) {  // ZCL 0x01 Read attributes response 7.2
             var attribute = reader.nextUInt16LE();
-            //console.log("attribute: %s", sprintf("0x%04x", attribute));
+            //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
 
             if (attribute == 0x0000) { // active power 
                 var status = reader.nextUInt8();
@@ -977,7 +956,7 @@ class XbeeHandler {
             }
         }       
         else if (zcl_command == 0x07) {  // ZCL 0x07 Configure reporting response 7.8
-            console.log(util.inspect(frame.data));
+            logger.debug(util.inspect(frame.data));
 
             var status = reader.nextUInt8();
             if (status == 0x00) {
@@ -994,7 +973,7 @@ class XbeeHandler {
     }
 
     handle_cluster_0006(frame) {
-        //console.log(util.inspect(frame));
+        //logger.debug(util.inspect(frame));
         if (frame.profileId == "0000") {
             // this is a ZDO Match Descriptor Request
             this.handle_ZDO_match_descriptor_request(frame);
@@ -1007,7 +986,7 @@ class XbeeHandler {
 
     handle_cluster_8000(frame) {
         try {
-            console.log(util.inspect(frame));
+            logger.debug(util.inspect(frame));
             var reader = new BufferReader(frame.data);
             var id = reader.nextUInt8();
             var status = reader.nextUInt8();
@@ -1018,11 +997,11 @@ class XbeeHandler {
             var ieebuf = reader.nextBuffer(8);
             var swapped = this.swapEUI64BuffertoBigEndian(ieebuf);
             var ieeestr = swapped.toString("hex")
-            console.log("IEEE: " + ieeestr);
+            logger.debug("IEEE: " + ieeestr);
 
             var address16 = reader.nextUInt16LE();
             var address16str = sprintf("%02x", address16)
-            console.log("IEEE: " + ieeestr + " NWK address: " + address16str);
+            logger.debug("IEEE: " + ieeestr + " NWK address: " + address16str);
 
             this.dispatch_datarcv_event(
                 {
@@ -1046,7 +1025,7 @@ class XbeeHandler {
     }
 
     handle_cluster_8032(frame) {
-        //console.log(util.inspect(frame));
+        //logger.debug(util.inspect(frame));
         this.dispatch_datarcv_event(
             {
                 "type": iotdefinitions.EVENT_DEVICE_ONLINE,
@@ -1067,7 +1046,7 @@ class XbeeHandler {
     }
 
     handle_cluster_0013(frame) {
-        //console.log(util.inspect(frame));
+        //logger.debug(util.inspect(frame));
         this.dispatch_datarcv_event(
             {
                 "type": iotdefinitions.EVENT_DEVICE_ANNOUNCE,
@@ -1081,20 +1060,20 @@ class XbeeHandler {
     }
 
     handle_cluster_8036(frame) {
-        console.log(util.inspect(frame));
+        logger.debug(util.inspect(frame));
     }
 
     // Network Address Request
     netaddr_request(address64) {
         try {
-            console.log("netaddr_request to " + address64);
+            logger.debug("netaddr_request to " + address64);
 
             var addressbuf = this.swapEUI64toLittleEndian(address64);
             const narbuf = Buffer.alloc(10);
             narbuf.writeUInt8(0x03, 0); // 0x03 transaction sequence number (arbitrarily chosen) 
             addressbuf.copy(narbuf, 1);
             narbuf.writeUInt8(0x00, 9); // Request Type 
-            //console.log("Network Address Request ClusterID=0x0000 buffer: " + util.inspect(narbuf));
+            //logger.debug("Network Address Request ClusterID=0x0000 buffer: " + util.inspect(narbuf));
             var txframe = {
                 type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
                 destination64: "000000000000ffff",
@@ -1164,7 +1143,7 @@ class XbeeHandler {
             this.configured_devices.forEach(
                 (ieeeaddr) => {
                     if (this.online_devices.indexOf(ieeeaddr) == -1) {
-                        //console.log("device " + ieeeaddr + " not online");
+                        //logger.debug("device " + ieeeaddr + " not online");
                         offline_devices.push(ieeeaddr);
                     }
                 }
@@ -1297,7 +1276,7 @@ class XbeeHandler {
         xbee.on("frame_object", (frame) => {
             try {
                 if (frame && frame.clusterId) {
-                    console.log("frame type: " + frame.type + " clusterid: " + frame.clusterId);
+                    logger.debug(`frame type: ${frame.type} clusterid: ${frame.clusterId}`);
                     this.handle_frame(frame);
                 }               
 
@@ -1311,11 +1290,11 @@ class XbeeHandler {
 
     dotasks() {
         // check if the devices are online
-        //console.log("xbee dotasks");
+        //logger.debug("xbee dotasks");
         var currtime = Date.now();
         var lastcheck = this.last_onlinedevice_check;
-        if ((currtime - this.last_onlinedevice_check) > 600000) { // TODO: put this value back 30000) {
-            //console.log("xbee dotasks run");
+        if ((currtime - this.last_onlinedevice_check) > 30000) { // TODO: put this value back 30000) {
+            //logger.debug("xbee dotasks run");
             if (!this.is_portopened) {
                 return this.init();
             }
@@ -1323,19 +1302,6 @@ class XbeeHandler {
             this.check_online_devices();
             this.last_onlinedevice_check = Date.now();            
         }
-
-        //setInterval(
-        //    () => {
-        //        if (!this.is_portopened) {
-        //            //console.log("try to init");
-        //            return this.init();
-        //        }
-
-        //        //TODO comment out
-        //        this.check_online_devices();
-        //    }, 
-        //    30000
-        //);
     }
 }
 
