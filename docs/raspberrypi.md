@@ -100,12 +100,10 @@ Create a Sreembit configuration file. Refer to the streembit-cli readme at https
 
 Set the "serialport" field under the IoT module section to /dev/ttyS0. This is the GPIO serial port on Raspberry PI v.3. 
 
-Typical IoT module configuration settings in the config.json configuration file:
+Typical IoT module configuration settings in the config.json configuration file. Please note there are section before and after this IoT module config section. 
 
  ```json
  {
-    ... more settings preceed ... refer to the streembit-cli readme.
-
     "modules": [
         {
             "name": "iot",
@@ -144,8 +142,6 @@ Typical IoT module configuration settings in the config.json configuration file:
             ]
         }
     ]
-
-	...more settings follow... refer to the streembit-cli readme.
 }
 ```
 
@@ -159,4 +155,5 @@ The debug logs on the terminal should indicate that the Streeembit application c
 
 ## Start communicating with Zigbee devices
 
+TODO. 
 
