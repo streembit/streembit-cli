@@ -15,7 +15,7 @@ Login to the Raspberry PI via SSH using your Linux/MAC SSH client or PUTTY on Wi
 sudo raspi-config
 ```
 
-1. Enable SSH: select Interfacing Options. Navigate to and select SSH and choose "Yes".
+1. Enable SSH: select Interfacing Options. Navigate to and select SSH, and select "Yes".
 
 2. Enable serial port: select Interfacing Options. Navigate to Advanced Options/Serial set "No" to “Would you like a login shell to be accessible over serial?” and select "Yes"  to Would you like the serial port hardware to be enabled?" question.
 Refer to the "For latest Jessie version" section at https://hallard.me/enable-serial-port-on-raspberry-pi/
