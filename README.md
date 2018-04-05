@@ -383,3 +383,40 @@ Copy the value of the BS58 public key of the hub (must be the last string of the
 At the UI you must add this Hub to your IoT Hub list. Click on the "IoT Devices" menu item and click on "Create IoT Hub". Enter the IoT device ID. This is usually the Zigbee MAC of your device that sits top on the streembit-cli Raspberry Pi (such as the Zovolt Zigbee gateway). Enter the device name and copy the BS58 public key of the streembit-cli that you gathered in the previous step. Click on Save and the web application should connect to your streembit-cli IoT instance.
 
 The created IoT Hub should appear on the devices view that is accessible from the "My devices" link.
+
+**Step 5**
+
+Configuring Raspberry PI to run as IoT using streembit-cli repo.
+
+Once you have Raspbian OS installed and running on your device, create a new user (say, uiot) and clone the repo into arbitrary folder under this user namespace. eg, /home/uiot/sreembit-cli
+
+Follow all the aforementioned steps
+
+Now we need to make the app automatically start on system boot up. To acheive this first start app with PM2 
+
+```bash
+$ node pm2start --pwd=YOUR_PASSWORD
+```
+a quick side note: since pm2 was not installed globally but rather as a node dependency the path executable would be ./node_modules/pm2/bin/pm2
+
+after the app successfully executed (make sure of it by looking at pm2 logs) first stop it by using 
+```bash
+./node_module/pm2/bin/pm2 delete all
+```
+then do
+```bash
+sudo env PATH=$PATH:/home/uiot/streembit-cli/node_modules/pm2/bin pm2 startup -u uiot --hp /home/uiot/
+```
+
+next, execute
+```bash
+/home/uiot/streembit-cli/node_modules/pm2/bin pm2 save
+```
+
+replace uiot with a username of your choice and check for the correctness of the path
+
+Now, it is time to reboot OS and check if the app was autostarted by pm2 daemon
+you can do it with
+```bash
+/home/uiot/streembit-cli/node_modules/pm2/bin pm2 list
+```
