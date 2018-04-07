@@ -63,9 +63,9 @@ db/*/*/*
 .vs/streembit-cli/v15/Browse.VC.db
 db/sqlite/streembit/streembit.db
 db/leveldb/streembit/CURRENT
+
 /config*.json
 /*.temp.js
-/ssl
 package-lock.json
 ./package-lock.json
 
