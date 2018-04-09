@@ -44,6 +44,7 @@ var MSGFIELD = {
     ECDHPK: "ecdh_public",
     PROTOCOL: "protocol",
     HOST: "address",
+    LOCALIP: "localip",
     PORT: "port",
     DATA: "data",
     CIPHER: "cipher",

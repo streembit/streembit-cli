@@ -21,10 +21,11 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var assert = require('assert');
-var config = require('config');
+const assert = require('assert');
+const config = require('config');
 const program = require('commander');
-var constants = require("libs/constants");
+const constants = require("libs/constants");
+const exec = require('child_process').exec;
 
 var streembit_config = (function (cnfobj) {
     var m_cmdinput = null;
@@ -197,6 +198,7 @@ var streembit_config = (function (cnfobj) {
     cnfobj.transport = {
         "protocol": "",
         "host": "",
+        "localip": 0,
         "port": 0,
         "ws": {
             "port": 0
@@ -241,6 +243,7 @@ var streembit_config = (function (cnfobj) {
             cnfobj.transport.ws.port = config.transport.ws.port || constants.DEFAULT_WS_PORT;
             // set the ws max connection 
             cnfobj.transport.ws.maxconn = config.transport.ws.maxconn || constants.DEFAULT_WS_MAXCONN;
+
 
             cnfobj.cmdinput = config.cmdinput && !program.pm2;
 
@@ -351,9 +354,23 @@ var streembit_config = (function (cnfobj) {
             }
             else{
                 cnfobj.dns = {run: false};
-            }            
+            }
 
-            return callback();
+            if (cnfobj.client_config.run) {
+                exec("ifconfig | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1' | tr -d '\n'",
+                //exec("ip route get 1 | head -1 | awk '{ print $NF }' | tr -d '\n'",
+                    (err, ip4) => {
+                        if (err !== null) {
+                            throw new Error(`exec error: ${err}`);
+                        }
+
+                        cnfobj.transport.localip = ip4;
+
+                        return callback();
+                    });
+            } else {
+                return callback();
+            }
         }
         catch (err) {
             callback(err.message);

@@ -116,7 +116,7 @@ class PeerNet {
         }
     }
 
-    inform_contact(crypto_key, account, user_pkhash, user_public_key, contact_public_key, contact_pkey_hash, connsymmkey, transport, address, port, type, cbfunc) {
+    inform_contact(crypto_key, account, user_pkhash, user_public_key, contact_public_key, contact_pkey_hash, connsymmkey, transport, address, localip, port, type, cbfunc) {
         try {
             if (!cbfunc || typeof cbfunc != "function") {
                 throw new Error("inform_contact error: invalid callback parameter")
@@ -159,6 +159,7 @@ class PeerNet {
             plain[peermsg.MSGFIELD.PUBKEY] = user_public_key;
             plain[peermsg.MSGFIELD.PROTOCOL] = transport;
             plain[peermsg.MSGFIELD.HOST] = address;
+            plain[peermsg.MSGFIELD.LOCALIP] = localip;
             plain[peermsg.MSGFIELD.PORT] = port;
             plain[peermsg.MSGFIELD.UTYPE] = type;
             plain[peermsg.MSGFIELD.SYMKEY] = connsymmkey;
