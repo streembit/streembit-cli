@@ -24,7 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const xbeeapi = require('./xbeeapi');
 const util = require('util');
-const SerialPort = require('serialport');
+const SerialPort = require('./serialport');
 const logger = require("streembit-util").logger;
 const config = require('libs/config');
 const events = require("streembit-util").events;

@@ -45,6 +45,7 @@ class TaskManager {
             var public_key = account.bs58pk;
             // TODO resolve the address 
             var address = config.transport.host;
+            var localip = config.transport.localip;
             // send the WS port
             var port = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;;
             var transport = constants.DEFAULT_WSSTRANSPORT;
@@ -62,7 +63,7 @@ class TaskManager {
                 try {
                     peernet.inform_contact(
                         crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash,
-                        symcryptkey, transport, address, port, type, function (err) {
+                        symcryptkey, transport, address, localip, port, type, function (err) {
                         if (err) {
                             var msg = "send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err);
                             logger.error(msg);                            
