@@ -48,7 +48,7 @@ class TaskManager {
             var localip = config.transport.localip;
             // send the WS port
             var port = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;;
-            var transport = constants.DEFAULT_WSSTRANSPORT;
+            var transport = constants.DEFAULT_WSTRANSPORT;
             var type = config.usertype;
             var pubkeyhash = account.public_key_hash;
             var symcryptkey = account.connsymmkey;
