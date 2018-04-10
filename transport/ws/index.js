@@ -158,7 +158,7 @@ class WsServer {
             // must create the handler, the type of handler depends on the WS mode
             this.handler = this.handler_factory();
 
-            if (config.transport.ssl) {
+            if (config.transport.ssl && !config.transport.localip) {
                 const options = {
                     key: fs.readFileSync(config.transport.key),
                     cert: fs.readFileSync(config.transport.cert)
