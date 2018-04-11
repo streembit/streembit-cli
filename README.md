@@ -178,6 +178,12 @@ Log: logger settings.
 
 **Create a Kademlia network for test and development**
 
+When do you need to execute this step and experiment with the Kademlia network? 
+- If you want to understand better how the Streembit Kademlia network works
+- If you want to develop the UI and connect to a local Kademlia network
+
+Do you need this for Streembit IoT module and to run the Streembit IoT module on a Raspberry PI? **No.** If you want to run the Streembit IoT handler please skip this section and move to the "Streembit IOT Handler" section.
+
 For test and development purposes to create a basic Kademlia network at least two nodes must exist on the network. To run multiple nodes on a computer, do the the following steps:
 
 1) In step 1 we need to create a streembit-cli application, this will be seed No. 1, the first seed node of the Kademlia network.
