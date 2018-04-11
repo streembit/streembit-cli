@@ -33,7 +33,7 @@ const iotdefinitions = require("apps/iot/definitions");
 const BufferReader = require('buffer-reader');
 const BitStream = require('libs/utils/bitbuffer').BitStream;
 const sprintf = require('sprintf-js').sprintf;
-const Devices = require("libs/devices");
+const devices = require("./devices");
 const async = require("async");
 
 const MYENDPOINT = 0x02; // TODO review this to set it dynamcally
@@ -561,6 +561,49 @@ class XbeeSimulator {
         logger.debug(util.inspect(frame));
     }
 
+    send(cmd) {
+        try {
+            if (!cmd) {
+                throw new Error("cmd paameter is required");
+            }
+
+            // endpoints must set from the command handler
+            var sourceEndpoint = cmd.sourceEndpoint;
+            var destinationEndpoint = cmd.destinationEndpoint;
+
+            var txframe = { // AT Request to be sent to
+                type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
+                destination64: cmd.destination64,
+                destination16: cmd.destination16 || 'fffe',
+                sourceEndpoint: sourceEndpoint,
+                destinationEndpoint: destinationEndpoint,
+                clusterId: cmd.clusterId,
+                profileId: cmd.profileId,
+                data: cmd.data
+            };
+
+            serialport.write(xbee.buildFrame(txframe));
+
+            //
+        }
+        catch (err) {
+            logger.error("XBEE send error: %j", err);
+        }
+    }
+
+    send_rtg_request() {
+        var txframe = { // AT Request to be sent to
+            type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
+            clusterId: 0x0032,
+            profileId: 0x0000,
+            sourceEndpoint: 0x00,
+            destinationEndpoint: 0x00,
+            data: [0x02, 0x00]
+        };
+
+        serialport.write(xbee.buildFrame(txframe));
+    }
+
     check_online_devices(){
         try {
             var offline_devices = [];
@@ -598,12 +641,11 @@ class XbeeSimulator {
     }
 
     init() {
-        const devices = 'DEVICES';
+        logger.debug("XBEE handler init");
 
         this.is_portopened = false;
 
         // get the gateway address64
-        //var devices = Devices.list();
         devices.forEach((item) => {
             if (item.permission == iotdefinitions.PERMISSION_ALLOWED) {
                 this.configured_devices.push(item.deviceid);
