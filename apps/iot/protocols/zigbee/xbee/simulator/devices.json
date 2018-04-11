@@ -1,0 +1,19 @@
+{
+    "iotdevid": 1,
+    "deviceid": "0013a20041679c00",
+    "type": 1,
+    "protocol": "zigbee",
+    "permission": 1,
+    "mcu": "xbee",
+    "name": "Streembit Hub",
+    "details": {
+        "manufacturername":"ZoVolt",
+        "modelidentifier":"ZOVOLT-P2PIOTHUB-01",
+        "hwversion":"0001",
+        "protocol":"Zigbee",
+        "security":"ECC PPKI",
+        "NFC":true,
+        "endpoint":2
+    },
+    "features": null
+}
