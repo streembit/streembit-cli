@@ -138,7 +138,7 @@ class XbeeHandler {
 
 
     simple_descriptor_request(address64, address16, data) {
-        //logger.debug("simple_descriptor_request to " + address64);
+        logger.debug("simple_descriptor_request to " + address64);
         var txframe = { 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
             destination64: address64,
@@ -154,7 +154,7 @@ class XbeeHandler {
     }
 
     active_endpoint_request(address64, address16, data) {
-        //logger.debug("active_endpoint_request to " + address64);
+        logger.debug("active_endpoint_request to " + address64);
         var txframe = { 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
             destination64: address64,
@@ -170,7 +170,7 @@ class XbeeHandler {
     }
 
     match_descriptor_response(address64, address16, data) {
-        //logger.debug("match_descriptor_response to " + address64);
+        logger.debug("match_descriptor_response to " + address64);
         var txframe = { // AT Request to be sent to 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
             destination64: address64,
@@ -186,7 +186,7 @@ class XbeeHandler {
     }
 
     simple_basciccluster_request(address64, address16, destenpoint, data) {
-        //logger.debug("simple_basciccluster_request to " + address64);
+        logger.debug("simple_basciccluster_request to " + address64);
         var txframe = { // AT Request to be sent to 
             type: C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME,
             destination64: address64,
@@ -206,8 +206,7 @@ class XbeeHandler {
     
     handle_cluster_8031 (frame) {
         try {
-            //logger.debug("handle_cluster_8031");
-            //logger.debug(util.inspect(frame));
+            logger.debug(`handle_cluster_8031 ${util.inspect(frame)}`);
             var clusterId = 0x0031;
 
             var bufflen = frame.data.length;
@@ -299,7 +298,7 @@ class XbeeHandler {
     };
 
     handle_cluster_8004(frame) {
-        logger.debug(util.inspect(frame));
+        logger.debug(`handle_cluster_8004 ${util.inspect(frame)}`);
 
         let reader = new BufferReader(frame.data);
         let id = reader.nextUInt8();
@@ -373,6 +372,7 @@ class XbeeHandler {
     }
 
     handle_cluster_8005(frame) {
+        logger.debug(`handle_cluster_8005 ${util.inspect(frame)}`);
         if (frame.profileId != "0000") {
             return logger.debug("INVALID profileID for clusterId 0x8005")
         }
@@ -536,7 +536,8 @@ class XbeeHandler {
     }
 
     handle_cluster_0b04(frame) {
-        //logger.debug(util.inspect(frame));
+        logger.debug(`handle_cluster_0b04 ${util.inspect(frame)}`);
+
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
@@ -577,7 +578,8 @@ class XbeeHandler {
     }
 
     handle_cluster_0406(frame) {
-        //logger.debug(util.inspect(frame));
+        logger.debug(`handle_cluster_0406 ${util.inspect(frame)}`);
+
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
@@ -589,6 +591,8 @@ class XbeeHandler {
     }
 
     handle_cluster_0402_01(frame, reader) {
+        logger.debug(`handle_cluster_0402_01 ${util.inspect(frame)}`);
+
         var attribute = reader.nextUInt16LE();
         //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
 
@@ -620,6 +624,8 @@ class XbeeHandler {
     }
 
     handle_cluster_0402_0a(frame, reader) {
+        logger.debug(`handle_cluster_0402_0a ${util.inspect(frame)}`);
+
         var attribute = reader.nextUInt16LE();
         //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
 
@@ -646,7 +652,6 @@ class XbeeHandler {
     }
 
     handle_cluster_0402(frame) {
-
         var properties = [];
         var reader = new BufferReader(frame.data);
         reader.seek(2);
@@ -661,7 +666,7 @@ class XbeeHandler {
             this.handle_cluster_0402_01(frame, reader);
         }          
         else if (zcl_command == 0x07) {  // ZCL 0x07 Configure reporting response 7.8
-            logger.debug(util.inspect(frame.data));
+            logger.debug(`handle_cluster_0402 zcl_command == 0x07 ${util.inspect(frame)}`);
             var status = reader.nextUInt8();
             if (status == 0x00) {
                 this.dispatch_datarcv_event(
@@ -679,7 +684,7 @@ class XbeeHandler {
 
     handle_cluster_0000(frame) {
         try {
-            //logger.debug(util.inspect(frame));
+            logger.debug(`handle_cluster_0000 ${util.inspect(frame)}`);
 
             var reader = new BufferReader(frame.data);
             reader.seek(1);
@@ -783,7 +788,7 @@ class XbeeHandler {
     }
 
     handle_cluster_8021(frame) {
-        //logger.debug(util.inspect(frame));
+        logger.debug(`handle_cluster_8021 ${util.inspect(frame)}`);
         if (frame.profileId == "0000") {
             // ZDO bind response
             var reader = new BufferReader(frame.data);
@@ -973,7 +978,7 @@ class XbeeHandler {
     }
 
     handle_cluster_0006(frame) {
-        //logger.debug(util.inspect(frame));
+        logger.debug(`handle_cluster_0006 ${util.inspect(frame)}`);
         if (frame.profileId == "0000") {
             // this is a ZDO Match Descriptor Request
             this.handle_ZDO_match_descriptor_request(frame);
@@ -986,7 +991,8 @@ class XbeeHandler {
 
     handle_cluster_8000(frame) {
         try {
-            logger.debug(util.inspect(frame));
+            logger.debug(`handle_cluster_8000 ${util.inspect(frame)}`);
+
             var reader = new BufferReader(frame.data);
             var id = reader.nextUInt8();
             var status = reader.nextUInt8();
@@ -1025,7 +1031,8 @@ class XbeeHandler {
     }
 
     handle_cluster_8032(frame) {
-        //logger.debug(util.inspect(frame));
+        logger.debug(`handle_cluster_8032 ${util.inspect(frame)}`);
+
         this.dispatch_datarcv_event(
             {
                 "type": iotdefinitions.EVENT_DEVICE_ONLINE,
@@ -1046,7 +1053,8 @@ class XbeeHandler {
     }
 
     handle_cluster_0013(frame) {
-        //logger.debug(util.inspect(frame));
+        logger.debug(`handle_cluster_0013 ${util.inspect(frame)}`);
+
         this.dispatch_datarcv_event(
             {
                 "type": iotdefinitions.EVENT_DEVICE_ANNOUNCE,
@@ -1060,7 +1068,7 @@ class XbeeHandler {
     }
 
     handle_cluster_8036(frame) {
-        logger.debug(util.inspect(frame));
+        logger.debug(`handle_cluster_8036 ${util.inspect(frame)}`);
     }
 
     // Network Address Request
