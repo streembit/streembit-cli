@@ -104,15 +104,6 @@ A typical configuration file is the following:
             "port": 8080
         }
     ],
-    "users": [
-        {
-            "pkhash": "my_streembit_ui_publickey_hash",
-            "publickey": "my_streembitui_long_publickey",
-            "username": "",
-            "isadmin": true,
-            "settings": {}
-        }
-    ],
     "log": {
         "level": "debug",
         "logs_dir": "logs"
