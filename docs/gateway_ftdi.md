@@ -26,11 +26,11 @@ Gateway JP1 wires:
 
 ![Gateway JP1](gateway_to_ftdi_pins.png?raw=true "Gateway JP1")
 
-## XBEE configuration
+## Write settings to the XBEE module
 
-Install the DIGI XCTU configuration tool. This pplication must be used to configure the XBEE Zigbee MCU.
+Install the DIGI XCTU configuration tool. This application must be used to configure the XBEE Zigbee MCU.
 
-Using the DIG XCTU software or some other Terminal Emulator or processor, the following settings within the XBee ZB SMT module would need to be set:
+Using the DIG XCTU software the following settings within the XBee ZB SMT module would need to be set:
 
 - ZS: 2
 - AP: 1
