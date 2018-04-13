@@ -64,7 +64,7 @@ A typical configuration file is the following:
         {
             "name": "iot",
             "run": false,
-            "serialport": "Com3",
+            "serialport": "/dev/ttyS0",
             "protocols": [
                 {
                     "name": "zigbee",
@@ -97,7 +97,7 @@ A typical configuration file is the following:
                 }
             ]
         },
-		{
+	{
             "name": "dns",
             "run": true,
             "host": "srv.streembit.net",
@@ -273,7 +273,7 @@ Make sure you modify your config.json according to this example
    "database_name": "streembitsql",
    "cmdinput": true,
    "seeds": [
-		{
+	{
             "host": "seed.streembit.uk",
             "port": 32319
         }
@@ -285,8 +285,8 @@ Make sure you modify your config.json according to this example
 	   "ws": {
            "port": 32320
        },
-	    "ssl": true,
-		"ca": "ssl/aaaaz.streembit.org.ca-bundle.crt",
+	"ssl": true,
+	"ca": "ssl/aaaaz.streembit.org.ca-bundle.crt",
         "cert": "ssl/aaaaz.streembit.org.crt",
         "key": "ssl/aaaaz.streembit.org.key"
    },
@@ -313,7 +313,7 @@ Make sure you modify your config.json according to this example
        {
            "name": "iot",
            "run": true,
-           "serialport": "Com3",
+           "serialport": "/dev/ttyS0",
            "protocols": [
                {
                    "name": "zigbee",
@@ -345,7 +345,13 @@ Make sure you modify your config.json according to this example
                    }
                }
            ]
-       }
+       },
+       {
+            "name": "dns",
+            "run": true,
+            "host": "srv.streembit.net",
+            "port": 8080
+        }
    ],
    "log": {
        "level": "debug",
