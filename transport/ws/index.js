@@ -159,6 +159,7 @@ class WsServer {
             this.handler = this.handler_factory();
 
             if (config.transport.ssl) {
+                console.log('WSS SERVER')
                 const options = {
                     key: fs.readFileSync(config.transport.key),
                     cert: fs.readFileSync(config.transport.cert)

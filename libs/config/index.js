@@ -357,7 +357,7 @@ var streembit_config = (function (cnfobj) {
             }
 
             if (cnfobj.client_config.run) {
-                exec("ifconfig | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1' | tr -d '\n'",
+                exec("ifconfig | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1' | head -1 | tr -d '\n'",
                 //exec("ip route get 1 | head -1 | awk '{ print $NF }' | tr -d '\n'",
                     (err, ip4) => {
                         if (err !== null) {

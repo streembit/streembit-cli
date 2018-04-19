@@ -230,8 +230,10 @@ class HTTPTransport {
             };
 
             var isssl = config.transport.ssl;
-            if (target.protocol == "http" ){
+            if (target.protocol === 'http') {
                 isssl = false;
+            } else if (target.protocol === 'https') {
+                isssl = true;
             }
 
             var req;
