@@ -32,7 +32,7 @@ A typical configuration file is the following:
     "seeds": [],
     "transport": {
         "protocol": "http",
-        "host": "182.120.242.165,
+        "host": "182.120.242.165",
         "port": 32321,
         "ws": {
             "port": 32318,
