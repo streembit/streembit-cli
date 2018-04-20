@@ -45,7 +45,6 @@ var MSGFIELD = {
     PROTOCOL: "protocol",
     HOST: "address",
     LOCALIP: "localip",
-    EXTERNALIP: "externalip",
     PORT: "port",
     DATA: "data",
     CIPHER: "cipher",

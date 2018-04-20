@@ -40,7 +40,7 @@ class PeerClient{
         return instance;
     }
 
-    query(message, debug, callback) {
+    query(message, callback) {
         var seeds = utils.shuffle(config.seeds);
 
         var response = null;
@@ -67,8 +67,7 @@ class PeerClient{
             if (!result && errormsg) {
                 callback(errormsg);
             }
-            else {
-                logger.debug(debug, result);
+            else {                
                 callback(null, response);
             }
         });
@@ -79,10 +78,7 @@ class PeerClient{
             type: "ping"
         };
         var message = JSON.stringify(data);
-
-        var debug_msg = "PING succeeded: %j";
-
-        this.query(message, debug_msg, callback);
+        this.query(message, callback);
     }
 
     put(key, value, callback) {
@@ -94,9 +90,15 @@ class PeerClient{
         };
         var message = JSON.stringify(data);
 
-        var debug_msg = "PUT for key " + key + " succeeded at %j";
+        this.query(message, (err, result) => {
+            if (err) {
+                return callback(err);
+            }
 
-        this.query(message, debug_msg, callback);
+            logger.debug("PUT for key " + key + " succeeded at %j");
+
+            callback(null, result);
+        });
     }
 }
 

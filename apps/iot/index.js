@@ -698,7 +698,8 @@ class IoTRunner {
         try {
             let conf = config.iot_config;
             if (!conf.run) {
-                return callback(null, "Config IoT handler -> not running");
+                logger.info("Config IoT handler -> not running");
+                return callback();
             }
 
             logger.info("Run IoT handler");

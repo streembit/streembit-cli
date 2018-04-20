@@ -357,18 +357,26 @@ var streembit_config = (function (cnfobj) {
             }
 
             if (cnfobj.client_config.run) {
-                exec("ifconfig | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1' | head -1 | tr -d '\n'",
-                //exec("ip route get 1 | head -1 | awk '{ print $NF }' | tr -d '\n'",
-                    (err, ip4) => {
-                        if (err !== null) {
-                            throw new Error(`exec error: ${err}`);
-                        }
-
-                        cnfobj.transport.localip = ip4;
-
-                        return callback();
-                    });
-            } else {
+                try {
+                    exec("ifconfig | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1' | head -1 | tr -d '\n'",
+                        (err, ip4) => {
+                            if (err !== null) {                                
+                                console.log(`exec ifconfig error  ${err}`);
+                                cnfobj.transport.localip = 0;
+                            }
+                            else {
+                                cnfobj.transport.localip = ip4;
+                            }
+                            return callback();
+                        });
+                }
+                catch (e) {
+                    // still let run the module if the ifconfig failed for any reasons
+                    cnfobj.transport.localip = 0;
+                    console.log(`exec ifconfig error  ${e.message}`);
+                }
+            }
+            else {
                 return callback();
             }
         }

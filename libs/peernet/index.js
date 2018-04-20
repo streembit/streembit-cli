@@ -116,7 +116,7 @@ class PeerNet {
         }
     }
 
-    inform_contact(crypto_key, account, user_pkhash, user_public_key, contact_public_key, contact_pkey_hash, connsymmkey, transport, address, localip, externalip, port, type, cbfunc) {
+    inform_contact(crypto_key, account, user_pkhash, user_public_key, contact_public_key, contact_pkey_hash, connsymmkey, transport, address, localip, port, type, cbfunc) {
         try {
             if (!cbfunc || typeof cbfunc != "function") {
                 throw new Error("inform_contact error: invalid callback parameter")
@@ -160,7 +160,6 @@ class PeerNet {
             plain[peermsg.MSGFIELD.PROTOCOL] = transport;
             plain[peermsg.MSGFIELD.HOST] = address;
             plain[peermsg.MSGFIELD.LOCALIP] = localip;
-            plain[peermsg.MSGFIELD.EXTERNALIP] = externalip;
             plain[peermsg.MSGFIELD.PORT] = port;
             plain[peermsg.MSGFIELD.UTYPE] = type;
             plain[peermsg.MSGFIELD.SYMKEY] = connsymmkey;
@@ -185,14 +184,6 @@ class PeerNet {
         catch (e) {
             cbfunc(e);
         }
-    }
-
-    ping_contact(cbfunc) {
-        if (!cbfunc || typeof cbfunc != "function") {
-            throw new Error("ping_contact error: invalid callback parameter")
-        }
-
-        NetFactory.net.ping((err, result) => cbfunc(err, result));
     }
 }
 

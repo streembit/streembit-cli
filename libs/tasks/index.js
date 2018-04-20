@@ -43,11 +43,9 @@ class TaskManager {
             var account = new Account();
             var pubkey_hash = account.public_key_hash;
             var public_key = account.bs58pk;
-            // TODO resolve the address 
             var address = config.transport.host;
             var localip = config.transport.localip;
-            // send the WS port
-            var port = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;;
+            var port = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;
             var transport = constants.DEFAULT_WSTRANSPORT;
             var type = config.usertype;
             var pubkeyhash = account.public_key_hash;
@@ -61,20 +59,17 @@ class TaskManager {
 
             var send_to_contact = function(contact, next) {
                 try {
-                    peernet.ping_contact((err, result) => {
-                        result = JSON.parse(result);
-
-                        peernet.inform_contact(
-                            crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash,
-                            symcryptkey, transport, address, localip, result.clientip, port, type, function (err) {
-                                if (err) {
-                                    var msg = "send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err);
-                                    logger.error(msg);
-                                    error_count++;
-                                }
-                                next();
-                            });
-                    })
+                    peernet.inform_contact(
+                        crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash, symcryptkey, transport, address, localip, port, type,
+                        (err) => {
+                            if (err) {
+                                var msg = "send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err);
+                                logger.error(msg);
+                                error_count++;
+                            }
+                            next();
+                        }
+                    );                    
                 }
                 catch (err) {
                     logger.error("send_to_contact error, contact: " + contact.public_key + " error: " + err.message);

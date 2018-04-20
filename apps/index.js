@@ -35,42 +35,32 @@ class ModulesHandler {
     }
 
     init(callback) {
-        async.series(
+        async.waterfall(
             [
-                async.reflect(function (callback) {
+                function (callback) {
                     seed(callback);
-                }),
-                async.reflect(function (callback) {
+                },
+                function (callback) {
                     client(callback);
-                }),
-                async.reflect(function (callback) {
+                },
+                function (callback) {
                     iot.run(callback);
-                }),
-                async.reflect(function (callback) {
+                },
+                function (callback) {
                     const blockchain = new BlockchainHandler();
                     blockchain.run(callback);
-                }),
-                async.reflect(function (callback) {
+                },
+                function (callback) {
                     dnshandler.run(callback);
-                }),
-                async.reflect(function (callback) {
+                },
+                function (callback) {
                     const cmd = new CmdHandler();
                     cmd.run(callback);
-                })
+                }
             ],
-            function (err, results) {
-                results.forEach(
-                    (res) => {
-                        if (res.error) {
-                            logger.error(res.error);
-                        }
-                        else {
-                            logger.info(res.value);
-                        }
-                    }
-                );
-
-                callback();
+            function (err) {
+                logger.error("ModulesHandler error: %j", err);
+                callback(err);                
             }
         );
     }

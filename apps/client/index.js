@@ -28,6 +28,8 @@ const logger = require("streembit-util").logger;
 const peerutils = require("libs/peernet/peerutils");
 const events = require("streembit-util").events;
 const natupnp = require("libs/upnp");
+const PeerClient = require("libs/peernet/peerclient");
+const libutils = require("libs/utils");
 
 function upnpProc(callback) {
     try {
@@ -76,26 +78,75 @@ function upnpProc(callback) {
     }
 }
 
+/*
+    Use this method to work out the host. It is either a domain name or the external IP address.
+    If the host is defined then use that data. If the host is empty then get the external IP address by pinging a seed.
+*/
+function resolveHost(callback) {
+    try {
+        if (config.transport && config.transport.host) {
+            // validate the host is correct in the config, either it is a valid domain and IP address 
+            if (!libutils.is_ipaddress(config.transport.host) && !libutils.is_valid_domain(config.transport.host)) {
+                return callback("Invalid host configuration value. When the host is defined it must be either a valid domain name or IP adddress");
+            }
+            else {
+                return callback();
+            }
+        }
+
+        let peerclient = new PeerClient();
+        peerclient.ping(
+            (err, response) => {
+                if (err) {
+                    return callback(`Resolving IP address failed, error: ${err}`);
+                }
+                if (!response ) {
+                    return callback("Resolving IP address failed, error: invalid response returned");
+                }
+
+                let data = JSON.parse(response);
+
+                if (!data || !data.clientip || !libutils.is_ipaddress(data.clientip)){
+                    return callback("Resolving IP address failed, error: invalid external IP address returned from a seed");
+                }
+
+                // the IP is returned, set the host to the IP value
+                config.transport.host = data.clientip;
+                callback();
+            }
+        );        
+    }
+    catch (e) {
+        callback(`Resolving host IP address error: ${e.message}`);
+    }
+}
+
 module.exports = exports = function (callback) {
     try {
         config.net = constants.CLIENTNET;
 
         var conf = config.client_config;
         if (!conf.run) {
-            return callback(null, "Config client handler -> not running");
+            logger.info("Config client handler -> not running");
+            return callback();
         }
 
         logger.info("Run streembit client handler");
 
-        upnpProc(() => {
-            logger.info("Client handler started");
+        resolveHost((err) => {
+            if (err) {
+                return callback(err);
+            }
 
-            callback(null, "Client module initialized");
+            upnpProc(() => {
+                logger.info("Client handler started");
 
-            // process the tasks following init
-            events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
+                callback(null, "Client module initialized");
+
+                // process the tasks following init
+                events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
+            });
         });
-
     }
     catch (err) {
         callback(err.message);
