@@ -67,7 +67,7 @@ module.exports = function (callback) {
                 }
 
                 logger.info("Seed handler started");
-                callback(null, "Seed module initialized");
+                callback();
             }
         );
 

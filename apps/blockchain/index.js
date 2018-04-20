@@ -37,7 +37,8 @@ class BlockchainHandler {
         try {
             var conf = config.blockchain_config;
             if (!conf.run) {
-                return callback(null, "Config blockchain handler -> not running");
+                logger.info("Config blockchain handler -> not running");
+                return callback();
             }
 
             logger.info("Run blockchain handler");

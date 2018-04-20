@@ -720,7 +720,8 @@ class IoTRunner {
                         return callback(err);
                     }
 
-                    callback(null, "IoT module initialized");
+                    logger.info("IoT module initialized");
+                    callback();
                 }
             );
 

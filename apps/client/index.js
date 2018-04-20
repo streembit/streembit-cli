@@ -140,8 +140,7 @@ module.exports = exports = function (callback) {
 
             upnpProc(() => {
                 logger.info("Client handler started");
-
-                callback(null, "Client module initialized");
+                callback();
 
                 // process the tasks following init
                 events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });

@@ -59,7 +59,6 @@ class ModulesHandler {
                 }
             ],
             function (err) {
-                logger.error("ModulesHandler error: %j", err);
                 callback(err);                
             }
         );

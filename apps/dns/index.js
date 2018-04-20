@@ -81,7 +81,8 @@ module.exports.run = function (callback) {
     try {
         var conf = config.dns;
         if (!conf.run) {
-            return callback(null, "DNS handler -> not running");
+            logger.info("DNS handler -> not running");
+            return callback();
         }
 
         logger.info("Run streembit DNS handler");

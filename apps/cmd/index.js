@@ -31,17 +31,27 @@ const prompt = require('prompt');
 
 
 class CmdHandler {
-    constructor() {
-        if (!config.cmdinput) {
-            this.run = () => {
-                logger.info('Commands interface is not active');
-            };
-        }
+    constructor() {        
     }
 
     run(callback) {
+        // use this function to handle cmd errors
+        function cmddone(err) {
+            if (err) {
+                logger.error("cmd run error: %j", err)
+            }
+        }
+
         try {
+            if (!config.cmdinput) {                
+                logger.info('Commands interface is not active');
+                return callback();
+            }
+
             logger.info("Run CMD input handler");
+            // still return here the callback so the apps/index can complete and the application can be initialized
+            // but this method is still carry 0n
+            callback();
 
             const schema = {
                 properties: {
@@ -65,17 +75,16 @@ class CmdHandler {
                         // shut down cmd prompt gracefully
                         console.log("\nCMD input has been terminated by user");
                         this.stop();
-                        return callback();
                     }
 
-                    return callback(err);
+                    return cmddone(err);
                 }
 
-                this.processInput(result.cmd, callback);
+                this.processInput(result.cmd, cmddone);
             });
         }
         catch (err) {
-            callback("CMD handler error: " + err.message);
+            cmddone("CMD handler error: " + err.message);
         }
     }
 
