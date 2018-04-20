@@ -61,16 +61,20 @@ class TaskManager {
 
             var send_to_contact = function(contact, next) {
                 try {
-                    peernet.inform_contact(
-                        crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash,
-                        symcryptkey, transport, address, localip, port, type, function (err) {
-                        if (err) {
-                            var msg = "send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err);
-                            logger.error(msg);                            
-                            error_count++;
-                        }    
-                        next();
-                    }); 
+                    peernet.ping_contact((err, result) => {
+                        result = JSON.parse(result);
+
+                        peernet.inform_contact(
+                            crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash,
+                            symcryptkey, transport, address, localip, result.clientip, port, type, function (err) {
+                                if (err) {
+                                    var msg = "send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err);
+                                    logger.error(msg);
+                                    error_count++;
+                                }
+                                next();
+                            });
+                    })
                 }
                 catch (err) {
                     logger.error("send_to_contact error, contact: " + contact.public_key + " error: " + err.message);

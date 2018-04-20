@@ -30,6 +30,8 @@ const utils = require("libs/utils");
 
 let instance = null;
 
+const protocol = 'https';
+
 class PeerClient{
     constructor() {
         if (!instance) {
@@ -38,26 +40,14 @@ class PeerClient{
         return instance;
     }
 
-    query() {
-
-    }
-
-    put(key, value, callback) {
-
+    query(message, debug, callback) {
         var seeds = utils.shuffle(config.seeds);
-
-        var data = {
-            type: "dhtput",
-            key: key,
-            value: value
-        };
-        var message = JSON.stringify(data);
 
         var response = null;
         var errormsg = null;
 
         function write(seed, cb) {
-            seed.protocol = 'https';
+            seed.protocol = protocol;
             HTTPTransport.write(message, seed, "/", function (err, msg) {
                 var complete = false;
                 if (err) {
@@ -78,11 +68,35 @@ class PeerClient{
                 callback(errormsg);
             }
             else {
-                logger.debug("PUT for key " + key + " succeeded at %j", result);
+                logger.debug(debug, result);
                 callback(null, response);
             }
-        });       
-        
+        });
+    }
+
+    ping(callback) {
+        var data = {
+            type: "ping"
+        };
+        var message = JSON.stringify(data);
+
+        var debug_msg = "PING succeeded: %j";
+
+        this.query(message, debug_msg, callback);
+    }
+
+    put(key, value, callback) {
+
+        var data = {
+            type: "dhtput",
+            key: key,
+            value: value
+        };
+        var message = JSON.stringify(data);
+
+        var debug_msg = "PUT for key " + key + " succeeded at %j";
+
+        this.query(message, debug_msg, callback);
     }
 }
 

@@ -113,7 +113,12 @@ class ClientRequestHandler  {
 
     ping(req, res, message) {
         try {
-            this.sendcomplete(res, { result: 0 });
+            let clientip = req.connection.remoteAddress;
+            if (req.socket.address().family === 'IPv6') {
+                clientip = clientip.replace(/^::ffff:/, '');
+            }
+
+            this.sendcomplete(res, { result: 0, clientip: clientip });
         }
         catch (err) {
             this.senderror(res, errcodes.HTTP_HANDLEREQUEST, err);
