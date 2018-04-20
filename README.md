@@ -32,11 +32,11 @@ A typical configuration file is the following:
     "seeds": [],
     "transport": {
         "protocol": "http",
-        "host": "192.168.0.10",
+        "host": "182.120.242.165,
         "port": 32321,
         "ws": {
             "port": 32318,
-			"maxconn":  10000
+	    "maxconn":  10000
         }
     },
     "limits": {
@@ -125,7 +125,8 @@ The "transport" field:
 
 protocol: default value is "http".
 
-host: IP address for the HTTP listener. Since The Kademlia contact is the composite of IP address and port, if the application run as a Kademlia seed node this field is required and must be an IP address. 
+host: IP address or domain name for the HTTP listener. <br />
+For seed node: Since The Kademlia contact is the composite of IP address and port, if the application run as a Kademlia seed node this field is required and must be an IP address. 
 
 port: Port for the http listener. Default value is 32321
 
@@ -271,7 +272,7 @@ Make sure you modify your config.json according to this example
    ],
    "transport": {
        "protocol": "http",
-       "host": "aaaaz.streembit.org",
+       "host": "domain name OR ip address OR empty string ",
        "port": 32319,
 	   "ws": {
            "port": 32320
@@ -350,6 +351,11 @@ Make sure you modify your config.json according to this example
    }
 }
 ```
+
+For IoT node: the transport.host field can be the following:
+- IP address - type the valid public static IP adddress of your device. The Streembit UI will try to connect to the IoT node via this static public IP address.
+- Domain name - type a domain name which DNS services is configured. The Streembit UI will connect to the IoT node via this domain name.
+- "" - empty string. By configuring the device with this option and define an empty string i.e "", the application will try to resolve the external (public) IP address of the device. The Streembit UI will connect to the IoT node via this resolved public IP address.
 
 Notice that we are using domain names instead of IP addresses for the ssl cert configuration. This is important. Also there must be at least one valid seed, as well as run value in client and iot modules set to 'true'.
 
