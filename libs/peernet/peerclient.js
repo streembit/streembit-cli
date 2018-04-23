@@ -95,7 +95,7 @@ class PeerClient{
                 return callback(err);
             }
 
-            logger.debug("PUT for key " + key + " succeeded at %j");
+            logger.debug("PUT for key " + key + " succeeded");
 
             callback(null, result);
         });

@@ -31,6 +31,9 @@ const natupnp = require("libs/upnp");
 const PeerClient = require("libs/peernet/peerclient");
 const libutils = require("libs/utils");
 
+const peerclient = new PeerClient();
+const interval = 600000; // 10 mins
+
 function upnpProc(callback) {
     try {
         var upnpclient = natupnp.createClient(logger);
@@ -82,9 +85,9 @@ function upnpProc(callback) {
     Use this method to work out the host. It is either a domain name or the external IP address.
     If the host is defined then use that data. If the host is empty then get the external IP address by pinging a seed.
 */
-function resolveHost(callback) {
+function resolveHost(callback, initUpdater = null) {
     try {
-        if (config.transport && config.transport.host) {
+        if (initUpdater && config.transport && config.transport.host) {
             // validate the host is correct in the config, either it is a valid domain and IP address 
             if (!libutils.is_ipaddress(config.transport.host) && !libutils.is_valid_domain(config.transport.host)) {
                 return callback("Invalid host configuration value. When the host is defined it must be either a valid domain name or IP adddress");
@@ -94,7 +97,6 @@ function resolveHost(callback) {
             }
         }
 
-        let peerclient = new PeerClient();
         peerclient.ping(
             (err, response) => {
                 if (err) {
@@ -112,9 +114,20 @@ function resolveHost(callback) {
 
                 // the IP is returned, set the host to the IP value
                 config.transport.host = data.clientip;
+
                 callback();
+
+                if (initUpdater) {
+                    setInterval(function() {
+                        resolveHost(err => {
+                            if (err) {
+                                logger.error(err);
+                            }
+                        })
+                    }, interval);
+                }
             }
-        );        
+        );
     }
     catch (e) {
         callback(`Resolving host IP address error: ${e.message}`);
@@ -145,7 +158,7 @@ module.exports = exports = function (callback) {
                 // process the tasks following init
                 events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
             });
-        });
+        }, 1);
     }
     catch (err) {
         callback(err.message);
