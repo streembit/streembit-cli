@@ -121,7 +121,7 @@ class BlockchainCmds {
     }
 
     async processInput(inp) {
-        const inp_r = inp.split(/\s+/);
+        const inp_r = inp.trim().split(/\s+/);
         const cmd = inp_r[0];
         const cix = this.validCmd.indexOf(inp_r[0]) > -1;
 

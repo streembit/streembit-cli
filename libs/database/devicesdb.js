@@ -45,8 +45,8 @@ class IoTDevicesDb extends database{
     delete_device(deviceid) {
         return new Promise(
             (resolve, reject) => {
-                var query = "DELETE FROM iotdevices WHERE deviceid=?";
-                this.database.run(query, [deviceid], (err) => {
+                var query = "DELETE FROM iotdevices WHERE deviceid=? OR iotdevid=?";
+                this.database.run(query, [deviceid, deviceid], (err) => {
                     if (err) {
                         return reject(err);
                     }
@@ -59,8 +59,8 @@ class IoTDevicesDb extends database{
     get_device(deviceid) {
         return new Promise(
             (resolve, reject) => {
-                var query = "SELECT * FROM iotdevices WHERE deviceid=?";
-                this.database.get(query, [deviceid], (err, row) => {
+                var query = "SELECT * FROM iotdevices WHERE deviceid=? OR iotdevid=?";
+                this.database.get(query, [deviceid, deviceid], (err, row) => {
                     if (err) {
                         return reject(err.message);
                     }

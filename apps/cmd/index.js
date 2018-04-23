@@ -27,6 +27,7 @@ const config = require('libs/config');
 const BlockchainCmd = require('../blockchain/cmds');
 const AccountCmds = require('libs/account/cmds');
 const UsersCmds = require('libs/users/cmds');
+const DevicesCmds = require('libs/devices/cmds');
 const prompt = require('prompt');
 
 
@@ -102,6 +103,10 @@ class CmdHandler {
                 case 'usr':
                     const usersCmd = new UsersCmds(this, callback);
                     usersCmd.run();
+                    break;
+                case 'dev':
+                    const devicesCmd = new DevicesCmds(this, callback);
+                    devicesCmd.run();
                     break;
                 default:
                     this.helper();
