@@ -48,7 +48,7 @@ class DevicesCmds {
                 cmd: {
                     description: 'Enter devices command',
                     type: 'string',
-                    pattern: /^[a-z]+( [a-z0-9]{3,})?$/i,
+                    pattern: /^[a-z]+( [a-z0-9]{1,})?$/i,
                     message: 'Invalid command',
                     required: true
                 },

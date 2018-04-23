@@ -35,6 +35,7 @@ const utils = require("libs/utils");
 program
     .version(version)
     .option('-pwd, --pwd [pwd]', 'Password (secret) to protect the private key')
+    .option('-cmd, --cmd', 'Initialize command line interface')
     .option('-pm2, --pm2', 'PM2 or service/daemon mode')
     .option('-i, --ip [value]', 'IP address for the Streembit seed')
     .option('-p, --port <num>', 'Port for the Streembit client', utils.parse_ipport)
@@ -78,7 +79,8 @@ try {
         app.delete_user(program.pwd);
     }
     else {
-        app(program.port, program.ip, program.pwd);
+        const cmd = program.cmd || null;
+        app(program.port, program.ip, program.pwd, cmd);
     }
 }
 catch (e) {

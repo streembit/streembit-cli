@@ -214,7 +214,7 @@ var streembit_config = (function (cnfobj) {
     };
 
 
-    cnfobj.init = function (argv_port, argv_ip, callback) {
+    cnfobj.init = function (argv_port, argv_ip, cmd, callback) {
         try {
             cnfobj.log = config.log;
 
@@ -245,7 +245,7 @@ var streembit_config = (function (cnfobj) {
             cnfobj.transport.ws.maxconn = config.transport.ws.maxconn || constants.DEFAULT_WS_MAXCONN;
 
 
-            cnfobj.cmdinput = config.cmdinput && !program.pm2;
+            cnfobj.cmdinput = ( config.cmdinput || cmd ) && !program.pm2;
 
             cnfobj.seeds = config.seeds;
 

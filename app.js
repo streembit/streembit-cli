@@ -47,13 +47,13 @@ const WhitelistDB = require("libs/database/whitelistdb");
 const constants = require("libs/constants");
 
 // initialize the logger
-module.exports = exports = function (port, ip, password) {
+module.exports = exports = function (port, ip, password, cmd) {
     try {
         async.waterfall(
             [
                 function (callback) {
                     try {
-                        config.init(port, ip, callback);
+                        config.init(port, ip, cmd, callback);
                     }
                     catch (e) {
                         callback(e);
