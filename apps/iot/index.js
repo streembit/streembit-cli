@@ -42,11 +42,13 @@ class IoTHandler {
     }
 
     getdevice(id) {
-        return this.devicelist.get(id);
+        var lowercase_id = id.toLowerCase();
+        return this.devicelist.get(lowercase_id);
     }
 
     setdevice(id, device) {
-        this.devicelist.set(id, device);
+        var lowercase_id = id.toLowerCase();
+        this.devicelist.set(lowercase_id, device);
     }
 
     getdeviceobj(type, protocol) {
