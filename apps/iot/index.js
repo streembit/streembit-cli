@@ -285,10 +285,12 @@ class IoTHandler {
     enable_join(payload, callback) {
         try {
             var enabled = false;
-            var gatewayid = payload.id;
+            var gatewayid = payload.id.toLowerCase();
+            var deviceid;
             var interval = payload.interval;
             this.devicelist.forEach(
                 (device) => {
+                    deviceid = device.id.toLowerCase();
                     if (device.type == iotdefinitions.IOT_DEVICE_GATEWAY && device.id == gatewayid) {
                         device.enable_join(interval);
                         enabled = true;
