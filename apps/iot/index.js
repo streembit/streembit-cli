@@ -291,7 +291,7 @@ class IoTHandler {
             this.devicelist.forEach(
                 (device) => {
                     deviceid = device.id.toLowerCase();
-                    if (device.type == iotdefinitions.IOT_DEVICE_GATEWAY && device.id == gatewayid) {
+                    if (device.type == iotdefinitions.IOT_DEVICE_GATEWAY && deviceid == gatewayid) {
                         device.enable_join(interval);
                         enabled = true;
                     }
