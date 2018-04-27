@@ -55,6 +55,19 @@ class IoTFeature {
         this.isonline = false;
         this.isbindcomplete = false;
         this.isreportcomplete = false;
+
+        // get the gateway id
+        var payload = {
+            event: iotdefinitions.EVENT_GATEWAY_DATA_REQUEST,
+            protocol: iotdefinitions.ZIGBEE
+        }
+        events.iotmsg(
+            payload,
+            (gateway) => {
+                this.gatewayid = gateway.id;
+                logger.debug(`IoTFeature ${deviceid} set gateway id:${gateway.id}`);
+            }
+        );    
     }
 
     on_datareceive_event(data, event) {
@@ -69,6 +82,7 @@ class IoTFeature {
         }
         else {
             data.payload.deviceid = this.deviceid;
+            data.payload.gatewayid = this.gatewayid;
             data.payload.feature = this.type;
             events.emit(event, this.deviceid, data);
         }        

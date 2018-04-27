@@ -158,9 +158,20 @@ class IoTWsHandler extends Wshandler {
                 iotdefinitions.EVENT_NOTIFY_USERS,
                 (id, data) => {
                     try {
+                        if (!data || !data.payload) {
+                            return logger.error("EVENT_NOTIFY_USERSevent handler error: invalid data.payload ");
+                        }
+
                         logger.debug('EVENT_NOTIFY_USERS event signalled');
                         let lowercase_device = id.toLowerCase();
                         let pkhash = this.list_of_devices.get(lowercase_device);
+                        if (!pkhash) {
+                            // try the gatewayid
+                            if (data.payload.gatewayid) {
+                                pkhash = this.list_of_devices.get(data.payload.gatewayid);
+                            }
+                        }
+
                         if (!pkhash) {
                             return logger.debug(`EVENT_NOTIFY_USERS cannot complete, pkhash is empty for device ID: ${id}`);
                         }
@@ -195,7 +206,7 @@ class IoTWsHandler extends Wshandler {
             );
         }
         catch (err) {
-            logger.error("ws on_send() error: " + err.message);
+            logger.error("EVENT_NOTIFY_USERS error: " + err.message);
         }
     }
 
