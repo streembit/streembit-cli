@@ -45,6 +45,7 @@ class IoTDevicesDb extends database{
     delete_device(deviceid) {
         return new Promise(
             (resolve, reject) => {
+                deviceid = deviceid.toLowerCase();
                 var query = "DELETE FROM iotdevices WHERE deviceid=? OR iotdevid=?";
                 this.database.run(query, [deviceid, deviceid], (err) => {
                     if (err) {
@@ -59,6 +60,7 @@ class IoTDevicesDb extends database{
     get_device(deviceid) {
         return new Promise(
             (resolve, reject) => {
+                deviceid = deviceid.toLowerCase();
                 var query = "SELECT * FROM iotdevices WHERE deviceid=? OR iotdevid=?";
                 this.database.get(query, [deviceid, deviceid], (err, row) => {
                     if (err) {
@@ -78,6 +80,7 @@ class IoTDevicesDb extends database{
                     return reject("Invalid device data add database add_device.");
                 }
 
+                deviceid = deviceid.toLowerCase();
                 this.database.run(
                     "INSERT INTO iotdevices (deviceid, type, protocol, mcu, name, details, permission, features) VALUES (?,?,?,?,?,?,?,?)",
                     [deviceid, type, protocol, mcu, name, details, permission, features],
@@ -103,6 +106,7 @@ class IoTDevicesDb extends database{
                     return reject("Invalid permission.");
                 }
 
+                deviceid = deviceid.toLowerCase();
                 var sql = "UPDATE iotdevices SET permission=" + permission + " WHERE deviceid='" + deviceid + "'";
                 this.database.run(
                     sql,
@@ -125,6 +129,7 @@ class IoTDevicesDb extends database{
                     return reject("Invalid device data add database add_device.");
                 }
 
+                deviceid = deviceid.toLowerCase();
                 var sql = "UPDATE iotdevices SET name='" + name + "', permission=" + permission + " WHERE deviceid='" + deviceid + "'";
                 this.database.run(
                     sql,
