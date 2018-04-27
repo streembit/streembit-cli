@@ -477,7 +477,7 @@ class ZigbeeDevice extends Device {
                                 (obj, key) => {
                                     try {
                                         obj.gatewayid = gateway.id;
-                                        logger.debug(`IoTFeature type ${obj.type} at device ${deviceid} set gateway id: ${gateway.id}`);
+                                        logger.debug(`IoTFeature type ${obj.type} at device ${obj.deviceid} set gateway id: ${gateway.id}`);
                                     }
                                     catch (err) {
                                         logger.error(`device  set feature gateway id error: ${err.message}`);
