@@ -494,6 +494,9 @@ class IoTHandler {
 
             }
 
+            // refresh devices
+            Devices.refresh();
+
             // update the database
             async.eachSeries(
                 updatelist,
