@@ -485,7 +485,7 @@ class ZigbeeDevice extends Device {
                         }
                     );    
                 },
-                1000
+                100
             );           
 
             let isactive_timer = setInterval(
