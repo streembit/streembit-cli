@@ -1,6 +1,4 @@
-﻿import { setTimeout } from "timers";
-
-/*
+﻿/*
  
 This file is part of Streembit application. 
 Streembit is an open source project to create a real time communication system for humans and machines. 
@@ -462,7 +460,7 @@ class ZigbeeDevice extends Device {
             let cmd = zigbeecmd.netAddressRequest(this.id);
             this.transport.send(cmd);
 
-            // 
+            
             setTimeout(
                 () => {
                     logger.debug("Set gateway id for the features at " + this.id);
