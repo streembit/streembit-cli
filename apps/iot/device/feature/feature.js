@@ -56,18 +56,8 @@ class IoTFeature {
         this.isbindcomplete = false;
         this.isreportcomplete = false;
 
-        // get the gateway id
-        var payload = {
-            event: iotdefinitions.EVENT_GATEWAY_DATA_REQUEST,
-            protocol: iotdefinitions.ZIGBEE
-        }
-        events.iotmsg(
-            payload,
-            (gateway) => {
-                this.gatewayid = gateway.id;
-                logger.debug(`IoTFeature ${deviceid} set gateway id:${gateway.id}`);
-            }
-        );    
+        this.gatewayid = 0;
+
     }
 
     on_datareceive_event(data, event) {

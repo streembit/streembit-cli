@@ -1,4 +1,6 @@
-﻿/*
+﻿import { setTimeout } from "timers";
+
+/*
  
 This file is part of Streembit application. 
 Streembit is an open source project to create a real time communication system for humans and machines. 
@@ -459,6 +461,34 @@ class ZigbeeDevice extends Device {
             logger.debug("Net address request to " + this.id);
             let cmd = zigbeecmd.netAddressRequest(this.id);
             this.transport.send(cmd);
+
+            // 
+            setTimeout(
+                () => {
+                    logger.debug("Set gateway id for the features at " + this.id);
+                    var payload = {
+                        event: iotdefinitions.EVENT_GATEWAY_DATA_REQUEST,
+                        protocol: iotdefinitions.ZIGBEE
+                    }
+                    events.iotmsg(
+                        payload,
+                        (gateway) => {
+                            this.features.forEach(
+                                (obj, key) => {
+                                    try {
+                                        obj.gatewayid = gateway.id;
+                                        logger.debug(`IoTFeature type ${obj.type} at device ${deviceid} set gateway id: ${gateway.id}`);
+                                    }
+                                    catch (err) {
+                                        logger.error(`device  set feature gateway id error: ${err.message}`);
+                                    }
+                                }
+                            );
+                        }
+                    );    
+                },
+                1000
+            );           
 
             let isactive_timer = setInterval(
                 () => {
