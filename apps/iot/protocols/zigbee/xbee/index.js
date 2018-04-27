@@ -1151,7 +1151,7 @@ class XbeeHandler {
             this.configured_devices.forEach(
                 (ieeeaddr) => {
                     if (this.online_devices.indexOf(ieeeaddr) == -1) {
-                        //logger.debug("device " + ieeeaddr + " not online");
+                        logger.debug("device " + ieeeaddr + " not online");
                         offline_devices.push(ieeeaddr);
                     }
                 }
