@@ -1189,9 +1189,10 @@ class XbeeHandler {
         var devices = Devices.list();
         devices.forEach((item) => {
             if (item.permission == iotdefinitions.PERMISSION_ALLOWED) {
-                this.configured_devices.push(item.deviceid);
+                var lwcaseid = item.deviceid.toLowerCase();
+                this.configured_devices.push(lwcaseid);
                 if (item.deviceid && item.type == iotdefinitions.IOT_DEVICE_GATEWAY && item.mcu == "xbee") {
-                    this.gateway = item.deviceid.toLowerCase();
+                    this.gateway = lwcaseid;
                 }
             }
         });
