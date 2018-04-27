@@ -290,9 +290,9 @@ class ZigbeeDevice extends Device {
         return data;
     }
 
-    notify_device_info() { 
-        var deviceinfo = this.get_device_info();
-        logger.debug(`notify_device_info sending IOT_NEW_DEVICE_JOINED deviceinfo: ${util.inspect(deviceinfo)}`);
+    notify_device_info() {       
+
+        logger.debug("notify_device_info() send EVENT_GATEWAY_DATA_REQUEST");
 
         var payload = {
             event: iotdefinitions.EVENT_GATEWAY_DATA_REQUEST,
@@ -302,6 +302,7 @@ class ZigbeeDevice extends Device {
             payload,
             (gateway) => {
                 let gatewayid = gateway.id;
+                var deviceinfo = this.get_device_info();
                 let data = {                    
                     payload: {
                         event: iotdefinitions.IOT_NEW_DEVICE_JOINED,
@@ -309,7 +310,9 @@ class ZigbeeDevice extends Device {
                         device: deviceinfo
                     }
                 };
-                
+               
+                logger.debug(`notify_device_info TrackingEvent.send event IOT_NEW_DEVICE_JOINED gateway:${gatewayid} deviceinfo: ${util.inspect(deviceinfo)}`);
+
                 TrackingEvent.send(iotdefinitions.EVENT_NOTIFY_USERS, gatewayid, data);
             }
         );    

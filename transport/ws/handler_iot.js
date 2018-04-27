@@ -153,27 +153,34 @@ class IoTWsHandler extends Wshandler {
                 iotdefinitions.EVENT_NOTIFY_USERS,
                 (id, data) => {
                     try {
+                        logger.debug('EVENT_NOTIFY_USERS event signalled');
                         let pkhash = this.list_of_devices.get(id);
-                        if (pkhash) {
-                            const session = this.list_of_sessions.get(pkhash);
-                            if (session) {
-                                let ws = session.ws;
-                                if (ws) {
-                                    if (ws.readyState === WebSocket.OPEN) {
-                                        logger.debug(`on_send->data.payload: ${util.inspect(data.payload)}`);
-                                        data.payload = peermsg.aes256encrypt(session.symmcryptkey, JSON.stringify(data.payload));
-
-                                        const response = JSON.stringify(data);
-                                        ws.send(response);
-                                    }
-                                    else {
-                                        // the socket was closed, remove the session
-                                        logger.debug(`Remove WS session for ${pkhash}`);
-                                        this.list_of_sessions.delete(pkhash);
-                                    }
-                                }                                
-                            }
+                        if (!pkhash) {
+                            return logger.debug(`EVENT_NOTIFY_USERS cannot complete, pkhash is empty for device ID: ${id}`);
                         }
+                       
+                        const session = this.list_of_sessions.get(pkhash);
+                        if (!session) {
+                            return logger.debug(`EVENT_NOTIFY_USERS cannot complete, no WS session for device ID: ${id}`);
+                        }
+                  
+                        let ws = session.ws;
+                        if (!ws) {
+                            return logger.debug(`EVENT_NOTIFY_USERS cannot complete, no WS object for device ID: ${id}`);
+                        }
+                  
+                        if (ws.readyState === WebSocket.OPEN) {
+                            logger.debug(`on_send->data.payload: ${util.inspect(data.payload)}`);
+                            data.payload = peermsg.aes256encrypt(session.symmcryptkey, JSON.stringify(data.payload));
+
+                            const response = JSON.stringify(data);
+                            ws.send(response);
+                        }
+                        else {
+                            // the socket was closed, remove the session
+                            logger.debug(`Remove WS session for ${pkhash}`);
+                            this.list_of_sessions.delete(pkhash);
+                        }              
                     }
                     catch (err) {
                         logger.error("ws handle_server_messages() event handler error: " + err.message);
