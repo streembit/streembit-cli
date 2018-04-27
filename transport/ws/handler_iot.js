@@ -54,7 +54,9 @@ class IoTWsHandler extends Wshandler {
             if (res.devices && Array.isArray(res.devices)) {
                 res.devices.forEach(
                     (device) => {
-                        this.list_of_devices.set(device, res.pkhash);
+                        let lowercase_device = device.toLowerCase();
+                        logger.debug(`list_of_devices add: ${lowercase_device}`);
+                        this.list_of_devices.set(lowercase_device, res.pkhash);
                     }
                 );
             }
@@ -114,7 +116,9 @@ class IoTWsHandler extends Wshandler {
         var deviceid = data.id;
         if (deviceid) {
             if (!this.list_of_devices.has(deviceid)) {
-                this.list_of_devices.set(deviceid, message.pkhash);
+                let lowercase_device = deviceid.toLowerCase();
+                logger.debug(`list_of_devices add: ${lowercase_device}`);
+                this.list_of_devices.set(lowercase_device, message.pkhash);
             }
         }
 
@@ -122,7 +126,8 @@ class IoTWsHandler extends Wshandler {
     }
 
     iotsend(k, data) {
-        let pkhash = this.list_of_devices.get(k);
+        let lowercase_device = k.toLowerCase();
+        let pkhash = this.list_of_devices.get(lowercase_device);
         const session = this.list_of_sessions.get(pkhash);
         if (session) {
             let ws = session.ws;
@@ -154,7 +159,8 @@ class IoTWsHandler extends Wshandler {
                 (id, data) => {
                     try {
                         logger.debug('EVENT_NOTIFY_USERS event signalled');
-                        let pkhash = this.list_of_devices.get(id);
+                        let lowercase_device = id.toLowerCase();
+                        let pkhash = this.list_of_devices.get(lowercase_device);
                         if (!pkhash) {
                             return logger.debug(`EVENT_NOTIFY_USERS cannot complete, pkhash is empty for device ID: ${id}`);
                         }
