@@ -53,7 +53,7 @@ class ZigbeeHumidityFeature extends HumidityFeature {
 
         this.report_max = 0x003c; // 60 seconds
 
-        this.property_names.push(iotdefinitions.PROPERTY_TEMPERATURE);
+        this.property_names.push(iotdefinitions.PROPERTY_RELATIVE_HUMIDITY);
 
         logger.debug("Initialized a Zigbee humidity sensor feature");
     }

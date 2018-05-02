@@ -729,6 +729,8 @@ class XbeeHandler {
 
         var value = reader.nextUInt16LE();
 
+        logger.debug("attribute: %s value: %d", sprintf("0x%04x", attribute), value);
+
         this.dispatch_datarcv_event(
             {
                 "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
