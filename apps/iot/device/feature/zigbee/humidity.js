@@ -181,7 +181,6 @@ class ZigbeeHumidityFeature extends HumidityFeature {
 
         this.polling_timer = setInterval(
             () => {
-                //console.log("poll temperature data");
                 this.read_humidity();
             },
             ((this.long_poll_interval /4)*1000)
@@ -207,7 +206,7 @@ class ZigbeeHumidityFeature extends HumidityFeature {
             if (is_report_available) {
                 var data = {
                     payload: {
-                        temperature: this.temperature
+                        humidity: this.humidity
                     }
                 };
                 callback(null, data);
