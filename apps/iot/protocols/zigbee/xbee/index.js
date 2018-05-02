@@ -694,7 +694,7 @@ class XbeeHandler {
         }
 
         var datatype = reader.nextUInt8();
-        if (datatype != 0x29) {
+        if (datatype != 0x21) {
             return this.dispatch_error_event(frame.remote64, "cluster 0405 invalid data type returned");
         }
 
@@ -721,7 +721,7 @@ class XbeeHandler {
         //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
 
         var datatype = reader.nextUInt8();
-        if (datatype != 0x29) {
+        if (datatype != 0x21) {
             return this.dispatch_error_event(frame.remote64, "cluster 0405 invalid data type returned");
         }
 
