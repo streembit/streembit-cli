@@ -42,6 +42,8 @@ const BIND_ID_ONOFFSWITCH = 0x50;
 const BIND_ID_ELECTRICAL_MEASUREMENT = 0x51;
 const BIND_ID_TEMPERATURE = 0x52;
 const BIND_ID_OCCUPANCY = 0x53;
+const BIND_ID_HUMIDITY= 0x55;
+
 
 let C = xbeeapi.constants;
 
@@ -901,6 +903,12 @@ class XbeeHandler {
                     break;
                 case BIND_ID_OCCUPANCY:
                     cluster = "0406";
+                    break;
+                case BIND_ID_HUMIDITY:
+                    cluster = "0405";
+                    break;
+                default:
+                    logger.debug(`handle_cluster_8021 id: ${id} is not handled`);
                     break;
             }
 
