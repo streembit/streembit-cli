@@ -682,6 +682,65 @@ class XbeeHandler {
         //
     }
 
+    handle_cluster_0405_01(frame, reader) {
+        logger.debug(`handle_cluster_0405_01 ${util.inspect(frame)}`);
+
+        var attribute = reader.nextUInt16LE();
+        //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
+
+        var status = reader.nextUInt8();
+        if (status != 0) {
+            return this.dispatch_error_event(frame.remote64, "cluster 0405 invalid status returned");
+        }
+
+        var datatype = reader.nextUInt8();
+        if (datatype != 0x29) {
+            return this.dispatch_error_event(frame.remote64, "cluster 0405 invalid data type returned");
+        }
+
+        var value = reader.nextUInt16LE();
+
+        this.dispatch_datarcv_event(
+            {
+                "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                "deviceid": frame.remote64,
+                "properties": [
+                    {
+                        "property": iotdefinitions.PROPERTY_RELATIVE_HUMIDITY,
+                        "value": value
+                    }
+                ]
+            }
+        );
+    }
+
+    handle_cluster_0405_0a(frame, reader) {
+        logger.debug(`handle_cluster_0405_0a ${util.inspect(frame)}`);
+
+        var attribute = reader.nextUInt16LE();
+        //logger.debug("attribute: %s", sprintf("0x%04x", attribute));
+
+        var datatype = reader.nextUInt8();
+        if (datatype != 0x29) {
+            return this.dispatch_error_event(frame.remote64, "cluster 0405 invalid data type returned");
+        }
+
+        var value = reader.nextUInt16LE();
+
+        this.dispatch_datarcv_event(
+            {
+                "type": iotdefinitions.EVENT_FEATURE_PROPERTY_UPDATE,
+                "deviceid": frame.remote64,
+                "properties": [
+                    {
+                        "property": iotdefinitions.PROPERTY_RELATIVE_HUMIDITY,
+                        "value": value
+                    }
+                ]
+            }
+        );
+    }
+
     handle_cluster_0405(frame) {
         var properties = [];
         var reader = new BufferReader(frame.data);
@@ -690,9 +749,13 @@ class XbeeHandler {
 
         logger.debug("cluster 0405 zcl_command: %s", sprintf("0x%02x", zcl_command));
 
-        if (zcl_command === 0x01) {
-
+        if (zcl_command == 0x0a) {  // ZCL 0x0a Report attributes 7.11
+            //logger.debug(util.inspect(frame));
+            this.handle_cluster_0405_0a(frame, reader);
         }
+        else if (zcl_command == 0x01) {  // ZCL 0x01 Read attributes response 7.2
+            this.handle_cluster_0405_01(frame, reader);
+        }         
         else if (zcl_command == 0x07) {  // ZCL 0x07 Configure reporting response 7.8
             logger.debug(`handle_cluster_0405 zcl_command == 0x07 ${util.inspect(frame)}`);
             var status = reader.nextUInt8();
@@ -1290,6 +1353,7 @@ class XbeeHandler {
             case "8031":
             case "0006":
             case "0402":
+            case "0405":
             case "0b04":
             case "8005":
             case "8004":
