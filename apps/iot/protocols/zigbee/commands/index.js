@@ -35,7 +35,9 @@ const ZDO_TXN_SWITCHSTATUS= 0xab;
 const ZDO_TXN_SWITCHOFF= 0xac;
 const ZDO_TXN_SWITCHON= 0xad;
 const ZDO_TXN_SWITCHTOGGLE= 0xae;
-const ZDO_TXN_CONFIGUREREPORT= 0xdd;        
+const ZDO_TXN_CONFIGUREREPORT = 0xdd;     
+const ZDO_TXN_HUMIDITY = 0xde;
+const ZDO_TXN_READATTR = 0xdf;
 
 let zigbeegateway = {};
 
@@ -244,7 +246,7 @@ class ZigbeeCommands {
     }
 
     static readHumidity(address64, address16, destendpoint) {
-        var txn = ZDO_TXN_TEMPERATURE;
+        var txn = ZDO_TXN_HUMIDITY;
         var cmd = {
             destination64: address64,
             destination16: address16,
@@ -258,7 +260,7 @@ class ZigbeeCommands {
     }
 
     static readAttributes(address64, address16, clusterId, attributes, destendpoint) {
-        var txn = ZDO_TXN_TEMPERATURE; 
+        var txn = ZDO_TXN_READATTR; 
 
         var data = [0x00, txn, 0x00];
         attributes.forEach(
