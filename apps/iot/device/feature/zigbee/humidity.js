@@ -74,7 +74,7 @@ class ZigbeeHumidityFeature extends HumidityFeature {
                             };
                             super.on_datareceive_event(data, iotdefinitions.EVENT_NOTIFY_USERS);
                             this.last_update_time = Date.now();
-                            logger.debug("HumidityFeature on_datareceive_event " + item.property + ": " + this.temperature);
+                            logger.debug("HumidityFeature on_datareceive_event " + item.property + ": " + this.humidity);
                         }
                     }
                 );
@@ -109,7 +109,7 @@ class ZigbeeHumidityFeature extends HumidityFeature {
     }
 
     bind() {
-        var txn = 0x52;
+        var txn = 0x55;
         logger.debug("ZigbeeHumidityFeature cluster 0405, send bind request at endpoint: " + this.cluster_endpoint);
         var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
         this.transport.send(cmd);

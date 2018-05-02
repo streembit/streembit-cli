@@ -688,11 +688,24 @@ class XbeeHandler {
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
 
-        logger.debug("cluster 0402 zcl_command: %s", sprintf("0x%02x", zcl_command));
+        logger.debug("cluster 0405 zcl_command: %s", sprintf("0x%02x", zcl_command));
 
         if (zcl_command === 0x01) {
 
         }
+        else if (zcl_command == 0x07) {  // ZCL 0x07 Configure reporting response 7.8
+            logger.debug(`handle_cluster_0405 zcl_command == 0x07 ${util.inspect(frame)}`);
+            var status = reader.nextUInt8();
+            if (status == 0x00) {
+                this.dispatch_datarcv_event(
+                    {
+                        "type": iotdefinitions.EVENT_REPORT_CONFIGURED,
+                        "deviceid": frame.remote64,
+                        "status": 0
+                    }
+                );
+            }
+        }       
     }
 
     handle_cluster_0000(frame) {
