@@ -243,6 +243,20 @@ class ZigbeeCommands {
         return cmd;
     }
 
+    static readHumidity(address64, address16, destendpoint) {
+        var txn = ZDO_TXN_TEMPERATURE;
+        var cmd = {
+            destination64: address64,
+            destination16: address16,
+            sourceEndpoint: zigbeegateway.endpoint,
+            destinationEndpoint: destendpoint,
+            clusterId: 0x0405,
+            profileId: 0x0104,
+            data: [0x00, txn, 0x00, 0x00, 0x00]
+        };
+        return cmd;
+    }
+
     static readAttributes(address64, address16, clusterId, attributes, destendpoint) {
         var txn = ZDO_TXN_TEMPERATURE; 
 
