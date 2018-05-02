@@ -187,17 +187,18 @@ class IoTWsHandler extends Wshandler {
                         }
                   
                         if (ws.readyState === WebSocket.OPEN) {
+                            let sendobj = Object.assign({}, data);
                             logger.debug(`on_send->data.payload: ${util.inspect(data.payload)}`);
-                            data.payload = peermsg.aes256encrypt(session.symmcryptkey, JSON.stringify(data.payload));
+                            sendobj.payload = peermsg.aes256encrypt(session.symmcryptkey, JSON.stringify(sendobj.payload));
 
-                            const response = JSON.stringify(data);
+                            const response = JSON.stringify(sendobj);
                             ws.send(response);
                         }
                         else {
                             // the socket was closed, remove the session
                             logger.debug(`Remove WS session for ${pkhash}`);
                             this.list_of_sessions.delete(pkhash);
-                        }              
+                        }
                     }
                     catch (err) {
                         logger.error("ws handle_server_messages() event handler error: " + err.message);
