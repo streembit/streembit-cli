@@ -323,7 +323,7 @@ class XbeeHandler {
             inputclusters.push(txtcluster);
         }
 
-        //logger.debug(frame.remote64 + " clusters: " + util.inspect(clusters));
+        logger.debug(frame.remote64 + " clusters: " + util.inspect(inputclusters));
 
         this.dispatch_datarcv_event(
             {
@@ -682,6 +682,19 @@ class XbeeHandler {
         //
     }
 
+    handle_cluster_0405(frame) {
+        var properties = [];
+        var reader = new BufferReader(frame.data);
+        reader.seek(2);
+        var zcl_command = reader.nextUInt8();
+
+        logger.debug("cluster 0402 zcl_command: %s", sprintf("0x%02x", zcl_command));
+
+        if (zcl_command === 0x01) {
+
+        }
+    }
+
     handle_cluster_0000(frame) {
         try {
             logger.debug(`handle_cluster_0000 ${util.inspect(frame)}`);
@@ -695,7 +708,7 @@ class XbeeHandler {
                 return logger.error("handle_cluster_0000() command");
             }
 
-            function read_next_attribute() {
+            var read_next_attribute = function read_next_attribute() {
                 try {
                     let property_name, value;
                     let attribute = reader.nextUInt16LE();
