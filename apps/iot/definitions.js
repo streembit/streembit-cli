@@ -159,7 +159,7 @@ var definitions = {
         2: "switch",
         3: "ecmeasure",
         4: "temperature",
-        5: "motion",
+        5: "humidity",
         6: "occupancy",
         7: UNDEFINED,
         8: UNDEFINED,
