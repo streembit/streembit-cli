@@ -162,7 +162,7 @@ Modules:
 This section defines how the application will be executed. Whether it is seed, client, IoT node or a blockchain node. The "run" flag of each module defines whether or not execute the module.
 Both "seed" and "client" cannot be defined, it must be either "seed" or "client".
 
-The role of the DNS module is to manage dynamic DNS updates. In case if you define a domain at the transport.host and the IP is DHCP, the DNS A record of the host must be updated upon start of the CLI. The dns defines the dynamic DNS service. By default the application uses srv.streembit.net:8080. Most CLI will define a static IP address at the host field. In case if an IP address is defined at the host field then you must remove the DNS module from the configuration file.
+The role of the DNS module is to manage dynamic DNS updates for the domain name based host field. The DNS module defines the parameters of a dynamic DNS service. This module is used in case if you define a domain name at the transport.host field and network router uses DHCP. Using DHCP the DNS A record of the doomain name (host) must be updated upon the start of this CLI application. By default the application uses srv.streembit.net:8080. Most CLI will define a static IP address at the host field. **In case if an IP address is defined at the transport.host field then you must remove the DNS module from the configuration file.**
 
 Log: logger settings.
 
