@@ -128,6 +128,7 @@ class CmdHandler {
         console.log('bc', ' -- Blockchain commands');
         console.log('ac', ' -- Account management commands');
         console.log('usr', ' -- Users management commands');
+        console.log('dev', ' -- IoT devices management commands');
         // etc
         console.groupEnd();
         console.log('-------------------');

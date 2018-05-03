@@ -143,7 +143,7 @@ class Device {
             if (!flist.length) {
                 return;
             }
- 
+
             flist.forEach(
                 (feature) => {
                     try {     
