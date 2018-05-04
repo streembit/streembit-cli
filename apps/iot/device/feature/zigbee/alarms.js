@@ -43,7 +43,8 @@ class ZigbeeAlarmFeature extends AlarmFeature {
             throw new Error("ZigbeeAlarmFeature " + feature + " is invalid cluster");
         }
 
-        this.cluster_endpoint = -1;
+        //this.cluster_endpoint = -1;
+        this.cluster_endpoint = 0x08;
         this.IEEEaddress = 0;
         this.NWKaddress = 0;
         this.ispolling = (feature.settings && feature.settings.ispolling) ? feature.settings.ispolling : false;
@@ -63,7 +64,7 @@ class ZigbeeAlarmFeature extends AlarmFeature {
             if (Array.isArray(properties) && properties.length) {
                 properties.forEach(
                     (item) => {
-                        if (item.property == iotdefinitions.PROPERTY_TEMPERATURE) {
+                        if (item.property === iotdefinitions.PROPERTY_ALARMS) {
                             var val = new Number(item.value);
                             this.alarm = val.toFixed(2);
                             let data = {
@@ -141,7 +142,7 @@ class ZigbeeAlarmFeature extends AlarmFeature {
 
     configure_report() {
         logger.debug("ZigbeeAlarmFeature send configure report");
-        var attribute = 0x0000, datatype = 0x21, mininterval = 0x05, maxinterval = 0x005a;
+        var attribute = 0x0000, datatype = 0xf0, mininterval = 0x05, maxinterval = 0x005a;
         var reports = [];
         reports.push(
             {

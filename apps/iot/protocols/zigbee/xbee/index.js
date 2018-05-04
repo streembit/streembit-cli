@@ -776,13 +776,13 @@ class XbeeHandler {
         }       
     }
 
-    handle_cluster_0009(frame) {
+    handle_cluster_0500(frame) {
         var properties = [];
         var reader = new BufferReader(frame.data);
         reader.seek(2);
         var zcl_command = reader.nextUInt8();
 
-        logger.debug("cluster 0009 zcl_command: %s", sprintf("0x%02x", zcl_command));
+        logger.debug("cluster 0500 zcl_command: %s", sprintf("0x%02x", zcl_command));
 
         process.exit(0);
     }
@@ -922,7 +922,7 @@ class XbeeHandler {
                     cluster = "0405";
                     break;
                 case BIND_ID_ALARM:
-                    cluster = "0009";
+                    cluster = "0500";
                     break;
                 default:
                     logger.debug(`handle_cluster_8021 id: ${id} is not handled`);
@@ -1379,6 +1379,7 @@ class XbeeHandler {
             case "0006":
             case "0402":
             case "0405":
+            case "0500":
             case "0b04":
             case "8005":
             case "8004":
