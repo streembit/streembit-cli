@@ -25,7 +25,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const constants = require("libs/constants");
 const iotdefinitions = require("apps/iot/definitions");
-const AlarmFeature = require("../alarm");
+const AlarmFeature = require("../alarms");
 const logger = require("streembit-util").logger;
 const util = require('util');
 const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
@@ -109,7 +109,7 @@ class ZigbeeAlarmFeature extends AlarmFeature {
     }
 
     bind() {
-        var txn = 0x52;
+        var txn = 0x56;
         logger.debug("ZigbeeAlarmFeature cluster 0009, send bind request at endpoint: " + this.cluster_endpoint);
         var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
         this.transport.send(cmd);
@@ -128,7 +128,7 @@ class ZigbeeAlarmFeature extends AlarmFeature {
 
     configure_report() {
         logger.debug("ZigbeeAlarmFeature send configure report");
-        var attribute = 0x0000, datatype = 0x010f, mininterval = 0x05, maxinterval = 0x005a;
+        var attribute = 0x0000, datatype = 0x21, mininterval = 0x05, maxinterval = 0x005a;
         var reports = [];
         reports.push(
             {

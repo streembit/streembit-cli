@@ -43,6 +43,7 @@ const BIND_ID_ELECTRICAL_MEASUREMENT = 0x51;
 const BIND_ID_TEMPERATURE = 0x52;
 const BIND_ID_OCCUPANCY = 0x53;
 const BIND_ID_HUMIDITY= 0x55;
+const BIND_ID_ALARM= 0x56;
 
 
 let C = xbeeapi.constants;
@@ -775,6 +776,17 @@ class XbeeHandler {
         }       
     }
 
+    handle_cluster_0009(frame) {
+        var properties = [];
+        var reader = new BufferReader(frame.data);
+        reader.seek(2);
+        var zcl_command = reader.nextUInt8();
+
+        logger.debug("cluster 0009 zcl_command: %s", sprintf("0x%02x", zcl_command));
+
+        process.exit(0);
+    }
+
     handle_cluster_0000(frame) {
         try {
             logger.debug(`handle_cluster_0000 ${util.inspect(frame)}`);
@@ -908,6 +920,9 @@ class XbeeHandler {
                     break;
                 case BIND_ID_HUMIDITY:
                     cluster = "0405";
+                    break;
+                case BIND_ID_ALARM:
+                    cluster = "0009";
                     break;
                 default:
                     logger.debug(`handle_cluster_8021 id: ${id} is not handled`);
