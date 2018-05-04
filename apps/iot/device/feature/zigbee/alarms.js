@@ -30,7 +30,7 @@ const logger = require("streembit-util").logger;
 const util = require('util');
 const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
 
-let CLUSTERID = 0x0009;
+let CLUSTERID = 0x0500;
 
 class ZigbeeAlarmFeature extends AlarmFeature {
 
@@ -53,7 +53,7 @@ class ZigbeeAlarmFeature extends AlarmFeature {
 
         this.report_max = 0x003c; // 60 seconds  
 
-        this.property_names.push(iotdefinitions.PROPERTY_TEMPERATURE);
+        this.property_names.push(iotdefinitions.PROPERTY_ALARMS);
 
         logger.debug("Initialized a Zigbee alarm sensor feature");
     }
@@ -110,9 +110,22 @@ class ZigbeeAlarmFeature extends AlarmFeature {
 
     bind() {
         var txn = 0x56;
-        logger.debug("ZigbeeAlarmFeature cluster 0009, send bind request at endpoint: " + this.cluster_endpoint);
+        logger.debug("ZigbeeAlarmFeature cluster 0500, send bind request at endpoint: " + this.cluster_endpoint);
         var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
         this.transport.send(cmd);
+    }
+
+    on_bind_complete() {
+        try {
+            super.on_bind_complete();
+            logger.debug("ZigbeeAlarmFeature " + this.IEEEaddress + " 0x0500 on_bind_complete()");
+
+            // TODO do the IAS Zone enroll here instead of doing the configure report 
+            // this.configure_report();
+        }
+        catch (err) {
+            logger.error("ZigbeeAlarmFeature on_bind_complete() error: %j", err);
+        }
     }
 
     on_clusterlist_receive(endpoint) {
@@ -141,17 +154,6 @@ class ZigbeeAlarmFeature extends AlarmFeature {
 
         var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, CLUSTERID, reports, this.cluster_endpoint);
         this.transport.send(cmd);
-    }
-
-    on_bind_complete() {
-        try {
-            super.on_bind_complete();
-            logger.debug("ZigbeeAlarmFeature " + this.IEEEaddress + " 0x04009 on_bind_complete()");
-            this.configure_report();
-        }
-        catch (err) {
-            logger.error("ZigbeeAlarmFeature on_bind_complete() error: %j", err);
-        }
     }
 
     on_report_configured() {
