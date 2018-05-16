@@ -24,7 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const db = require("streembit-db").instance;
-const kad = require('libs/kad');
+const kad = require('libs/kadence');
 const Account = require("libs/account");
 const utils = require("libs/utils");
 const async = require("async");
@@ -39,7 +39,7 @@ class KadHandler {
             this.m_node = 0;
         }
 
-        return instance;        
+        return instance;
     }
 
     get node(){
@@ -93,7 +93,7 @@ class KadHandler {
                 var result = { seed: seed[1], error: null };
                 try {
                     logger.debug("connecting to seed " + seed[1].hostname + " port: " + seed[1].port);
-                    node.connect(seed, function (err) {
+                    node.join(seed, function (err) {
                         if (err) {
                             result.error = err;
                         }
@@ -126,7 +126,7 @@ class KadHandler {
                     callback("Failed to connect to any seed");
                 }
 
-                
+
             }
         );
     }
@@ -140,7 +140,7 @@ class KadHandler {
             host: config.transport.host,
             port: config.transport.port,
             publickey: bs58pk
-        };       
+        };
 
         var contact = kad.contacts.StreembitContact(contact_param);
         logger.info('this contact object: ' + contact.toString());
@@ -160,7 +160,7 @@ class KadHandler {
             // otherwise pass on
             next();
         });
-       
+
         // message validator
         transport.before('receive', options.onKadMessage);
 
@@ -195,5 +195,3 @@ class KadHandler {
 }
 
 module.exports.KadHandler = KadHandler;
-
-
