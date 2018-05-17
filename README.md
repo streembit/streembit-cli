@@ -33,11 +33,15 @@ A typical configuration file is the following:
     "transport": {
         "protocol": "http",
         "host": "182.120.242.165",
-        "port": 32321,
+        "port": 32319,
         "ws": {
-            "port": 32318,
-	    "maxconn":  10000
-        }
+            "port": 32320,
+			"maxconn":  10000
+        },
+		"kad": {
+            "host": "182.120.242.165",
+            "port": 32321
+        },
     },
     "limits": {
         "refresh": 3600,
@@ -113,8 +117,6 @@ A typical configuration file is the following:
 
 **Fields:**
 
-Account: This is the account name stored in the local SQLITE database. The Streembit UI identifies this node by this account name
-
 Password: To decrypt account information in the SQLITE database. For development purpose and make easy to develop the software define this password in the config file. In production, provide this password from the command line using the --pasword (or -s) command line switch. See "node streembit.js --help" for more command line arguments.
 
 The "database_name" field: This is the SQLITE database name. Default value is "streembitsql". You may change it for production or for testing purpose. For using different databases in production or testing.
@@ -128,9 +130,14 @@ protocol: default value is "http".
 host: IP address or domain name for the HTTP listener. <br />
 For seed node: Since The Kademlia contact is the composite of IP address and port, if the application run as a Kademlia seed node this field is required and must be an IP address. 
 
-port: Port for the http listener. Default value is 32321
+port: Port for the http listener. Default value is 32319
 
-ws.port: Port for the websocket listener. Default value is 32318.
+"ws" section: <br />
+ws.port: Port for the websocket listener. Default value is 32320.
+
+"kad" section: defines the Kademlia network parameters <br />
+kad.port: Port for the Kademlia TCP listener. Default value is 32321. <br />
+kad.host: IP address or domain name for the Kademlia TCP listener. 
 
 Seeds: Array of Streembit Kademlia seed nodes.
 
@@ -138,12 +145,13 @@ The format is
 ```json
 [
     {
+		"id": ""b925f073406a991a38361672660fc4ccae88d457",
         "host": "192.168.0.10",
         "port": 32322
     }
 ]
 ```
-The host and port where the seed node listen for connections.
+The "id" field is the e Rmd160 hash of the seed's public key. The host and port where the seed node listen for connections.
 
 The "Limits" section of the configuration determines time interval values of various KAD operations.<br />
 "Limits" intervals (values are in seconds):
