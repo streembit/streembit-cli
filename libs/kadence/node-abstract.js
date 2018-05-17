@@ -3,7 +3,6 @@
 const uuid = require('uuid');
 const async = require('async');
 const assert = require('assert');
-const bunyan = require('bunyan');
 const merge = require('merge');
 const constants = require('./constants');
 const utils = require('./utils');
@@ -86,7 +85,7 @@ class AbstractNode extends EventEmitter {
 
   static get DEFAULTS() {
     return {
-      logger: bunyan.createLogger({ name: 'kadtools' }),
+      logger: null,
       identity: utils.getRandomKeyBuffer(),
       transport: null,
       storage: null,

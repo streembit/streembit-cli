@@ -136,7 +136,7 @@ class KadHandler {
         const account = new Account();
 
         const init_options = {
-            identity: config.transport.identity,
+            identity: new Buffer(account.public_key, "hex"), 
             logger: logger,
             storage: db.getdb("streembitkv"),
             contact: {

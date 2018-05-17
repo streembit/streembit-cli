@@ -28,9 +28,6 @@ module.exports.ErrorRules = require('./rules-errors');
 /** {@link Bucket} */
 module.exports.Bucket = require('./bucket');
 
-/** {@link Control} */
-module.exports.Control = require('./control');
-
 /** {@link Messenger} */
 module.exports.Messenger = require('./messenger');
 
@@ -63,9 +60,6 @@ module.exports.trust = require('./plugin-trust');
 
 /** {@link module:kadence/constants} */
 module.exports.constants = require('./constants');
-
-/** {@link module:kadence/version} */
-module.exports.version = require('./version');
 
 /** {@link module:kadence/utils} */
 module.exports.utils = require('./utils');
