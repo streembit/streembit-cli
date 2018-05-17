@@ -62,7 +62,7 @@ module.exports.quasar = require('./plugin-quasar');
 module.exports.spartacus = require('./plugin-spartacus');
 
 /** {@link module:kadence/traverse} */
-module.exports.traverse = require('./plugin-traverse');
+//module.exports.traverse = require('./plugin-traverse');
 
 /** {@link module:kadence/eclipse} */
 module.exports.eclipse = require('./plugin-eclipse');

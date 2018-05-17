@@ -39,11 +39,9 @@ module.exports = function (options, callback) {
     //  create the node
     // var peer = new Node(options);
 
-    const node_param = {
-        identity: options.identity,
-        storage: options.storage,
-        contact: options.contact
-    };
+    const node_param = Object.assign({}, options);
+    delete node_param.seeds;
+    delete node_param.isseed;
 
     const node = new kad.KademliaNode(node_param);
     node.listen(options.contact.port, options.contact.hostname, err => {
