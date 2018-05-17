@@ -20,7 +20,6 @@ Copyright (C) 2016 The Streembit software development team
 */
 
 const async = require('async');
-const config = require("libs/config");
 const kad = require('libs/kadence');
 
 /*
@@ -50,7 +49,7 @@ module.exports = function (options, callback) {
             return;
         }
 
-        console.log(`Identity ${options.identity} is listening on port ${config.transport.port}`);
+        console.log(`Identity ${options.identity} is listening on port ${options.contact.port}`);
     });
 
     if (!seeds || seeds.length < 1) {

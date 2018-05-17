@@ -46,26 +46,14 @@ module.exports.HTTPTransport = require('./transport-http');
 /** {@link HTTPSTransport} */
 module.exports.HTTPSTransport = require('./transport-https');
 
-/** {@link module:kadence/hashcash} */
-module.exports.hashcash = require('./plugin-hashcash');
-
 /** {@link module:kadence/hibernate} */
 module.exports.hibernate = require('./plugin-hibernate');
-
-/** {@link module:kadence/onion} */
-module.exports.onion = require('./plugin-onion');
 
 /** {@link module:kadence/quasar} */
 module.exports.quasar = require('./plugin-quasar');
 
 /** {@link module:kadence/spartacus} */
 module.exports.spartacus = require('./plugin-spartacus');
-
-/** {@link module:kadence/traverse} */
-//module.exports.traverse = require('./plugin-traverse');
-
-/** {@link module:kadence/eclipse} */
-module.exports.eclipse = require('./plugin-eclipse');
 
 /** {@link module:kadence/permission} */
 module.exports.permission = require('./plugin-permission');
@@ -92,4 +80,3 @@ module.exports.utils = require('./utils');
 module.exports.logger = require('./logger');
 
 module.exports.create = require('./addons/create');
-
