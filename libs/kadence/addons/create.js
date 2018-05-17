@@ -46,7 +46,7 @@ module.exports = function (options, callback) {
     };
 
     const node = new kad.KademliaNode(node_param);
-    node.listen(config.transport.port, "127.0.0.1", err => {
+    node.listen(options.contact.port, options.contact.host, err => {
         if (err) {
             console.log('Listen error: ', err);
             return;

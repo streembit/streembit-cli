@@ -28,6 +28,10 @@ class KademliaNode extends AbstractNode {
    * @constructor
    */
   constructor(options) {
+    if (!options.hasOwnProperty('transport')) {
+      const http_transport = require('./transport-http');
+      options.transport = new http_transport();
+    }
     super(options);
 
     this._lookups = new Map(); // NB: Track the last lookup time for buckets
