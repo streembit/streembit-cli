@@ -118,9 +118,6 @@ module.exports = exports = function (port, ip, password, cmd) {
                     wsserver.init(callback);
                 },      
                 function (callback) {
-                    console.log('--------------');
-                    console.log('SERV INIT');
-                    console.log('••••••••••••••');
                     ServicesHandler.init(callback)
                 },
                 function (callback) {
@@ -173,7 +170,7 @@ module.exports.display_data = function (password) {
             const account = new Account();
             //print the node ID
             console.log("accountname: %s", account.accountname);
-            console.log("node ID: %s", account.accountpk);
+            console.log("node ID (rmd160hash public key): %s", account.accountpk);
             console.log("publickey hex: %s", account.public_key);
             console.log("publickey encoded hash: %s", account.public_key_hash);
             console.log("publickey bs58pk: %s", account.bs58pk);

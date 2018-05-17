@@ -22,52 +22,23 @@ Copyright (C) 2016 The Streembit software development team
 const async = require('async');
 const kad = require('libs/kadence');
 
-/*
- *  Creates the node
- *  Connects to the seeds by interating the seeds array
- *  Returns the peer object
- */
-module.exports = function (options, callback) {
-    // if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
-    //     throw new Error("alogger that implements the error, info, warn and debug methods must be passed to the node");
-    // }
-
-    // var transport = options.transport;
-    const seeds = options.seeds;
-
-    //  create the node
-    // var peer = new Node(options);
-
-    const node_param = Object.assign({}, options);
-    delete node_param.seeds;
-    delete node_param.isseed;
-
-    const node = new kad.KademliaNode(node_param);
-    node.listen(options.contact.port, options.contact.hostname, err => {
-        if (err) {
-            console.log('Listen error: ', err);
-            return;
-        }
-
-        console.log(`Identity ${options.identity} is listening on port ${options.contact.port}`);
-    });
-
+function join(node, seeds, logger, callback) {
     if (!seeds || seeds.length < 1) {
-        options.logger.warn("there are no seeds defined, the node is not connected to any seeds");
+        logger.warn("There are no Kademlia seeds defined, the node is not connected to any seeds");
         // There are no seeds, this must be the very first participant of the Streembit network
         return callback(null, node);
     }
 
     if (!Array.isArray(seeds)) {
         //  must be an array
-        throw new Error("the seeds must be an array");
+        return callback("Kademlia seeds must be an array");
     }
 
     async.mapSeries(
         seeds,
         function (seed, done) {
             seed = [
-                seed.identity,
+                seed.id,
                 {
                     hostname: seed.host,
                     port: seed.port
@@ -81,16 +52,13 @@ module.exports = function (options, callback) {
                         return done(null, result);
                     }
 
-                    console.info(`connected to ${node.router.size} peers`);
-                    //var contact = peer._rpc._createContact(seed);
-                    //peer._router.findNode(contact.nodeID, function (err) {
-                        result.error = null;
-                        done(null, result);
-                    //});
+                    logger.info(`connected to ${node.router.size} peers`);
+                    result.error = null;
+                    done(null, result);
                 });
             }
             catch (e) {
-                options.logger.error("node.join error: %j", e);
+                logger.error("node.join error: %j", e);
                 result.error = e;
                 done(null, result);
             }
@@ -104,7 +72,7 @@ module.exports = function (options, callback) {
             results.forEach(function (item, index, array) {
                 if (item.seed && !item.error) {
                     seed_success_count++;
-                    options.logger.debug("seed connected: %j", item.seed);
+                    logger.debug("seed connected: %j", item.seed);
                 }
             });
 
@@ -115,4 +83,36 @@ module.exports = function (options, callback) {
             callback(err, node);
         }
     );
+}
+
+/*
+ *  Creates the node
+ *  Connects to the seeds by interating the seeds array
+ *  Returns the peer object
+ */
+module.exports = function (options, callback) {
+    if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
+        return callback("A logger that implements the error, info, warn and debug methods must be passed to the Kademlia node");
+    }
+
+    // var transport = options.transport;
+    const seeds = options.seeds;
+
+    //  create the node
+    // var peer = new Node(options);
+
+    const node_param = Object.assign({}, options);
+    const node = new kad.KademliaNode(node_param);
+    node.listen(options.contact.port, options.contact.hostname, err => {
+        if (err) {
+            return callback('KAD listen error: ' + err);
+        }
+
+        options.logger.info(`Identity ${options.identity} is listening on port ${options.contact.port}`);
+
+        // join the Kademlia network
+        join(node, seeds, options.logger, callback);
+
+        //
+    });    
 };

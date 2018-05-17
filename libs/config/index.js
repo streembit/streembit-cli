@@ -238,12 +238,16 @@ var streembit_config = (function (cnfobj) {
                 //  check the config file
                 ip = config.transport.host || 0;
             }
-            cnfobj.transport.host = ip;
-
-            cnfobj.transport.identity = config.transport.identity;
+            cnfobj.transport.host = ip;            
 
             // set the ws port
             cnfobj.transport.ws.port = config.transport.ws.port || constants.DEFAULT_WS_PORT;
+
+            // set the Kademlia port
+            cnfobj.transport.kad = {};
+            cnfobj.transport.kad.port = config.transport.kad.port || constants.DEFAULT_KAD_PORT;
+            cnfobj.transport.kad.host = config.transport.kad.host 
+
             // set the ws max connection 
             cnfobj.transport.ws.maxconn = config.transport.ws.maxconn || constants.DEFAULT_WS_MAXCONN;
 

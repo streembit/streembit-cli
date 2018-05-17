@@ -196,17 +196,18 @@ Define the seeds array in the config file. The seed is the instance that is desc
 {
  "seeds": [
   {
+      "id": "b925f073406a991a38361672660fc4ccae88d457",
       "host": "192.168.0.10",
       "port": 32321
   }
  ]
 }
 ```
-(The host is your machine's local IP so it might different than 192.168.0.10.)
-Set the "account" field, it can be anything, but should be different than seed No. 1, like "seed2".
+The host is your machine's local IP so it might different than 192.168.0.10.
+The "id" field of the seed must be the Rmd160 hash of the seed's public key.
 Run the application with 
 ```bash
-$ node streembit
+$ node streembit --pwd PASSWORD
 ```
 
 At this point seed No. 2 will try to connect to seed No. 1. 

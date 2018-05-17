@@ -83,6 +83,8 @@ class KademliaRules {
       return next(new Error('Invalid lookup key supplied'));
     }
 
+      this.node.logger.debug(`FIND_NODE for key ${key}`);
+
     response.send([...this.node.router.getClosestContactsToKey(key).entries()]);
   }
 

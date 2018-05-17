@@ -30,6 +30,7 @@ const utils = require("libs/utils");
 const async = require("async");
 const constants = require("libs/constants");
 const util = require('util');
+const assert = require('assert');
 
 let instance = null;
 
@@ -133,54 +134,24 @@ class KadHandler {
     }
 
     init(options, callback) {
+
+        assert.ok(config.transport.kad.host && typeof config.transport.kad.host === "string" && config.transport.kad.host.length > 0, 'Invalid Kademlia host');
+        assert.ok(config.transport.kad.port && typeof config.transport.kad.port === "number" && config.transport.kad.port > 0, 'Invalid Kademlia port');
+
         const account = new Account();
+        var accountpk = account.accountpk;
+        assert.ok(accountpk && typeof accountpk === "string" && accountpk.length >= 40, 'Invalid account short public key');
 
         const init_options = {
-            identity: new Buffer(account.public_key, "hex"), 
+            identity: accountpk, 
             logger: logger,
             storage: db.getdb("streembitkv"),
             contact: {
-                hostname: config.transport.host,
-                port: config.transport.port,
+                hostname: config.transport.kad.host,
+                port: config.transport.kad.port,
             },
-            seeds: options.seeds,
-            isseed: options.isseed
+            seeds: options.seeds
         }
-
-        //logger.info('this contact object: ' + contact.toString());
-
-        // var httpopts = {
-        //     logger: logger,
-        //     peermsgrcv: options.peermsgrcv
-        // };
-        // if (config.transport.ssl) {
-        //     httpopts.ssl = true;
-        // }
-        // var transport = kad.transports.HTTP(contact, httpopts);
-        // transport.after('open', function (next) {
-        //     // exit middleware stack if contact is blacklisted
-        //     logger.info('TCP peer connection is opened');
-        //
-        //     // otherwise pass on
-        //     next();
-        // });
-
-        // message validator
-        // transport.before('receive', options.onKadMessage);
-
-        // handle errors from RPC
-        // transport.on('error', options.onTransportError);
-
-        // var seeds = utils.ensure_seeds(options.seeds);
-        //
-        // var options = {
-        //     transport: transport,
-        //     logger: logger,
-        //     storage: db.getdb("streembitkv"), // streembit key-value database (leveldb)
-        //     seeds: seeds,
-        //     isseed: options.isseed,
-        //     config: config
-        // };
 
         kad.create(init_options, (err, peer) => {
             if (err) {
