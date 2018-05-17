@@ -42,9 +42,6 @@ class SwitchFeature extends IoTFeature {
     on_device_contacting(payload) {
     }
 
-    on_device_contacting(payload) {
-    }
-
     on_device_online(payload) {
         super.on_device_online(payload);
     }

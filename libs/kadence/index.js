@@ -55,9 +55,6 @@ module.exports.quasar = require('./plugin-quasar');
 /** {@link module:kadence/spartacus} */
 module.exports.spartacus = require('./plugin-spartacus');
 
-/** {@link module:kadence/permission} */
-module.exports.permission = require('./plugin-permission');
-
 /** {@link module:kadence/rolodex} */
 module.exports.rolodex = require('./plugin-rolodex');
 

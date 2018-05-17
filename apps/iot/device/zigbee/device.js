@@ -92,7 +92,7 @@ class ZigbeeDevice extends Device {
     on_device_online(payload) {
         this.details.address64 = payload.address64;
         this.details.address16 = payload.address16;
-        logger.debug("ZigbeeDevice address64: " + this.details.address64 + " address16: " + this.details.address16 + " online");
+        logger.debug("on_device_online() ZigbeeDevice address64: " + this.details.address64 + " address16: " + this.details.address16 + " online");
 
         // set to active
         this.active = true;
@@ -151,6 +151,9 @@ class ZigbeeDevice extends Device {
             }
             else {
                 logger.debug("Device joined " + this.id);
+
+                // wait a bit for a 0x0006 request
+
                 // send a ZDO 0x0005 "Active Endpoint Request"
                 var cmd = zigbeecmd.active_endpoint_request(this.details.address64, this.details.address16);
                 this.transport.send(cmd);
@@ -388,11 +391,12 @@ class ZigbeeDevice extends Device {
                 });
             }
             else if (payload.type == iotdefinitions.EVENT_DEVICE_CONTACTING) {
+                console.log("+++++++++ EVENT_DEVICE_CONTACTING")
                 this.set_property_item(payload.devicedetails);
-                // call the features on_device_contacting method
-                this.features.forEach((feature, key, map) => {
-                    feature.on_device_contacting(payload);
-                });
+
+                // this is a ZDO 0x0006 Match Descriptor Request 
+                // reply with Cluster ID: 0x8006 permit we support the cluster
+
             }
             else if (payload.type == iotdefinitions.EVENT_DEVICE_PROPERTY_UPDATE) {
                 this.set_property_item(payload.properties);

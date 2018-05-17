@@ -99,13 +99,14 @@ class ZigbeeAlarmFeature extends AlarmFeature {
             this.bind();
         }
         else {
-            if (!this.isreportcomplete) {
-                // bind was completed, send the report configure request
-                this.configure_report();
-            }
-            else {
-                logger.info("ZigbeeAlarmFeature on_device_announce() do nothing as the feature was binded and report was configured");
-            }
+            logger.debug("ZigbeeAlarmFeature on_device_announce() bind complete");
+            //if (!this.isreportcomplete) {
+            //    // bind was completed, send the report configure request
+            //    ///this.configure_report();
+            //}
+            //else {
+            //    logger.info("ZigbeeAlarmFeature on_device_announce() do nothing as the feature was binded and report was configured");
+            //}
         }
     }
 
@@ -119,10 +120,11 @@ class ZigbeeAlarmFeature extends AlarmFeature {
     on_bind_complete() {
         try {
             super.on_bind_complete();
-            logger.debug("ZigbeeAlarmFeature " + this.IEEEaddress + " 0x0500 on_bind_complete()");
+            logger.debug("ZigbeeAlarmFeature " + this.IEEEaddress + " 0x0500 on_bind_complete() write CIE address");
 
-            // TODO do the IAS Zone enroll here instead of doing the configure report 
-            // this.configure_report();
+            zigbeecmd.writeCieAddress(0x57, this.IEEEaddress, this.NWKaddres);
+
+           
         }
         catch (err) {
             logger.error("ZigbeeAlarmFeature on_bind_complete() error: %j", err);

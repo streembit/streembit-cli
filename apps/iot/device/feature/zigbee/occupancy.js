@@ -157,10 +157,6 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
         super.on_device_contacting(payload);
     }
 
-    on_device_contacting(payload) {
-        // must send the report
-    }
-
     on_report_configured() {
         super.on_report_configured();
         logger.debug("ZigbeeOccupancyFeature " + this.IEEEaddress + " on_report_configured()");

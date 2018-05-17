@@ -9,7 +9,7 @@ const constants = require('./constants');
 const semver = require('semver');
 const ip = require('ip');
 const crypto = require('crypto');
-const scrypt = require('scrypt');
+//const scrypt = require('scrypt');
 const assert = require('assert');
 const { randomBytes, createHash } = crypto;
 const hdkey = require('hdkey');
@@ -231,17 +231,17 @@ module.exports.hash256 = function(input) {
  * @param {buffer} input - Data to hash
  * @param {function} [callback] - Callback including hash value
  */
-module.exports.scrypt = function(input, callback) {
-  const params = { N: 1024, r: 8, p: 16 };
-  const salt = Buffer.from([]);
-  const length = 32;
+//module.exports.scrypt = function(input, callback) {
+//  const params = { N: 1024, r: 8, p: 16 };
+//  const salt = Buffer.from([]);
+//  const length = 32;
 
-  if (typeof callback === 'function') {
-    return scrypt.hash(input, params, length, salt, callback);
-  } else {
-    return scrypt.hashSync(input, params, length, salt);
-  }
-};
+//  if (typeof callback === 'function') {
+//    return scrypt.hash(input, params, length, salt, callback);
+//  } else {
+//    return scrypt.hashSync(input, params, length, salt);
+//  }
+//};
 
 /**
  * Returns the RMD-160 hash of the input

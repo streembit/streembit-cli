@@ -56,8 +56,6 @@
         "rc": "1.2.7",
         "request": "2.86.0",
         "safe-buffer": "5.1.2",
-        "scrypt": "^6.0.3",
-        "secp256k1": "^3.5.0",
         "secure-random": "^1.1.1",
         "semver": "^5.1.0",
         "serialport": "^5.0.0",
