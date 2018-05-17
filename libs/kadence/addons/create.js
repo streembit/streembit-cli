@@ -69,6 +69,13 @@ module.exports = function (options, callback) {
     async.mapSeries(
         seeds,
         function (seed, done) {
+            seed = [
+                seed.identity,
+                {
+                    hostname: seed.host,
+                    port: seed.port
+                }
+            ];
             var result = { seed: seed, error: null };
             try {
                 node.join(seed, function (err) {
@@ -77,6 +84,7 @@ module.exports = function (options, callback) {
                         return done(null, result);
                     }
 
+                    console.info(`connected to ${node.router.size} peers`);
                     //var contact = peer._rpc._createContact(seed);
                     //peer._router.findNode(contact.nodeID, function (err) {
                         result.error = null;
