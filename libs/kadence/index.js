@@ -52,9 +52,6 @@ module.exports.hibernate = require('./plugin-hibernate');
 /** {@link module:kadence/quasar} */
 module.exports.quasar = require('./plugin-quasar');
 
-/** {@link module:kadence/spartacus} */
-module.exports.spartacus = require('./plugin-spartacus');
-
 /** {@link module:kadence/rolodex} */
 module.exports.rolodex = require('./plugin-rolodex');
 
