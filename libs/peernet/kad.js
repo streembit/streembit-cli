@@ -29,6 +29,7 @@ const Account = require("libs/account");
 const utils = require("libs/utils");
 const async = require("async");
 const constants = require("libs/constants");
+const util = require('util');
 
 let instance = null;
 
@@ -132,53 +133,56 @@ class KadHandler {
     }
 
     init(options, callback) {
+        const account = new Account();
 
-        var account = new Account();
-        var bs58pk = account.bs58pk;
-
-        var contact_param = {
-            host: config.transport.host,
-            port: config.transport.port,
-            publickey: bs58pk
-        };
-
-        var contact = kad.contacts.StreembitContact(contact_param);
-        logger.info('this contact object: ' + contact.toString());
-
-        var httpopts = {
+        const init_options = {
+            identity: config.transport.identity,
             logger: logger,
-            peermsgrcv: options.peermsgrcv
-        };
-        if (config.transport.ssl) {
-            httpopts.ssl = true;
+            storage: db.getdb("streembitkv"),
+            contact: {
+                hostname: config.transport.host,
+                port: config.transport.port,
+            },
+            seeds: options.seeds,
+            isseed: options.isseed
         }
-        var transport = kad.transports.HTTP(contact, httpopts);
-        transport.after('open', function (next) {
-            // exit middleware stack if contact is blacklisted
-            logger.info('TCP peer connection is opened');
 
-            // otherwise pass on
-            next();
-        });
+        //logger.info('this contact object: ' + contact.toString());
+
+        // var httpopts = {
+        //     logger: logger,
+        //     peermsgrcv: options.peermsgrcv
+        // };
+        // if (config.transport.ssl) {
+        //     httpopts.ssl = true;
+        // }
+        // var transport = kad.transports.HTTP(contact, httpopts);
+        // transport.after('open', function (next) {
+        //     // exit middleware stack if contact is blacklisted
+        //     logger.info('TCP peer connection is opened');
+        //
+        //     // otherwise pass on
+        //     next();
+        // });
 
         // message validator
-        transport.before('receive', options.onKadMessage);
+        // transport.before('receive', options.onKadMessage);
 
         // handle errors from RPC
-        transport.on('error', options.onTransportError);
+        // transport.on('error', options.onTransportError);
 
-        var seeds = utils.ensure_seeds(options.seeds);
+        // var seeds = utils.ensure_seeds(options.seeds);
+        //
+        // var options = {
+        //     transport: transport,
+        //     logger: logger,
+        //     storage: db.getdb("streembitkv"), // streembit key-value database (leveldb)
+        //     seeds: seeds,
+        //     isseed: options.isseed,
+        //     config: config
+        // };
 
-        var options = {
-            transport: transport,
-            logger: logger,
-            storage: db.getdb("streembitkv"), // streembit key-value database (leveldb)
-            seeds: seeds,
-            isseed: options.isseed,
-            config: config
-        };
-
-        kad.create(options, (err, peer) => {
+        kad.create(init_options, (err, peer) => {
             if (err) {
                 //  since the seed is the main module and it failed, the whole intialization failed so return the error
                 //  and the async waterflow will be terminated

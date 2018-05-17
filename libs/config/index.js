@@ -196,6 +196,7 @@ var streembit_config = (function (cnfobj) {
     });
 
     cnfobj.transport = {
+        "identity": "",
         "protocol": "",
         "host": "",
         "localip": 0,
@@ -238,6 +239,8 @@ var streembit_config = (function (cnfobj) {
                 ip = config.transport.host || 0;
             }
             cnfobj.transport.host = ip;
+
+            cnfobj.transport.identity = config.transport.identity;
 
             // set the ws port
             cnfobj.transport.ws.port = config.transport.ws.port || constants.DEFAULT_WS_PORT;

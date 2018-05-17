@@ -131,6 +131,7 @@ class AbstractNode extends EventEmitter {
     this.identity = options.identity;
     this.contact = options.contact;
     this.logger = options.logger;
+
     this.router = new RoutingTable(this.identity);
 
     this._init();

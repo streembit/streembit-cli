@@ -118,6 +118,9 @@ module.exports = exports = function (port, ip, password, cmd) {
                     wsserver.init(callback);
                 },      
                 function (callback) {
+                    console.log('--------------');
+                    console.log('SERV INIT');
+                    console.log('••••••••••••••');
                     ServicesHandler.init(callback)
                 },
                 function (callback) {

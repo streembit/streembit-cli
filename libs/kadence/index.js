@@ -91,5 +91,5 @@ module.exports.utils = require('./utils');
 /** {@link module:kadence/logger} */
 module.exports.logger = require('./logger');
 
-/** {@link module:kadence/contact-list} */
-module.exports.contacts = require('./contacts');
+module.exports.create = require('./addons/create');
+

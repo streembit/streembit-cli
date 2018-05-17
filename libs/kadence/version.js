@@ -15,7 +15,9 @@ module.exports = {
   /**
    * @constant {string} software - The current software version
    */
-  software: require('../package').version,
+
+  software: require('./package').version,
+
   /**
    * Returns human readable string of versions
    * @function

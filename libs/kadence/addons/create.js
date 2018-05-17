@@ -20,28 +20,45 @@ Copyright (C) 2016 The Streembit software development team
 */
 
 const async = require('async');
-const Node = require('../node-kademlia');
+const config = require("libs/config");
+const kad = require('libs/kadence');
 
 /*
  *  Creates the node
  *  Connects to the seeds by interating the seeds array
  *  Returns the peer object
  */
-module.exports.create = function (options, callback) {
-    if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
-        throw new Error("alogger that implements the error, info, warn and debug methods must be passed to the node");
-    }
+module.exports = function (options, callback) {
+    // if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
+    //     throw new Error("alogger that implements the error, info, warn and debug methods must be passed to the node");
+    // }
 
-    var transport = options.transport;
-    var seeds = options.seeds;
+    // var transport = options.transport;
+    const seeds = options.seeds;
 
     //  create the node
-    var peer = new Node(options);
+    // var peer = new Node(options);
 
-    if (!seeds || seeds.length == 0) {
+    const node_param = {
+        identity: options.identity,
+        storage: options.storage,
+        contact: options.contact
+    };
+
+    const node = new kad.KademliaNode(node_param);
+    node.listen(config.transport.port, "127.0.0.1", err => {
+        if (err) {
+            console.log('Listen error: ', err);
+            return;
+        }
+
+        console.log(`Identity ${options.identity} is listening on port ${config.transport.port}`);
+    });
+
+    if (!seeds || seeds.length < 1) {
         options.logger.warn("there are no seeds defined, the node is not connected to any seeds");
-        // There are no seeds, this must be the very first partcicipant of the Streembit network
-        return callback(null, peer);
+        // There are no seeds, this must be the very first participant of the Streembit network
+        return callback(null, node);
     }
 
     if (!Array.isArray(seeds)) {
@@ -54,28 +71,28 @@ module.exports.create = function (options, callback) {
         function (seed, done) {
             var result = { seed: seed, error: null };
             try {
-                peer.join(seed, function (err) {
+                node.join(seed, function (err) {
                     if (err) {
                         result.error = err;
                         return done(null, result);
                     }
 
-                    var contact = peer._rpc._createContact(seed);
-                    peer._router.findNode(contact.nodeID, function (err) {
-                        result.error = err;
+                    //var contact = peer._rpc._createContact(seed);
+                    //peer._router.findNode(contact.nodeID, function (err) {
+                        result.error = null;
                         done(null, result);
-                    });
+                    //});
                 });
             }
             catch (e) {
-                options.logger.error("peer.connect error: %j", e);
+                options.logger.error("node.join error: %j", e);
                 result.error = e;
                 done(null, result);
             }
         },
         function (err, results) {
             if (err || results.length == 0) {
-                return callback("Failed to connect to any seed", peer);
+                return callback("Failed to connect to any seed", node);
             }
 
             var seed_success_count = 0;
@@ -90,7 +107,7 @@ module.exports.create = function (options, callback) {
                 err = "Failed to connect to any seed";
             }
 
-            callback(err, peer);
+            callback(err, node);
         }
     );
 };
