@@ -232,7 +232,7 @@ class ZigbeeCommands {
     }
 
     static writeCieAddress(txn, address64, address16) {
-        var gateway64 = zigbeegateway.address64;
+        const gateway64 = zigbeegateway.address64;
         if (!gateway64) {
             throw new Error("invalid gateway IEEE address");
         }        
@@ -244,7 +244,7 @@ class ZigbeeCommands {
         enrollbuf.writeUInt16LE(0x0010, 3); // attribute identifier
         enrollbuf.writeUInt8(0xf0, 5); // 0xf0 data type
         // write the DstAddress
-        var dest64buf = ZigbeeCommands.swapEUI64toLittleEndian(gateway64);
+        const dest64buf = ZigbeeCommands.swapEUI64toLittleEndian(gateway64);
         dest64buf.copy(enrollbuf, 6);
 
         // write the source address 
@@ -259,7 +259,7 @@ class ZigbeeCommands {
         dest64buf.copy(bindingbuf, 13);
         bindingbuf.writeUInt8(destendpoint, 21); // 
 
-        var cmd = {
+        const cmd = {
             destination64: address64,
             destination16: address16, 
             sourceEndpoint: 0x00,           // ?????
@@ -270,19 +270,19 @@ class ZigbeeCommands {
         };
         return cmd;
 
-        // Start the IAS Zone enroll here instead of doing the configure report 
-        const enrollbuf = Buffer.alloc(14);
-        enrollbuf.writeUInt8(0x00, 0);
-        enrollbuf.writeUInt8(0x33, 1);// 0x22 transaction sequence number (arbitrarily chosen) 
-        enrollbuf.writeUInt8(0x02, 2); // write attribute
-        enrollbuf.writeUInt16LE(0x0010, 3); // attribute identifier
-        enrollbuf.writeUInt8(0xf0, 5); // 0xf0 data type
-        var addressbuf = Buffer.from('0013a20041679c00', 'hex');
-        addressbuf.swap32();
-        addressbuf.copy(enrollbuf, 6);
-        //var enrolldata = [...enrollbuf];
-        console.log("IAS Zone enroll write request buffer: " + util.inspect(enrollbuf));
-        iaszone_enroll(frame.remote64, frame.remote16, 2, 1, enrollbuf);
+        // // Start the IAS Zone enroll here instead of doing the configure report
+        // const enrollbuf = Buffer.alloc(14);
+        // enrollbuf.writeUInt8(0x00, 0);
+        // enrollbuf.writeUInt8(0x33, 1);// 0x22 transaction sequence number (arbitrarily chosen)
+        // enrollbuf.writeUInt8(0x02, 2); // write attribute
+        // enrollbuf.writeUInt16LE(0x0010, 3); // attribute identifier
+        // enrollbuf.writeUInt8(0xf0, 5); // 0xf0 data type
+        // var addressbuf = Buffer.from('0013a20041679c00', 'hex');
+        // addressbuf.swap32();
+        // addressbuf.copy(enrollbuf, 6);
+        // //var enrolldata = [...enrollbuf];
+        // console.log("IAS Zone enroll write request buffer: " + util.inspect(enrollbuf));
+        // iaszone_enroll(frame.remote64, frame.remote16, 2, 1, enrollbuf);
 
     }
 
