@@ -27,7 +27,7 @@ async function join(node, seeds, logger, callback) {
     // enable storage for seen contacts
     const rolodex = node.plugin(kad.rolodex(`db/kad/${node.identity.toString('hex')}`));
 
-    const peers = await rolodex.getBootstrapCandidates() || [];
+    const peers = await rolodex.getBootstrapCandidates();
 
     seeds = [ ...seeds, ...peers.filter(p => seeds.every(s => p.id !== s.id)) ];
 
