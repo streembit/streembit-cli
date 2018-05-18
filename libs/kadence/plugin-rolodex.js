@@ -48,14 +48,18 @@ class RolodexPlugin {
     return new Promise(resolve => {
       this.db.each((contact, key) => {
         const [prefix, identity] = key.split(':');
-
         /* istanbul ignore else */
         if (prefix === RolodexPlugin.EXTERNAL_PREFIX) {
-          candidates.push([identity, contact]);
+          candidates.push({
+                  id: identity,
+                  host: contact.hostname,
+                  port: contact.port
+              });
         }
+      }, () => {
+          resolve(candidates.sort((a, b) => b[1].timestamp - a[1].timestamp));
+              //.map(utils.getContactURL));
       });
-      resolve(candidates.sort((a, b) => b[1].timestamp - a[1].timestamp)
-        .map(utils.getContactURL));
     });
   }
 

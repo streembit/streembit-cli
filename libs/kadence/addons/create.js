@@ -22,7 +22,15 @@ Copyright (C) 2016 The Streembit software development team
 const async = require('async');
 const kad = require('libs/kadence');
 
-function join(node, seeds, logger, callback) {
+async function join(node, seeds, logger, callback) {
+
+    // enable storage for seen contacts
+    const rolodex = node.plugin(kad.rolodex(`db/kad/${node.identity.toString('hex')}`));
+
+    const peers = await rolodex.getBootstrapCandidates() || [];
+
+    seeds = [ ...seeds, ...peers.filter(p => seeds.every(s => p.id !== s.id)) ];
+
     if (!seeds || seeds.length < 1) {
         logger.warn("There are no Kademlia seeds defined, the node is not connected to any seeds");
         // There are no seeds, this must be the very first participant of the Streembit network
@@ -109,9 +117,6 @@ module.exports = function (options, callback) {
         }
 
         options.logger.info(`Identity ${options.identity} is listening on port ${options.contact.port}`);
-
-        // enable storage for seen contacts
-        kad.rolodex(`db/kad/${node.identity.toString('hex')}`)(node);
 
         // join the Kademlia network
         join(node, seeds, options.logger, callback);
