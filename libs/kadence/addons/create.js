@@ -110,6 +110,9 @@ module.exports = function (options, callback) {
 
         options.logger.info(`Identity ${options.identity} is listening on port ${options.contact.port}`);
 
+        // enable storage for seen contacts
+        kad.rolodex(`db/kad/${node.identity.toString('hex')}`)(node);
+
         // join the Kademlia network
         join(node, seeds, options.logger, callback);
 
