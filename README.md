@@ -115,9 +115,11 @@ A typical configuration file is the following:
 }
 ```
 
-**Fields:**
+Password: To decrypt account information in the SQLITE database.
+Provide password in the command line using `--pwd` (or `--pwd=`) command line switch. Once you initially setup password use this the same password in further script start ups.
+See "node streembit.js --help" for more command line arguments.
 
-Password: To decrypt account information in the SQLITE database. For development purpose and make easy to develop the software define this password in the config file. In production, provide this password from the command line using the --pasword (or -s) command line switch. See "node streembit.js --help" for more command line arguments.
+**Fields:**
 
 The "database_name" field: This is the SQLITE database name. Default value is "streembitsql". You may change it for production or for testing purpose. For using different databases in production or testing.
 
@@ -145,7 +147,7 @@ The format is
 ```json
 [
     {
-		"id": ""b925f073406a991a38361672660fc4ccae88d457",
+        "id": "b925f073406a991a38361672660fc4ccae88d457",
         "host": "192.168.0.10",
         "port": 32322
     }
