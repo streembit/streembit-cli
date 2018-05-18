@@ -31,7 +31,6 @@ A typical configuration file is the following:
 	"cmdinput": false,
     "seeds": [],
     "transport": {
-        "protocol": "http",
         "host": "182.120.242.165",
         "port": 32319,
         "ws": {
