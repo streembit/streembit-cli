@@ -274,7 +274,8 @@ Make sure you modify your config.json according to this example
    "database_name": "streembitsql",
    "cmdinput": true,
    "seeds": [
-	{
+	    {
+	        "id": "b925f073406a991a38361672660fc4ccae88d457",
             "host": "seed.streembit.uk",
             "port": 32319
         }
