@@ -30,18 +30,8 @@ class RolodexPlugin {
    */
   constructor(node, peerCacheFilePath) {
     this.node = node;
-    try {
-        const path_r = peerCacheFilePath.split('/');
-        let path_to = [];
-        path_r.slice(0, -1).forEach((dir, idx) => {
-            path_to.push(dir);
-            if (!fs.existsSync(path_to.join('/'))){
-                fs.mkdirSync(path_to.join('/'));
-            }
-        })
-    } catch (err) {
-        throw new Error(err.message);
-    }
+
+    this.storagePath(peerCacheFilePath);
 
     this.db = tiny(peerCacheFilePath);
 
@@ -51,6 +41,23 @@ class RolodexPlugin {
       contact.timestamp = Date.now();
       this.setExternalPeerInfo(identity, contact);
     });
+  }
+
+  storagePath(path) {
+      if (!fs.existsSync(path)) {
+          try {
+              const path_r = path.split('/');
+              let path_to = [];
+              path_r.slice(0, -1).forEach((dir, idx) => {
+                  path_to.push(dir);
+                  if (!fs.existsSync(path_to.join('/'))){
+                      fs.mkdirSync(path_to.join('/'));
+                  }
+              })
+          } catch (err) {
+              throw new Error(err.message);
+          }
+      }
   }
 
   /**
