@@ -46,20 +46,20 @@ function verify_signature(params, callback) {
             is_update_key = true;
         }
 
-        var checkkey = params.key;
-        /*if (is_update_key) {
+        var checkkey;
+        if (is_update_key) {
             checkkey = params.key;
         }
         else {
             //  must be a forward slash separated key and the first
             //  item must be the bs58 hashed publich key
-            var items = params.key.split("/");
+            var items = payload.contact_key.split("/");
             if (!items || items.lentgh == 1) {
                 return callback("validate() invalid message key");
             }
 
             checkkey = items[0];
-        }*/
+        }
 
         //  check if the bs58 key is correctly computed from the hex public key
         //  and then the JWT signature will validate the integrity of message
