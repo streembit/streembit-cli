@@ -46,8 +46,8 @@ function verify_signature(params, callback) {
             is_update_key = true;
         }
 
-        var checkkey;
-        if (is_update_key) {
+        var checkkey = params.key;
+        /*if (is_update_key) {
             checkkey = params.key;
         }
         else {
@@ -59,7 +59,7 @@ function verify_signature(params, callback) {
             }
 
             checkkey = items[0];
-        }
+        }*/
 
         //  check if the bs58 key is correctly computed from the hex public key
         //  and then the JWT signature will validate the integrity of message

@@ -34,6 +34,10 @@ class KademliaNode extends AbstractNode {
     }
     super(options);
 
+    if (options.hasOwnProperty('validator') && typeof options.validator === 'function') {
+      this.validator = options.validator;
+    }
+
     this._lookups = new Map(); // NB: Track the last lookup time for buckets
     this._pings = new Map();
     this._updateContactQueue = async.queue(
@@ -480,6 +484,29 @@ class KademliaNode extends AbstractNode {
       this._pings.set(headId, { timestamp: Date.now(), responded: !err });
       callback(err, headId);
     });
+  }
+
+  put(key, value, callback) {
+    var node = this;
+
+    this.logger.debug('attempting to set value for key %s', key);
+
+    this._validateKeyValuePair(key, value, function (valid) {
+      if (!valid) {
+        node.logger.warn('failed to validate key/value pair for %s', key);
+        return callback(new Error('Failed to validate key/value pair'));
+      }
+
+      node.iterativeStore(key, value, callback);
+    });
+  }
+
+  _validateKeyValuePair(key, value, callback) {
+    if (typeof this.validator === 'function') {
+      return this.validator.apply(this, arguments);
+    }
+
+    callback(true);
   }
 
 }
