@@ -557,6 +557,37 @@ class KademliaNode extends AbstractNode {
         }
     }
 
+    get(key, callback) {
+
+        this.logger.debug('attempting to get value for key %s', key);
+
+        this.iterativeFindValue(key, (err, result) => {
+            if (err) {
+                this.logger.warn('failed to get value from peers, reason: %s', err.message);
+                this.logger.debug('checking local storage for items at key %s', key);
+
+                return callback(err);
+            }
+
+            if (result.length < 1) {
+                // find value in local storage
+                return this.storage.get(key, function (err, item) {
+                    if (!err && item) {
+                        callback(null, JSON.parse(item).value);
+                    }
+                    else {
+                        if (err) {
+                            callback(err);
+                        }
+                        else {
+                            callback("failed to get item from DHT and storage");
+                        }
+                    }
+                });
+            }
+        })
+    };
+
 }
 
 module.exports = KademliaNode;
