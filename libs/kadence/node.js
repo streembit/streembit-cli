@@ -35,6 +35,46 @@ class Node {
         this.peercount = 0;
     }
 
+    publish(msgtype, data) {
+        try {
+            this.node.quasarPublish(msgtype, data);
+        }
+        catch (err) {
+            this.logger.error("Node publish() error %j", err)
+        }
+    }
+
+    eventHandlers() {
+
+        this.node.quasarSubscribe(constants.PUBLISH_TXN, payload => {
+            try {
+                this.logger.debug(`subscribe ${constants.PUBLISH_TXN } data: ${payload}`);
+            }
+            catch (err) {
+                this.logger.error("eventHandlers() error: " + err.message);
+            }
+        });
+
+        events.register(
+            events.ONBCEVENT,
+            (payload, callback) => {
+                try {
+                    switch (payload.type) {
+                        case constants.ONTXNREQUEST:
+                            this.publish(constants.PUBLISH_TXN, payload.data);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                catch (err) {
+                    this.logger.error("eventHandlers() ONBCEVENT error %j", err)
+                }
+            }
+        );  
+        
+    }
+
     join(callback) {
 
         if (!this.seeds || this.seeds.length < 1) {
@@ -115,9 +155,9 @@ class Node {
 
         // enable pubsub system
         this.node.plugin(kad.quasar());
-        this.node.quasarSubscribe('TXN', payload => {
-            console.log('TXN sub:', payload);
-        });
+
+        // start the event handlers
+        this.eventHandlers();
 
         // enable storage for seen contacts
         const rolodex = this.node.plugin(kad.rolodex(`db/kad/${this.node.identity.toString('hex')}`));
@@ -142,31 +182,9 @@ class Node {
                 }
                 else {
                     if (this.seeds.length) {
-                        // there is seeds exists
+                        // there is seeds exists, but failed to connect
                         this.logger.error("Failed to connect to any seed");
-
-                        // try to connect to the seeds
-                        // the task handler should execute other connection attempts
-                        //setTimeout(
-                        //    () => {
-                        //        this.join(() => {
-                        //        });
-                        //    },
-                        //    30000
-                        //);
                     }                   
-                }
-
-                try {
-                    events.on(
-                        constants.ONTXNREQUEST,
-                        data => {
-                            this.node.quasarPublish(data);
-                        }
-                    );
-                }
-                catch (err) {
-                    this.logger.error("on_request() error: " + err.message);
                 }
 
                 callback(null, this.node, this.peercount);

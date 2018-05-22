@@ -55,7 +55,9 @@ var constants = {
     ONCLIENTREQUEST: "on_client_request",
     ONSETDNS: "on_setdns",
 
-    ONTXNREQUEST: "txn_request"
+    ONTXNREQUEST: "txn_request",
+
+    PUBLISH_TXN: "TXN"
 
 };
 

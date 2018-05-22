@@ -171,13 +171,22 @@ class ClientRequestHandler  {
     }
 
     txn(req, res, message) {
+        try {
+            logger.debug("HTTP clihandler txn");
 
-        const data = {
-            message: message,
-            timestamp: Date.now()
+            if (!message || !message.txnhex) {
+                return this.senderror(res, errcodes.HTTP_HANDLEREQUEST, "invalid transaction");
+            }
+
+            // submit the transaction to the blockchain transaction handlers
+            events.bcmsg({ type: constants.ONTXNREQUEST, data: message.txnhex });
+
+            this.sendcomplete(res, { result: 0 });
         }
-
-        events.emit(constants.ONTXNREQUEST, data);
+        catch (err) {
+            this.senderror(res, errcodes.HTTP_NOWSINFO, err);
+            logger.error("txn() error: " + err.message);
+        }
     }
 
     getwsinfo(req, res) {
