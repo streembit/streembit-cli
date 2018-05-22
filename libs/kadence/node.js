@@ -22,6 +22,8 @@ Based on kadence library https://github.com/kadence author Gordon Hall https://g
 'use strict';
 
 const async = require('async');
+const constants = require("libs/constants");
+const events = require("streembit-util").events;
 const kad = require('libs/kadence');
 
 class Node {
@@ -111,6 +113,12 @@ class Node {
         const node_param = Object.assign({}, options);
         this.node = new kad.KademliaNode(node_param);
 
+        // enable pubsub system
+        this.node.plugin(kad.quasar());
+        this.node.quasarSubscribe('TXN', payload => {
+            console.log('TXN sub:', payload);
+        });
+
         // enable storage for seen contacts
         const rolodex = this.node.plugin(kad.rolodex(`db/kad/${this.node.identity.toString('hex')}`));
         const peers = await rolodex.getBootstrapCandidates();
@@ -147,6 +155,18 @@ class Node {
                         //    30000
                         //);
                     }                   
+                }
+
+                try {
+                    events.on(
+                        constants.ONTXNREQUEST,
+                        data => {
+                            this.node.quasarPublish(data);
+                        }
+                    );
+                }
+                catch (err) {
+                    this.logger.error("on_request() error: " + err.message);
                 }
 
                 callback(null, this.node, this.peercount);

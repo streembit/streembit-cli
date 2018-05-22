@@ -53,7 +53,9 @@ var constants = {
 
     ONSENDTOWSCLIENT: "on_send_to_ws_client",
     ONCLIENTREQUEST: "on_client_request",
-    ONSETDNS: "on_setdns"
+    ONSETDNS: "on_setdns",
+
+    ONTXNREQUEST: "txn_request"
 
 };
 

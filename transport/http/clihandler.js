@@ -170,6 +170,16 @@ class ClientRequestHandler  {
         }
     }
 
+    txn(req, res, message) {
+
+        const data = {
+            message: message,
+            timestamp: Date.now()
+        }
+
+        events.emit(constants.ONTXNREQUEST, data);
+    }
+
     getwsinfo(req, res) {
         try {
             var result = clientsrvc.getwsinfo();
@@ -208,6 +218,7 @@ class ClientRequestHandler  {
                 case "getwsinfo":
                 case "getwspeers":
                 case "dhtput":
+                case "txn":
                     // a funciton with the same name as the type must exists
                     this[type](req, res, message);
                     break;
@@ -223,7 +234,7 @@ class ClientRequestHandler  {
     }
 
     on_request() {
-        try {    
+        try {
             events.on(
                 constants.ONCLIENTREQUEST,
                 (data) => {
