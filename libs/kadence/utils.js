@@ -1,6 +1,24 @@
-/**
-* @module kadence/utils
+/*
+This file is part of Streembit application.
+Streembit is an open source project to create a real time communication system for humans and machines.
+
+Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation, either version 3.0 of the License, or (at your option) any later version.
+
+Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with Streembit software.
+If not, see http://www.gnu.org/licenses/.
+
+-------------------------------------------------------------------------------------------------------------------------
+Author: Streembit team
+Copyright (C) 2018 The Streembit software development team
+
+Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
+-------------------------------------------------------------------------------------------------------------------------
 */
+
 
 'use strict';
 
@@ -11,7 +29,10 @@ const ip = require('ip');
 const crypto = require('crypto');
 //const scrypt = require('scrypt');
 const assert = require('assert');
-const { randomBytes, createHash } = crypto;
+const {
+    randomBytes,
+    createHash
+} = crypto;
 const hdkey = require('hdkey');
 
 
@@ -19,16 +40,16 @@ const hdkey = require('hdkey');
  * Returns a random valid key/identity as a string
  * @returns {string}
  */
-exports.getRandomKeyString = function() {
-  return exports.getRandomKeyBuffer().toString('hex');
+exports.getRandomKeyString = function () {
+    return exports.getRandomKeyBuffer().toString('hex');
 };
 
 /**
  * Returns a random valid key/identity as a buffer
  * @returns {buffer}
  */
-exports.getRandomKeyBuffer = function() {
-  return crypto.randomBytes(constants.B / 8);
+exports.getRandomKeyBuffer = function () {
+    return crypto.randomBytes(constants.B / 8);
 };
 
 /**
@@ -36,16 +57,16 @@ exports.getRandomKeyBuffer = function() {
  * @param {string} key - Node ID or item key
  * @returns {boolean}
  */
-exports.keyStringIsValid = function(key) {
-  let buf;
+exports.keyStringIsValid = function (key) {
+    let buf;
 
-  try {
-    buf = Buffer.from(key, 'hex');
-  } catch (err) {
-    return false;
-  }
+    try {
+        buf = Buffer.from(key, 'hex');
+    } catch (err) {
+        return false;
+    }
 
-  return exports.keyBufferIsValid(buf);
+    return exports.keyBufferIsValid(buf);
 };
 
 /**
@@ -53,8 +74,8 @@ exports.keyStringIsValid = function(key) {
  * @param {buffer} key - Node ID or item key
  * @returns {boolean}
  */
-exports.keyBufferIsValid = function(key) {
-  return Buffer.isBuffer(key) && key.length === constants.B / 8;
+exports.keyBufferIsValid = function (key) {
+    return Buffer.isBuffer(key) && key.length === constants.B / 8;
 };
 
 /**
@@ -63,18 +84,18 @@ exports.keyBufferIsValid = function(key) {
  * @param {string} key2 - Identity key to compare
  * @returns {buffer}
  */
-exports.getDistance = function(id1, id2) {
-  id1 = !Buffer.isBuffer(id1)
-      ? Buffer.from(id1, 'hex')
-      : id1;
-  id2 = !Buffer.isBuffer(id2)
-      ? Buffer.from(id2, 'hex')
-      : id2;
+exports.getDistance = function (id1, id2) {
+    id1 = !Buffer.isBuffer(id1) ?
+        Buffer.from(id1, 'hex') :
+        id1;
+    id2 = !Buffer.isBuffer(id2) ?
+        Buffer.from(id2, 'hex') :
+        id2;
 
-  assert(exports.keyBufferIsValid(id1), 'Invalid key supplied');
-  assert(exports.keyBufferIsValid(id2), 'Invalid key supplied');
+    assert(exports.keyBufferIsValid(id1), 'Invalid key supplied');
+    assert(exports.keyBufferIsValid(id2), 'Invalid key supplied');
 
-  return Buffer(constants.B / 8).map((b, index) => id1[index] ^ id2[index]);
+    return Buffer(constants.B / 8).map((b, index) => id1[index] ^ id2[index]);
 };
 
 /**
@@ -83,19 +104,19 @@ exports.getDistance = function(id1, id2) {
  * @param {buffer} b2 - Buffer to compare
  * @returns {number}
  */
-exports.compareKeyBuffers = function(b1, b2) {
-  assert(exports.keyBufferIsValid(b1), 'Invalid key supplied');
-  assert(exports.keyBufferIsValid(b2), 'Invalid key supplied');
+exports.compareKeyBuffers = function (b1, b2) {
+    assert(exports.keyBufferIsValid(b1), 'Invalid key supplied');
+    assert(exports.keyBufferIsValid(b2), 'Invalid key supplied');
 
-  for (let index = 0; index < b1.length; index++) {
-    let bits = b1[index];
+    for (let index = 0; index < b1.length; index++) {
+        let bits = b1[index];
 
-    if (bits !== b2[index]) {
-      return bits < b2[index] ? -1 : 1;
+        if (bits !== b2[index]) {
+            return bits < b2[index] ? -1 : 1;
+        }
     }
-  }
 
-  return 0;
+    return 0;
 };
 
 /**
@@ -104,26 +125,26 @@ exports.compareKeyBuffers = function(b1, b2) {
  * @param {string} foreignKey - Key to compare
  * @returns {number}
  */
-exports.getBucketIndex = function(referenceKey, foreignKey) {
-  let distance = exports.getDistance(referenceKey, foreignKey);
-  let bucketIndex = constants.B;
+exports.getBucketIndex = function (referenceKey, foreignKey) {
+    let distance = exports.getDistance(referenceKey, foreignKey);
+    let bucketIndex = constants.B;
 
-  for (let byteValue of distance) {
-    if (byteValue === 0) {
-      bucketIndex -= 8;
-      continue;
+    for (let byteValue of distance) {
+        if (byteValue === 0) {
+            bucketIndex -= 8;
+            continue;
+        }
+
+        for (let i = 0; i < 8; i++) {
+            if (byteValue & (0x80 >> i)) {
+                return --bucketIndex;
+            } else {
+                bucketIndex--;
+            }
+        }
     }
 
-    for (let i = 0; i < 8; i++) {
-      if (byteValue & (0x80 >> i)) {
-        return --bucketIndex;
-      } else {
-        bucketIndex--;
-      }
-    }
-  }
-
-  return bucketIndex;
+    return bucketIndex;
 };
 
 /**
@@ -132,18 +153,18 @@ exports.getBucketIndex = function(referenceKey, foreignKey) {
  * @param {number} bucketIndex - Bucket index for key
  * @returns {buffer}
  */
-exports.getPowerOfTwoBufferForIndex = function(referenceKey, exp) {
-  assert(exp >= 0 && exp < constants.B, 'Index out of range');
+exports.getPowerOfTwoBufferForIndex = function (referenceKey, exp) {
+    assert(exp >= 0 && exp < constants.B, 'Index out of range');
 
-  const buffer = Buffer.isBuffer(referenceKey)
-               ? Buffer.from(referenceKey)
-               : Buffer.from(referenceKey, 'hex');
-  const byteValue = parseInt(exp / 8);
+    const buffer = Buffer.isBuffer(referenceKey) ?
+        Buffer.from(referenceKey) :
+        Buffer.from(referenceKey, 'hex');
+    const byteValue = parseInt(exp / 8);
 
-  // NB: We set the byte containing the bit to the right left shifted amount
-  buffer[constants.K - byteValue - 1] = 1 << (exp % 8);
+    // NB: We set the byte containing the bit to the right left shifted amount
+    buffer[constants.K - byteValue - 1] = 1 << (exp % 8);
 
-  return buffer;
+    return buffer;
 };
 
 /**
@@ -151,79 +172,79 @@ exports.getPowerOfTwoBufferForIndex = function(referenceKey, exp) {
  * @param {buffer} referenceKey - Key for bucket distance reference
  * @param {number} index - Bucket index for random buffer selection
  */
-exports.getRandomBufferInBucketRange = function(referenceKey, index) {
-  let base = exports.getPowerOfTwoBufferForIndex(referenceKey, index);
-  let byte = parseInt(index / 8); // NB: Randomize bytes below the power of two
+exports.getRandomBufferInBucketRange = function (referenceKey, index) {
+    let base = exports.getPowerOfTwoBufferForIndex(referenceKey, index);
+    let byte = parseInt(index / 8); // NB: Randomize bytes below the power of two
 
-  for (let i = constants.K - 1; i > (constants.K - byte - 1); i--) {
-    base[i] = parseInt(Math.random() * 256);
-  }
+    for (let i = constants.K - 1; i > (constants.K - byte - 1); i--) {
+        base[i] = parseInt(Math.random() * 256);
+    }
 
-  // NB: Also randomize the bits below the number in that byte and remember
-  // NB: arrays are off by 1
-  for (let j = index - 1; j >= byte * 8; j--) {
-    let one = Math.random() >= 0.5;
-    let shiftAmount = j - byte * 8;
+    // NB: Also randomize the bits below the number in that byte and remember
+    // NB: arrays are off by 1
+    for (let j = index - 1; j >= byte * 8; j--) {
+        let one = Math.random() >= 0.5;
+        let shiftAmount = j - byte * 8;
 
-    base[constants.K - byte - 1] |= one ? (1 << shiftAmount) : 0;
-  }
+        base[constants.K - byte - 1] |= one ? (1 << shiftAmount) : 0;
+    }
 
-  return base;
+    return base;
 };
 
 /**
  * Validates the given object is a storage adapter
  * @param {AbstractNode~storage} storageAdapter
  */
-exports.validateStorageAdapter = function(storage) {
-  assert(typeof storage === 'object',
-         'No storage adapter supplied');
-  assert(typeof storage.get === 'function',
-         'Store has no get method');
-  assert(typeof storage.put === 'function',
-         'Store has no put method');
-  assert(typeof storage.del === 'function',
-         'Store has no del method');
-  assert(typeof storage.createReadStream === 'function',
-         'Store has no createReadStream method');
+exports.validateStorageAdapter = function (storage) {
+    assert(typeof storage === 'object',
+        'No storage adapter supplied');
+    assert(typeof storage.get === 'function',
+        'Store has no get method');
+    assert(typeof storage.put === 'function',
+        'Store has no put method');
+    assert(typeof storage.del === 'function',
+        'Store has no del method');
+    assert(typeof storage.createReadStream === 'function',
+        'Store has no createReadStream method');
 };
 
 /**
  * Validates the given object is a logger
  * @param {AbstractNode~logger} logger
  */
-exports.validateLogger = function(logger) {
-  assert(typeof logger === 'object',
-         'No logger object supplied');
-  assert(typeof logger.debug === 'function',
-         'Logger has no debug method');
-  assert(typeof logger.info === 'function',
-         'Logger has no info method');
-  assert(typeof logger.warn === 'function',
-         'Logger has no warn method');
-  assert(typeof logger.error === 'function',
-         'Logger has no error method');
+exports.validateLogger = function (logger) {
+    assert(typeof logger === 'object',
+        'No logger object supplied');
+    assert(typeof logger.debug === 'function',
+        'Logger has no debug method');
+    assert(typeof logger.info === 'function',
+        'Logger has no info method');
+    assert(typeof logger.warn === 'function',
+        'Logger has no warn method');
+    assert(typeof logger.error === 'function',
+        'Logger has no error method');
 };
 
 /**
  * Validates the given object is a transport
  * @param {AbstractNode~transport} transport
  */
-exports.validateTransport = function(transport) {
-  assert(typeof transport === 'object',
-         'No transport adapter supplied');
-  assert(typeof transport.read === 'function',
-         'Transport has no read method');
-  assert(typeof transport.write === 'function',
-         'Transport has no write method');
+exports.validateTransport = function (transport) {
+    assert(typeof transport === 'object',
+        'No transport adapter supplied');
+    assert(typeof transport.read === 'function',
+        'Transport has no read method');
+    assert(typeof transport.write === 'function',
+        'Transport has no write method');
 };
 
 /**
  * Returns the SHA-256 hash of the input
  * @param {buffer} input - Data to hash
  */
-module.exports.hash256 = function(input) {
-  return crypto.createHash('sha256').update(input).digest();
+module.exports.hash256 = function (input) {
+    return crypto.createHash('sha256').update(input).digest();
 };
 
 /**
@@ -247,16 +268,16 @@ module.exports.hash256 = function(input) {
  * Returns the RMD-160 hash of the input
  * @param {buffer} input - Data to hash
  */
-module.exports.hash160 = function(input) {
-  return crypto.createHash('rmd160').update(input).digest();
+module.exports.hash160 = function (input) {
+    return crypto.createHash('rmd160').update(input).digest();
 };
 
 /**
  * Returns 33 bytes of random data
  * @returns {buffer}
  */
-module.exports.noise33 = function() {
-  return crypto.randomBytes(33);
+module.exports.noise33 = function () {
+    return crypto.randomBytes(33);
 };
 
 /**
@@ -264,28 +285,32 @@ module.exports.noise33 = function() {
  * @param {Bucket~contact} contact
  * @returns {string}
  */
-module.exports.getContactURL = function(contact) {
-  const [id, info] = contact;
+module.exports.getContactURL = function (contact) {
+    const [id, info] = contact;
 
-  return `${info.protocol}//${info.hostname}:${info.port}/#${id}`;
+    return `${info.protocol}//${info.hostname}:${info.port}/#${id}`;
 };
 
 /**
  * Returns a parsed contact object from a URL
  * @returns {object}
  */
-module.exports.parseContactURL = function(addr) {
-  const { protocol, hostname, port, hash } = url.parse(addr);
-  const contact = [
-    (hash ? hash.substr(1) : null) || Buffer.alloc(20).fill(0).toString('hex'),
-    {
-      protocol,
-      hostname,
-      port
-    }
-  ];
+module.exports.parseContactURL = function (addr) {
+    const {
+        protocol,
+        hostname,
+        port,
+        hash
+    } = url.parse(addr);
+    const contact = [
+        (hash ? hash.substr(1) : null) || Buffer.alloc(20).fill(0).toString('hex'), {
+            protocol,
+            hostname,
+            port
+        }
+    ];
 
-  return contact;
+    return contact;
 };
 
 /**
@@ -293,17 +318,17 @@ module.exports.parseContactURL = function(addr) {
  * @param {string} version - The semver tag from the contact
  * @returns {boolean}
  */
-module.exports.isCompatibleVersion = function(version) {
-  const local = require('./version').protocol;
-  const remote = version;
-  const sameMajor = semver.major(local) === semver.major(remote);
-  const diffs = ['prerelease', 'prepatch', 'preminor', 'premajor'];
+module.exports.isCompatibleVersion = function (version) {
+    const local = require('./version').protocol;
+    const remote = version;
+    const sameMajor = semver.major(local) === semver.major(remote);
+    const diffs = ['prerelease', 'prepatch', 'preminor', 'premajor'];
 
-  if (diffs.indexOf(semver.diff(remote, local)) !== -1) {
-    return false;
-  } else {
-    return sameMajor;
-  }
+    if (diffs.indexOf(semver.diff(remote, local)) !== -1) {
+        return false;
+    } else {
+        return sameMajor;
+    }
 };
 
 /**
@@ -312,15 +337,15 @@ module.exports.isCompatibleVersion = function(version) {
  * @param {boolean} loopback - Allows contacts that are localhost
  * @returns {boolean}
  */
-module.exports.isValidContact = function(contact, loopback) {
-  const [, info] = contact;
-  const isValidAddr = ip.isV4Format(info.hostname) ||
-                      ip.isV6Format(info.hostname) ||
-                      ip.isPublic(info.hostname);
-  const isValidPort = info.port > 0;
-  const isAllowedAddr = ip.isLoopback(info.hostname) ? !!loopback : true;
+module.exports.isValidContact = function (contact, loopback) {
+    const [, info] = contact;
+    const isValidAddr = ip.isV4Format(info.hostname) ||
+        ip.isV6Format(info.hostname) ||
+        ip.isPublic(info.hostname);
+    const isValidPort = info.port > 0;
+    const isAllowedAddr = ip.isLoopback(info.hostname) ? !!loopback : true;
 
-  return isValidPort && isValidAddr && isAllowedAddr;
+    return isValidPort && isValidAddr && isAllowedAddr;
 };
 
 /**
@@ -328,12 +353,12 @@ module.exports.isValidContact = function(contact, loopback) {
  * @param {string} a - The value to be tested
  * @returns {boolean}
  */
-module.exports.isHexaString = function(a) {
-  if (typeof a !== 'string') {
-    return false;
-  }
+module.exports.isHexaString = function (a) {
+    if (typeof a !== 'string') {
+        return false;
+    }
 
-  return /^[0-9a-fA-F]+$/.test(a);
+    return /^[0-9a-fA-F]+$/.test(a);
 };
 
 /**
@@ -341,9 +366,9 @@ module.exports.isHexaString = function(a) {
  * @param {string} hdKey - The HD key in base 58 encoding
  * @returns {boolean} isValidHDKey
  */
-module.exports.isValidHDNodeKey = function(hdKey) {
-  return typeof hdKey === 'string' &&
-    /^[1-9a-km-zA-HJ-NP-Z]{1,111}$/.test(hdKey);
+module.exports.isValidHDNodeKey = function (hdKey) {
+    return typeof hdKey === 'string' &&
+        /^[1-9a-km-zA-HJ-NP-Z]{1,111}$/.test(hdKey);
 };
 
 /**
@@ -351,9 +376,9 @@ module.exports.isValidHDNodeKey = function(hdKey) {
  * @param {number} hdIndex - The HD key index
  * @returns {boolean} isValidHDKeyIndex
  */
-module.exports.isValidNodeIndex = function(n) {
-  return !Number.isNaN(n) && (parseInt(n) === n) && n >= 0 &&
-    n <= constants.MAX_NODE_INDEX;
+module.exports.isValidNodeIndex = function (n) {
+    return !Number.isNaN(n) && (parseInt(n) === n) && n >= 0 &&
+        n <= constants.MAX_NODE_INDEX;
 };
 
 /**
@@ -361,33 +386,33 @@ module.exports.isValidNodeIndex = function(n) {
  * @param {buffer} buffer - Byte array to convert to binary string
  * @returns {string}
  */
-module.exports.toBinaryStringFromBuffer = function(buffer) {
-  const mapping = {
-    '0': '0000',
-    '1': '0001',
-    '2': '0010',
-    '3': '0011',
-    '4': '0100',
-    '5': '0101',
-    '6': '0110',
-    '7': '0111',
-    '8': '1000',
-    '9': '1001',
-    'a': '1010',
-    'b': '1011',
-    'c': '1100',
-    'd': '1101',
-    'e': '1110',
-    'f': '1111'
-  };
-  const hexaString = buffer.toString('hex').toLowerCase();
-  const bitmaps = [];
+module.exports.toBinaryStringFromBuffer = function (buffer) {
+    const mapping = {
+        '0': '0000',
+        '1': '0001',
+        '2': '0010',
+        '3': '0011',
+        '4': '0100',
+        '5': '0101',
+        '6': '0110',
+        '7': '0111',
+        '8': '1000',
+        '9': '1001',
+        'a': '1010',
+        'b': '1011',
+        'c': '1100',
+        'd': '1101',
+        'e': '1110',
+        'f': '1111'
+    };
+    const hexaString = buffer.toString('hex').toLowerCase();
+    const bitmaps = [];
 
-  for (let i = 0; i < hexaString.length; i++) {
-    bitmaps.push(mapping[hexaString[i]]);
-  }
+    for (let i = 0; i < hexaString.length; i++) {
+        bitmaps.push(mapping[hexaString[i]]);
+    }
 
-  return bitmaps.join('');
+    return bitmaps.join('');
 };
 
 /**
@@ -397,25 +422,25 @@ module.exports.toBinaryStringFromBuffer = function(buffer) {
  * @param {number} difficulty - Number of leading zeroes
  * @returns {boolean}
  */
-module.exports.satisfiesDifficulty = function(buffer, difficulty) {
-  const binString = module.exports.toBinaryStringFromBuffer(buffer);
-  const prefix = Array(difficulty).fill('0').join('');
+module.exports.satisfiesDifficulty = function (buffer, difficulty) {
+    const binString = module.exports.toBinaryStringFromBuffer(buffer);
+    const prefix = Array(difficulty).fill('0').join('');
 
-  return binString.substr(0, difficulty) === prefix;
+    return binString.substr(0, difficulty) === prefix;
 };
 
 /**
  * @private
  */
-module.exports._sha256 = function(input) {
-  return createHash('sha256').update(input).digest();
+module.exports._sha256 = function (input) {
+    return createHash('sha256').update(input).digest();
 };
 
 /**
  * @private
  */
-module.exports._rmd160 = function(input) {
-  return createHash('rmd160').update(input).digest();
+module.exports._rmd160 = function (input) {
+    return createHash('rmd160').update(input).digest();
 };
 
 /**
@@ -425,15 +450,15 @@ module.exports._rmd160 = function(input) {
  * @param {string} [derivationPath] - HD key derivation path
  * @returns {object}
  */
-module.exports.toHDKeyFromSeed = function(masterSeed, derivationPath) {
-  const hdKeyPair = hdkey.fromMasterSeed(masterSeed || randomBytes(64));
+module.exports.toHDKeyFromSeed = function (masterSeed, derivationPath) {
+    const hdKeyPair = hdkey.fromMasterSeed(masterSeed || randomBytes(64));
 
-  /* istanbul ignore if */
-  if (derivationPath) {
-    return hdKeyPair.derive(derivationPath);
-  }
+    /* istanbul ignore if */
+    if (derivationPath) {
+        return hdKeyPair.derive(derivationPath);
+    }
 
-  return hdKeyPair;
+    return hdKeyPair;
 };
 
 /**
@@ -443,13 +468,13 @@ module.exports.toHDKeyFromSeed = function(masterSeed, derivationPath) {
  * @param {buffer} privateKey - Raw bytes for the private key
  * @returns {string}
  */
-module.exports.toExtendedFromPrivateKey = function(priv) {
-  const hdKeyPair = new hdkey();
+module.exports.toExtendedFromPrivateKey = function (priv) {
+    const hdKeyPair = new hdkey();
 
-  hdKeyPair.privateKey = priv;
-  hdKeyPair.chainCode = Buffer(32).fill(0);
+    hdKeyPair.privateKey = priv;
+    hdKeyPair.chainCode = Buffer(32).fill(0);
 
-  return hdKeyPair.privateExtendedKey;
+    return hdKeyPair.privateExtendedKey;
 };
 
 /**
@@ -461,14 +486,14 @@ module.exports.toExtendedFromPrivateKey = function(priv) {
  * @param {number} derivationIndex - Derivation index
  * @returns {boolean}
  */
-module.exports.isDerivedFromExtendedPublicKey = function(pub, xpub, i) {
-  const hdKeyPair = hdkey.fromExtendedKey(xpub);
+module.exports.isDerivedFromExtendedPublicKey = function (pub, xpub, i) {
+    const hdKeyPair = hdkey.fromExtendedKey(xpub);
 
-  if (i === -1) {
-    return hdKeyPair.publicKey.toString('hex') === pub;
-  }
+    if (i === -1) {
+        return hdKeyPair.publicKey.toString('hex') === pub;
+    }
 
-  return pub === hdKeyPair.deriveChild(i).publicKey.toString('hex');
+    return pub === hdKeyPair.deriveChild(i).publicKey.toString('hex');
 };
 
 /**
@@ -476,6 +501,6 @@ module.exports.isDerivedFromExtendedPublicKey = function(pub, xpub, i) {
  * @param {buffer} publicKey - Raw public key bytes
  * @returns {buffer}
  */
-module.exports.toPublicKeyHash = function(publicKey) {
-  return exports._rmd160(exports._sha256(publicKey));
+module.exports.toPublicKeyHash = function (publicKey) {
+    return exports._rmd160(exports._sha256(publicKey));
 };

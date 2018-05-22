@@ -116,43 +116,45 @@ class PeerNet {
         }
     }
 
-    inform_contact(crypto_key, account, user_pkhash, user_public_key, contact_public_key, contact_pkey_hash, connsymmkey, transport, address, localip, port, type, cbfunc) {
+    send_contact_offer(crypto_key, account, user_pkhash, user_public_key, contact_public_key, contact_pkey_hash, connsymmkey, transport, address, localip, port, type, cbfunc) {
         try {
             if (!cbfunc || typeof cbfunc != "function") {
-                throw new Error("inform_contact error: invalid callback parameter")
+                throw new Error("send_contact_offer error: invalid callback parameter")
             }
 
             if (!transport ) {
-                return cbfunc("inform_contact error: invalid transport parameter");
+                return cbfunc("send_contact_offer error: invalid transport parameter");
             }
 
             if (!user_pkhash || !user_public_key || !address || !type ) {
-                return cbfunc("inform_contact error: invalid user parameters");
+                return cbfunc("send_contact_offer error: invalid user parameters");
             }
 
             if (!contact_public_key  ) {
-                return cbfunc("inform_contact error: invalid contact public key parameter");
+                return cbfunc("send_contact_offer error: invalid contact public key parameter");
             }
 
             if ( !connsymmkey) {
-                return cbfunc("inform_contact error: invalid connsymmkey parameters");
+                return cbfunc("send_contact_offer error: invalid connsymmkey parameters");
             }
 
             var pkey_hexbuffer = new Buffer(contact_public_key, 'hex');
             var rmd160buffer = createHash('rmd160').update(pkey_hexbuffer).digest();
             var contact_pkhash = bs58check.encode(rmd160buffer);
             if (contact_pkey_hash != contact_pkhash) {
-                return cbfunc("inform_contact error: contact pkeyhash mismatch");
+                return cbfunc("send_contact_offer error: contact pkeyhash mismatch");
             }
 
-            var contact_bs58public_key = bs58check.encode(pkey_hexbuffer);
+            var contact_bs58public_key = bs58check.encode(pkey_hexbuffer);            
 
             //  publish the public keys so this client can communicate with the devices
             //  via direct peer to peer messaging as well
             // create the WoT message 
 
+            var keydata = user_pkhash + "/" + contact_pkhash;
             var payload = {};
             payload.type = peermsg.MSGTYPE.CAMSG;
+            payload[peermsg.MSGFIELD.KEYDATA] = keydata;
 
             var plain = {};
             plain[peermsg.MSGFIELD.ACCOUNT] = account || "";
@@ -162,19 +164,18 @@ class PeerNet {
             plain[peermsg.MSGFIELD.LOCALIP] = localip;
             plain[peermsg.MSGFIELD.PORT] = port;
             plain[peermsg.MSGFIELD.UTYPE] = type;
-            plain[peermsg.MSGFIELD.SYMKEY] = connsymmkey;
+            plain[peermsg.MSGFIELD.SYMKEY] = connsymmkey;            
 
             var plaindata = JSON.stringify(plain);
             var cipher = peermsg.ecdh_encypt(crypto_key, contact_public_key, plaindata);
-
-            var payload = {};
-            payload.type = peermsg.MSGTYPE.CAMSG;
-            payload[peermsg.MSGFIELD.CIPHER] = cipher;
+            payload[peermsg.MSGFIELD.CIPHER] = cipher;            
 
             var id = this.create_id();
 
             var value = peermsg.create_jwt_token(crypto_key, id, payload, null, null, user_public_key, null, contact_bs58public_key);
-            var key = user_pkhash + "/" + contact_pkhash;
+
+            var keybuffer = new Buffer(keydata);
+            var key = createHash('rmd160').update(keybuffer).digest('hex');
 
             // put the message to the network
             NetFactory.net.put(key, value, (err) => cbfunc(err));

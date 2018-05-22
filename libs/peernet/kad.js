@@ -153,7 +153,8 @@ class KadHandler {
             seeds: options.seeds
         }
 
-        kad.create(init_options, (err, peer) => {
+        var node = new kad.Node();
+        node.init(init_options, (err, peer, peercount) => {
             if (err) {
                 //  since the seed is the main module and it failed, the whole intialization failed so return the error
                 //  and the async waterflow will be terminated

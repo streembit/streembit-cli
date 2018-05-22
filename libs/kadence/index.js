@@ -1,5 +1,4 @@
 /*
- 
 This file is part of Streembit application. 
 Streembit is an open source project to create a real time communication system for humans and machines. 
 
@@ -90,4 +89,4 @@ module.exports.utils = require('./utils');
 /** {@link module:kadence/logger} */
 module.exports.logger = require('./logger');
 
-module.exports.create = require('./addons/create');
+module.exports.Node = require('./node');

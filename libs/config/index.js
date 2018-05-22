@@ -245,8 +245,8 @@ var streembit_config = (function (cnfobj) {
 
             // set the Kademlia port
             cnfobj.transport.kad = {};
-            cnfobj.transport.kad.port = config.transport.kad.port || constants.DEFAULT_KAD_PORT;
-            cnfobj.transport.kad.host = config.transport.kad.host 
+            cnfobj.transport.kad.port = config.transport.kad && config.transport.kad.port ? config.transport.kad.port : constants.DEFAULT_KAD_PORT;
+            cnfobj.transport.kad.host = config.transport.kad && config.transport.kad.host ? config.transport.kad.host : "";
 
             // set the ws max connection 
             cnfobj.transport.ws.maxconn = config.transport.ws.maxconn || constants.DEFAULT_WS_MAXCONN;
