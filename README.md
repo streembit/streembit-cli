@@ -251,7 +251,7 @@ Currently, modern browsers increasingly enforce HTTPS. Many browser functionalit
 HTTPS requires a domain name and a third party signed SSL certificate.
 
 **Can I run the Gateway without a domain name and SSL certificate?**
-Yes, the gateway can be configured using the HTTP protocol without an SSL certificate. We understand many home users canât manage domain names and SSL certificates. Also, domain names and SSL certificates introduce an additional level of dependency on registrars and DNS service providers. Streembit aims to create a peer-to-peer connection between users and IoT devices. Relying on domain name registrars and DNS providers contradicts the P2P idea to a certain extent.
+Yes, the gateway can be configured using the HTTP protocol without an SSL certificate. We understand many home users cannot manage domain names and SSL certificates. Also, domain names and SSL certificates introduce an additional level of dependency on registrars and DNS service providers. Streembit aims to create a peer-to-peer connection between users and IoT devices. Relying on domain name registrars and DNS providers contradicts the P2P idea to a certain extent.
 
 **Does the HTTP connection and lack of SSL certificate compromise security?**
 It is not. The IoT Gateway is configured with a unique PKI key pair. The UI user must know and configure the Gateway on the UI using the unique public key of the gateway. The identity of the gateway is verified via the PKI public key. Therefore the lack of SSL certificate do not compromise security.
@@ -277,6 +277,7 @@ First obtain an SSL certificate for your domain name from a third party certific
  - Key: ssl/DOMAIN.key
 
 Adjust corresponding section in the configuration file to look like this:
+```json
 "transport": {
 ...
 	"ssl": true,
@@ -284,14 +285,17 @@ Adjust corresponding section in the configuration file to look like this:
     "cert": "ssl/DOMAIN_NAME.crt",
     "key": "ssl/DOMAIN_NAME.key"
 }
+```
 
 *Option 2. Without SSL, via HTTP*
 
 The transport section in config.json file must be configured the following:
+```json
 "transport": {
 ...
 	"ssl": false
 }
+```
 
 
 **Step 2**
