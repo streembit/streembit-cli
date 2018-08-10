@@ -242,17 +242,57 @@ Answer the prompt by typing the user name, public key, whether or not the user i
 
 To manage your IoT devices on Streembit a few additional configuration steps are required to be done.
 
+Users control IoT end devices using the Streembit User Interface (UI) application and the IoT gateway. The IoT gateway acts as a bridge between the UI and the IoT end devices. That means the IoT gateway must provide an interface for incoming IoT requests. We do this via either the HTTP or HTTPS transport protocols, and the gateway listens for incoming connections using either HTTP or HTTPS.
+
+**When should I use the HTTPS protocol?**
+Currently, modern browsers increasingly enforce HTTPS. Many browser functionalities available only via the HTTPS protocol. HTTPS on the UI side means that the IoT Gateway must use a domain name and third-party SSL certificate (modern browsers don't support self-signed SSL certificates). Seeing the current trends, we feel the Gateway must support HTTPS connections. Also, many businesses and government organisations IT & security policies requires to use SSL certificates. We aim to enable the gateway to operations where the security policies requires SSL certificates.
+
+**What are the requirements for the HTTPS configuration?**
+HTTPS requires a domain name and a third party signed SSL certificate.
+
+**Can I run the Gateway without a domain name and SSL certificate?**
+Yes, the gateway can be configured using the HTTP protocol without an SSL certificate. We understand many home users canât manage domain names and SSL certificates. Also, domain names and SSL certificates introduce an additional level of dependency on registrars and DNS service providers. Streembit aims to create a peer-to-peer connection between users and IoT devices. Relying on domain name registrars and DNS providers contradicts the P2P idea to a certain extent.
+
+**Does the HTTP connection and lack of SSL certificate compromise security?**
+It is not. The IoT Gateway is configured with a unique PKI key pair. The UI user must know and configure the Gateway on the UI using the unique public key of the gateway. The identity of the gateway is verified via the PKI public key. Therefore the lack of SSL certificate do not compromise security.
+All transport packets are end-to-end encrypted on Streembit using PKI based ECDH or symmetric cryptoraphy. The symmetric end-to-end encryption is AES256 and it uses 512-bit strong cryptography keys. Using the combination of PKI Network sniffers or third party observers/intruders unable to decipher the end-to-end encrypted messages. Using tested, robust and strong cryprography methods we can achieve military grade security on a home IoT network without SSL certificates.
+
+**So which configuration options should I use HTTP or HTTPS?**
+It is entirely depending on the user policies, preferences and capabilities. Both options can secure IoT devices adequatelly.
+
+*Options #1 and #2 of step 1 below describe each configuration.*
+
 **Step 1**
 
-Since we are using encrypted connections which appear as WSS and HTTPS, the corresponding configuration is required in the config.json file.
+*Option 1. With a domain and SSL certificates, via HTTPS.*
 
-Generate or obtain SSL certificates for your domain and include the certificate files in the ssl folder.
+The connection between the UI and the gateway are WSS and HTTPS. Therefore SSL certificates must be deployed and configured on the gateway. The configuration must be saved in the config.json file.
+
+First obtain an SSL certificate for your domain name from a third party certificate provider. Include the certificate files in the ssl folder.
 
 ** Required files **
 
  - CA: ssl/DOMAIN.ca-bundle.crt
  - Certificate: ssl/DOMAIN.crt
  - Key: ssl/DOMAIN.key
+
+Adjust corresponding section in the configuration file to look like this:
+"transport": {
+...
+	"ssl": true,
+	"ca": "ssl/DOMAIN_NAME.ca-bundle.crt",
+    "cert": "ssl/DOMAIN_NAME.crt",
+    "key": "ssl/DOMAIN_NAME.key"
+}
+
+*Option 2. Without SSL, via HTTP*
+
+The transport section in config.json file must be configured the following:
+"transport": {
+...
+	"ssl": false
+}
+
 
 **Step 2**
 
@@ -269,14 +309,14 @@ Make sure you modify your config.json according to this example
         }
    ],
    "transport": {
-       "protocol": "http",
-       "host": "domain name OR ip address OR empty string ",
-       "port": 32319,
-	   "ws": {
+        "protocol": "http",
+        "host": "domain name OR ip address OR empty string ",
+        "port": 32319,
+        "ws": {
            "port": 32320
-       },
-	"ssl": true,
-	"ca": "ssl/aaaaz.streembit.org.ca-bundle.crt",
+        },
+        "ssl": false,
+        "ca": "ssl/aaaaz.streembit.org.ca-bundle.crt",
         "cert": "ssl/aaaaz.streembit.org.crt",
         "key": "ssl/aaaaz.streembit.org.key"
    },
