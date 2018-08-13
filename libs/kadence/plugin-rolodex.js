@@ -91,12 +91,13 @@ class RolodexPlugin {
                 if (prefix === RolodexPlugin.EXTERNAL_PREFIX) {
                     candidates.push({
                         id: identity,
+                        timestamp: contact.timestamp,
                         host: contact.hostname,
                         port: contact.port
                     });
                 }
             }, () => {
-                resolve(candidates.sort((a, b) => b[1].timestamp - a[1].timestamp));
+                resolve(candidates.sort((a, b) => b.timestamp - a.timestamp));
                 //.map(utils.getContactURL));
             });
         });
