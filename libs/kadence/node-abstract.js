@@ -381,7 +381,9 @@ class AbstractNode extends EventEmitter {
         this.use(handlers.methodNotFound.bind(handlers));
         this.use(handlers.internalError.bind(handlers));
 
-        this.transport.listen(...arguments);
+        arguments[arguments.length - 1](null);
+
+        //this.transport.listen(...arguments);
     }
 
     /**

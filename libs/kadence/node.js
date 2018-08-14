@@ -71,7 +71,15 @@ class Node {
                     this.logger.error("eventHandlers() ONBCEVENT error %j", err)
                 }
             }
-        );  
+        );
+
+        events.on(
+            "kad_message",
+            (message) => {
+                const m_json = JSON.stringify(message);
+                this.node.transport.emit('data', Buffer.from(m_json));
+            }
+        );
         
     }
 
@@ -171,7 +179,7 @@ class Node {
                 return callback('KAD listen error: ' + err);
             }
 
-            this.logger.info(`Identity ${options.identity} is listening on port ${options.contact.port}`);
+        //     this.logger.info(`Identity ${options.identity} is listening on port ${options.contact.port}`);
 
             // join the Kademlia network
             this.join((count) => {

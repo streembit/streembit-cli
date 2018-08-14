@@ -81,12 +81,17 @@ class HTTPTransport {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
     };
 
+    static iskadmsg(message) {
+        // KAD messages don't have a type field, other messages must have a string type field
+        var iskad = !(message && message.type && typeof message.type == "string");
+        return iskad;
+    }
+
     // 
     // route the message
     // 
     static routemsg(payload, req, res) {
         try {
-            //console.log(payload);
             if (!res || !res.end) {
                 return logger.error("HTTPTransport routemsg error: invalid res object");
             }
@@ -115,6 +120,17 @@ class HTTPTransport {
                 throw new Error("invalid message");
             }
 
+            // this is KAD message, let kad transport take care about it
+            if (req.headers['x-kad-message-id']) {
+                //var msgid = HTTPTransport.newid;
+                events.emit(
+                    "kad_message",
+                    message
+                );
+
+                return;
+            }
+
             // this is a client request, the HTTP client request handler will get it
             var data = {
                 req: req,
@@ -132,7 +148,7 @@ class HTTPTransport {
                 res.end();
             }
             catch (e){ }
-            logger.error("HTTPTransport routemsg error: " + err.message);
+            logger.error("HTTPTransport routemsg error2: " + err.message);
         }
     }
 
