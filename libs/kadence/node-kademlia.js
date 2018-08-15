@@ -584,6 +584,8 @@ class KademliaNode extends AbstractNode {
                         }
                     }
                 });
+            } else {
+                callback(null, result.value);
             }
         })
     };
