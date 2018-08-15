@@ -122,10 +122,11 @@ class HTTPTransport {
 
             // this is KAD message, let kad transport take care about it
             if (req.headers['x-kad-message-id']) {
-                //var msgid = HTTPTransport.newid;
                 events.emit(
                     "kad_message",
-                    message
+                    message,
+                    req,
+                    res
                 );
 
                 return;

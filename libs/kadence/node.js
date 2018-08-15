@@ -75,9 +75,29 @@ class Node {
 
         events.on(
             "kad_message",
-            (message) => {
+            (message, req, res) => {
                 const m_json = JSON.stringify(message);
-                this.node.transport.emit('data', Buffer.from(m_json));
+                const buffer = Buffer.from(m_json);
+
+                req.on('error', (err) => {
+                    this.node.transport.emit('error', err)
+                });
+
+                res.on('error', (err) => {
+                    this.node.transport.emit('error', err)
+                });
+
+                res.setHeader('x-kad-message-id', req.headers['x-kad-message-id']);
+                res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+                res.setHeader('Access-Control-Allow-Methods', '*');
+                res.setHeader('Access-Control-Allow-Headers', '*');
+                res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+                this.node.transport._pending.set(req.headers['x-kad-message-id'], {
+                    timestamp: Date.now(),
+                    response: res
+                });
+                this.node.transport.push(buffer);
             }
         );
         

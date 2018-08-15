@@ -207,7 +207,10 @@ class HTTPTransport extends DuplexStream {
      * Binds the server to the given address/port
      */
     listen() {
-        this.server.listen(...arguments);
+
+        arguments[arguments.length - 1](null);
+
+        //this.server.listen(...arguments);
     }
 
 }
