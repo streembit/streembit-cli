@@ -199,7 +199,7 @@ class Node {
                 return callback('KAD listen error: ' + err);
             }
 
-        //     this.logger.info(`Identity ${options.identity} is listening on port ${options.contact.port}`);
+            this.logger.info(`Identity ${options.identity} is listening on port ${options.contact.port}`);
 
             // join the Kademlia network
             this.join((count) => {
