@@ -45,6 +45,8 @@ class HTTPSTransport extends HTTPTransport {
       cert: this._options.cert
     });
 
+    requestOptions.protocol = requestOptions.protocol ? requestOptions.protocol+ ':' : null;
+
     return https.request(requestOptions);
   }
 
