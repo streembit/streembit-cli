@@ -180,7 +180,7 @@ class HTTPTransport extends DuplexStream {
             return res.end();
         }
 
-        res.setHeader('X-Kad-Message-ID', req.headers['x-kad-message-id']);
+        res.setHeader('x-kad-message-id', req.headers['x-kad-message-id']);
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
         res.setHeader('Access-Control-Allow-Methods', '*');
         res.setHeader('Access-Control-Allow-Headers', '*');

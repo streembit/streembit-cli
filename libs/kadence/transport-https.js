@@ -39,7 +39,13 @@ class HTTPSTransport extends HTTPTransport {
    * @private
    */
   _createRequest() {
-    return https.request(...arguments);
+
+    const requestOptions = Object.assign(...arguments, {
+      key: this._options.key,
+      cert: this._options.cert
+    });
+
+    return https.request(requestOptions);
   }
 
 }

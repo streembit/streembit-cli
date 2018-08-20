@@ -52,8 +52,8 @@ class KademliaNode extends AbstractNode {
      */
     constructor(options) {
         if (!options.hasOwnProperty('transport')) {
-            const http_transport = require('./transport-http');
-            options.transport = new http_transport();
+            const http_transport = require(`./transport-${options.contact.protocol}`);
+            options.transport = new http_transport(options.contact);
         }
         super(options);
 
