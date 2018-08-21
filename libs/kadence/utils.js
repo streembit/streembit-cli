@@ -33,7 +33,8 @@ const {
     randomBytes,
     createHash
 } = crypto;
-const hdkey = require('hdkey');
+
+//const hdkey = require('hdkey');
 
 
 /**
@@ -450,16 +451,16 @@ module.exports._rmd160 = function (input) {
  * @param {string} [derivationPath] - HD key derivation path
  * @returns {object}
  */
-module.exports.toHDKeyFromSeed = function (masterSeed, derivationPath) {
-    const hdKeyPair = hdkey.fromMasterSeed(masterSeed || randomBytes(64));
+//module.exports.toHDKeyFromSeed = function (masterSeed, derivationPath) {
+//    const hdKeyPair = hdkey.fromMasterSeed(masterSeed || randomBytes(64));
 
-    /* istanbul ignore if */
-    if (derivationPath) {
-        return hdKeyPair.derive(derivationPath);
-    }
+//    /* istanbul ignore if */
+//    if (derivationPath) {
+//        return hdKeyPair.derive(derivationPath);
+//    }
 
-    return hdKeyPair;
-};
+//    return hdKeyPair;
+//};
 
 /**
  * Takes a plain secp256k1 private key and converts it to an HD key - note
@@ -468,14 +469,14 @@ module.exports.toHDKeyFromSeed = function (masterSeed, derivationPath) {
  * @param {buffer} privateKey - Raw bytes for the private key
  * @returns {string}
  */
-module.exports.toExtendedFromPrivateKey = function (priv) {
-    const hdKeyPair = new hdkey();
+//module.exports.toExtendedFromPrivateKey = function (priv) {
+//    const hdKeyPair = new hdkey();
 
-    hdKeyPair.privateKey = priv;
-    hdKeyPair.chainCode = Buffer(32).fill(0);
+//    hdKeyPair.privateKey = priv;
+//    hdKeyPair.chainCode = Buffer(32).fill(0);
 
-    return hdKeyPair.privateExtendedKey;
-};
+//    return hdKeyPair.privateExtendedKey;
+//};
 
 /**
  * Verifies the public key is derives from the index of the extended public
@@ -486,15 +487,15 @@ module.exports.toExtendedFromPrivateKey = function (priv) {
  * @param {number} derivationIndex - Derivation index
  * @returns {boolean}
  */
-module.exports.isDerivedFromExtendedPublicKey = function (pub, xpub, i) {
-    const hdKeyPair = hdkey.fromExtendedKey(xpub);
+//module.exports.isDerivedFromExtendedPublicKey = function (pub, xpub, i) {
+//    const hdKeyPair = hdkey.fromExtendedKey(xpub);
 
-    if (i === -1) {
-        return hdKeyPair.publicKey.toString('hex') === pub;
-    }
+//    if (i === -1) {
+//        return hdKeyPair.publicKey.toString('hex') === pub;
+//    }
 
-    return pub === hdKeyPair.deriveChild(i).publicKey.toString('hex');
-};
+//    return pub === hdKeyPair.deriveChild(i).publicKey.toString('hex');
+//};
 
 /**
  * Takes a public key are returns the identity
