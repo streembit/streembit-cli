@@ -55,7 +55,7 @@
         "safe-buffer": "5.1.2",
         "secure-random": "^1.1.1",
         "semver": "^5.1.0",
-        "serialport": "^5.0.0",
+        "serialport": "^6.2.2",
         "split": "^1.0.1",
         "sprintf-js": "^1.1.1",
         "streembit-db": "git+https://github.com/streembit/streembit-db.git",
