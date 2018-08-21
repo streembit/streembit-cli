@@ -148,7 +148,6 @@ class KadHandler {
             logger: logger,
             storage: db.getdb("streembitkv"),
             contact: {
-                protocol: 'http',
                 hostname: config.transport.kad.host,
                 port: config.transport.kad.port,
             },
@@ -156,7 +155,6 @@ class KadHandler {
         };
 
         if (config.transport.ssl) {
-            init_options.contact.protocol = 'https';
             init_options.contact.cert = fs.readFileSync(config.transport.cert);
             init_options.contact.key = fs.readFileSync(config.transport.key);
             init_options.contact.ca = fs.readFileSync(config.transport.ca);
