@@ -179,11 +179,11 @@ class KademliaNode extends AbstractNode {
             return value;
         }
 
-        return {
+        return JSON.stringify({
             value: value,
             timestamp: Date.now(),
             publisher: this.identity.toString('hex')
-        };
+        });
     }
 
     /**
