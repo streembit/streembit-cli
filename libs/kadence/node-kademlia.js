@@ -31,6 +31,7 @@ const AbstractNode = require('./node-abstract');
 const KademliaRules = require('./rules-kademlia');
 const ContactList = require('./contact-list');
 const MetaPipe = require('metapipe');
+const logger = require('streembit-util').logger;
 
 
 /**
@@ -179,11 +180,11 @@ class KademliaNode extends AbstractNode {
             return value;
         }
 
-        return JSON.stringify({
+        return {
             value: value,
             timestamp: Date.now(),
             publisher: this.identity.toString('hex')
-        });
+        };
     }
 
     /**
@@ -215,7 +216,8 @@ class KademliaNode extends AbstractNode {
             (next) => this.iterativeFindNode(key, next),
             (contacts, next) => dispatchStoreRpcs(contacts, next),
             (next) => {
-                this.storage.put(key, this._createStorageItem(value), {
+console.log('storing value', key, JSON.stringify(this._createStorageItem(value)));
+                this.storage.put(key, JSON.stringify(this._createStorageItem(value)), {
                     valueEncoding: 'json'
                 }, next);
             }
@@ -413,6 +415,7 @@ class KademliaNode extends AbstractNode {
         this._lookups.set(utils.getBucketIndex(this.identity, key), Date.now());
 
         function iterativeLookup(selection, callback, continueLookup = true) {
+
             if (!selection.length) {
                 return callback(null, shortlist.active.slice(0, constants.K));
             }
@@ -572,10 +575,20 @@ class KademliaNode extends AbstractNode {
                 return callback(err);
             }
 
+            if (result && result.type === 'Buffer') {
+                const resultBufString = Buffer.from(result.data).toString('utf8');
+                result = JSON.parse(resultBufString);
+            }
+
+            this.logger.debug('get value for key:' +key+ ' $j', result);
+
             if (result.length < 1) {
                 // find value in local storage
-                return this.storage.get(key, function (err, item) {
+                return this.storage.get(key, {
+                    valueEncoding: 'json'
+                }, (err, item) => {
                     if (!err && item) {
+                        this.logger.debug('get value for key:' +key+ ' from storage, %j', item);
                         callback(null, JSON.parse(item).value);
                     }
                     else {
@@ -592,7 +605,6 @@ class KademliaNode extends AbstractNode {
             }
         })
     };
-
 }
 
 module.exports = KademliaNode;

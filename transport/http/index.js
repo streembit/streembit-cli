@@ -122,6 +122,15 @@ class HTTPTransport {
 
             // this is KAD message, let kad transport take care about it
             if (req.headers['x-kad-message-id']) {
+// console.log('KADMSG', message);
+// message.map(v => {
+//     if (v.params && Array.isArray(v.params) && v.params.length > 1) {
+//         console.log('param [1]', v.params[1]);
+//     }
+//
+// })
+
+
                 events.emit(
                     "kad_message",
                     message,

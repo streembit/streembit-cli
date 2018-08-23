@@ -63,30 +63,51 @@ class KademliaRules {
      */
     store(request, response, next) {
         const [key, item] = request.params;
+        let itemPayload = item;
 
         try {
-            assert(typeof item === 'object',
+            if (itemPayload.type === 'Buffer') {
+                itemPayload = JSON.parse(Buffer.from(item.data).toString('utf8'));
+                if (typeof itemPayload === 'string') {
+                    itemPayload = JSON.parse(itemPayload);
+                }
+            }
+
+            if (typeof itemPayload === 'string') {
+                itemPayload = JSON.parse(itemPayload);
+            }
+
+            this.node.logger.info('KADEMLIA: STORE request for key:' +key+ ': %j', itemPayload);
+            
+            assert(typeof itemPayload === 'object',
                 'Invalid storage item supplied');
-            assert(typeof item.timestamp === 'number',
+            assert(typeof itemPayload.timestamp === 'number',
                 'Invalid timestamp supplied');
-            assert(utils.keyStringIsValid(item.publisher),
+            assert(utils.keyStringIsValid(itemPayload.publisher),
                 'Invalid publisher identity supplied');
             assert(utils.keyStringIsValid(key),
                 'Invalid item key supplied');
-            assert(typeof item.value !== 'undefined',
+            assert(typeof itemPayload.value !== 'undefined',
                 'Invalid item value supplied');
         } catch (err) {
+            this.node.logger.error('KADEMLIA: STORE request validation failed, key:' +key+ ': %j', err);
             return next(err);
         }
 
-        this.node.storage.put(key, item, {
+        this.node.logger.info('KADEMLIA: STORE request for key:' +key+ ': validation passed');
+
+        const itemPayloadJSON = JSON.stringify(itemPayload);
+
+        this.node.storage.put(key, itemPayloadJSON, {
             valueEncoding: 'json'
         }, (err) => {
             if (err) {
                 return next(err);
             }
 
-            response.send([key, item]); // NB: Echo back what was stored
+            this.node.logger.info('KADEMLIA: STORE sending back stored item', itemPayloadJSON);
+
+            response.send([key, itemPayload]); // NB: Echo back what was stored
         });
     }
 
@@ -122,7 +143,10 @@ class KademliaRules {
     findValue(request, response, next) {
         const [key] = request.params;
 
+        this.node.logger.info('KADEMLIA: FIND_VALUE request for key:' +key);
+
         if (!utils.keyStringIsValid(key)) {
+            this.node.logger.error('KADEMLIA: FIND_VALUE error, for key:' +key+ ', error: invalid key');
             return next(new Error('Invalid lookup key supplied'));
         }
 
@@ -130,8 +154,11 @@ class KademliaRules {
             valueEncoding: 'json'
         }, (err, item) => {
             if (err) {
+                this.node.logger.error('KADEMLIA: FIND_VALUE error: %j', err);
                 return this.findNode(request, response, next);
             }
+
+            this.node.logger.info('KADEMLIA: FIND_VALUE request for key:' +key+ ' succeeded', item);
 
             response.send(item);
         });
