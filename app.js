@@ -25,8 +25,6 @@ Copyright (C) 2016 The Streembit software development team
 const program = require('commander');
 const path = require('path');
 const fs = require('fs');
-const crypto = require('crypto');
-const levelup = require('levelup');
 const async = require('async');
 const util = require('util');
 const assert = require('assert');
