@@ -42,6 +42,7 @@ const WebSocket = require("./transport/ws");
 const ServicesHandler = require("./services");
 const dbschema = require("./dbschema");
 const WhitelistDB = require("libs/database/whitelistdb");
+const PubSub = require('libs/pubsub');
 const constants = require("libs/constants");
 
 // initialize the logger
@@ -126,8 +127,12 @@ module.exports = exports = function (port, ip, password, cmd) {
                     catch (e) {
                         callback(e);
                     }
+                },
+                function (callback) {
+                    const pubsub = new PubSub();
+                    pubsub.init(callback);
                 }
-            ],  
+            ],
             function (err) {
                 if (err) {
                     return logger.error("application init error: %j", err);

@@ -56,7 +56,7 @@ class KadHandler {
     get(key, callback) {
         try {
             if (!this.node) {
-                throw new Error("the KAD node is not initialized")
+                throw new Error("the KAD node is not initialized");
             }
 
             this.node.get(key, callback);
@@ -70,7 +70,7 @@ class KadHandler {
     put(key, value, callback) {
         try {
             if (!this.node) {
-                throw new Error("the KAD node is not initialized")
+                throw new Error("the KAD node is not initialized");
             }
 
             logger.info("RMTP put to node");
@@ -79,6 +79,25 @@ class KadHandler {
         catch (err) {
             //logger.error("put error: %s", err.message)
             callback(err.message || err);
+        }
+    }
+
+    publish(msgtype, data) {
+        try {
+            this.node.quasarPublish(msgtype, data);
+        }
+        catch (err) {
+            logger.error("Node publish() error %j", err)
+        }
+    }
+
+    subscribe(msgtype, callback) {
+        try {
+            this.node.quasarSubscribe(msgtype, payload => {
+                callback(payload);
+            })
+        } catch (err) {
+            logger.error("Node subscribe() error %j", err)
         }
     }
 
@@ -172,9 +191,7 @@ class KadHandler {
             this.node = peer;
             callback();
         });
-
     }
-
 }
 
 module.exports.KadHandler = KadHandler;

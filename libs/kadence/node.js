@@ -35,25 +35,7 @@ class Node {
         this.peercount = 0;
     }
 
-    publish(msgtype, data) {
-        try {
-            this.node.quasarPublish(msgtype, data);
-        }
-        catch (err) {
-            this.logger.error("Node publish() error %j", err)
-        }
-    }
-
     eventHandlers() {
-
-        this.node.quasarSubscribe(constants.PUBLISH_TXN, payload => {
-            try {
-                this.logger.debug(`subscribe ${constants.PUBLISH_TXN } data: ${payload}`);
-            }
-            catch (err) {
-                this.logger.error("eventHandlers() error: " + err.message);
-            }
-        });
 
         events.register(
             events.ONBCEVENT,
