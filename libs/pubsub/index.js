@@ -85,7 +85,7 @@ class Pubsub {
                         this.pub(payload);
                     }
                     catch (err) {
-                        logger.error("PUBSUB_PUB_EVENT error %j", err)
+                        logger.error("PUBLISH_EVENT error %j", err)
                     }
                 });
 
@@ -107,7 +107,7 @@ class Pubsub {
                         this.kad.subscribe(subTopic, subCb);
                     }
                     catch (err) {
-                        logger.error("pubSub PUBSUB_SUB_EVENT error %j", err);
+                        logger.error("SUBSCRIBE_EVENT error %j", err);
                     }
             });
 

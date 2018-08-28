@@ -81,15 +81,13 @@ class HTTPTransport {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
     };
 
-    static iskadmsg(message) {
-        // KAD messages don't have a type field, other messages must have a string type field
-        var iskad = !(message && message.type && typeof message.type == "string");
-        return iskad;
+    static iskadmsg(request) {
+        return !!request.headers['x-kad-message-id'];
     }
 
-    // 
-    // route the message
-    // 
+    /*
+    * route the message
+    */
     static routemsg(payload, req, res) {
         try {
             if (!res || !res.end) {
@@ -121,24 +119,13 @@ class HTTPTransport {
             }
 
             // this is KAD message, let kad transport take care about it
-            if (req.headers['x-kad-message-id']) {
-// console.log('KADMSG', message);
-// message.map(v => {
-//     if (v.params && Array.isArray(v.params) && v.params.length > 1) {
-//         console.log('param [1]', v.params[1]);
-//     }
-//
-// })
-
-
-                events.emit(
+            if (this.iskadmsg(req)) {
+                return events.emit(
                     "kad_message",
                     message,
                     req,
                     res
                 );
-
-                return;
             }
 
             // this is a client request, the HTTP client request handler will get it

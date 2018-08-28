@@ -39,7 +39,6 @@ const events = require("streembit-util").events;
 const Users = require("libs/users");
 const HttpTransport = require("./transport/http");
 const WebSocket = require("./transport/ws");
-const ServicesHandler = require("./services");
 const dbschema = require("./dbschema");
 const WhitelistDB = require("libs/database/whitelistdb");
 const PubSub = require('libs/pubsub');
@@ -115,9 +114,6 @@ module.exports = exports = function (port, ip, password, cmd) {
                     let maxconn = config.transport && config.transport.ws && config.transport.ws.maxconn ? config.transport.ws.maxconn : constants.DEFAULT_WS_MAXCONN;
                     let wsserver = new WebSocket(port, maxconn);
                     wsserver.init(callback);
-                },      
-                function (callback) {
-                    ServicesHandler.init(callback)
                 },
                 function (callback) {
                     try {
