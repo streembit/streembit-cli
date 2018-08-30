@@ -15,23 +15,23 @@ If not, see http://www.gnu.org/licenses/.
 Author: Streembit team
 Copyright (C) 2018 The Streembit software development team
 
-Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
+Based on
+ * @module kadence
+ * @license AGPL-3.0
+ * @author Gordon Hall https://github.com/bookchin
 -------------------------------------------------------------------------------------------------------------------------
 */
 
 'use strict';
 
 const async = require('async');
-const {
-    Writable: WritableStream
-} = require('stream');
+const { Writable: WritableStream } = require('stream');
 const constants = require('./constants');
 const utils = require('./utils');
 const AbstractNode = require('./node-abstract');
 const KademliaRules = require('./rules-kademlia');
 const ContactList = require('./contact-list');
 const MetaPipe = require('metapipe');
-const logger = require('streembit-util').logger;
 
 
 /**
@@ -68,12 +68,8 @@ class KademliaNode extends AbstractNode {
             1
         );
 
-        this.replicatePipeline = new MetaPipe({
-            objectMode: true
-        });
-        this.expirePipeline = new MetaPipe({
-            objectMode: true
-        });
+        this.replicatePipeline = new MetaPipe({ objectMode: true });
+        this.expirePipeline = new MetaPipe({ objectMode: true });
     }
 
     /**
@@ -106,45 +102,34 @@ class KademliaNode extends AbstractNode {
     join([identity, contact], callback) {
         /* istanbul ignore else */
         if (callback) {
-            this.once('join', () => {
-                callback();
-            });
-            this.once('error', (err) => {
-                callback(err);
-            });
+            this.once('join', callback);
+            this.once('error', callback);
         }
 
         this.router.addContactByNodeId(identity, contact);
-        async.series(
-            [
-                (next) => {
-                    this.iterativeFindNode(this.identity.toString('hex'), next)
-                },
-                (next) => {
-                    this.refresh(this.router.getClosestBucket() + 1, next)
-                }
-            ],
-            (err, results) => {
-                if (err) {
-                    this.emit('error', err);
+        async.series([
+            (next) => this.iterativeFindNode(this.identity.toString('hex'), next),
+            (next) => this.refresh(this.router.getClosestBucket() + 1, next)
+        ], (err) => {
+            if (err) {
+                this.emit('error', err);
+            }
+            else {
+                let peer = this.router.getContactByNodeId(identity);
+                if (!peer) {
+                    // the seed couldn't connect
+                    this.emit('error', `unable to connect to seed id: ${identity} host: ${contact.hostname} port: ${contact.port}`);
                 }
                 else {
-                    let peer = this.router.getContactByNodeId(identity);
-                    if (!peer) {
-                        // the seed couldn't connect
-                        this.emit('error', `unable to connect to seed id: ${identity} host: ${contact.hostname} port: ${contact.port}`);
-                    }
-                    else {
-                        this.emit('join');
-                    }
-                }
-
-                if (callback) {
-                    this.removeListener('join', callback);
-                    this.removeListener('error', callback);
+                    this.emit('join');
                 }
             }
-        );
+
+            if (callback) {
+                this.removeListener('join', callback);
+                this.removeListener('error', callback);
+            }
+        });
     }
 
     /**
@@ -216,7 +201,6 @@ class KademliaNode extends AbstractNode {
             (next) => this.iterativeFindNode(key, next),
             (contacts, next) => dispatchStoreRpcs(contacts, next),
             (next) => {
-console.log('storing value', key, JSON.stringify(this._createStorageItem(value)));
                 this.storage.put(key, JSON.stringify(this._createStorageItem(value)), {
                     valueEncoding: 'json'
                 }, next);
@@ -275,18 +259,13 @@ console.log('storing value', key, JSON.stringify(this._createStorageItem(value))
     replicate(callback = () => null) {
         const self = this;
         const now = Date.now();
-        const itemStream = this.storage.createReadStream({
-            valueEncoding: 'json'
-        });
+        const itemStream = this.storage.createReadStream({ valueEncoding: 'json' });
         const replicateStream = new WritableStream({
             objectMode: true,
             write: maybeReplicate
         });
 
-        function maybeReplicate({
-            key,
-            value
-        }, enc, next) {
+        function maybeReplicate({ key, value }, enc, next) {
             const isPublisher = value.publisher === self.identity.toString('hex');
             const republishDue = (value.timestamp + constants.T_REPUBLISH) <= now;
             const replicateDue = (value.timestamp + constants.T_REPLICATE) <= now;
@@ -328,18 +307,13 @@ console.log('storing value', key, JSON.stringify(this._createStorageItem(value))
     expire(callback = () => null) {
         const self = this;
         const now = Date.now();
-        const itemStream = this.storage.createReadStream({
-            valueEncoding: 'json'
-        });
+        const itemStream = this.storage.createReadStream({ valueEncoding: 'json' });
         const expireStream = new WritableStream({
             objectMode: true,
             write: maybeExpire
         });
 
-        function maybeExpire({
-            key,
-            value
-        }, enc, next) {
+        function maybeExpire({ key, value }, enc, next) {
             if ((value.timestamp + constants.T_EXPIRE) <= now) {
                 return self.storage.del(key, next);
             }
@@ -415,7 +389,6 @@ console.log('storing value', key, JSON.stringify(this._createStorageItem(value))
         this._lookups.set(utils.getBucketIndex(this.identity, key), Date.now());
 
         function iterativeLookup(selection, callback, continueLookup = true) {
-
             if (!selection.length) {
                 return callback(null, shortlist.active.slice(0, constants.K));
             }
@@ -435,25 +408,31 @@ console.log('storing value', key, JSON.stringify(this._createStorageItem(value))
                     // NB: If the result is a contact/node list, just keep track of it
                     // NB: Otherwise, do not proceed with iteration, just callback
                     if (Array.isArray(result) || method !== 'FIND_VALUE') {
-                        shortlist.add(result || []).forEach((contact) => {
-                            // NB: if it wasn't in the shortlist, we haven't added to the
-                            // NB: routing table, so do that now.
-                            this._updateContact(...contact);
-                        });
+                        shortlist
+                            .add(Array.isArray(result) ? result : [])
+                            .forEach((contact) => {
+                                // NB: if it wasn't in the shortlist, we haven't added to the
+                                // NB: routing table, so do that now.
+                                this._updateContact(...contact);
+                            });
+
                         return next();
                     }
 
                     // NB: If we did get an item back, get the closest node we contacted
                     // NB: who is missing the value and store a copy with them
-                    const closestMissingValue = shortlist.active[0]
+                    const closestMissingValue = shortlist.active[0];
 
                     if (closestMissingValue) {
-                        this.send('STORE', [key, result], closestMissingValue, () => null);
+                        this.send('STORE', [
+                            key,
+                            this._createStorageItem(result)
+                        ], closestMissingValue, () => null);
                     }
 
                     // NB: we found a value, so stop searching
                     callback(null, result, contact);
-                    callback = () => { };
+                    callback = () => {};
                 })
             }, () => {
 
@@ -501,10 +480,7 @@ console.log('storing value', key, JSON.stringify(this._createStorageItem(value))
      * @private
      */
     _updateContact(identity, contact) {
-        this._updateContactQueue.push({
-            identity,
-            contact
-        }, (err, headId) => {
+        this._updateContactQueue.push({ identity, contact }, (err, headId) => {
             if (err) {
                 this.router.removeContactByNodeId(headId);
                 this.router.addContactByNodeId(identity, contact);
@@ -517,10 +493,7 @@ console.log('storing value', key, JSON.stringify(this._createStorageItem(value))
      * @private
      */
     _updateContactWorker(task, callback) {
-        const {
-            identity,
-            contact
-        } = task;
+        const { identity, contact } = task;
 
         if (identity === this.identity.toString('hex')) {
             return callback();
@@ -545,10 +518,7 @@ console.log('storing value', key, JSON.stringify(this._createStorageItem(value))
         }
 
         this.ping([headId, headContact], (err) => {
-            this._pings.set(headId, {
-                timestamp: Date.now(),
-                responded: !err
-            });
+            this._pings.set(headId, { timestamp: Date.now(), responded: !err });
             callback(err, headId);
         });
     }

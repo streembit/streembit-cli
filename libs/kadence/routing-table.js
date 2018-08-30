@@ -15,15 +15,16 @@ If not, see http://www.gnu.org/licenses/.
 Author: Streembit team
 Copyright (C) 2018 The Streembit software development team
 
-Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
+Based on
+ * @module kadence
+ * @license AGPL-3.0
+ * @author Gordon Hall https://github.com/bookchin
 -------------------------------------------------------------------------------------------------------------------------
 */
 
 'use strict';
 
-const {
-    EventEmitter
-} = require('events');
+const { EventEmitter } = require('events');
 const Bucket = require('./bucket');
 const utils = require('./utils');
 const constants = require('./constants');

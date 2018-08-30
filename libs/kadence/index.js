@@ -15,16 +15,12 @@ If not, see http://www.gnu.org/licenses/.
 Author: Streembit team 
 Copyright (C) 2018 The Streembit software development team
 
-Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
--------------------------------------------------------------------------------------------------------------------------
-*/
-
-
-/**
+Based on
  * @module kadence
  * @license AGPL-3.0
  * @author Gordon Hall https://github.com/bookchin
- */
+-------------------------------------------------------------------------------------------------------------------------
+*/
 
 'use strict';
 
@@ -65,20 +61,11 @@ module.exports.HTTPTransport = require('./transport-http');
 /** {@link HTTPSTransport} */
 module.exports.HTTPSTransport = require('./transport-https');
 
-/** {@link module:kadence/hibernate} */
-module.exports.hibernate = require('./plugin-hibernate');
-
 /** {@link module:kadence/quasar} */
 module.exports.quasar = require('./plugin-quasar');
 
 /** {@link module:kadence/rolodex} */
 module.exports.rolodex = require('./plugin-rolodex');
-
-/** {@link module:kadence/contentaddress} */
-module.exports.contentaddress = require('./plugin-contentaddress');
-
-/** {@link module:kadence/trust} */
-module.exports.trust = require('./plugin-trust');
 
 /** {@link module:kadence/constants} */
 module.exports.constants = require('./constants');

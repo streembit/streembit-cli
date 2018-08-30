@@ -15,7 +15,10 @@ If not, see http://www.gnu.org/licenses/.
 Author: Streembit team
 Copyright (C) 2018 The Streembit software development team
 
-Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
+Based on
+ * @module kadence
+ * @license AGPL-3.0
+ * @author Gordon Hall https://github.com/bookchin
 -------------------------------------------------------------------------------------------------------------------------
 */
 
@@ -36,25 +39,6 @@ class Node {
     }
 
     eventHandlers() {
-
-        events.register(
-            events.ONBCEVENT,
-            (payload, callback) => {
-                try {
-                    switch (payload.type) {
-                        case constants.ONTXNREQUEST:
-                            this.publish(constants.PUBLISH_TXN, payload.data);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                catch (err) {
-                    this.logger.error("eventHandlers() ONBCEVENT error %j", err)
-                }
-            }
-        );
-
         events.on(
             "kad_message",
             (message, req, res) => {
@@ -173,8 +157,7 @@ class Node {
         const rolodex = this.node.plugin(kad.rolodex(`db/kad/${this.node.identity.toString('hex')}`));
         const peers = await rolodex.getBootstrapCandidates();
 
-        const seeds = [...options.seeds, ...peers.filter(p => options.seeds.every(s => p.id !== s.id))];
-        this.seeds = seeds;
+        this.seeds = [...options.seeds, ...peers.filter(p => options.seeds.every(s => p.id !== s.id))];
 
         this.node.listen(options.contact.port, options.contact.hostname, err => {
             if (err) {
@@ -204,6 +187,5 @@ class Node {
         });
     }
 }
-
 
 module.exports = Node;

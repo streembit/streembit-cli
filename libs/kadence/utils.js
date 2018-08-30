@@ -15,7 +15,10 @@ If not, see http://www.gnu.org/licenses/.
 Author: Streembit team
 Copyright (C) 2018 The Streembit software development team
 
-Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
+Based on
+ * @module kadence
+ * @license AGPL-3.0
+ * @author Gordon Hall https://github.com/bookchin
 -------------------------------------------------------------------------------------------------------------------------
 */
 
@@ -26,22 +29,15 @@ const url = require('url');
 const constants = require('./constants');
 const semver = require('semver');
 const ip = require('ip');
-const crypto = require('crypto');
-//const scrypt = require('scrypt');
+const { randomBytes, createHash } = require('crypto');
 const assert = require('assert');
-const {
-    randomBytes,
-    createHash
-} = crypto;
-
-//const hdkey = require('hdkey');
 
 
 /**
  * Returns a random valid key/identity as a string
  * @returns {string}
  */
-exports.getRandomKeyString = function () {
+exports.getRandomKeyString = function() {
     return exports.getRandomKeyBuffer().toString('hex');
 };
 
@@ -49,8 +45,8 @@ exports.getRandomKeyString = function () {
  * Returns a random valid key/identity as a buffer
  * @returns {buffer}
  */
-exports.getRandomKeyBuffer = function () {
-    return crypto.randomBytes(constants.B / 8);
+exports.getRandomKeyBuffer = function() {
+    return randomBytes(constants.B / 8);
 };
 
 /**
@@ -58,7 +54,7 @@ exports.getRandomKeyBuffer = function () {
  * @param {string} key - Node ID or item key
  * @returns {boolean}
  */
-exports.keyStringIsValid = function (key) {
+exports.keyStringIsValid = function(key) {
     let buf;
 
     try {
@@ -75,7 +71,7 @@ exports.keyStringIsValid = function (key) {
  * @param {buffer} key - Node ID or item key
  * @returns {boolean}
  */
-exports.keyBufferIsValid = function (key) {
+exports.keyBufferIsValid = function(key) {
     return Buffer.isBuffer(key) && key.length === constants.B / 8;
 };
 
@@ -85,13 +81,13 @@ exports.keyBufferIsValid = function (key) {
  * @param {string} key2 - Identity key to compare
  * @returns {buffer}
  */
-exports.getDistance = function (id1, id2) {
-    id1 = !Buffer.isBuffer(id1) ?
-        Buffer.from(id1, 'hex') :
-        id1;
-    id2 = !Buffer.isBuffer(id2) ?
-        Buffer.from(id2, 'hex') :
-        id2;
+exports.getDistance = function(id1, id2) {
+    id1 = !Buffer.isBuffer(id1)
+        ? Buffer.from(id1, 'hex')
+        : id1;
+    id2 = !Buffer.isBuffer(id2)
+        ? Buffer.from(id2, 'hex')
+        : id2;
 
     assert(exports.keyBufferIsValid(id1), 'Invalid key supplied');
     assert(exports.keyBufferIsValid(id2), 'Invalid key supplied');
@@ -105,7 +101,7 @@ exports.getDistance = function (id1, id2) {
  * @param {buffer} b2 - Buffer to compare
  * @returns {number}
  */
-exports.compareKeyBuffers = function (b1, b2) {
+exports.compareKeyBuffers = function(b1, b2) {
     assert(exports.keyBufferIsValid(b1), 'Invalid key supplied');
     assert(exports.keyBufferIsValid(b2), 'Invalid key supplied');
 
@@ -126,7 +122,7 @@ exports.compareKeyBuffers = function (b1, b2) {
  * @param {string} foreignKey - Key to compare
  * @returns {number}
  */
-exports.getBucketIndex = function (referenceKey, foreignKey) {
+exports.getBucketIndex = function(referenceKey, foreignKey) {
     let distance = exports.getDistance(referenceKey, foreignKey);
     let bucketIndex = constants.B;
 
@@ -154,12 +150,12 @@ exports.getBucketIndex = function (referenceKey, foreignKey) {
  * @param {number} bucketIndex - Bucket index for key
  * @returns {buffer}
  */
-exports.getPowerOfTwoBufferForIndex = function (referenceKey, exp) {
+exports.getPowerOfTwoBufferForIndex = function(referenceKey, exp) {
     assert(exp >= 0 && exp < constants.B, 'Index out of range');
 
-    const buffer = Buffer.isBuffer(referenceKey) ?
-        Buffer.from(referenceKey) :
-        Buffer.from(referenceKey, 'hex');
+    const buffer = Buffer.isBuffer(referenceKey)
+        ? Buffer.from(referenceKey)
+        : Buffer.from(referenceKey, 'hex');
     const byteValue = parseInt(exp / 8);
 
     // NB: We set the byte containing the bit to the right left shifted amount
@@ -173,7 +169,7 @@ exports.getPowerOfTwoBufferForIndex = function (referenceKey, exp) {
  * @param {buffer} referenceKey - Key for bucket distance reference
  * @param {number} index - Bucket index for random buffer selection
  */
-exports.getRandomBufferInBucketRange = function (referenceKey, index) {
+exports.getRandomBufferInBucketRange = function(referenceKey, index) {
     let base = exports.getPowerOfTwoBufferForIndex(referenceKey, index);
     let byte = parseInt(index / 8); // NB: Randomize bytes below the power of two
 
@@ -197,7 +193,7 @@ exports.getRandomBufferInBucketRange = function (referenceKey, index) {
  * Validates the given object is a storage adapter
  * @param {AbstractNode~storage} storageAdapter
  */
-exports.validateStorageAdapter = function (storage) {
+exports.validateStorageAdapter = function(storage) {
     assert(typeof storage === 'object',
         'No storage adapter supplied');
     assert(typeof storage.get === 'function',
@@ -214,7 +210,7 @@ exports.validateStorageAdapter = function (storage) {
  * Validates the given object is a logger
  * @param {AbstractNode~logger} logger
  */
-exports.validateLogger = function (logger) {
+exports.validateLogger = function(logger) {
     assert(typeof logger === 'object',
         'No logger object supplied');
     assert(typeof logger.debug === 'function',
@@ -231,7 +227,7 @@ exports.validateLogger = function (logger) {
  * Validates the given object is a transport
  * @param {AbstractNode~transport} transport
  */
-exports.validateTransport = function (transport) {
+exports.validateTransport = function(transport) {
     assert(typeof transport === 'object',
         'No transport adapter supplied');
     assert(typeof transport.read === 'function',
@@ -244,41 +240,24 @@ exports.validateTransport = function (transport) {
  * Returns the SHA-256 hash of the input
  * @param {buffer} input - Data to hash
  */
-module.exports.hash256 = function (input) {
-    return crypto.createHash('sha256').update(input).digest();
+module.exports.hash256 = function(input) {
+    return createHash('sha256').update(input).digest();
 };
-
-/**
- * Returns the Scrypt hash of the input
- * @param {buffer} input - Data to hash
- * @param {function} [callback] - Callback including hash value
- */
-//module.exports.scrypt = function(input, callback) {
-//  const params = { N: 1024, r: 8, p: 16 };
-//  const salt = Buffer.from([]);
-//  const length = 32;
-
-//  if (typeof callback === 'function') {
-//    return scrypt.hash(input, params, length, salt, callback);
-//  } else {
-//    return scrypt.hashSync(input, params, length, salt);
-//  }
-//};
 
 /**
  * Returns the RMD-160 hash of the input
  * @param {buffer} input - Data to hash
  */
-module.exports.hash160 = function (input) {
-    return crypto.createHash('rmd160').update(input).digest();
+module.exports.hash160 = function(input) {
+    return createHash('rmd160').update(input).digest();
 };
 
 /**
  * Returns 33 bytes of random data
  * @returns {buffer}
  */
-module.exports.noise33 = function () {
-    return crypto.randomBytes(33);
+module.exports.noise33 = function() {
+    return randomBytes(33);
 };
 
 /**
@@ -286,7 +265,7 @@ module.exports.noise33 = function () {
  * @param {Bucket~contact} contact
  * @returns {string}
  */
-module.exports.getContactURL = function (contact) {
+module.exports.getContactURL = function(contact) {
     const [id, info] = contact;
 
     return `${info.protocol}//${info.hostname}:${info.port}/#${id}`;
@@ -296,15 +275,11 @@ module.exports.getContactURL = function (contact) {
  * Returns a parsed contact object from a URL
  * @returns {object}
  */
-module.exports.parseContactURL = function (addr) {
-    const {
-        protocol,
-        hostname,
-        port,
-        hash
-    } = url.parse(addr);
+module.exports.parseContactURL = function(addr) {
+    const { protocol, hostname, port, hash } = url.parse(addr);
     const contact = [
-        (hash ? hash.substr(1) : null) || Buffer.alloc(20).fill(0).toString('hex'), {
+        (hash ? hash.substr(1) : null) || Buffer.alloc(20).fill(0).toString('hex'),
+        {
             protocol,
             hostname,
             port
@@ -319,7 +294,7 @@ module.exports.parseContactURL = function (addr) {
  * @param {string} version - The semver tag from the contact
  * @returns {boolean}
  */
-module.exports.isCompatibleVersion = function (version) {
+module.exports.isCompatibleVersion = function(version) {
     const local = require('./version').protocol;
     const remote = version;
     const sameMajor = semver.major(local) === semver.major(remote);
@@ -338,7 +313,7 @@ module.exports.isCompatibleVersion = function (version) {
  * @param {boolean} loopback - Allows contacts that are localhost
  * @returns {boolean}
  */
-module.exports.isValidContact = function (contact, loopback) {
+module.exports.isValidContact = function(contact, loopback) {
     const [, info] = contact;
     const isValidAddr = ip.isV4Format(info.hostname) ||
         ip.isV6Format(info.hostname) ||
@@ -354,7 +329,7 @@ module.exports.isValidContact = function (contact, loopback) {
  * @param {string} a - The value to be tested
  * @returns {boolean}
  */
-module.exports.isHexaString = function (a) {
+module.exports.isHexaString = function(a) {
     if (typeof a !== 'string') {
         return false;
     }
@@ -367,7 +342,7 @@ module.exports.isHexaString = function (a) {
  * @param {string} hdKey - The HD key in base 58 encoding
  * @returns {boolean} isValidHDKey
  */
-module.exports.isValidHDNodeKey = function (hdKey) {
+module.exports.isValidHDNodeKey = function(hdKey) {
     return typeof hdKey === 'string' &&
         /^[1-9a-km-zA-HJ-NP-Z]{1,111}$/.test(hdKey);
 };
@@ -377,7 +352,7 @@ module.exports.isValidHDNodeKey = function (hdKey) {
  * @param {number} hdIndex - The HD key index
  * @returns {boolean} isValidHDKeyIndex
  */
-module.exports.isValidNodeIndex = function (n) {
+module.exports.isValidNodeIndex = function(n) {
     return !Number.isNaN(n) && (parseInt(n) === n) && n >= 0 &&
         n <= constants.MAX_NODE_INDEX;
 };
@@ -387,7 +362,7 @@ module.exports.isValidNodeIndex = function (n) {
  * @param {buffer} buffer - Byte array to convert to binary string
  * @returns {string}
  */
-module.exports.toBinaryStringFromBuffer = function (buffer) {
+module.exports.toBinaryStringFromBuffer = function(buffer) {
     const mapping = {
         '0': '0000',
         '1': '0001',
@@ -443,59 +418,6 @@ module.exports._sha256 = function (input) {
 module.exports._rmd160 = function (input) {
     return createHash('rmd160').update(input).digest();
 };
-
-/**
- * Generates a private key or derives one from the supplied seed
- * @function
- * @param {buffer} [masterSeed] - 64 bytes of data
- * @param {string} [derivationPath] - HD key derivation path
- * @returns {object}
- */
-//module.exports.toHDKeyFromSeed = function (masterSeed, derivationPath) {
-//    const hdKeyPair = hdkey.fromMasterSeed(masterSeed || randomBytes(64));
-
-//    /* istanbul ignore if */
-//    if (derivationPath) {
-//        return hdKeyPair.derive(derivationPath);
-//    }
-
-//    return hdKeyPair;
-//};
-
-/**
- * Takes a plain secp256k1 private key and converts it to an HD key - note
- * that the chain code is zeroed out and thus provides no additional security.
- * @function
- * @param {buffer} privateKey - Raw bytes for the private key
- * @returns {string}
- */
-//module.exports.toExtendedFromPrivateKey = function (priv) {
-//    const hdKeyPair = new hdkey();
-
-//    hdKeyPair.privateKey = priv;
-//    hdKeyPair.chainCode = Buffer(32).fill(0);
-
-//    return hdKeyPair.privateExtendedKey;
-//};
-
-/**
- * Verifies the public key is derives from the index of the extended public
- * key. Special case: if index is -1, then matches the public key against the
- * extended public key with zeroed chain code.
- * @param {string} hexPublicKey - Public ECDSA key
- * @param {string} extPublicKey - Public extended key
- * @param {number} derivationIndex - Derivation index
- * @returns {boolean}
- */
-//module.exports.isDerivedFromExtendedPublicKey = function (pub, xpub, i) {
-//    const hdKeyPair = hdkey.fromExtendedKey(xpub);
-
-//    if (i === -1) {
-//        return hdKeyPair.publicKey.toString('hex') === pub;
-//    }
-
-//    return pub === hdKeyPair.deriveChild(i).publicKey.toString('hex');
-//};
 
 /**
  * Takes a public key are returns the identity

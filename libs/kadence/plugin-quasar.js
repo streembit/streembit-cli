@@ -15,7 +15,10 @@ If not, see http://www.gnu.org/licenses/.
 Author: Streembit team
 Copyright (C) 2018 The Streembit software development team
 
-Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
+Based on
+ * @module kadence
+ * @license AGPL-3.0
+ * @author Gordon Hall https://github.com/bookchin
 -------------------------------------------------------------------------------------------------------------------------
 */
 
@@ -24,9 +27,7 @@ Based on kadence library https://github.com/kadence author Gordon Hall https://g
 const assert = require('assert');
 const merge = require('merge');
 const async = require('async');
-const {
-    knuthShuffle
-} = require('knuth-shuffle');
+const { knuthShuffle } = require('knuth-shuffle');
 const uuid = require('uuid');
 const constants = require('./constants');
 const utils = require('./utils');
@@ -59,12 +60,7 @@ class QuasarRules {
      */
     publish(request, response, next) {
         /* eslint max-statements: [2, 18] */
-        let {
-            ttl,
-            topic,
-            uuid,
-            contents
-        } = request.params;
+        let { ttl, topic, uuid, contents } = request.params;
         let neighbors = [...this.quasar.node.router.getClosestContactsToKey(
             this.quasar.node.identity,
             constants.K
@@ -180,9 +176,7 @@ class QuasarRules {
     _relayPublication(request, contact, callback) {
         this.quasar.node.send(
             request.method,
-            merge({}, request.params, {
-                ttl: request.params.ttl - 1
-            }),
+            merge({}, request.params, { ttl: request.params.ttl - 1 }),
             contact,
             callback
         );
@@ -424,8 +418,8 @@ class QuasarPlugin {
 /**
  * Registers a {@link module:kadence/quasar~QuasarPlugin} with a {@link KademliaNode}
  */
-module.exports = function () {
-    return function (node) {
+module.exports = function() {
+    return function(node) {
         return new QuasarPlugin(node);
     };
 };

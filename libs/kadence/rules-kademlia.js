@@ -15,7 +15,10 @@ If not, see http://www.gnu.org/licenses/.
 Author: Streembit team
 Copyright (C) 2018 The Streembit software development team
 
-Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
+Based on
+ * @module kadence
+ * @license AGPL-3.0
+ * @author Gordon Hall https://github.com/bookchin
 -------------------------------------------------------------------------------------------------------------------------
 */
 
@@ -64,7 +67,7 @@ class KademliaRules {
     store(request, response, next) {
         const [key, item] = request.params;
         let itemPayload = item;
-
+        console.log('raw item pl:', item)
         try {
             if (itemPayload.type === 'Buffer') {
                 itemPayload = JSON.parse(Buffer.from(item.data).toString('utf8'));
@@ -77,7 +80,7 @@ class KademliaRules {
                 itemPayload = JSON.parse(itemPayload);
             }
 
-            this.node.logger.info('KADEMLIA: STORE request for key:' +key+ ': %j', itemPayload);
+            this.node.logger.debug('KADEMLIA: STORE request for key:' +key+ ': %j', itemPayload);
             
             assert(typeof itemPayload === 'object',
                 'Invalid storage item supplied');
@@ -94,18 +97,15 @@ class KademliaRules {
             return next(err);
         }
 
-        this.node.logger.info('KADEMLIA: STORE request for key:' +key+ ': validation passed');
+        this.node.logger.debug('KADEMLIA: STORE request for key:' +key+ ': validation passed');
 
-        const itemPayloadJSON = JSON.stringify(itemPayload);
-
-        this.node.storage.put(key, itemPayloadJSON, {
-            valueEncoding: 'json'
-        }, (err) => {
+        itemPayload = JSON.stringify(itemPayload);
+        this.node.storage.put(key, itemPayload, { valueEncoding: 'json' }, (err) => {
             if (err) {
                 return next(err);
             }
 
-            this.node.logger.info('KADEMLIA: STORE sending back stored item', itemPayloadJSON);
+            this.node.logger.debug('KADEMLIA: STORE sending back stored item', itemPayload);
 
             response.send([key, itemPayload]); // NB: Echo back what was stored
         });
@@ -150,15 +150,13 @@ class KademliaRules {
             return next(new Error('Invalid lookup key supplied'));
         }
 
-        this.node.storage.get(key, {
-            valueEncoding: 'json'
-        }, (err, item) => {
+        this.node.storage.get(key, { valueEncoding: 'json' }, (err, item) => {
             if (err) {
                 this.node.logger.error('KADEMLIA: FIND_VALUE error: %j', err);
                 return this.findNode(request, response, next);
             }
 
-            this.node.logger.info('KADEMLIA: FIND_VALUE request for key:' +key+ ' succeeded', item);
+            this.node.logger.debug('KADEMLIA: FIND_VALUE request for key:' +key+ ' succeeded', item);
 
             response.send(item);
         });

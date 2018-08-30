@@ -15,16 +15,18 @@ If not, see http://www.gnu.org/licenses/.
 Author: Streembit team
 Copyright (C) 2018 The Streembit software development team
 
-Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
+Based on
+ * @module kadence
+ * @license AGPL-3.0
+ * @author Gordon Hall https://github.com/bookchin
 -------------------------------------------------------------------------------------------------------------------------
 */
 
 'use strict';
 
 const http = require('http');
-const {
-    Duplex: DuplexStream
-} = require('stream');
+const https = require('https');
+const { Duplex: DuplexStream } = require('stream');
 const merge = require('merge');
 const concat = require('concat-stream');
 const constants = require('./constants');
@@ -44,9 +46,7 @@ class HTTPTransport extends DuplexStream {
      * @constructor
      */
     constructor(options) {
-        super({
-            objectMode: true
-        });
+        super({ objectMode: true });
 
         this._options = merge({}, HTTPTransport.DEFAULTS, options);
         this._pending = new Map();
@@ -68,7 +68,11 @@ class HTTPTransport extends DuplexStream {
      * Returns a HTTP request object
      * @private
      */
-    _createRequest() {
+    _createRequest(options) {
+        if (options.protocol === 'https:') {
+            return https.request(...arguments);
+        }
+
         return http.request(...arguments);
     }
 
@@ -92,10 +96,7 @@ class HTTPTransport extends DuplexStream {
     _timeoutPending() {
         const now = Date.now();
 
-        this._pending.forEach(({
-            timestamp,
-            response
-        }, id) => {
+        this._pending.forEach(({ timestamp, response }, id) => {
             let timeout = timestamp + constants.T_RESPONSETIMEOUT;
 
             if (now >= timeout) {
@@ -138,11 +139,7 @@ class HTTPTransport extends DuplexStream {
         const request = this._createRequest(reqopts);
 
         request.on('response', (response) => {
-
-            response.on('error', (err) => {
-                this.emit('error', err)
-            });
-
+            response.on('error', (err) => this.emit('error', err));
             response.pipe(concat((buffer) => {
                 if (response.statusCode >= 400) {
                     this.emit('error', new Error(buffer.toString()));
@@ -152,10 +149,7 @@ class HTTPTransport extends DuplexStream {
             }));
         });
 
-        request.on('error', (err) => {
-            this.emit('error', err)
-        });
-
+        request.on('error', (err) => this.emit('error', err));
         request.end(buffer);
 
         callback();
@@ -166,14 +160,8 @@ class HTTPTransport extends DuplexStream {
      * @private
      */
     _handle(req, res) {
-
-        req.on('error', (err) => {
-            this.emit('error', err)
-        });
-
-        res.on('error', (err) => {
-            this.emit('error', err)
-        });
+        req.on('error', (err) => this.emit('error', err));
+        res.on('error', (err) => this.emit('error', err));
 
         if (!req.headers['x-kad-message-id']) {
             res.statusCode = 400;
@@ -204,13 +192,11 @@ class HTTPTransport extends DuplexStream {
     }
 
     /**
-     * Binds the server to the given address/port
+     * Let the default CLI transport listen on traffic
+     * Set success (null-error) callback
      */
     listen() {
-
         arguments[arguments.length - 1](null);
-
-        //this.server.listen(...arguments);
     }
 
 }

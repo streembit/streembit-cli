@@ -1,21 +1,24 @@
 /*
-This file is part of Streembit application. 
-Streembit is an open source project to create a real time communication system for humans and machines. 
+This file is part of Streembit application.
+Streembit is an open source project to create a real time communication system for humans and machines.
 
-Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation, either version 3.0 of the License, or (at your option) any later version.
 
-Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with Streembit software.  
+You should have received a copy of the GNU General Public License along with Streembit software.
 If not, see http://www.gnu.org/licenses/.
- 
+
 -------------------------------------------------------------------------------------------------------------------------
-Author: Streembit team 
+Author: Streembit team
 Copyright (C) 2018 The Streembit software development team
 
-Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
+Based on
+ * @module kadence
+ * @license AGPL-3.0
+ * @author Gordon Hall https://github.com/bookchin
 -------------------------------------------------------------------------------------------------------------------------
 */
 
@@ -27,9 +30,7 @@ const assert = require('assert');
 const merge = require('merge');
 const constants = require('./constants');
 const utils = require('./utils');
-const {
-    EventEmitter
-} = require('events');
+const { EventEmitter } = require('events');
 const RoutingTable = require('./routing-table');
 const Messenger = require('./messenger');
 const ErrorRules = require('./rules-errors');
@@ -143,12 +144,8 @@ class AbstractNode extends EventEmitter {
         AbstractNode.validate(options = merge(AbstractNode.DEFAULTS, options));
         super();
 
-        this._middlewares = {
-            '*': []
-        };
-        this._errors = {
-            '*': []
-        };
+        this._middlewares = { '*': [] };
+        this._errors = { '*': [] };
         this._pending = new Map();
 
         this.rpc = options.messenger;
@@ -157,7 +154,6 @@ class AbstractNode extends EventEmitter {
         this.identity = options.identity;
         this.contact = options.contact;
         this.logger = options.logger;
-
         this.router = new RoutingTable(this.identity);
 
         this._init();
@@ -169,24 +165,15 @@ class AbstractNode extends EventEmitter {
      */
     _init() {
         this.rpc.serializer.pipe(this.transport).pipe(this.rpc.deserializer);
-
-        this.rpc.on('error', (err) => {
-            this.logger.warn(err.message.toLowerCase())
-        });
-
+        this.rpc.on('error', (err) => this.logger.warn(err.message.toLowerCase()));
         this.rpc.deserializer
             .on('data', (data) => this._process(data))
             .on('unpipe', (source) => source.pipe(this.rpc.deserializer));
-
         this.transport
-            .on('error', (err) => {
-                this.logger.warn(err.message.toLowerCase())
-            })
+            .on('error', (err) => this.logger.warn(err.message.toLowerCase()))
             .on('unpipe', (source) => source.pipe(this.transport));
 
-        setInterval(() => {
-            this._timeout(), constants.T_RESPONSETIMEOUT
-        });
+        setInterval(() => this._timeout(), constants.T_RESPONSETIMEOUT);
     }
 
     /**
@@ -200,29 +187,20 @@ class AbstractNode extends EventEmitter {
         // NB: stacks to process it
         if (message.type === 'request') {
             return this.receive(
-                merge({}, message.payload, {
-                    contact: contact.payload.params
-                }), {
+                merge({}, message.payload, { contact: contact.payload.params }), {
                     send: (data) => {
                         this.rpc.serializer.write([
-                            merge({
-                                id: message.payload.id
-                            }, {
-                                    result: data
-                                }), [this.identity.toString('hex'), this.contact],
+                            merge({ id: message.payload.id }, { result: data }),
+                            [this.identity.toString('hex'), this.contact],
                             contact.payload.params
                         ])
                     },
                     error: (msg, code = -32000) => {
                         this.rpc.serializer.write([
-                            merge({
-                                id: message.payload.id
-                            }, {
-                                    error: {
-                                        message: msg,
-                                        code
-                                    }
-                                }), [this.identity.toString('hex'), this.contact],
+                            merge({ id: message.payload.id }, {
+                                error: { message: msg, code }
+                            }),
+                            [this.identity.toString('hex'), this.contact],
                             contact.payload.params
                         ])
                     }
@@ -239,16 +217,14 @@ class AbstractNode extends EventEmitter {
 
         // NB: Otherwise, check if we are waiting on a response to a pending
         // NB: message and fire the result handler
-        const {
-            handler
-        } = this._pending.get(message.payload.id);
+        const { handler } = this._pending.get(message.payload.id);
         const handlerArgs = [
-            (message.type === 'error' ?
-                new Error(message.payload.error.message) :
-                null),
-            (message.type === 'success' ?
-                message.payload.result :
-                null)
+            (message.type === 'error'
+                ? new Error(message.payload.error.message)
+                : null),
+            (message.type === 'success'
+                ? message.payload.result
+                : null)
         ];
 
         handler(...handlerArgs);
@@ -297,9 +273,7 @@ class AbstractNode extends EventEmitter {
      * @param {AbstractNode~sendCallback} [callback]
      */
     send(method, params, target, handler = () => null) {
-        const {
-            router
-        } = this;
+        const { router } = this;
         const id = uuid();
         const timestamp = Date.now();
 
@@ -317,16 +291,10 @@ class AbstractNode extends EventEmitter {
             handler(...arguments);
         }
 
-        this._pending.set(id, {
-            handler: wrapped,
-            timestamp
-        });
-        this.rpc.serializer.write([{
-            id,
-            method,
-            params
-        },
-        [this.identity.toString('hex'), this.contact],
+        this._pending.set(id, { handler: wrapped, timestamp });
+        this.rpc.serializer.write([
+            { id, method, params },
+            [this.identity.toString('hex'), this.contact],
             target
         ]);
     }
@@ -392,9 +360,7 @@ class AbstractNode extends EventEmitter {
      */
     receive(request, response) {
         const self = this;
-        const {
-            method
-        } = request;
+        const { method } = request;
 
         // NB: First pass the the arguments through the * middleware stack
         // NB: Then pass the arguments through the METHOD middleware stack

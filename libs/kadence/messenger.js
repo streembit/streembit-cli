@@ -15,18 +15,17 @@ If not, see http://www.gnu.org/licenses/.
 Author: Streembit team
 Copyright (C) 2018 The Streembit software development team
 
-Based on kadence library https://github.com/kadence author Gordon Hall https://github.com/bookchin
+Based on
+ * @module kadence
+ * @license AGPL-3.0
+ * @author Gordon Hall https://github.com/bookchin
 -------------------------------------------------------------------------------------------------------------------------
 */
 
 'use strict';
 
-const {
-    EventEmitter
-} = require('events');
-const {
-    Transform: TransformStream
-} = require('stream');
+const { EventEmitter } = require('events');
+const { Transform: TransformStream } = require('stream');
 const merge = require('merge');
 const jsonrpc = require('jsonrpc-lite');
 const uuid = require('uuid');
@@ -57,12 +56,9 @@ class Messenger extends EventEmitter {
      * @param {function} callback - Transform stream callback(err, data)
      */
     static get JsonRpcSerializer() {
-        return function ([object, sender, receiver], callback) {
+        return function([object, sender, receiver], callback) {
             let message = jsonrpc.parseObject(
-                merge({
-                    jsonrpc: '2.0',
-                    id: uuid()
-                }, object)
+                merge({ jsonrpc: '2.0', id: uuid() }, object)
             );
             let notification = jsonrpc.notification('IDENTIFY', sender);
 
@@ -94,7 +90,7 @@ class Messenger extends EventEmitter {
      * @param {function} callback - Transform stream callback(err, data)
      */
     static get JsonRpcDeserializer() {
-        return function (buffer, callback) {
+        return function(buffer, callback) {
             let [message, notification] = jsonrpc.parse(buffer.toString('utf8'));
 
             switch (message.type) {
@@ -148,12 +144,8 @@ class Messenger extends EventEmitter {
         super();
 
         this._opts = merge(Messenger.DEFAULTS, options);
-        this.serializer = new MetaPipe({
-            objectMode: true
-        });
-        this.deserializer = new MetaPipe({
-            objectMode: true
-        });
+        this.serializer = new MetaPipe({ objectMode: true });
+        this.deserializer = new MetaPipe({ objectMode: true });
 
         this.serializer.append(new TransformStream({
             objectMode: true,
