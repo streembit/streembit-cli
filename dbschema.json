@@ -235,6 +235,37 @@
                         "notnull": true
                     }
                 ]
+            },
+            {
+                "name": "seedlist",
+                "columns": [
+                    {
+                        "name": "sid",
+                        "datatype": "integer",
+                        "pkey": true
+                    },
+                    {
+                        "name": "key",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "host",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "port",
+                        "datatype": "text",
+                        "notnull": true
+                    },
+                    {
+                        "name": "lastConnection",
+                        "datatype": "timestamp",
+                        "notnull": true,
+                        "default": "current_timestamp"
+                    }
+                ]
             }
         ],
         "indexes": [
@@ -279,6 +310,12 @@
                 "name": "idxUserPkeyHash",
                 "table": "users",
                 "column": "pkhash"
+            },
+            {
+                "unique": true,
+                "name": "idxSeedlistKeyId",
+                "table": "seedlist",
+                "column": "key"
             }
         ]
     }

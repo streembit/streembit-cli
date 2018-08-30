@@ -154,8 +154,8 @@ class Node {
         this.eventHandlers();
 
         // enable storage for seen contacts
-        const rolodex = this.node.plugin(kad.rolodex(`db/kad/${this.node.identity.toString('hex')}`));
-        const peers = await rolodex.getBootstrapCandidates();
+        const seedlist = this.node.plugin(kad.seedlist());
+        const peers = await seedlist.getBootstrapCandidates();
 
         this.seeds = [...options.seeds, ...peers.filter(p => options.seeds.every(s => p.id !== s.id))];
 

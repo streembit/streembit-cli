@@ -64,8 +64,8 @@ module.exports.HTTPSTransport = require('./transport-https');
 /** {@link module:kadence/quasar} */
 module.exports.quasar = require('./plugin-quasar');
 
-/** {@link module:kadence/rolodex} */
-module.exports.rolodex = require('./plugin-rolodex');
+/** {@link module:kadence/seedlist} */
+module.exports.seedlist = require('./plugin-seedlist');
 
 /** {@link module:kadence/constants} */
 module.exports.constants = require('./constants');
