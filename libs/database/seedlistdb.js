@@ -20,6 +20,7 @@ Copyright (C) 2017 The Streembit software development team
 */
 
 const database = require("libs/database/database");
+const constantsKad = require("libs/kadence/constants");
 
 'use strict';
 
@@ -54,7 +55,7 @@ class SeedlistDb extends database {
         return new Promise(
             (resolve, reject) => {
                 this.database.all(
-                    "SELECT key as id, host, port FROM seedlist ORDER BY lastConnection DESC",
+                    `SELECT key as id, host, port FROM seedlist ORDER BY lastConnection DESC LIMIT ${constantsKad.K}`,
                     [],
                     function(err, rows) {
                         if (err) {
