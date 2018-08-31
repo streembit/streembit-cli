@@ -67,7 +67,7 @@ class KademliaRules {
     store(request, response, next) {
         const [key, item] = request.params;
         let itemPayload = item;
-        console.log('raw item pl:', item)
+
         try {
             if (itemPayload.type === 'Buffer') {
                 itemPayload = JSON.parse(Buffer.from(item.data).toString('utf8'));
