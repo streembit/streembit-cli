@@ -22,8 +22,7 @@ Based on kadence library https://github.com/kadence author Gordon Hall https://g
 'use strict';
 
 const constants = require("libs/constants");
-const events = require("streembit-util").events;
-const logger = require("streembit-util").logger;
+const { events, logger } = require("streembit-util");
 const kad = require("libs/peernet/kad");
 
 let instance = null;
@@ -38,10 +37,10 @@ class Pubsub {
             this.kad = new kad.KadHandler();
             /* initial subscriptions maybe, somewhere in pubsub/txn_subs etc. */
             this.subscribeTo = [
-                { topic: 'TXN', callbacks: [] },
-                { topic: 'BLOCK', callbacks: [] },
-                { topic: 'BLACKLIST', callbacks: [] },
-                { topic: 'IOT', callbacks: [] }
+                { topic: constants.PUBSUB_TXN, callbacks: [] },
+                { topic: constants.PUBSUB_BLOCK, callbacks: [] },
+                { topic: constants.PUBSUB_BLACKLIST, callbacks: [] },
+                { topic: constants.PUBSUB_IOT, callbacks: [] }
             ];
 
             instance = this;
@@ -72,9 +71,12 @@ class Pubsub {
         try {
             for(var a = 0, sl = this.subscribeTo.length; a < sl; ++a) {
                 if (this.subscribeTo[a].callbacks.length) {
-                    this.kad.subscribe(this.subscribeTo[a].topic, payload => {
-                        this.subscribeTo[a].callbacks.map(cb => cb(payload));
-                    })
+                    this.kad.subscribe(
+                        this.subscribeTo[a].topic,
+                        ((cbs) => (payload) => {
+                            cbs.map(cb => cb(payload))
+                        })(this.subscribeTo[a].callbacks)
+                    )
                 }
             }
 
@@ -104,6 +106,7 @@ class Pubsub {
                             throw new Error('subscription callback is not of callable type');
                         }
 
+                        console.log(subTopic, subCb.toString());
                         this.kad.subscribe(subTopic, subCb);
                     }
                     catch (err) {

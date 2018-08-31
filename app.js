@@ -126,6 +126,10 @@ module.exports = exports = function (port, ip, password, cmd) {
                 },
                 function (callback) {
                     const pubsub = new PubSub();
+                    const pubsub_test = require('libs/pubsub/test');
+
+                    pubsub_test();
+
                     pubsub.init(callback);
                 }
             ],

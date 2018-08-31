@@ -57,7 +57,16 @@ var constants = {
 
     ONTXNREQUEST: "txn_request",
 
-    PUBLISH_TXN: "TXN"
+    SUBSCRIBE_EVENT: "SUBSCRIBE_EVENT",
+    PUBLISH_EVENT: "PUBLISH_EVENT",
+
+    PUBSUB_TXN: "TXN",
+    PUBSUB_BLOCK: "BLOCK",
+    PUBSUB_BLACKLIST: "BLACKLIST",
+    PUBSUB_IOT: "IOT",
+    // tmp. tests
+    PUBSUB_SEED: "test_SEED",
+    PUBSUB_ACCOUNT: "test_ACCOUNT"
 
 };
 
