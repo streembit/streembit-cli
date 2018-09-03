@@ -106,7 +106,6 @@ class Pubsub {
                             throw new Error('subscription callback is not of callable type');
                         }
 
-                        console.log(subTopic, subCb.toString());
                         this.kad.subscribe(subTopic, subCb);
                     }
                     catch (err) {
