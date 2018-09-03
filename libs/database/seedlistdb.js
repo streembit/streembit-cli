@@ -20,7 +20,6 @@ Copyright (C) 2017 The Streembit software development team
 */
 
 const database = require("libs/database/database");
-const constantsKad = require("libs/kadence/constants");
 
 'use strict';
 
@@ -33,6 +32,13 @@ class SeedlistDb extends database {
         this.database = db;
     }
 
+    /**
+    * Add seed to DB
+    * @param {string} identity. seed's identification key
+    * @param {string} host. seed's ip address
+    * @param {string} port. seed's port number
+    * @returns {Promise}
+    */
     addSeed(identity, host, port) {
         return new Promise(
             (resolve, reject) => {
@@ -51,11 +57,21 @@ class SeedlistDb extends database {
         );
     }
 
-    getAll() {
+    /**
+    * Get limited number of seeds sorted by last connection time from DB
+    * @param {number} limit. how many seeds to get from DB
+    * @returns {Promise}
+    */
+    getSeeds(limit) {
+        limit = parseInt(limit);
+        if (typeof limit !== 'number') {
+            throw new Error('Limit in getSeeds funk must be a number')
+        }
+
         return new Promise(
             (resolve, reject) => {
                 this.database.all(
-                    `SELECT key as id, host, port FROM seedlist ORDER BY lastConnection DESC LIMIT ${constantsKad.K}`,
+                    `SELECT key as id, host, port FROM seedlist ORDER BY lastConnection DESC LIMIT ${limit}`,
                     [],
                     function(err, rows) {
                         if (err) {
@@ -67,6 +83,11 @@ class SeedlistDb extends database {
         );
     }
 
+    /**
+    * Get a seed by key
+    * @param {string} key. seed's identification key
+    * @returns {Promise}
+    */
     getByKey(key) {
         return new Promise(
             (resolve, reject) => {

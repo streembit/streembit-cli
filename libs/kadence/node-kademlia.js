@@ -259,6 +259,7 @@ class KademliaNode extends AbstractNode {
     replicate(callback = () => null) {
         const self = this;
         const now = Date.now();
+        const replicatePipeline = new MetaPipe({ objectMode: true });
         const itemStream = this.storage.createReadStream({ valueEncoding: 'json' });
         const replicateStream = new WritableStream({
             objectMode: true,
@@ -266,12 +267,18 @@ class KademliaNode extends AbstractNode {
         });
 
         function maybeReplicate({ key, value }, enc, next) {
+            if (Buffer.isBuffer(key)) {
+                key = key.toString('utf8');
+            }
+            if (Buffer.isBuffer(value)) {
+                value = JSON.parse(value.toString('utf8'));
+            }
+
             const isPublisher = value.publisher === self.identity.toString('hex');
             const republishDue = (value.timestamp + constants.T_REPUBLISH) <= now;
             const replicateDue = (value.timestamp + constants.T_REPLICATE) <= now;
             const shouldRepublish = isPublisher && republishDue;
             const shouldReplicate = !isPublisher && replicateDue;
-
             if (shouldReplicate || shouldRepublish) {
                 return self.iterativeStore(key, value, next);
             }
@@ -288,7 +295,7 @@ class KademliaNode extends AbstractNode {
         itemStream.on('error', triggerCallback);
         replicateStream.on('error', triggerCallback);
         replicateStream.on('finish', triggerCallback);
-        itemStream.pipe(this.replicatePipeline).pipe(replicateStream);
+        itemStream.pipe(replicatePipeline).pipe(replicateStream);
     }
     /**
      * @callback KademliaNode~replicateCallback

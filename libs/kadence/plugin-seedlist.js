@@ -25,6 +25,7 @@ Streembit team plugin for
 'use strict';
 
 const SeedlistDb = require("libs/database/seedlistdb");
+const constants = require('./constants');
 
 
 /**
@@ -42,7 +43,7 @@ class SeedlistPlugin {
         this.db = new SeedlistDb();
 
         this.node.router.events.on('add', identity => {
-            //this.node.logger.debug(`updating peer profile ${identity}`);
+            this.node.logger.debug(`updating peer profile ${identity}`);
             const { hostname, port } = this.node.router.getContactByNodeId(identity);
             this.setExternalPeerInfo(identity, hostname, port);
         });
@@ -53,7 +54,7 @@ class SeedlistPlugin {
      * @returns {object}
      */
     async getBootstrapCandidates() {
-        return await this.db.getAll();
+        return await this.db.getSeeds(constants.K);
     }
 
     /**
