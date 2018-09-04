@@ -67,9 +67,6 @@ class KademliaNode extends AbstractNode {
             (task, cb) => this._updateContactWorker(task, cb),
             1
         );
-
-        this.replicatePipeline = new MetaPipe({ objectMode: true });
-        this.expirePipeline = new MetaPipe({ objectMode: true });
     }
 
     /**
@@ -267,18 +264,14 @@ class KademliaNode extends AbstractNode {
         });
 
         function maybeReplicate({ key, value }, enc, next) {
-            if (Buffer.isBuffer(key)) {
-                key = key.toString('utf8');
-            }
-            if (Buffer.isBuffer(value)) {
-                value = JSON.parse(value.toString('utf8'));
-            }
+            [key, value] = self._convertKeyValue(key, value);
 
             const isPublisher = value.publisher === self.identity.toString('hex');
             const republishDue = (value.timestamp + constants.T_REPUBLISH) <= now;
             const replicateDue = (value.timestamp + constants.T_REPLICATE) <= now;
             const shouldRepublish = isPublisher && republishDue;
             const shouldReplicate = !isPublisher && replicateDue;
+
             if (shouldReplicate || shouldRepublish) {
                 return self.iterativeStore(key, value, next);
             }
@@ -314,6 +307,7 @@ class KademliaNode extends AbstractNode {
     expire(callback = () => null) {
         const self = this;
         const now = Date.now();
+        const expirePipeline = new MetaPipe({ objectMode: true });
         const itemStream = this.storage.createReadStream({ valueEncoding: 'json' });
         const expireStream = new WritableStream({
             objectMode: true,
@@ -321,6 +315,8 @@ class KademliaNode extends AbstractNode {
         });
 
         function maybeExpire({ key, value }, enc, next) {
+            [key, value] = self._convertKeyValue(key, value);
+
             if ((value.timestamp + constants.T_EXPIRE) <= now) {
                 return self.storage.del(key, next);
             }
@@ -337,7 +333,7 @@ class KademliaNode extends AbstractNode {
         itemStream.on('error', triggerCallback);
         expireStream.on('error', triggerCallback);
         expireStream.on('finish', triggerCallback);
-        itemStream.pipe(this.expirePipeline).pipe(expireStream);
+        itemStream.pipe(expirePipeline).pipe(expireStream);
     }
     /**
      * @callback KademliaNode~expireCallback
@@ -530,13 +526,31 @@ class KademliaNode extends AbstractNode {
         });
     }
 
+    /**
+     * Converts key and value from Buffer to UTF8
+     * @param {buffer} key
+     * @param {buffer} value
+     * @returns {array} { key: string, value: string }
+     * @private
+     */
+    _convertKeyValue(key, value) {
+        if (Buffer.isBuffer(key)) {
+            key = key.toString('utf8');
+        }
+        if (Buffer.isBuffer(value)) {
+            value = JSON.parse(value.toString('utf8'));
+        }
+
+        return [key, value];
+    }
+
     put(key, value, callback) {
         try {
             this.logger.debug('attempting to set value for key %s', key);
             this.iterativeStore(key, value, callback);
         }
         catch (err) {
-            callback(err); 
+            callback(err);
         }
     }
 
