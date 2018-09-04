@@ -81,8 +81,9 @@ class KademliaNode extends AbstractNode {
         this.use('FIND_VALUE', handlers.findValue.bind(handlers));
 
         setInterval(() => this.refresh(0), constants.T_REFRESH);
-        setInterval(() => this.replicate(() => this.expire()),
-            constants.T_REPLICATE);
+        setInterval(() => this.replicate(
+                err => err ? this.logger.error('Replicate error: %j', err) : ''
+            ), constants.T_REPLICATE);
 
         super.listen(...arguments);
     }
