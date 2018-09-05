@@ -63,10 +63,7 @@ var constants = {
     PUBSUB_TXN: "TXN",
     PUBSUB_BLOCK: "BLOCK",
     PUBSUB_BLACKLIST: "BLACKLIST",
-    PUBSUB_IOT: "IOT",
-    // tmp. tests
-    PUBSUB_SEED: "test_SEED",
-    PUBSUB_ACCOUNT: "test_ACCOUNT"
+    PUBSUB_IOT: "IOT"
 
 };
 
