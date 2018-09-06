@@ -1,19 +1,19 @@
 ﻿/*
 
-This file is part of Streembit application. 
-Streembit is an open source project to create a real time communication system for humans and machines. 
+This file is part of Streembit application.
+Streembit is an open source project to create a real time communication system for humans and machines.
 
-Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation, either version 3.0 of the License, or (at your option) any later version.
 
-Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with Streembit software.  
+You should have received a copy of the GNU General Public License along with Streembit software.
 If not, see http://www.gnu.org/licenses/.
- 
+
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Z Pardi 
+Author: Tibor Z Pardi
 Copyright (C) 2016 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -238,7 +238,7 @@ var streembit_config = (function (cnfobj) {
                 //  check the config file
                 ip = config.transport.host || 0;
             }
-            cnfobj.transport.host = ip;            
+            cnfobj.transport.host = ip;
 
             // set the ws port
             cnfobj.transport.ws.port = config.transport.ws.port || constants.DEFAULT_WS_PORT;
@@ -248,7 +248,7 @@ var streembit_config = (function (cnfobj) {
             cnfobj.transport.kad.port = config.transport.kad && config.transport.kad.port ? config.transport.kad.port : constants.DEFAULT_KAD_PORT;
             cnfobj.transport.kad.host = config.transport.kad && config.transport.kad.host ? config.transport.kad.host : "";
 
-            // set the ws max connection 
+            // set the ws max connection
             cnfobj.transport.ws.maxconn = config.transport.ws.maxconn || constants.DEFAULT_WS_MAXCONN;
 
 
@@ -335,6 +335,24 @@ var streembit_config = (function (cnfobj) {
                 cnfobj.blockchain_config.run = false;
             }
 
+            var bcclientcfarr = config.modules.filter(function (item) {
+                return item.name === "bcclient";
+            });
+            var bcclientconf = bcclientcfarr && bcclientcfarr.length ? bcclientcfarr[0] : 0;
+            cnfobj.bcclient_config = bcclientconf;
+            if (!cnfobj.bcclient_config) {
+                cnfobj.bcclient_config = {}
+            }
+            if (!cnfobj.bcclient_config.hasOwnProperty("run")) {
+                cnfobj.bcclient_config.run = false;
+            }
+            if (
+                (isseed || cnfobj.blockchain_config.run || cnfobj.client_config.run)
+                && cnfobj.bcclient_config.run
+            ) {
+                throw new Error("Invalid configuration. Please, activate only one of: Client, Blockchain server, or Blockchain client modules");
+            }
+
             // set the wsmode, it could be either none, srvc (service mode) or iot (IoT mode)
             var wsm = constants.WSMODE_NONE;
             if (seedconf && seedconf.run) {
@@ -363,12 +381,12 @@ var streembit_config = (function (cnfobj) {
                 cnfobj.dns = {run: false};
             }
 
-            if (cnfobj.client_config.run) {
+            if (cnfobj.client_config.run || cnfobj.bcclient_config.run) {
                 try {
                     exec("ifconfig | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1' | head -1 | tr -d '\n'",
                         (err, ip4) => {
-                            if (err !== null) {                                
-                                console.log(`exec ifconfig error  ${err}`);
+                            if (err !== null) {
+                                console.error(`exec ifconfig error:  ${err.message ? err.message : err}`);
                                 cnfobj.transport.localip = 0;
                             }
                             else {
@@ -379,8 +397,8 @@ var streembit_config = (function (cnfobj) {
                 }
                 catch (e) {
                     // still let run the module if the ifconfig failed for any reasons
+                    console.error(`exec ifconfig error:  ${e.message}`);
                     cnfobj.transport.localip = 0;
-                    console.log(`exec ifconfig error  ${e.message}`);
                 }
             }
             else {

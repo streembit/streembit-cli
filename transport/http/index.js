@@ -81,8 +81,19 @@ class HTTPTransport {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
     };
 
-    static iskadmsg(request) {
-        return !!request.headers['x-kad-message-id'];
+    static getMsgHeader(request) {
+        const isKad = !!request.headers['x-kad-message-id'];
+        const isBlockchain = !!request.headers['streembit-bc-msg'];
+
+        return { isKad, isBlockchain };
+    }
+
+    static chooseMessageHandler(header, message, req, res) {
+        return header.isKad
+            ? events.emit("kad_message", message, req, res)
+            : (header.isBlockchain
+                ? events.emit("bc_message", message, req, res)
+                : events.emit(constants.ONCLIENTREQUEST, { req, res, message }));
     }
 
     /*
@@ -118,23 +129,7 @@ class HTTPTransport {
                 throw new Error("invalid message");
             }
 
-            // this is KAD message, let kad transport take care about it
-            if (this.iskadmsg(req)) {
-                return events.emit(
-                    "kad_message",
-                    message,
-                    req,
-                    res
-                );
-            }
-
-            // this is a client request, the HTTP client request handler will get it
-            var data = {
-                req: req,
-                res: res,
-                message: message
-            };
-            events.emit(constants.ONCLIENTREQUEST, data);
+            return this.chooseMessageHandler(this.getMsgHeader(req), message, req, res);
 
             //
         }

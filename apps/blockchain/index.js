@@ -22,9 +22,8 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-
 var config = require("libs/config");
-var logger = require("streembit-util").logger;
+var { events, logger } = require("streembit-util");
 var merkle = require("./merkle");
 
 
@@ -40,6 +39,11 @@ class BlockchainHandler {
                 logger.info("Config blockchain handler -> not running");
                 return callback();
             }
+            if (!this.verifyConfig(conf)) {
+                return callback();
+            }
+
+            this.registerHandlers();
 
             logger.info("Run blockchain handler");
 
@@ -48,6 +52,34 @@ class BlockchainHandler {
         catch (err) {
             logger.error("Blockchain handler error: " + err.message);
         }
+    }
+
+    registerHandlers() {
+        events.on(
+            "bc_message",
+            (message, req, res) => {
+                const m_json = JSON.stringify(message);
+
+                console.log('BC message\'s here:', m_json);
+            }
+        );
+    }
+
+    verifyConfig(conf) {
+        if (!conf.rpcuser || !conf.rpcuser.length) {
+            logger.error("Config blockchain handler: RPC user is not defined");
+            return false;
+        }
+        if (!conf.rpcpassword || !conf.rpcpassword.length) {
+            logger.error("Config blockchain handler: RPC password is not defined");
+            return false;
+        }
+        if (!conf.rpcallowip || !Array.isArray(conf.rpcallowip)) {
+            logger.error("Config blockchain handler: RPC allow IP list is missing");
+            return false;
+        }
+
+        return true;
     }
 }
 
