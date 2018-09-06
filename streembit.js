@@ -1,19 +1,19 @@
 ﻿/*
- 
-This file is part of Streembit application. 
-Streembit is an open source project to create a real time communication system for humans and machines. 
 
-Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+This file is part of Streembit application.
+Streembit is an open source project to create a real time communication system for humans and machines.
+
+Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation, either version 3.0 of the License, or (at your option) any later version.
 
-Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with Streembit software.  
+You should have received a copy of the GNU General Public License along with Streembit software.
 If not, see http://www.gnu.org/licenses/.
- 
+
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Z Pardi 
+Author: Tibor Z Pardi
 Copyright (C) 2016 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -37,6 +37,9 @@ program
     .option('-pwd, --pwd [pwd]', 'Password (secret) to protect the private key')
     .option('-cmd, --cmd', 'Initialize command line interface')
     .option('-pm2, --pm2', 'PM2 or service/daemon mode')
+    .option('-rpcuser, --rpcuser [rpcuser]', 'BC client RPC user')
+    .option('-rpcpassword, --rpcpassword [rpcpassword]', 'BC client RPC password')
+    .option('-rpcport, --rpcport [rpcport]', '*optional: BC client RPC port')
     .option('-i, --ip [value]', 'IP address for the Streembit seed')
     .option('-p, --port <num>', 'Port for the Streembit client', utils.parse_ipport)
     .option('-d, --data', 'Print node ID')
@@ -48,39 +51,59 @@ program
     .option('-a, --addpk [pkey]', 'Add/Remove a user to/from whitelist')
     .parse(process.argv);
 
-
 try {
-    if (!program.pwd || typeof program.pwd !== 'string' || program.pwd.length < 6) {
+    const {
+        pwd,
+        data,
+        backup,
+        users,
+        whitelist,
+        addpk,
+        deluser,
+        port,
+        ip,
+        cmd,
+        rpcuser,
+        rpcpassword,
+        rpcport,
+        args
+    } = program;
+
+    let bcclient = false;
+    if ((rpcuser && rpcuser.length) && (rpcpassword && rpcpassword.length)) {
+        bcclient = { rpcuser, rpcpassword, rpcport, args };
+    }
+
+    if (!bcclient && (!pwd || typeof pwd !== 'string' || pwd.length < 6)) {
         console.log('\x1b[31m%s\x1b[0m', 'Error:', 'Password required! Restart the app with --pwd PASSWORD or --pwd=PASSWORD');
         process.exit(1);
     }
-    if (program.data) {
-        app.display_data(program.pwd);
+    if (data) {
+        app.display_data(pwd);
     }
-    else if (program.backup) {
-        app.backup(program.pwd);
+    else if (backup) {
+        app.backup(pwd);
     }
-    else if (program.users) {
-        app.list_users(program.pwd);
+    else if (users) {
+        app.list_users(pwd);
     }
-    else if (program.whitelist) {
-        if (!program.addpk && !program.deluser) {
+    else if (whitelist) {
+        if (!addpk && !deluser) {
             throw new Error('-w command option requires user private key being provided');
         } else if (
-            (program.addpk && program.addpk.length < 64) ||
-            (program.deluser && program.deluser.length < 64)
+            (addpk && addpk.length < 64) ||
+            (deluser && deluser.length < 64)
         ) {
             throw new Error('Invalid public key');
         }
 
-        app.whitelist_update(program.pwd, program.addpk || program.deluser, !!program.deluser);
+        app.whitelist_update(pwd, addpk || deluser, !!deluser);
     }
-    else if (program.deluser) {
-        app.delete_user(program.pwd);
+    else if (deluser) {
+        app.delete_user(pwd);
     }
     else {
-        const cmd = program.cmd || null;
-        app(program.port, program.ip, program.pwd, cmd);
+        app(port, ip, pwd, !!cmd, bcclient);
     }
 }
 catch (e) {

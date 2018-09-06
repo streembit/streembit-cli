@@ -215,7 +215,7 @@ var streembit_config = (function (cnfobj) {
     };
 
 
-    cnfobj.init = function (argv_port, argv_ip, cmd, callback) {
+    cnfobj.init = function (argv_port, argv_ip, cmd, bcclient, callback) {
         try {
             cnfobj.log = config.log;
 
@@ -254,14 +254,11 @@ var streembit_config = (function (cnfobj) {
 
             cnfobj.cmdinput = ( config.cmdinput || cmd ) && !program.pm2;
 
+            cnfobj.bcclient = cnfobj.cmdinput ? false : bcclient;
+
             cnfobj.seeds = config.seeds;
 
             cnfobj.usertype = config.usertype || constants.USERTYPE_HUMAN;
-
-            // if (!config.account) {
-            //     return callback("account is missing from the configuration file.");
-            // }
-            // cnfobj.account = config.account;
 
             if (!config.database_name) {
                 return callback("database_name is missing from the configuration file.");
@@ -335,20 +332,9 @@ var streembit_config = (function (cnfobj) {
                 cnfobj.blockchain_config.run = false;
             }
 
-            var bcclientcfarr = config.modules.filter(function (item) {
-                return item.name === "bcclient";
-            });
-            var bcclientconf = bcclientcfarr && bcclientcfarr.length ? bcclientcfarr[0] : 0;
-            cnfobj.bcclient_config = bcclientconf;
-            if (!cnfobj.bcclient_config) {
-                cnfobj.bcclient_config = {}
-            }
-            if (!cnfobj.bcclient_config.hasOwnProperty("run")) {
-                cnfobj.bcclient_config.run = false;
-            }
             if (
                 (isseed || cnfobj.blockchain_config.run || cnfobj.client_config.run)
-                && cnfobj.bcclient_config.run
+                && cnfobj.bcclient
             ) {
                 throw new Error("Invalid configuration. Please, activate only one of: Client, Blockchain server, or Blockchain client modules");
             }

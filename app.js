@@ -45,13 +45,13 @@ const PubSub = require('libs/pubsub');
 const constants = require("libs/constants");
 
 // initialize the logger
-module.exports = exports = function (port, ip, password, cmd) {
+module.exports = exports = function (port, ip, password, cmd, bcclient) {
     try {
         async.waterfall(
             [
                 function (callback) {
                     try {
-                        config.init(port, ip, cmd, callback);
+                        config.init(port, ip, cmd, bcclient, callback);
                     }
                     catch (e) {
                         callback(e);
@@ -60,7 +60,7 @@ module.exports = exports = function (port, ip, password, cmd) {
                 function (callback) {
                     try {
                         var loglevel = config.log && config.log.level ? config.log.level : "debug";
-                        if (config.cmdinput || config.bcclient_config.run) {
+                        if (config.cmdinput || config.bcclient) {
                             logger.init(loglevel, null, ['file']);
                         } else {
                             logger.init(loglevel);
@@ -73,14 +73,14 @@ module.exports = exports = function (port, ip, password, cmd) {
                     }
                 },
                 function (callback) {
-                    if (config.bcclient_config.run === true) {
+                    if (config.bcclient) {
                         return callback();
                     }
 
                     database.init(dbschema, callback);
                 },
                 function (callback) {
-                    if (config.bcclient_config.run === true) {
+                    if (config.bcclient) {
                         return callback();
                     }
 
@@ -93,7 +93,7 @@ module.exports = exports = function (port, ip, password, cmd) {
                     }
                 },
                 function (callback) {
-                    if (config.bcclient_config.run === true) {
+                    if (config.bcclient) {
                         return callback();
                     }
 
@@ -104,7 +104,7 @@ module.exports = exports = function (port, ip, password, cmd) {
                     httptransport.init(callback);
                 },
                 function (callback) {
-                    if (config.bcclient_config.run === true) {
+                    if (config.bcclient) {
                         return callback();
                     }
 
@@ -117,7 +117,7 @@ module.exports = exports = function (port, ip, password, cmd) {
                     }
                 },
                 function (callback) {
-                    if (config.bcclient_config.run === true) {
+                    if (config.bcclient) {
                         return callback();
                     }
 
@@ -434,7 +434,6 @@ module.exports.get_wl = function (password) {
             if (err) {
                 return console.log(err.message || err);
             }
-
 
             wlDb.get_rules().then(
                 (res) => {

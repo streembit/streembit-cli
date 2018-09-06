@@ -197,21 +197,21 @@ function resolveHost(callback, initUpdater = null) {
 module.exports = exports = function (callback) {
     try {
         var conf = config.bcclient_config;
-        if (!conf.run) {
+        if (!config.bcclient || conf.cmdinput) {
             logger.info("Config blockchain client handler -> not running");
             return callback();
         }
 
-        resolveHost((err) => {
-            if (err) {
-                return callback(err);
-            }
+        // resolveHost((err) => {
+        //     if (err) {
+        //         return callback(err);
+        //     }
 
             logger.info("Run streembit blockchain client handler");
 
             const cmd = new BcCmdHandler();
             cmd.run(callback);
-        }, 1);
+        // }, 1);
     }
     catch (err) {
         callback(err.message);
