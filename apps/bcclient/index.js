@@ -75,7 +75,7 @@ class BcCmdHandler {
                     return logger.error('Blockchain client failed: %j', err);
                 }
 
-                logger.info('Response from Blockchain server:', resp);
+                console.log('Response from Blockchain server:', resp);
             });
 
             callback();

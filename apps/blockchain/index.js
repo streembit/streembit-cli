@@ -22,9 +22,10 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-var config = require("libs/config");
-var { events, logger } = require("streembit-util");
-var merkle = require("./merkle");
+const config = require('libs/config');
+const constants = require('libs/constants');
+var { events, logger } = require('streembit-util');
+var merkle = require('./merkle');
 
 
 class BlockchainHandler {
@@ -58,9 +59,30 @@ class BlockchainHandler {
         events.on(
             "bc_message",
             (message, req, res) => {
-                const m_json = JSON.stringify(message);
+                let response = { result: 0, error: null };
 
-                console.log('BC message\'s here:', m_json);
+                logger.debug('Incoming message from blockchain client, command:', message.command, message.params);
+
+                try {
+                    const { user, password, command, params } = message;
+                    if (user !== config.blockchain_config.rpcuser) {
+                        throw new Error('Invalid RPC user');
+                    }
+                    if (password !== config.blockchain_config.rpcpassword) {
+                        throw new Error('Invalid RPC password');
+                    }
+                    if (!~constants.VALID_BLCOKCHAIN_CMDS.indexOf(command)) {
+                        throw new Error('Invalid Blcokchain command');
+                    }
+
+                    response.payload = `Processing ${command} with ${params.length ? params.join(', ') : 'no'} params...`;
+                    res.end(JSON.stringify(response), 'utf8');
+                } catch (err) {
+                    response.result = 1;
+                    response.error = err.message;
+
+                    return res.end(JSON.stringify(response), 'utf8');
+                }
             }
         );
     }
