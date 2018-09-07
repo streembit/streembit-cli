@@ -145,6 +145,10 @@ module.exports = exports = function (port, ip, password, cmd, bcclient) {
                     }
                 },
                 function (callback) {
+                    if (config.bcclient) {
+                        return callback();
+                    }
+
                     const pubsub = new PubSub();
                     pubsub.init(callback);
                 }
@@ -434,6 +438,7 @@ module.exports.get_wl = function (password) {
             if (err) {
                 return console.log(err.message || err);
             }
+
 
             wlDb.get_rules().then(
                 (res) => {

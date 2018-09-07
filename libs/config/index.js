@@ -251,9 +251,11 @@ var streembit_config = (function (cnfobj) {
             // set the ws max connection
             cnfobj.transport.ws.maxconn = config.transport.ws.maxconn || constants.DEFAULT_WS_MAXCONN;
 
-
             cnfobj.cmdinput = ( config.cmdinput || cmd ) && !program.pm2;
 
+            // give a preference to cmdinput
+            // if cmdinput is true then ditch bcclient
+            // and start cmd handler
             cnfobj.bcclient = cnfobj.cmdinput ? false : bcclient;
 
             cnfobj.seeds = config.seeds;
@@ -282,12 +284,11 @@ var streembit_config = (function (cnfobj) {
             var seedconf = seedcfarr && seedcfarr.length ? seedcfarr[0] : 0;
             cnfobj.seed_config = seedconf;
             if (!cnfobj.seed_config) {
-                cnfobj.seed_config = {run: false}
+                cnfobj.seed_config = {};
             }
-            if (!cnfobj.seed_config.hasOwnProperty("run")) {
-                cnfobj.seed_config.run = false;
-            }
-            var isseed = cnfobj.seed_config.run;
+            // bcclient mode disables seed module,
+            // overriding config
+            cnfobj.seed_config.run = cnfobj.bcclient ? false : cnfobj.seed_config.run || false;
 
             var iot_confarr = config.modules.filter(function (item) {
                 return item.name == "iot";
@@ -301,7 +302,7 @@ var streembit_config = (function (cnfobj) {
                 cnfobj.iot_config.run = false;
             }
 
-            if (isseed && cnfobj.iot_config.run) {
+            if (cnfobj.seed_config.run && cnfobj.iot_config.run) {
                 throw new Error("Invalid configuration. IoT handler cannot run when the seed is configured to run");
             }
 
@@ -316,7 +317,7 @@ var streembit_config = (function (cnfobj) {
             if (!cnfobj.client_config.hasOwnProperty("run")) {
                 cnfobj.client_config.run = false;
             }
-            if (isseed && cnfobj.client_config.run) {
+            if (cnfobj.seed_config.run && cnfobj.client_config.run) {
                 throw new Error("Invalid configuration. Client handler cannot run when the seed is configured to run");
             }
 
@@ -332,11 +333,8 @@ var streembit_config = (function (cnfobj) {
                 cnfobj.blockchain_config.run = false;
             }
 
-            if (
-                (isseed || cnfobj.blockchain_config.run || cnfobj.client_config.run)
-                && cnfobj.bcclient
-            ) {
-                throw new Error("Invalid configuration. Please, activate only one of: Client, Blockchain server, or Blockchain client modules");
+            if (cnfobj.blockchain_config.run && cnfobj.bcclient) {
+                throw new Error("Invalid configuration. App cannot run in seed and IoT mode, or in blockchain server and blockchain client mode simultaneously");
             }
 
             // set the wsmode, it could be either none, srvc (service mode) or iot (IoT mode)
@@ -367,7 +365,7 @@ var streembit_config = (function (cnfobj) {
                 cnfobj.dns = {run: false};
             }
 
-            if (cnfobj.client_config.run || cnfobj.bcclient_config.run) {
+            if (cnfobj.client_config.run) {
                 try {
                     exec("ifconfig | grep -Eo 'inet (addr:)?([0-9]*\\.){3}[0-9]*' | grep -Eo '([0-9]*\\.){3}[0-9]*' | grep -v '127.0.0.1' | head -1 | tr -d '\n'",
                         (err, ip4) => {

@@ -1,19 +1,19 @@
 ﻿/*
 
-This file is part of Streembit application. 
-Streembit is an open source project to create a real time communication system for humans and machines. 
+This file is part of Streembit application.
+Streembit is an open source project to create a real time communication system for humans and machines.
 
-Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation, either version 3.0 of the License, or (at your option) any later version.
 
-Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with Streembit software.  
+You should have received a copy of the GNU General Public License along with Streembit software.
 If not, see http://www.gnu.org/licenses/.
- 
+
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Z Pardi 
+Author: Streembit team
 Copyright (C) 2016 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -26,6 +26,7 @@ var constants = {
     DEFAULT_TRANSPORT: "http",
     DEFAULT_WSTRANSPORT: "ws",
     DEFAULT_STREEMBIT_PORT: 32319,
+    DEFAULT_STREEMBIT_HOST: "127.0.0.1",
     DEFAULT_WS_PORT: 32320,
     DEFAULT_KAD_PORT: 32321,
     DEFAULT_WS_MAXCONN: 10000,
@@ -63,8 +64,50 @@ var constants = {
     PUBSUB_TXN: "TXN",
     PUBSUB_BLOCK: "BLOCK",
     PUBSUB_BLACKLIST: "BLACKLIST",
-    PUBSUB_IOT: "IOT"
+    PUBSUB_IOT: "IOT",
 
+    VALID_BLCOKCHAIN_CMDS: [
+        'backupwallet',
+        'createrawtransaction',
+        'decoderawtransaction',
+        'dumpprivkey',
+        'dumpwallet',
+        'encryptwallet',
+        'getaccount',
+        'getaccountaddress',
+        'getaddressesbyaccount',
+        'getbalance',
+        'getblock',
+        'getblockcount',
+        'getblockhash',
+        'getinfo',
+        'getnewaddress',
+        'getrawtransaction',
+        'getreceivedbyaccount',
+        'getreceivedbyaddress',
+        'gettransaction',
+        'gettxout',
+        'importprivkey',
+        'listaccounts',
+        'listreceivedbyaccount',
+        'listreceivedbyaddress',
+        'listsinceblock',
+        'listtransactions',
+        'listunspent',
+        'listlockunspent',
+        'lockunspent',
+        'sendfrom',
+        'sendmany',
+        'sendrawtransaction',
+        'sendtoaddress',
+        'setaccount',
+        'settxfee',
+        'signmessage',
+        'signrawtransaction',
+        'submitblock',
+        'validateaddress',
+        'verifymessage'
+    ]
 };
 
 module.exports = constants;

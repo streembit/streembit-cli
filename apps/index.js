@@ -28,6 +28,7 @@ const client = require("./client");
 const bcclient = require("./bcclient");
 const iot = require("./iot");
 const BlockchainHandler = require("./blockchain");
+const BlockchainCmdsHandler = require("./blockchain/cmds");
 const CmdHandler = require("./cmd");
 const dnshandler = require("./dns");
 const async = require('async');

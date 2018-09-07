@@ -22,6 +22,7 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
+const constants = require('libs/constants');
 const logger = require("streembit-util").logger;
 const prompt = require("prompt");
 
@@ -34,48 +35,7 @@ class BlockchainCmds {
         this.cb = callback;
         this.active = bc_config.run;
 
-        this.validCmd = [
-            'backupwallet',
-            'createrawtransaction',
-            'decoderawtransaction',
-            'dumpprivkey',
-            'dumpwallet',
-            'encryptwallet',
-            'getaccount',
-            'getaccountaddress',
-            'getaddressesbyaccount',
-            'getbalance',
-            'getblock',
-            'getblockcount',
-            'getblockhash',
-            'getinfo',
-            'getnewaddress',
-            'getrawtransaction',
-            'getreceivedbyaccount',
-            'getreceivedbyaddress',
-            'gettransaction',
-            'gettxout',
-            'importprivkey',
-            'listaccounts',
-            'listreceivedbyaccount',
-            'listreceivedbyaddress',
-            'listsinceblock',
-            'listtransactions',
-            'listunspent',
-            'listlockunspent',
-            'lockunspent',
-            'sendfrom',
-            'sendmany',
-            'sendrawtransaction',
-            'sendtoaddress',
-            'setaccount',
-            'settxfee',
-            'signmessage',
-            'signrawtransaction',
-            'submitblock',
-            'validateaddress',
-            'verifymessage'
-        ];
+        this.validCmd = constants.VALID_BLOCKCHAIN_CMDS;
     }
 
     run() {

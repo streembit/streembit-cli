@@ -25,7 +25,6 @@ const pinfo = require('./package.json');
 const version = pinfo.version;
 // resolve the directories for require
 const res = require('./resolvedir');
-
 const program = require('commander');
 const app = require('app');
 const utils = require("libs/utils");
@@ -72,40 +71,45 @@ try {
     let bcclient = false;
     if ((rpcuser && rpcuser.length) && (rpcpassword && rpcpassword.length)) {
         bcclient = { rpcuser, rpcpassword, rpcport, args };
+        if (bcclient.args.length < 1) {
+            console.log('\x1b[31m%s\x1b[0m', 'Error:', 'Blockchain client does not see a command to execute');
+            process.exit(1);
+        }
     }
 
     if (!bcclient && (!pwd || typeof pwd !== 'string' || pwd.length < 6)) {
         console.log('\x1b[31m%s\x1b[0m', 'Error:', 'Password required! Restart the app with --pwd PASSWORD or --pwd=PASSWORD');
         process.exit(1);
     }
+
     if (data) {
-        app.display_data(pwd);
+        return app.display_data(pwd);
     }
-    else if (backup) {
-        app.backup(pwd);
+
+    if (backup) {
+        return app.backup(pwd);
     }
-    else if (users) {
-        app.list_users(pwd);
+
+    if (users) {
+        return app.list_users(pwd);
     }
-    else if (whitelist) {
+
+    if (whitelist) {
         if (!addpk && !deluser) {
             throw new Error('-w command option requires user private key being provided');
-        } else if (
-            (addpk && addpk.length < 64) ||
-            (deluser && deluser.length < 64)
-        ) {
+        } else if (addpk && addpk.length < 64 || deluser && deluser.length < 64) {
             throw new Error('Invalid public key');
         }
 
-        app.whitelist_update(pwd, addpk || deluser, !!deluser);
+        return app.whitelist_update(pwd, addpk || deluser, !!deluser);
     }
-    else if (deluser) {
-        app.delete_user(pwd);
+
+    if (deluser) {
+        return app.delete_user(pwd);
     }
-    else {
-        app(port, ip, pwd, !!cmd, bcclient);
-    }
+
+    return app(port, ip, pwd, !!cmd, bcclient);
 }
 catch (e) {
-    console.log("app command handler error: " + e.message);
+    console.log('\x1b[31m%s\x1b[0m', 'app command handler error: ' + e.message);
 }
