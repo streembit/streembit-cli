@@ -67,7 +67,7 @@ class PeerClient{
             if (!result && errormsg) {
                 callback(errormsg);
             }
-            else {                
+            else {
                 callback(null, response);
             }
         });
@@ -98,6 +98,22 @@ class PeerClient{
             logger.debug("PUT for key " + key + " succeeded");
 
             callback(null, result);
+        });
+    }
+
+    bcclient(reqBody, options, callback) {
+        const cmd = JSON.stringify(reqBody);
+
+        options.headers = {
+            'streembit-bc-msg': 'true'
+        };
+
+        HTTPTransport.write(cmd, options, "/", function (err, response) {
+            if (err) {
+                callback(err)
+            }
+
+            callback(null, response);
         });
     }
 }

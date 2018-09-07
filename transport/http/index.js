@@ -1,21 +1,21 @@
 /*
- 
-This file is part of Streembit application. 
-Streembit is an open source project to create a real time communication system for humans and machines. 
 
-Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+This file is part of Streembit application.
+Streembit is an open source project to create a real time communication system for humans and machines.
+
+Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation, either version 3.0 of the License, or (at your option) any later version.
 
-Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with Streembit software.  
+You should have received a copy of the GNU General Public License along with Streembit software.
 If not, see http://www.gnu.org/licenses/.
- 
+
 -------------------------------------------------------------------------------------------------------------------------
 Author: Streembit team
 Copyright (C) 2018 The Streembit software development team
--------------------------------------------------------------------------------------------------------------------------  
+-------------------------------------------------------------------------------------------------------------------------
 */
 
 'use strict';
@@ -46,8 +46,8 @@ class HTTPTransport {
         this.server = 0;
         this.port = options.port || constants.DEFAULT_STREEMBIT_PORT;
         this.islistening = false;
-        this.max_connections = options.max_connections || 250; 
-    }  
+        this.max_connections = options.max_connections || 250;
+    }
 
     static get newid() {
         if (messageid > 100000) {
@@ -81,19 +81,8 @@ class HTTPTransport {
         res.setHeader('Access-Control-Allow-Credentials', 'true');
     };
 
-    static getMsgHeader(request) {
-        const isKad = !!request.headers['x-kad-message-id'];
-        const isBlockchain = !!request.headers['streembit-bc-msg'];
-
-        return { isKad, isBlockchain };
-    }
-
-    static chooseMessageHandler(header, message, req, res) {
-        return header.isKad
-            ? events.emit("kad_message", message, req, res)
-            : (header.isBlockchain
-                ? events.emit("bc_message", message, req, res)
-                : events.emit(constants.ONCLIENTREQUEST, { req, res, message }));
+    static iskadmsg(request) {
+        return !!request.headers['x-kad-message-id'];
     }
 
     /*
@@ -122,14 +111,30 @@ class HTTPTransport {
                 message = JSON.parse(payload);
             }
             catch (err) {
-            }            
+            }
 
-            // for POST method must be a valid message 
+            // for POST method must be a valid message
             if (!message) {
                 throw new Error("invalid message");
             }
 
-            return this.chooseMessageHandler(this.getMsgHeader(req), message, req, res);
+            // this is KAD message, let kad transport take care about it
+            if (this.iskadmsg(req)) {
+                return events.emit(
+                    "kad_message",
+                    message,
+                    req,
+                    res
+                );
+            }
+
+            // this is a client request, the HTTP client request handler will get it
+            var data = {
+                req: req,
+                res: res,
+                message: message
+            };
+            events.emit(constants.ONCLIENTREQUEST, data);
 
             //
         }
@@ -195,11 +200,11 @@ class HTTPTransport {
                     payload += chunk.toString();
                 });
 
-                res.on('error', function (err) {                    
+                res.on('error', function (err) {
                     callback(err);
                 });
 
-                res.on('end', function () {  
+                res.on('end', function () {
                     if (status != 200) {
                         callback(status + " " + statusmsg);
                     }
@@ -207,7 +212,7 @@ class HTTPTransport {
                         callback(null, payload);
                     }
                 });
-            }            
+            }
 
             var options = {
                 host: target.host,
@@ -215,6 +220,10 @@ class HTTPTransport {
                 port: target.port,
                 method: 'POST'
             };
+
+            if (target.hasOwnProperty('headers')) {
+                options.headers = target.headers;
+            }
 
             var isssl = config.transport.ssl;
             if (target.protocol === 'http') {
@@ -242,7 +251,7 @@ class HTTPTransport {
             });
 
             req.write(message);
-            req.end();        
+            req.end();
 
             //
         }

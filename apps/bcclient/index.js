@@ -49,6 +49,7 @@ class BcCmdHandler {
 
         if (!~constants.VALID_BLCOKCHAIN_CMDS.indexOf(this.command)) {
             console.error('This is not the blockchain command');
+            this.helper();
             process.exit(1);
         }
 
@@ -61,26 +62,32 @@ class BcCmdHandler {
                 user: this.rpcuser,
                 password: this.rpcpassword,
                 command: this.command,
-                params: this.params || null
-            }
-            console.log('-------------')
-            console.log('BC CLIENT REQ:')
-            console.log(reqBody)
-            console.log('Sending to:', this.rpcport, this.rpchost);
-            console.log('-------------')
+                params: this.params || []
+            };
+
+            const reqDestination = {
+                host: this.rpchost,
+                port: this.rpcport
+            };
+
+            peerclient.bcclient(reqBody, reqDestination, (err, resp) => {
+                if (err) {
+                    return logger.error('Blockchain client failed: %j', err);
+                }
+
+                logger.info('Response from Blockchain server:', resp);
+            });
+
             callback();
         } catch (err) {
-            callback("CMD handler error: " + err.message);
+            callback('Blockchain client handler error: ' + err.message);
         }
     }
 
     helper() {
         console.log('-------------------');
         console.group('\x1b[34m', 'Blockchain Client Commands:');
-        console.log('bc', ' -- Blockchain commands');
-        console.log('ac', ' -- Account management commands');
-        console.log('usr', ' -- Users management commands');
-        console.log('dev', ' -- IoT devices management commands');
+        console.log('backupwallet', '<path_to_save>', ' -- Safely copies wallet.dat to provided a path with filename.');
         // etc
         console.groupEnd();
         console.log('-------------------');
