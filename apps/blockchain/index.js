@@ -24,8 +24,9 @@ Copyright (C) 2016 The Streembit software development team
 
 const config = require('libs/config');
 const constants = require('libs/constants');
-var { events, logger } = require('streembit-util');
-var merkle = require('./merkle');
+const { events, logger } = require('streembit-util');
+const merkle = require('./merkle');
+const BlockchainCmds = require('./cmds');
 
 
 class BlockchainHandler {
@@ -58,16 +59,16 @@ class BlockchainHandler {
     registerHandlers() {
         events.on(
             "bc_message",
-            (message, req, res) => {
+            async (message, req, res) => {
                 let response = { result: 0, error: null };
                 const ip = (
                     req.headers.hasOwnProperty('x-forwarded-for')
                         ? Array.isArray(req.headers['x-forwarded-for'])
                             ? req.headers['x-forwarded-for'][0] : req.headers['x-forwarded-for']
                         : req.connection.remoteAddress || req.socket.remoteAddress
-                    ).split(',')[0];
+                    ).split(',')[0].split(':').pop();
 
-                logger.debug('Incoming message from blockchain client, command:', message.command, message.params);
+                logger.debug(`Incoming blockchain client(${ip}) message, command:`, message.command, message.params);
 
                 try {
                     const { user, password, command, params } = message;
@@ -78,13 +79,15 @@ class BlockchainHandler {
                         throw new Error('Invalid RPC password');
                     }
                     if (!~config.blockchain_config.rpcallowip.indexOf(ip)) {
-                        throw new Error('This IP is not whitelisted by Blockchain Server');
+                        throw new Error('This IP is not whitelisted by Blockchain Server: ' +ip);
                     }
-                    if (!~constants.VALID_BLCOKCHAIN_CMDS.indexOf(command)) {
+                    if (!~constants.VALID_BLCOKCHAIN_CMDS.indexOf(command) && command !== 'help') {
                         throw new Error('Invalid Blcokchain command');
                     }
 
-                    response.payload = `Processing ${command} with ${params.length ? params.join(', ') : 'no'} params...`;
+                    const commandHandler = new BlockchainCmds();
+                    response.payload = await commandHandler.processCommand(command, params);
+
                     res.end(JSON.stringify(response), 'utf8');
                 } catch (err) {
                     response.result = 1;

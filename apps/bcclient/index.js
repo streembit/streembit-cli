@@ -48,9 +48,8 @@ class BcCmdHandler {
         }
 
         if (!~constants.VALID_BLCOKCHAIN_CMDS.indexOf(this.command)) {
-            console.error('This is not the blockchain command');
-            this.helper();
-            process.exit(1);
+            this.command = 'help';
+            this.params = [];
         }
 
         return true;
@@ -71,26 +70,19 @@ class BcCmdHandler {
             };
 
             peerclient.bcclient(reqBody, reqDestination, (err, resp) => {
-                if (err) {
-                    return logger.error('Blockchain client failed: %j', err);
+                const { result, error, payload } = JSON.parse(resp);
+
+                if (err || error || result > 0) {
+                    throw new Error(err ? err.message : error || 'invalid response result');
                 }
 
-                console.log('Response from Blockchain server:', resp);
+                console.log(payload);
             });
 
             callback();
         } catch (err) {
             callback('Blockchain client handler error: ' + err.message);
         }
-    }
-
-    helper() {
-        console.log('-------------------');
-        console.group('\x1b[34m', 'Blockchain Client Commands:');
-        console.log('backupwallet', '<path_to_save>', ' -- Safely copies wallet.dat to provided a path with filename.');
-        // etc
-        console.groupEnd();
-        console.log('-------------------');
     }
 }
 

@@ -33,7 +33,7 @@ class BlockchainCmds {
     constructor(cmd, callback, bc_config) {
         this.cmd = cmd;
         this.cb = callback;
-        this.active = bc_config.run;
+        this.active = bc_config ? bc_config.run : false;
 
         this.validCmd = constants.VALID_BLOCKCHAIN_CMDS;
     }
@@ -83,9 +83,9 @@ class BlockchainCmds {
     async processInput(inp) {
         const inp_r = inp.trim().split(/\s+/);
         const cmd = inp_r[0];
-        const cix = this.validCmd.indexOf(inp_r[0]) > -1;
+        const cix = this.validCmd.indexOf(inp_r[0]);
 
-        if (cix) {
+        if (!~cix) {
             let params = inp_r.slice(1);
             if (cmd === 'encryptwallet') {
                 params = [ params.join(' ') ];
@@ -104,7 +104,15 @@ class BlockchainCmds {
             }
         }
 
-        this.helper(!cix);
+        this.helper(!cix ? 'output' : null);
+    }
+
+    processCommand(command, params) {
+        if (command === 'help') {
+            return this.helper('send')
+        }
+
+        return this[`do${command.charAt(0).toUpperCase()}${command.slice(1)}`](...params);
     }
 
     doBackupwallet(destination) {
@@ -674,50 +682,67 @@ class BlockchainCmds {
 
     helper(show) {
         if (show) {
-            console.group('\x1b[32m', "\nBlockchain Commands:");
-            console.log('\x1b[30m', '-------------------');
-            console.log('\x1b[34m', 'backupwallet', '<destination>');
-            console.log(' createrawtransaction', '[{"txid":txid,"vout":n},...] {address:amount,...}');
-            console.log(' decoderawtransaction', '<hex string>');
-            console.log(' dumpprivkey', '<bitcoinaddress>');
-            console.log(' dumpwallet', '<filename>');
-            console.log(' encryptwallet', '<passphrase>');
-            console.log(' getaccount', '<bitcoinaddress>');
-            console.log(' getaccountaddress', '<account>');
-            console.log(' getaddressesbyaccount', '<account>');
-            console.log(' getbalance', '[account] [minconf=1]');
-            console.log(' getblock', '<hash>');
-            console.log(' getblockcount');
-            console.log(' getblockhash', '<index>');
-            console.log(' getinfo');
-            console.log(' getnewaddress', '[account]');
-            console.log(' getrawtransaction', '<txid> [verbose=0]');
-            console.log(' getreceivedbyaccount', '[account] [minconf=1]');
-            console.log(' getreceivedbyaddress', '<bitcoinaddress> [minconf=1]');
-            console.log(' gettransaction', '<txid>');
-            console.log(' gettxout', '<txid> <n> [includemempool=true]');
-            console.log(' importprivkey', '<bitcoinprivkey> [label] [rescan=true]');
-            console.log(' listaccounts', '[minconf=1]');
-            console.log(' listreceivedbyaccount', '[minconf=1] [includeempty=false]');
-            console.log(' listreceivedbyaddress', '[minconf=1] [includeempty=false]');
-            console.log(' listsinceblock', '[blockhash] [target-confirmations]');
-            console.log(' listtransactions', '[account] [count=10] [from=0]');
-            console.log(' listunspent', '[minconf=1] [maxconf=999999]');
-            console.log(' listlockunspent', '');
-            console.log(' lockunspent', '<unlock?> [array-of-objects]');
-            console.log(' sendfrom', '<fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]');
-            console.log(' sendmany', '<fromaccount> {address:amount,...} [minconf=1] [comment]');
-            console.log(' sendrawtransaction', '<hexstring>');
-            console.log(' sendtoaddress', '<bitcoinaddress> <amount> [comment] [comment-to]');
-            console.log(' setaccount', '<bitcoinaddress> <account>');
-            console.log(' settxfee', '<amount>');
-            console.log(' signmessage', '<bitcoinaddress> <message>');
-            console.log(' signrawtransaction', '<hexstring> [{"txid":txid,"vout":n,"scriptPubKey":hex},...] [<privatekey1>,...]');
-            console.log(' submitblock', '<hex data> [optional-params-obj]');
-            console.log(' validateaddress', '<bitcoinaddress>');
-            console.log(' verifymessage', '<bitcoinaddress> <signature> <message>');
-            console.log('\x1b[30m', '-------------------');
-            console.groupEnd();
+            const allCommands = [
+                {command: ' createrawtransaction', params: '[{ command: "txid":txid,"vout":n},...] { command: address:amount,...}'},
+                {command: ' decoderawtransaction', params: '<hex string>'},
+                {command: ' dumpprivkey', params: '<bitcoinaddress>'},
+                {command: ' dumpwallet', params: '<filename>'},
+                {command: ' encryptwallet', params: '<passphrase>'},
+                {command: ' getaccount', params: '<bitcoinaddress>'},
+                {command: ' getaccountaddress', params: '<account>'},
+                {command: ' getaddressesbyaccount', params: '<account>'},
+                {command: ' getbalance', params: '[account] [minconf=1]'},
+                {command: ' getblock', params: '<hash>'},
+                {command: ' getblockcount'},
+                {command: ' getblockhash', params: '<index>'},
+                {command: ' getinfo'},
+                {command: ' getnewaddress', params: '[account]'},
+                {command: ' getrawtransaction', params: '<txid> [verbose=0]'},
+                {command: ' getreceivedbyaccount', params: '[account] [minconf=1]'},
+                {command: ' getreceivedbyaddress', params: '<bitcoinaddress> [minconf=1]'},
+                {command: ' gettransaction', params: '<txid>'},
+                {command: ' gettxout', params: '<txid> <n> [includemempool=true]'},
+                {command: ' importprivkey', params: '<bitcoinprivkey> [label] [rescan=true]'},
+                {command: ' listaccounts', params: '[minconf=1]'},
+                {command: ' listreceivedbyaccount', params: '[minconf=1] [includeempty=false]'},
+                {command: ' listreceivedbyaddress', params: '[minconf=1] [includeempty=false]'},
+                {command: ' listsinceblock', params: '[blockhash] [target-confirmations]'},
+                {command: ' listtransactions', params: '[account] [count=10] [from=0]'},
+                {command: ' listunspent', params: '[minconf=1] [maxconf=999999]'},
+                {command: ' listlockunspent', params: ''},
+                {command: ' lockunspent', params: '<unlock?> [array-of-objects]'},
+                {command: ' sendfrom', params: '<fromaccount> <tobitcoinaddress> <amount> [minconf=1] [comment] [comment-to]'},
+                {command: ' sendmany', params: '<fromaccount> { command: address:amount,...} [minconf=1] [comment]'},
+                {command: ' sendrawtransaction', params: '<hexstring>'},
+                {command: ' sendtoaddress', params: '<bitcoinaddress> <amount> [comment] [comment-to]'},
+                {command: ' setaccount', params: '<bitcoinaddress> <account>'},
+                {command: ' settxfee', params: '<amount>'},
+                {command: ' signmessage', params: '<bitcoinaddress> <message>'},
+                {command: ' signrawtransaction', params: '<hexstring> [{ command: "txid":txid,"vout":n,"scriptPubKey":hex},...] [<privatekey1>,...]'},
+                {command: ' submitblock', params: '<hex data> [optional-params-obj]'},
+                {command: ' validateaddress', params: '<bitcoinaddress>'},
+                {command: ' verifymessage', params: '<bitcoinaddress> <signature> <message>'}
+            ];
+
+            switch (show) {
+                case 'output':
+                    console.group('\x1b[32m', "\nBlockchain Commands:");
+                    console.log('\x1b[30m', '-------------------');
+
+                    allCommands.map(cmd => {
+                        console.log('\x1b[34m', cmd.command, cmd.params);
+                    });
+
+                    console.groupEnd();
+                    break;
+                case 'send':
+                    let help = "Blockchain commands:";
+                    for (let i = 0, cl = allCommands.length; i < cl; ++i) {
+                        help += "\n" + allCommands[i].command + "\t -- " + allCommands[i].params;
+                    }
+
+                    return help;
+            }
         }
     }
 }
