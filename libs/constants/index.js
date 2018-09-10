@@ -67,6 +67,7 @@ var constants = {
     PUBSUB_IOT: "IOT",
 
     VALID_BLCOKCHAIN_CMDS: [
+        'addmultisigaddress',
         'backupwallet',
         'createrawtransaction',
         'decoderawtransaction',
