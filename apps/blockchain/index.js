@@ -60,6 +60,12 @@ class BlockchainHandler {
             "bc_message",
             (message, req, res) => {
                 let response = { result: 0, error: null };
+                const ip = (
+                    req.headers.hasOwnProperty('x-forwarded-for')
+                        ? Array.isArray(req.headers['x-forwarded-for'])
+                            ? req.headers['x-forwarded-for'][0] : req.headers['x-forwarded-for']
+                        : req.connection.remoteAddress || req.socket.remoteAddress
+                    ).split(',')[0];
 
                 logger.debug('Incoming message from blockchain client, command:', message.command, message.params);
 
@@ -71,6 +77,9 @@ class BlockchainHandler {
                     if (password !== config.blockchain_config.rpcpassword) {
                         throw new Error('Invalid RPC password');
                     }
+                    if (!~config.blockchain_config.rpcallowip.indexOf(ip)) {
+                        throw new Error('This IP is not whitelisted by Blockchain Server');
+                    }
                     if (!~constants.VALID_BLCOKCHAIN_CMDS.indexOf(command)) {
                         throw new Error('Invalid Blcokchain command');
                     }
@@ -80,6 +89,8 @@ class BlockchainHandler {
                 } catch (err) {
                     response.result = 1;
                     response.error = err.message;
+
+                    logger.error('Blockchain Server error: %j', err);
 
                     return res.end(JSON.stringify(response), 'utf8');
                 }
