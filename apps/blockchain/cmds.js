@@ -115,6 +115,28 @@ class BlockchainCmds {
         return this[`do${command.charAt(0).toUpperCase()}${command.slice(1)}`](...params);
     }
 
+    doAddmultisigaddress(n, keys, account) {
+        return new Promise((resolve, reject) => {
+            if (!Number.isInteger(n)) {
+                return reject('Invalid nrequired-to-sign value');
+            }
+
+            try {
+                keys = JSON.parse(keys);
+            } catch (err) {
+                return reject('Invalid keys');
+            }
+
+            for (let i = 0, kl = keys.length; i < kl; ++i) {
+                if (!this.validateHex(keys[i])) {
+                    return reject(`Invalid key ${keys[i]}`);
+                }
+            }
+
+            resolve('addmultisigaddress');
+        });
+    }
+
     doBackupwallet(destination) {
         return new Promise((resolve, reject) => {
             if (!this.validateDestination(destination)) {
@@ -683,6 +705,7 @@ class BlockchainCmds {
     helper(show) {
         if (show) {
             const allCommands = [
+                {command: ' addmultisigaddress', params: '<nrequired> <\'["key","key"]\'> [account]'},
                 {command: ' createrawtransaction', params: '[{ command: "txid":txid,"vout":n},...] { command: address:amount,...}'},
                 {command: ' decoderawtransaction', params: '<hex string>'},
                 {command: ' dumpprivkey', params: '<bitcoinaddress>'},
