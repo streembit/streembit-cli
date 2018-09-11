@@ -37,7 +37,7 @@ describe("WSBD database module libs/database/wsdb", function () {
     }
 
     before(function (done) {
-        config.init(ws_config.port, ws_config.host, function() {
+        config.init(ws_config.port, ws_config.host, false, false, function() {
             config.database_name = ws_config.database;
             database.init(dbschema, async function () {
                 wsdb = new Database();
