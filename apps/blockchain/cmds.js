@@ -451,6 +451,9 @@ class BlockchainCmds {
             })) {
                 return reject('Invalid address value in addresses object');
             }
+            if (isNaN(amount)) {
+                return reject('Invalid amount');
+            }
             if (isNaN(minconf)) {
                 minconf = 1;
             }
@@ -601,11 +604,11 @@ class BlockchainCmds {
     }
 
     validateDestination(destination) {
-        return destination && /^[a-z0-9\/ :\\\\._\$#@\-]{4,}$/i.test(destination);
+        return destination && /^[a-z0-9\/ :\\\\._\$#@\-]{2,}$/i.test(destination);
     }
 
     validatePlainText(passphrase) {
-        return passphrase && /^[a-z0-9 ]{2,}$/i.test(passphrase);
+        return passphrase && /^[a-z0-9 ]{10,}$/i.test(passphrase);
     }
 
     validateHex(hex) {

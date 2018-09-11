@@ -61,10 +61,13 @@ describe("CMD Handlers", function () {
         const plainTxt = "Eeny meeny miny moe Catch a tiger by the toe";
         const validHex = "a9f98243d3c1bdff8ea4bbc14874e971ac6fc63ce7542efaa2baae0981029846";
         const destination = "/Users/domingo/docs/save\ _me\ -files/";
+        const invDestination = "mal<script>/?vilian%/`$boyz`/";
         const txid_vout_obj = "5B7B2274786964223A223533373437323635363536643632363937343230363236633666363336623633363836313639366532303637363536653635373336393733323036323663366636333662222C22766F7574223A307D2C7B2274786964223A2261353639373163326665646138313931626166646633383932313936623138366532653833313131346138326562363136663963646335333265316566623965222C22766F7574223A317D5D";
         const txid_vout_scrpubkey_obj = "5B7B2274786964223A223533373437323635363536643632363937343230363236633666363336623633363836313639366532303637363536653635373336393733323036323663366636333662222C22766F7574223A312C227363726970745075624B6579223A2239656662316532653533646339633666363165623832346131313331653865323836623139363231383966336664626139313831646166656332373136396135227D2C7B2274786964223A2261353639373163326665646138313931626166646633383932313936623138366532653833313131346138326562363136663963646335333265316566623965222C22766F7574223A322C227363726970745075624B6579223A223533373437323635363536643632363937343230363236633666363336623633363836313639366532303637363536653635373336393733323036323663366636333662227D5D";
         const addr_amt_r = "7B2261396639383234336433633162646666386561346262633134383734653937316163366663363363653735343265666161326261616530393831303239383436223A312E3233342C2237363830616465633865616263616261633637366265396538333835346164653062643232636462223A327D";
         const addr_r = "5B2261396639383234336433633162646666386561346262633134383734653937316163366663363363653735343265666161326261616530393831303239383436222C2237363830616465633865616263616261633637366265396538333835346164653062643232636462225D";
+        const invHex = "16A68542Z14YQ2F5TU";
+        const invBills = { '16A68542Z14YQ2F5TU': 22.34 };
         
         it('should show help for help command', function () {
             const help = bc.processCommand('help', []);
@@ -83,6 +86,12 @@ describe("CMD Handlers", function () {
                     done(new Error('Expected non-integer to reject in doAddmultisigaddress'))
                 }).catch(err => {
                     assert.isDefined(err, 'Error correctly thrown');
+                });
+                
+                bc.doAddmultisigaddress(2, `["${invHex}"]`).then(res => {
+                    done(new Error('Expected non-hex key to reject in doAddmultisigaddress'))
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
                     done();
                 });
             });
@@ -92,9 +101,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doBackupwallet(destination).then(res => {
                     assert.equal(res, 'backupwallet');
-                    done();
                 }).catch(err => {
                     done(new Error(err));
+                });
+                
+                bc.doBackupwallet(invDestination).then(res => {
+                    done(new Error('Expected valid path to save wallet'))
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -103,9 +118,21 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doCreaterawtransaction(txid_vout_obj, addr_amt_r).then(res => {
                     assert.equal(res, 'createrawtransaction');
-                    done();
                 }).catch(err => {
                     done(new Error(err));
+                });
+                
+                bc.doCreaterawtransaction(invHex, addr_amt_r).then(res => {
+                    done(new Error('Expected valid hex of txn IDs'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+                
+                bc.doCreaterawtransaction(invHex, invBills).then(res => {
+                    done(new Error('Expected valid hex in keys of bills'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -114,9 +141,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doDecoderawtransaction(validHex).then(res => {
                     assert.equal(res, 'decoderawtransaction');
-                    done();
                 }).catch(err => {
                     done(new Error(err));
+                });
+    
+                bc.doDecoderawtransaction(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -125,9 +158,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doDumpprivkey(validHex).then(res => {
                     assert.equal(res, 'dumpprivkey');
-                    done();
                 }).catch(err => {
                     done(new Error(err));
+                });
+    
+                bc.doDumpprivkey(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -136,9 +175,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doDumpwallet(destination).then(res => {
                     assert.equal(res, 'dumpwallet');
-                    done();
                 }).catch(err => {
                     done(new Error(err));
+                });
+    
+                bc.doDumpprivkey(invDestination).then(res => {
+                    done(new Error('Expected valid destination'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -147,9 +192,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doEncryptwallet(plainTxt).then(res => {
                     assert.equal(res, 'encryptwallet');
-                    done();
                 }).catch(err => {
                     done(new Error(err));
+                });
+    
+                bc.doEncryptwallet(destination).then(res => {
+                    done(new Error('Expected plain text'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -158,9 +209,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doGetaccount(validHex).then(res => {
                     assert.equal(res, 'getaccount');
-                    done();
                 }).catch(err => {
                     done(new Error(err));
+                });
+    
+                bc.doGetaccount(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -169,9 +226,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doGetaccountaddress(plainTxt).then(res => {
                     assert.equal(res, 'getaccountaddress');
-                    done();
                 }).catch(err => {
                     done(new Error(err));
+                });
+    
+                bc.doGetaccountaddress(destination).then(res => {
+                    done(new Error('Expected plain text'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -180,9 +243,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doGetaddressesbyaccount(plainTxt).then(res => {
                     assert.equal(res, 'getaddressesbyaccount');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doGetaddressesbyaccount(destination).then(res => {
+                    done(new Error('Expected plain text'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -194,11 +263,18 @@ describe("CMD Handlers", function () {
                 }).catch(err => {
                     assert.isNotOk(err, 'Promise error');
                 });
+                
                 bc.doGetbalance().then(res => {
                     assert.equal(res, 'getbalance total available');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doGetaddressesbyaccount(destination).then(res => {
+                    done(new Error('Expected plain text'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -207,9 +283,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doGetblock(validHex).then(res => {
                     assert.equal(res, 'getblock');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doGetblock(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -229,9 +311,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doGetblockhash(123).then(res => {
                     assert.equal(res, 'getblockhash');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doGetblockhash(plainTxt).then(res => {
+                    done(new Error('Expected an integer as an index'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -267,9 +355,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doGetrawtransaction(validHex).then(res => {
                     assert.equal(res, 'getrawtransaction');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doGetrawtransaction(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -278,9 +372,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doGetreceivedbyaccount(plainTxt).then(res => {
                     assert.equal(res, 'getreceivedbyaccount');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doGetreceivedbyaccount(destination).then(res => {
+                    done(new Error('Expected plain text'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -289,9 +389,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doGetreceivedbyaddress(validHex).then(res => {
                     assert.equal(res, 'getreceivedbyaddress');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doGetrawtransaction(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -300,9 +406,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doGettransaction(validHex).then(res => {
                     assert.equal(res, 'gettransaction');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doGettransaction(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -311,9 +423,21 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doGettxout(validHex, 10, true).then(res => {
                     assert.equal(res, 'gettxout');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doGettxout(invHex, 10, true).then(res => {
+                    done(new Error('Expected valid hex as first param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doGettxout(validHex, 'falzzy', true).then(res => {
+                    done(new Error('Expected integer as second param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -322,9 +446,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doImportprivkey(validHex, plainTxt, true).then(res => {
                     assert.equal(res, 'importprivkey');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doImportprivkey(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -366,9 +496,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doListsinceblock(validHex).then(res => {
                     assert.equal(res, 'listsinceblock');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doListsinceblock(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -377,9 +513,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doListtransactions(plainTxt).then(res => {
                     assert.equal(res, 'listtransactions');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doListtransactions(destination).then(res => {
+                    done(new Error('Expected plain text'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -410,9 +552,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doLockunspent(txid_vout_obj).then(res => {
                     assert.equal(res, 'lockunspent');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doLockunspent(invHex).then(res => {
+                    done(new Error('Expected valid hex to be parsed to object'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -421,9 +569,27 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doSendfrom(plainTxt, validHex, 4, 2).then(res => {
                     assert.equal(res, 'sendfrom');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doSendfrom(destination, validHex, 4, 2).then(res => {
+                    done(new Error('Expected plain text as the first param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doSendfrom(plainTxt, invHex, 4, 2).then(res => {
+                    done(new Error('Expected valid hex as the second param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doSendfrom(plainTxt, invHex, 'falzzy', 2).then(res => {
+                    done(new Error('Expected integer as the third param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -432,9 +598,27 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doSendmany(plainTxt, addr_r, 5).then(res => {
                     assert.equal(res, 'sendmany');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doSendmany(destination, addr_r, 5).then(res => {
+                    done(new Error('Expected plain text as the first param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doSendmany(plainTxt, invBills, 5).then(res => {
+                    done(new Error('Expected valid hex as the second param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doSendmany(plainTxt, invBills, 'falzzy').then(res => {
+                    done(new Error('Expected integer as the third param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -443,9 +627,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doSendrawtransaction(validHex).then(res => {
                     assert.equal(res, 'sendrawtransaction');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doSendrawtransaction(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -454,9 +644,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doSendtoaddress(validHex, 6).then(res => {
                     assert.equal(res, 'sendtoaddress');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doSendtoaddress(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -465,9 +661,21 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doSetaccount(validHex, plainTxt).then(res => {
                     assert.equal(res, 'setaccount');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doSetaccount(invHex, plainTxt).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doSetaccount(validHex, destination).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -476,9 +684,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doSettxfee(7).then(res => {
                     assert.equal(res, 'settxfee');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doSettxfee('falzzy').then(res => {
+                    done(new Error('Expected integer'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -487,9 +701,21 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doSignmessage(validHex, plainTxt).then(res => {
                     assert.equal(res, 'signmessage');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doSignmessage(invHex, plainTxt).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doSignmessage(validHex, destination).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -498,9 +724,27 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doSignrawtransaction(validHex, txid_vout_scrpubkey_obj, addr_r).then(res => {
                     assert.equal(res, 'signrawtransaction');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doSignrawtransaction(invHex, txid_vout_scrpubkey_obj, addr_r).then(res => {
+                    done(new Error('Expected valid hex as the first param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doSignrawtransaction(validHex, invBills, addr_r).then(res => {
+                    done(new Error('Expected valid hex as the second param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doSignrawtransaction(validHex, txid_vout_scrpubkey_obj, invBills).then(res => {
+                    done(new Error('Expected valid hex as the third param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -509,9 +753,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doSubmitblock(validHex, addr_r).then(res => {
                     assert.equal(res, 'submitblock');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doSubmitblock(invHex).then(res => {
+                    done(new Error('Expected valid hex as the first param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -520,9 +770,15 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doValidateaddress(validHex).then(res => {
                     assert.equal(res, 'validateaddress');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doValidateaddress(invHex).then(res => {
+                    done(new Error('Expected valid hex'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
@@ -531,9 +787,27 @@ describe("CMD Handlers", function () {
             stdout = capcon.interceptStdout(function capture() {
                 bc.doVerifymessage(validHex, validHex, plainTxt).then(res => {
                     assert.equal(res, 'verifymessage');
-                    done();
                 }).catch(err => {
                     done(err);
+                });
+    
+                bc.doVerifymessage(invHex, validHex, plainTxt).then(res => {
+                    done(new Error('Expected valid hex as the first param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doVerifymessage(validHex, invHex, plainTxt).then(res => {
+                    done(new Error('Expected valid hex as the second param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                });
+    
+                bc.doVerifymessage(validHex, invHex, destination).then(res => {
+                    done(new Error('Expected plain text as the third param'));
+                }).catch(err => {
+                    assert.isDefined(err, 'Error correctly thrown');
+                    done();
                 });
             });
         });
