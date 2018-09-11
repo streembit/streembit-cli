@@ -22,90 +22,8 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-const constants = require('libs/constants');
-const logger = require("streembit-util").logger;
-const prompt = require("prompt");
-
-const isBoolean = val => 'boolean' === typeof val;
-
-
 class BlockchainCmds {
-    constructor(cmd, callback, bc_config) {
-        this.cmd = cmd;
-        this.cb = callback;
-        this.active = bc_config ? bc_config.run : false;
-
-        this.validCmd = constants.VALID_BLOCKCHAIN_CMDS;
-    }
-
-    run() {
-        if (!this.active) {
-            console.log("Command line interface error: BC module is not active");
-            return this.cb("Command line interface error: BC module is not active");
-        }
-
-        logger.info("Run blockchain commands handler");
-
-        this.command();
-    }
-
-    command() {
-        const schema = {
-            properties: {
-                cmd: {
-                    description: 'Enter blockchain command',
-                    type: 'string',
-                    pattern: /^[a-z0-9 \/\\\#&%@\.,:_\$#&%@\+\-]{6,}$/i,
-                    message: 'Invalid command',
-                    required: true
-                },
-            }
-        };
-
-        prompt.message = "";
-
-        prompt.start();
-
-        prompt.get(schema, async (err, result) => {
-            if (err) {
-                if (err.message === 'canceled') { // ^C
-                    return this.cmd.run(this.cb);
-                }
-
-                throw new Error(err);
-            }
-
-            await this.processInput(result.cmd);
-            this.command();
-        });
-    }
-
-    async processInput(inp) {
-        const inp_r = inp.trim().split(/\s+/);
-        const cmd = inp_r[0];
-        const cix = this.validCmd.indexOf(inp_r[0]);
-
-        if (!~cix) {
-            let params = inp_r.slice(1);
-            if (cmd === 'encryptwallet') {
-                params = [ params.join(' ') ];
-            } else if (cmd === 'signmessage') {
-                params = [ params[0] || null, params[1] ? params.slice(1).join(' ') : null ];
-            } else if (cmd === 'verifymessage') {
-                params = [ params[0] || null, params[1] || null, params[2] ? params.slice(2).join(' ') : null ];
-            }
-
-            try {
-                const result = await this[`do${cmd.charAt(0).toUpperCase()}${cmd.slice(1)}`](...params);
-                console.log(result);
-            } catch (err) {
-                logger.error(err);
-                console.error('\x1b[31m%s\x1b[0m', '{error}:', err);
-            }
-        }
-
-        this.helper(!cix ? 'output' : null);
-    }
+    constructor() {}
 
     processCommand(command, params) {
         if (command === 'help') {
@@ -370,7 +288,7 @@ class BlockchainCmds {
             } else if (isNaN(n)) {
                 return reject('Invalid n');
             }
-            if (!isBoolean(includemempool)) {
+            if (typeof includemempool !== 'boolean') {
                 includemempool = true;
             }
 
@@ -386,7 +304,7 @@ class BlockchainCmds {
             if (!this.validatePlainText(label)) {
                 label = null;
             }
-            if (!isBoolean(rescan)) {
+            if (typeof rescan !== 'boolean') {
                 rescan = true;
             }
 
@@ -409,7 +327,7 @@ class BlockchainCmds {
             if (!Number.isInteger(minconf)) {
                 minconf = 1;
             }
-            if (!isBoolean(includeempty)) {
+            if (typeof includeempty !== 'boolean') {
                 includeempty = true;
             }
 
@@ -422,7 +340,7 @@ class BlockchainCmds {
             if (!Number.isInteger(minconf)) {
                 minconf = 1;
             }
-            if (!isBoolean(includeempty)) {
+            if (typeof includeempty !== 'boolean') {
                 includeempty = true;
             }
 
