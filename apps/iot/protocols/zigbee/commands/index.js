@@ -231,6 +231,35 @@ class ZigbeeCommands {
         return cmd;
     }
 
+    static writeCieAddress(txn, address64, address16) {
+        const gateway64 = zigbeegateway.address64;
+        if (!gateway64) {
+            throw new Error("invalid gateway IEEE address");
+        }        
+
+        const enrollbuf = Buffer.alloc(14);
+        // werite txn
+        enrollbuf.writeUInt8(txn, 0);
+        enrollbuf.writeUInt8(0x02, 2); // write attribute
+        enrollbuf.writeUInt16LE(0x0010, 3); // attribute identifier
+        enrollbuf.writeUInt8(0xf0, 5); // 0xf0 data type
+        // write the DstAddress
+        const dest64buf = ZigbeeCommands.swapEUI64toLittleEndian(gateway64);
+        dest64buf.copy(enrollbuf, 6);
+
+        const cmd = {
+            destination64: address64,
+            destination16: address16, 
+            sourceEndpoint: 0x00,           // ?????
+            destinationEndpoint: 0x00,      // ?????
+            clusterId: 0x0500,
+            profileId: 0x0104,
+            data: enrollbuf
+        };
+
+        return cmd;
+    }
+
     static readTemperature(address64, address16, destendpoint) {  
         var txn = ZDO_TXN_TEMPERATURE; 
         var cmd = {

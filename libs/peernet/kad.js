@@ -24,11 +24,14 @@ Copyright (C) 2017 The Streembit software development team
 const config = require("libs/config");
 const logger = require("streembit-util").logger;
 const db = require("streembit-db").instance;
-const kad = require('libs/kad');
+const kad = require('libs/kadence');
 const Account = require("libs/account");
 const utils = require("libs/utils");
 const async = require("async");
 const constants = require("libs/constants");
+const util = require('util');
+const assert = require('assert');
+const fs = require('fs');
 
 let instance = null;
 
@@ -39,7 +42,7 @@ class KadHandler {
             this.m_node = 0;
         }
 
-        return instance;        
+        return instance;
     }
 
     get node(){
@@ -53,7 +56,7 @@ class KadHandler {
     get(key, callback) {
         try {
             if (!this.node) {
-                throw new Error("the KAD node is not initialized")
+                throw new Error("the KAD node is not initialized");
             }
 
             this.node.get(key, callback);
@@ -67,7 +70,7 @@ class KadHandler {
     put(key, value, callback) {
         try {
             if (!this.node) {
-                throw new Error("the KAD node is not initialized")
+                throw new Error("the KAD node is not initialized");
             }
 
             logger.info("RMTP put to node");
@@ -76,6 +79,25 @@ class KadHandler {
         catch (err) {
             //logger.error("put error: %s", err.message)
             callback(err.message || err);
+        }
+    }
+
+    publish(msgtype, data) {
+        try {
+            this.node.quasarPublish(msgtype, data);
+        }
+        catch (err) {
+            logger.error("Node publish() error %j", err)
+        }
+    }
+
+    subscribe(msgtype, callback) {
+        try {
+            this.node.quasarSubscribe(msgtype, payload => {
+                callback(payload);
+            })
+        } catch (err) {
+            logger.error("Node subscribe() error %j", err)
         }
     }
 
@@ -93,7 +115,7 @@ class KadHandler {
                 var result = { seed: seed[1], error: null };
                 try {
                     logger.debug("connecting to seed " + seed[1].hostname + " port: " + seed[1].port);
-                    node.connect(seed, function (err) {
+                    node.join(seed, function (err) {
                         if (err) {
                             result.error = err;
                         }
@@ -126,59 +148,39 @@ class KadHandler {
                     callback("Failed to connect to any seed");
                 }
 
-                
+
             }
         );
     }
 
     init(options, callback) {
 
-        var account = new Account();
-        var bs58pk = account.bs58pk;
+        assert.ok(config.transport.kad.host && typeof config.transport.kad.host === "string" && config.transport.kad.host.length > 0, 'Invalid Kademlia host');
+        assert.ok(config.transport.kad.port && typeof config.transport.kad.port === "number" && config.transport.kad.port > 0, 'Invalid Kademlia port');
 
-        var contact_param = {
-            host: config.transport.host,
-            port: config.transport.port,
-            publickey: bs58pk
-        };       
+        const account = new Account();
+        var accountpk = account.accountpk;
+        assert.ok(accountpk && typeof accountpk === "string" && accountpk.length >= 40, 'Invalid account short public key');
 
-        var contact = kad.contacts.StreembitContact(contact_param);
-        logger.info('this contact object: ' + contact.toString());
-
-        var httpopts = {
+        const init_options = {
+            identity: accountpk, 
             logger: logger,
-            peermsgrcv: options.peermsgrcv
+            storage: db.getdb("streembitkv"),
+            contact: {
+                hostname: config.transport.kad.host,
+                port: config.transport.kad.port,
+            },
+            seeds: options.seeds
         };
+
         if (config.transport.ssl) {
-            httpopts.ssl = true;
+            init_options.contact.cert = fs.readFileSync(config.transport.cert);
+            init_options.contact.key = fs.readFileSync(config.transport.key);
+            init_options.contact.ca = fs.readFileSync(config.transport.ca);
         }
-        var transport = kad.transports.HTTP(contact, httpopts);
-        transport.after('open', function (next) {
-            // exit middleware stack if contact is blacklisted
-            logger.info('TCP peer connection is opened');
 
-            // otherwise pass on
-            next();
-        });
-       
-        // message validator
-        transport.before('receive', options.onKadMessage);
-
-        // handle errors from RPC
-        transport.on('error', options.onTransportError);
-
-        var seeds = utils.ensure_seeds(options.seeds);
-
-        var options = {
-            transport: transport,
-            logger: logger,
-            storage: db.getdb("streembitkv"), // streembit key-value database (leveldb)
-            seeds: seeds,
-            isseed: options.isseed,
-            config: config
-        };
-
-        kad.create(options, (err, peer) => {
+        var node = new kad.Node();
+        node.init(init_options, (err, peer, peercount) => {
             if (err) {
                 //  since the seed is the main module and it failed, the whole intialization failed so return the error
                 //  and the async waterflow will be terminated
@@ -189,11 +191,7 @@ class KadHandler {
             this.node = peer;
             callback();
         });
-
     }
-
 }
 
 module.exports.KadHandler = KadHandler;
-
-

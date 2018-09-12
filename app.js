@@ -1,19 +1,19 @@
 ﻿/*
- 
-This file is part of Streembit application. 
-Streembit is an open source project to create a real time communication system for humans and machines. 
 
-Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License 
+This file is part of Streembit application.
+Streembit is an open source project to create a real time communication system for humans and machines.
+
+Streembit is a free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
 as published by the Free Software Foundation, either version 3.0 of the License, or (at your option) any later version.
 
-Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of 
+Streembit is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License along with Streembit software.  
+You should have received a copy of the GNU General Public License along with Streembit software.
 If not, see http://www.gnu.org/licenses/.
- 
+
 -------------------------------------------------------------------------------------------------------------------------
-Author: Tibor Z Pardi 
+Author: Tibor Z Pardi
 Copyright (C) 2016 The Streembit software development team
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -25,8 +25,6 @@ Copyright (C) 2016 The Streembit software development team
 const program = require('commander');
 const path = require('path');
 const fs = require('fs');
-const crypto = require('crypto');
-const levelup = require('levelup');
 const async = require('async');
 const util = require('util');
 const assert = require('assert');
@@ -41,19 +39,19 @@ const events = require("streembit-util").events;
 const Users = require("libs/users");
 const HttpTransport = require("./transport/http");
 const WebSocket = require("./transport/ws");
-const ServicesHandler = require("./services");
 const dbschema = require("./dbschema");
 const WhitelistDB = require("libs/database/whitelistdb");
+const PubSub = require('libs/pubsub');
 const constants = require("libs/constants");
 
 // initialize the logger
-module.exports = exports = function (port, ip, password, cmd) {
+module.exports = exports = function (port, ip, password, cmd, bcclient) {
     try {
         async.waterfall(
             [
                 function (callback) {
                     try {
-                        config.init(port, ip, cmd, callback);
+                        config.init(port, ip, cmd, bcclient, callback);
                     }
                     catch (e) {
                         callback(e);
@@ -62,7 +60,7 @@ module.exports = exports = function (port, ip, password, cmd) {
                 function (callback) {
                     try {
                         var loglevel = config.log && config.log.level ? config.log.level : "debug";
-                        if (config.cmdinput) {
+                        if (config.cmdinput || config.bcclient) {
                             logger.init(loglevel, null, ['file']);
                         } else {
                             logger.init(loglevel);
@@ -75,9 +73,17 @@ module.exports = exports = function (port, ip, password, cmd) {
                     }
                 },
                 function (callback) {
+                    if (config.bcclient) {
+                        return callback();
+                    }
+
                     database.init(dbschema, callback);
                 },
                 function (callback) {
+                    if (config.bcclient) {
+                        return callback();
+                    }
+
                     try {
                         const account = new Account();
                         account.init(password, callback);
@@ -87,6 +93,10 @@ module.exports = exports = function (port, ip, password, cmd) {
                     }
                 },
                 function (callback) {
+                    if (config.bcclient) {
+                        return callback();
+                    }
+
                     var options = {
                         port: config.transport.port
                     };
@@ -94,6 +104,10 @@ module.exports = exports = function (port, ip, password, cmd) {
                     httptransport.init(callback);
                 },
                 function (callback) {
+                    if (config.bcclient) {
+                        return callback();
+                    }
+
                     try {
                         var tasks = new Tasks();
                         tasks.run(callback);
@@ -103,6 +117,10 @@ module.exports = exports = function (port, ip, password, cmd) {
                     }
                 },
                 function (callback) {
+                    if (config.bcclient) {
+                        return callback();
+                    }
+
                     try {
                         var users = new Users();
                         users.init(callback);
@@ -116,9 +134,6 @@ module.exports = exports = function (port, ip, password, cmd) {
                     let maxconn = config.transport && config.transport.ws && config.transport.ws.maxconn ? config.transport.ws.maxconn : constants.DEFAULT_WS_MAXCONN;
                     let wsserver = new WebSocket(port, maxconn);
                     wsserver.init(callback);
-                },      
-                function (callback) {
-                    ServicesHandler.init(callback)
                 },
                 function (callback) {
                     try {
@@ -128,8 +143,16 @@ module.exports = exports = function (port, ip, password, cmd) {
                     catch (e) {
                         callback(e);
                     }
+                },
+                function (callback) {
+                    if (config.bcclient) {
+                        return callback();
+                    }
+
+                    const pubsub = new PubSub();
+                    pubsub.init(callback);
                 }
-            ],  
+            ],
             function (err) {
                 if (err) {
                     return logger.error("application init error: %j", err);
@@ -170,12 +193,12 @@ module.exports.display_data = function (password) {
             const account = new Account();
             //print the node ID
             console.log("accountname: %s", account.accountname);
-            console.log("node ID: %s", account.accountpk);
+            console.log("node ID (rmd160hash public key): %s", account.accountpk);
             console.log("publickey hex: %s", account.public_key);
             console.log("publickey encoded hash: %s", account.public_key_hash);
             console.log("publickey bs58pk: %s", account.bs58pk);
         }
-    ); 
+    );
 
 };
 
@@ -217,7 +240,7 @@ module.exports.list_users = function (password) {
             console.log("\nUsers:");
             console.log(util.inspect(list));
         }
-    ); 
+    );
 };
 
 module.exports.delete_user = function (password) {
@@ -253,7 +276,7 @@ module.exports.delete_user = function (password) {
             function (err, result) {
                 if (err) {
                     return console.log(err.message || err);
-                }   
+                }
 
                 console.log("deleting user ID: " + userid);
 
@@ -266,9 +289,9 @@ module.exports.delete_user = function (password) {
                         (err) => {
                             console.log("Deleting user failed: " + err.message || err);
                         }
-                    );              
+                    );
             }
-        ); 
+        );
 
     });
 };
@@ -297,10 +320,10 @@ module.exports.backup = function(password) {
                         return callback(err);
                     }
 
-                    var data = {        
+                    var data = {
                         bs58pk: account.bs58pk,
                         pkhex: account.public_key,
-                        encoded_pkhash: account.public_key_hash,                        
+                        encoded_pkhash: account.public_key_hash,
                         private_key: account.private_key_hex,
                         nodeid: account.accountpk
                     };
@@ -312,7 +335,7 @@ module.exports.backup = function(password) {
                 try {
                     // write to file
                     data.timestamp = Date.now();
-                    var str = JSON.stringify(data, null, 4);  
+                    var str = JSON.stringify(data, null, 4);
                     var wdir = process.cwd();
                     var datadir = path.join(wdir, 'data');
                     var backupfile = path.join(datadir, 'account.json');
@@ -337,7 +360,7 @@ module.exports.backup = function(password) {
 
             console.log("Backup file account.json was created in the data directory");
         }
-    ); 
+    );
 };
 
 module.exports.whitelist_update = function (password, pkey, rm) {

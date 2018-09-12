@@ -32,7 +32,7 @@ var MSGTYPE = {
     UPDPK: 0x05,    //  Update public key
     DELMSG: 0x06,   //  Delete message
     CAMSG: 0x07,    //  Contact accept message
-    IOTAUTH: 0x08   //  IoT authentication request
+    IOTAUTH: 0x08,  //  IoT authentication request
 };
 
 var MSGFIELD = {
@@ -59,7 +59,8 @@ var MSGFIELD = {
     MSGID: "msgid",
     MSGTYPE: "message_type",
     TASKID: "taskid",
-    SYMKEY: "symkey"
+    SYMKEY: "symkey",
+    KEYDATA: "keydata"
 };
 
 var PEERMSG = {

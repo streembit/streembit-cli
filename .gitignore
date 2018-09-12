@@ -68,5 +68,5 @@ db/leveldb/streembit/CURRENT
 /ssl
 /ssl/*
 package-lock.json
-./package-lock.json
+**/package-lock.json
 

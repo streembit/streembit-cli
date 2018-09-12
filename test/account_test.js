@@ -20,7 +20,7 @@ describe("Account module test lib/account", function () {
 
     before(function (done) {
         account = new Account();
-        config.init(account_config.port, account_config.host, function () {
+        config.init(account_config.port, account_config.host, false, false, function () {
             database.init(dbschema, function () {
                 done();
             });

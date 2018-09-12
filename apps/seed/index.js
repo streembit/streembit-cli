@@ -31,6 +31,8 @@ const kad = require("libs/peernet/kad");
 const msghandler = require("libs/peernet/msg");
 const constants = require("libs/constants");
 
+const PubSub = require('libs/pubsub');
+
 module.exports = function (callback) {
     try {
 
