@@ -109,7 +109,7 @@ class HTTPTransport {
                 // return a success status for the GET request
                 // GET request is only for health check
                 if (req.method === 'GET') {
-                    console.log('health check GET');
+                    logger.debug('health check GET');
                     res.statusCode = 200;
                     return res.end();
                 }
