@@ -27,6 +27,7 @@ Based on
 const async = require('async');
 const { Writable: WritableStream } = require('stream');
 const constants = require('./constants');
+const config = require('libs/config');
 const utils = require('./utils');
 const AbstractNode = require('./node-abstract');
 const KademliaRules = require('./rules-kademlia');
@@ -53,7 +54,7 @@ class KademliaNode extends AbstractNode {
      */
     constructor(options) {
         if (!options.hasOwnProperty('transport')) {
-            const http_transport = options.contact.key ?
+            const http_transport = config.transport.ssl ?
                 require('./transport-https') :
                 require('./transport-http');
 
