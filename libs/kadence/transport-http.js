@@ -30,6 +30,7 @@ const { Duplex: DuplexStream } = require('stream');
 const merge = require('merge');
 const concat = require('concat-stream');
 const constants = require('./constants');
+const config = require('libs/config');
 
 
 /**
@@ -132,7 +133,7 @@ class HTTPTransport extends DuplexStream {
             }
         };
     
-        if (contact.cert || contact.key) {
+        if (config.transport.ssl) {
             reqopts.rejectUnauthorized = false;
         }
 
