@@ -133,7 +133,7 @@ class HTTPTransport extends DuplexStream {
             }
         };
         
-        if (config.transaction.ssl) {
+        if (config.transport.ssl) {
             reqopts.rejectUnauthorized = false;
         }
 
