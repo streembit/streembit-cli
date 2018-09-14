@@ -63,6 +63,8 @@ class HTTPSTransport extends HTTPTransport {
      * @private
      */
     _createRequest() {
+        console.log('HTTPS _createRequest');
+        console.dir(...arguments)
         return https.request(...arguments);
     }
 
