@@ -30,6 +30,7 @@ const { Duplex: DuplexStream } = require('stream');
 const merge = require('merge');
 const concat = require('concat-stream');
 const constants = require('./constants');
+const config = require('libs/config');
 
 
 /**
@@ -131,6 +132,10 @@ class HTTPTransport extends DuplexStream {
                 'x-kad-message-id': id
             }
         };
+        
+        if (config.transaction.ssl) {
+            reqopts.rejectUnauthorized = false;
+        }
 
         if (typeof contact.path === 'string') {
             reqopts.path = contact.path;
