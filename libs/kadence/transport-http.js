@@ -131,6 +131,10 @@ class HTTPTransport extends DuplexStream {
                 'x-kad-message-id': id
             }
         };
+    
+        if (contact.cert || contact.key) {
+            reqopts.rejectUnauthorized = false;
+        }
 
         if (typeof contact.path === 'string') {
             reqopts.path = contact.path;
