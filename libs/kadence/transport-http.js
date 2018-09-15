@@ -128,15 +128,12 @@ class HTTPTransport extends DuplexStream {
             port: contact.port,
             protocol: contact.protocol,
             method: 'POST',
+            rejectUnauthorized: !config.transport.ssl,
             headers: {
                 'x-kad-message-id': id
             }
         };
         
-        if (config.transport.ssl) {
-            reqopts.rejectUnauthorized = false;
-        }
-
         if (typeof contact.path === 'string') {
             reqopts.path = contact.path;
         }
