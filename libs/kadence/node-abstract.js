@@ -165,12 +165,12 @@ class AbstractNode extends EventEmitter {
      */
     _init() {
         this.rpc.serializer.pipe(this.transport).pipe(this.rpc.deserializer);
-        this.rpc.on('error', (err) => this.logger.warn(err.message.toLowerCase()));
+        this.rpc.on('error', (err) => this.logger.error(err.message.toLowerCase()));
         this.rpc.deserializer
             .on('data', (data) => this._process(data))
             .on('unpipe', (source) => source.pipe(this.rpc.deserializer));
         this.transport
-            .on('error', (err) => this.logger.warn(err.message.toLowerCase()))
+            .on('error', (err) => this.logger.error(err.message.toLowerCase()))
             .on('unpipe', (source) => source.pipe(this.transport));
 
         setInterval(() => this._timeout(), constants.T_RESPONSETIMEOUT);

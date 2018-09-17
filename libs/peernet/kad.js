@@ -158,12 +158,7 @@ class KadHandler {
         assert.ok(config.transport.kad.host && typeof config.transport.kad.host === "string" && config.transport.kad.host.length > 0, 'Invalid Kademlia host');
         assert.ok(config.transport.kad.port && typeof config.transport.kad.port === "number" && config.transport.kad.port > 0, 'Invalid Kademlia port');
 
-        const account = new Account();
-        var accountpk = account.accountpk;
-        assert.ok(accountpk && typeof accountpk === "string" && accountpk.length >= 40, 'Invalid account short public key');
-
         const init_options = {
-            identity: accountpk, 
             logger: logger,
             storage: db.getdb("streembitkv"),
             contact: {

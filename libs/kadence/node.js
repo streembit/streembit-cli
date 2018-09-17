@@ -25,8 +25,9 @@ Based on
 'use strict';
 
 const async = require('async');
-const constants = require("libs/constants");
-const events = require("streembit-util").events;
+const constants = require('libs/constants');
+const events = require('streembit-util').events;
+const utils = require('./utils');
 const kad = require('libs/kadence');
 
 class Node {
@@ -42,22 +43,22 @@ class Node {
         events.on(
             "kad_message",
             (message, req, res) => {
-                const m_json = JSON.stringify(message);
-                const buffer = Buffer.from(m_json);
-
                 req.on('error', (err) => {
                     this.node.transport.emit('error', err)
                 });
-
-                res.on('error', (err) => {
-                    this.node.transport.emit('error', err)
-                });
+    
+                const m_json = JSON.stringify(message);
+                if (!this.validateMessageIdentity(message[1])) {
+                    return res.emit('error', new Error('Invalid KAD sender identity'));
+                }
 
                 res.setHeader('x-kad-message-id', req.headers['x-kad-message-id']);
                 res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
                 res.setHeader('Access-Control-Allow-Methods', '*');
                 res.setHeader('Access-Control-Allow-Headers', '*');
                 res.setHeader('Access-Control-Allow-Credentials', 'true');
+    
+                const buffer = Buffer.from(m_json);
 
                 this.node.transport._pending.set(req.headers['x-kad-message-id'], {
                     timestamp: Date.now(),
@@ -66,7 +67,30 @@ class Node {
                 this.node.transport.push(buffer);
             }
         );
-        
+    }
+    
+    validateMessageIdentity(msg) {
+        try {
+            const { method, params } = msg;
+            if (method !== 'IDENTIFY') {
+                throw new Error;
+            }
+            
+            const identity = params[0];
+            const { hostname, port } = params[1];
+            if (!hostname || !port) {
+                throw new Error;
+            }
+            
+            const verifyId = utils.hash160(Buffer.from(`${hostname}:${port}`)).toString('hex');
+            if (verifyId !== identity) {
+                throw new Error;
+            }
+            
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 
     join(callback) {
@@ -141,6 +165,9 @@ class Node {
         if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
             return callback("A logger that implements the error, info, warn and debug methods must be passed to the Kademlia node");
         }
+        
+        const nodeIdentity = Buffer.from(`${options.contact.hostname}:${options.contact.port}`);
+        options.identity = utils.hash160(nodeIdentity).toString('hex');
 
         this.logger = options.logger;
 
