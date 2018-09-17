@@ -104,19 +104,17 @@ class HTTPTransport {
             if (!res || !res.end) {
                 return logger.error("HTTPTransport routemsg error: invalid res object");
             }
-
+    
             if (!payload) {
                 // return a success status for the GET request
                 // GET request is only for health check
                 if (req.method === 'GET') {
-                    logger.debug('health check GET');
                     res.statusCode = 200;
                     return res.end();
                 }
-                else {
-                    // for POST method the payload must exists
-                    throw new Error("invalid payload");
-                }
+        
+                // for POST method the payload must exists
+                throw new Error("invalid payload");
             }
 
             var message;
