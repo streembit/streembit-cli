@@ -573,7 +573,7 @@ class KademliaNode extends AbstractNode {
                 result = JSON.parse(resultBufString);
             }
 
-            this.logger.debug('get value for key:' +key+ ' $j', result);
+            this.logger.debug('get value for key:' +key);
 
             if (result.length < 1) {
                 // find value in local storage
@@ -581,7 +581,7 @@ class KademliaNode extends AbstractNode {
                     valueEncoding: 'json'
                 }, (err, item) => {
                     if (!err && item) {
-                        this.logger.debug('get value for key:' +key+ ' from storage, %j', item);
+                        this.logger.debug('get value from storage for key:' +key, item);
                         callback(null, JSON.parse(item).value);
                     }
                     else {

@@ -37,6 +37,7 @@ class Node {
         this.logger = null;
         this.seeds = null;
         this.peercount = 0;
+        this.validIdentities = [];
     }
 
     eventHandlers() {
@@ -46,12 +47,13 @@ class Node {
                 req.on('error', (err) => {
                     this.node.transport.emit('error', err)
                 });
-    
-                const m_json = JSON.stringify(message);
+                
                 if (!this.validateMessageIdentity(message[1])) {
                     return res.emit('error', new Error('Invalid KAD sender identity'));
                 }
-
+                
+                const m_json = JSON.stringify(message);
+                
                 res.setHeader('x-kad-message-id', req.headers['x-kad-message-id']);
                 res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
                 res.setHeader('Access-Control-Allow-Methods', '*');
@@ -72,6 +74,11 @@ class Node {
     validateMessageIdentity(msg) {
         try {
             const { method, params } = msg;
+            
+            if (~this.validIdentities.indexOf(params[0])) {
+                return true;
+            }
+
             if (method !== 'IDENTIFY') {
                 throw new Error;
             }
@@ -86,6 +93,8 @@ class Node {
             if (verifyId !== identity) {
                 throw new Error;
             }
+            
+            this.validIdentities = [...this.validIdentities, params[0]];
             
             return true;
         } catch (e) {
