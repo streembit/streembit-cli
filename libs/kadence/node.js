@@ -74,18 +74,14 @@ class Node {
     validateMessageIdentity(msg) {
         try {
             const { method, params } = msg;
+            const identity = params[0];
+            const { hostname, port } = params[1];
             
-            if (~this.validIdentities.indexOf(params[0])) {
+            if (~this.validIdentities.indexOf(identity)) {
                 return true;
             }
 
-            if (method !== 'IDENTIFY') {
-                throw new Error;
-            }
-            
-            const identity = params[0];
-            const { hostname, port } = params[1];
-            if (!hostname || !port) {
+            if (method !== 'IDENTIFY' || !hostname || !port) {
                 throw new Error;
             }
             
@@ -94,7 +90,7 @@ class Node {
                 throw new Error;
             }
             
-            this.validIdentities = [...this.validIdentities, params[0]];
+            this.validIdentities = [...this.validIdentities, identity];
             
             return true;
         } catch (e) {
