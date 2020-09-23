@@ -36,7 +36,10 @@
         "json-stable-stringify": "^1.0.1",
         "jsonrpc-lite": "2.0.1",
         "knuth-shuffle": "^1.0.8",
+<<<<<<< HEAD
         "leveldown": "^5.6.0",
+=======
+>>>>>>> ef6c4aa2d37e6494eed54843e1e712ef62bf2a4a
         "lru-cache": "^4.1.1",
         "merge": "^1.2.0",
         "metapipe": "^2.0.2",
@@ -45,12 +48,18 @@
         "nat-pmp": "^1.0.0",
         "nat-upnp": "^1.1.1",
         "network": "^0.4.1",
+<<<<<<< HEAD
         "node-gyp": "^7.1.0",
+=======
+>>>>>>> ef6c4aa2d37e6494eed54843e1e712ef62bf2a4a
         "npid": "^0.4.0",
         "pem": "1.13.1",
         "pm2": "3.1.2",
         "prompt": "^1.0.0",
+<<<<<<< HEAD
         "public-ip": "^4.0.2",
+=======
+>>>>>>> ef6c4aa2d37e6494eed54843e1e712ef62bf2a4a
         "rc": "1.2.8",
         "request": "2.88.0",
         "safe-buffer": "5.1.2",

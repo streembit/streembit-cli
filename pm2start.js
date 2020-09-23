@@ -19,12 +19,19 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
+<<<<<<< HEAD
 const pm2 = require("pm2");
 const config = require("./config");
+=======
+
+const pm2 = require('pm2');
+const config = require('./config');
+>>>>>>> ef6c4aa2d37e6494eed54843e1e712ef62bf2a4a
 
 let homedir;
 
 try {
+<<<<<<< HEAD
   if (config.homedir) {
     homedir = config.homedir; //grab the next item
   }
@@ -36,11 +43,26 @@ if (!homedir) {
   //  try to get the current directory
   console.log("setting home dir to current directory");
   homedir = require("path").dirname(__filename);
+=======
+    if (config.homedir) {
+        homedir = config.homedir; //grab the next item
+    }
+}
+catch (err) {
+    console.log("argument parse error: %j", err);
+}
+
+if (!homedir) {
+    //  try to get the current directory
+    console.log("setting home dir to current directory");
+    homedir = require('path').dirname(__filename);
+>>>>>>> ef6c4aa2d37e6494eed54843e1e712ef62bf2a4a
 }
 
 console.log("homedir: %s", homedir);
 
 pm2.connect(function (err) {
+<<<<<<< HEAD
   if (err) {
     console.error(err);
     process.exit(1);
@@ -62,3 +84,30 @@ pm2.connect(function (err) {
     process.exit(0);
   });
 });
+=======
+    if (err) {
+        console.error(err);
+        process.exit(1);
+    }
+
+    const pm2config = {
+        name    : 'streembit',
+        script  : 'streembit.js',
+        args    : [ ...process.argv.slice(2), '--pm2' ],
+        cwd     : homedir
+    };
+    
+    pm2.start(
+        pm2config,
+        function (err, apps) {
+            if (err) {
+                return console.log("pm2.start error: %j", err);
+            }
+            
+            console.log("pm2.start complete");
+            process.exit(0);
+        }
+    );
+    
+});
+>>>>>>> ef6c4aa2d37e6494eed54843e1e712ef62bf2a4a
