@@ -19,8 +19,7 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-
-'use strict';
+"use strict";
 
 const logger = require("streembit-util").logger;
 const events = require("streembit-util").events;
@@ -32,122 +31,145 @@ const Account = require("libs/account");
 const config = require("libs/config");
 
 class TaskManager {
+  constructor() {}
 
-    constructor() {
-    }
+  inform_users(payload) {
+    try {
+      logger.debug("start inform_users");
 
-    inform_users(payload) {
+      var account = new Account();
+      var pubkey_hash = account.public_key_hash;
+      var public_key = account.bs58pk;
+      var address = config.transport.host;
+      var localip = config.transport.localip;
+      var port =
+        config.transport && config.transport.ws && config.transport.ws.port
+          ? config.transport.ws.port
+          : constants.DEFAULT_WS_PORT;
+      var transport = constants.DEFAULT_WSTRANSPORT;
+      var type = config.usertype;
+      var pubkeyhash = account.public_key_hash;
+      var symcryptkey = account.connsymmkey;
+      var account_name = config.account;
+      var crypto_key = account.cryptokey;
+
+      var error_count = 0;
+
+      var peernet = new PeerNet();
+
+      var send_to_contact = function (contact, next) {
         try {
-            logger.debug("start inform_users");
-
-            var account = new Account();
-            var pubkey_hash = account.public_key_hash;
-            var public_key = account.bs58pk;
-            var address = config.transport.host;
-            var localip = config.transport.localip;
-            var port = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;
-            var transport = constants.DEFAULT_WSTRANSPORT;
-            var type = config.usertype;
-            var pubkeyhash = account.public_key_hash;
-            var symcryptkey = account.connsymmkey;
-            var account_name = config.account;
-            var crypto_key = account.cryptokey;
-
-            var error_count = 0;
-
-            var peernet = new PeerNet();
-
-            var send_to_contact = function(contact, next) {
-                try {
-                    peernet.send_contact_offer(
-                        crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash, symcryptkey, transport, address, localip, port, type,
-                        (err) => {
-                            if (err) {
-                                var msg = "send_to_contact error, contact: " + contact.public_key + " error: " + (err.message || err);
-                                logger.error(msg);
-                                error_count++;
-                            }
-                            next();
-                        }
-                    );                    
-                }
-                catch (err) {
-                    logger.error("send_to_contact error, contact: " + contact.public_key + " error: " + err.message);
-                    next();
-                }
+          peernet.send_contact_offer(
+            crypto_key,
+            account_name,
+            pubkey_hash,
+            public_key,
+            contact.publickey,
+            contact.pkhash,
+            symcryptkey,
+            transport,
+            address,
+            localip,
+            port,
+            type,
+            (err) => {
+              if (err) {
+                var msg =
+                  "send_to_contact error, contact: " +
+                  contact.public_key +
+                  " error: " +
+                  (err.message || err);
+                logger.error(msg);
+                error_count++;
+              }
+              next();
             }
-
-            var users = new Users();
-            var list = users.list();
-
-            if (!list || list.length == 0) {
-                logger.info("No user is configured. To enable users connect to this gateway you must add users to the application");
-                return;
-            }
-
-            async.eachSeries(list, send_to_contact, function () {
-                logger.debug("inform_users ended. error count: " + error_count );
-            });
+          );
+        } catch (err) {
+          logger.error(
+            "send_to_contact error, contact: " +
+              contact.public_key +
+              " error: " +
+              err.message
+          );
+          next();
         }
-        catch (err) {
-            logger.error("inform_users error: " + err.message);
+      };
+
+      var users = new Users();
+      var list = users.list();
+
+      if (!list || list.length == 0) {
+        logger.info(
+          "No user is configured. To enable users connect to this gateway you must add users to the application"
+        );
+        return;
+      }
+
+      async.eachSeries(list, send_to_contact, function () {
+        logger.debug("inform_users ended. error count: " + error_count);
+      });
+    } catch (err) {
+      logger.error("inform_users error: " + err.message);
+    }
+  }
+
+  publish_account() {
+    logger.debug("start publish account");
+
+    var account = new Account();
+    var public_key = account.bs58pk;
+    var address = config.transport.host;
+    var port = config.transport.port;
+    var transport = constants.DEFAULT_TRANSPORT;
+    var type = config.usertype;
+    var pubkeyhash = account.public_key_hash;
+    var symcryptkey = account.connsymmkey;
+    var account_name = config.account;
+
+    var peernet = new PeerNet();
+    peernet.publish_account(
+      symcryptkey,
+      pubkeyhash,
+      public_key,
+      transport,
+      address,
+      port,
+      type,
+      account_name,
+      callback
+    );
+  }
+
+  on_application_init() {
+    logger.debug("on_application_init");
+  }
+
+  run(callback) {
+    try {
+      // initialize the task event handler
+      events.register(events.ONTASKINIT, (task, payload) => {
+        switch (task) {
+          case constants.TASK_PUBLISHACCOUNT:
+            this.publish_account();
+            break;
+          case constants.TASK_INFORM_CONTACTS:
+            this.inform_users(payload);
+            break;
+          default:
+            break;
         }
+      });
+
+      events.register(events.ONAPPINIT, (result) => {
+        this.on_application_init();
+      });
+
+      callback();
+    } catch (err) {
+      logger.error("task manager error: " + err.message);
     }
-
-    publish_account() {
-        logger.debug("start publish account");
-
-        var account = new Account();
-        var public_key = account.bs58pk;
-        var address = config.transport.host;
-        var port = config.transport.port;
-        var transport = constants.DEFAULT_TRANSPORT;
-        var type = config.usertype;
-        var pubkeyhash = account.public_key_hash;
-        var symcryptkey = account.connsymmkey;
-        var account_name = config.account;
-
-        var peernet = new PeerNet();
-        peernet.publish_account(symcryptkey, pubkeyhash, public_key, transport, address, port, type, account_name, callback);
-    }
-
-    on_application_init() {
-        logger.debug("on_application_init");
-    }
-
-    run(callback) {
-        try {
-
-            // initialize the task event handler
-            events.register(
-                events.ONTASK,
-                (task, payload) => {
-                    switch (task) {
-                        case constants.TASK_PUBLISHACCOUNT:
-                            this.publish_account();
-                            break;
-                        case constants.TASK_INFORM_CONTACTS:
-                            this.inform_users(payload);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            );
-
-            events.register(
-                events.ONAPPINIT,
-                (result) => {
-                    this.on_application_init();
-                }
-            );
-
-            callback();
-        }
-        catch (err) {
-            logger.error("task manager error: " + err.message);
-        }
-    }
+  }
 }
 
 module.exports = TaskManager;

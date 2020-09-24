@@ -28,7 +28,7 @@ const constants = require("libs/constants");
 const HTTPTransport = require("transport/http");
 const Account = require("libs/account");
 const peermsg = require("libs/message");
-const publicIp = require("./IPv4");
+const dns_providers = require("libs/dnssrvc");
 const dnsinterval = 600000; // update in every 10 minutes
 
 function dnsupdate() {
@@ -45,7 +45,6 @@ function dnsupdate() {
       domain: domain,
       pkeyhash: pkeyhash,
     };
-
     var data = peermsg.create_jwt_token(
       crypto_key,
       Date.now(),
@@ -54,10 +53,21 @@ function dnsupdate() {
       null,
       publickey
     );
+
+    if (config.dns.provider) {
+      const providerInstance = dns_providers[config.dns.provider];
+
+      const provider = new providerInstance();
+
+      const result = provider.getZoneId(
+        config.transport.host,
+        config.dns.api.email,
+        config.dns.api.auth
+      );
+    }
+
     var message = JSON.stringify({ data: data });
-    (async () => {
-      logger.debug(await publicIp.v4());
-    })();
+
     HTTPTransport.write(
       message,
       { host: config.dns.host, port: config.dns.port, protocol: "http" },

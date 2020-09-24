@@ -1,89 +1,77 @@
 {
-    "name": "streembit-cli",
-    "version": "1.0.1",
-    "description": "Streembit command-line interface",
-    "license": "SEE LICENSE IN LICENSE",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/streembit/streembit-cli.git"
-    },
-    "main": "streembit.js",
-    "author": {
-        "name": "T Z Pardi",
-        "email": "tzpardi@streembit.com"
-    },
-    "dependencies": {
-        "app-module-path": "^2.2.0",
-        "async": "^2.6.0",
-        "atbf": "^1.1.0",
-        "boscar": "^2.0.0",
-        "browserify-aes": "1.2.0",
-        "bs58check": "^2.1.2",
-        "buffer-builder": "^0.2.0",
-        "buffer-reader": "^0.1.0",
-        "bytes": "^3.0.0",
-        "clarinet": "^0.12.1",
-        "collections": "^5.1.5",
-        "colors": "1.3.2",
-        "commander": "2.18.0",
-        "concat-stream": "1.6.2",
-        "create-hash": "1.2.0",
-        "create-hmac": "1.1.7",
-        "elliptic": "^6.3.2",
-        "encoding-down": "^5.0.4",
-        "hat": "0.0.3",
-        "ip": "^1.1.5",
-        "json-stable-stringify": "^1.0.1",
-        "jsonrpc-lite": "2.0.1",
-        "knuth-shuffle": "^1.0.8",
-<<<<<<< HEAD
-        "leveldown": "^5.6.0",
-=======
->>>>>>> ef6c4aa2d37e6494eed54843e1e712ef62bf2a4a
-        "lru-cache": "^4.1.1",
-        "merge": "^1.2.0",
-        "metapipe": "^2.0.2",
-        "mkdirp": "^0.5.1",
-        "ms": "^2.1.1",
-        "nat-pmp": "^1.0.0",
-        "nat-upnp": "^1.1.1",
-        "network": "^0.4.1",
-<<<<<<< HEAD
-        "node-gyp": "^7.1.0",
-=======
->>>>>>> ef6c4aa2d37e6494eed54843e1e712ef62bf2a4a
-        "npid": "^0.4.0",
-        "pem": "1.13.1",
-        "pm2": "3.1.2",
-        "prompt": "^1.0.0",
-<<<<<<< HEAD
-        "public-ip": "^4.0.2",
-=======
->>>>>>> ef6c4aa2d37e6494eed54843e1e712ef62bf2a4a
-        "rc": "1.2.8",
-        "request": "2.88.0",
-        "safe-buffer": "5.1.2",
-        "secure-random": "^1.1.1",
-        "semver": "^5.1.0",
-        "serialport": "^7.0.2",
-        "split": "^1.0.1",
-        "sprintf-js": "^1.1.1",
-        "streembit-db": "git+https://github.com/streembit/streembit-db.git",
-        "streembit-errcodes": "git+https://github.com/streembit/streembit-errcodes.git",
-        "streembit-util": "git+https://github.com/streembit/streembit-util.git",
-        "through": "^2.3.8",
-        "tiny": "^0.0.10",
-        "uuid": "3.3.2",
-        "winston": "3.1.0",
-        "ws": "6.0.0",
-        "xml2js": "~0.4.19"
-    },
-    "scripts": {
-        "test": "mocha test"
-    },
-    "devDependencies": {
-        "mocha": "5.2.0",
-        "capture-console": "1.0.1",
-        "chai": "^4.1.2"
-    }
+  "name": "streembit-cli",
+  "version": "1.0.1",
+  "description": "Streembit command-line interface",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/streembit/streembit-cli.git"
+  },
+  "main": "streembit.js",
+  "author": {
+    "name": "T Z Pardi",
+    "email": "tzpardi@streembit.com"
+  },
+  "dependencies": {
+    "app-module-path": "^2.2.0",
+    "async": "^2.6.0",
+    "atbf": "^1.1.0",
+    "boscar": "^2.0.0",
+    "browserify-aes": "1.2.0",
+    "bs58check": "^2.1.2",
+    "buffer-builder": "^0.2.0",
+    "buffer-reader": "^0.1.0",
+    "bytes": "^3.0.0",
+    "clarinet": "^0.12.1",
+    "collections": "^5.1.5",
+    "colors": "1.3.2",
+    "commander": "2.18.0",
+    "concat-stream": "1.6.2",
+    "create-hash": "1.2.0",
+    "create-hmac": "1.1.7",
+    "elliptic": "^6.3.2",
+    "encoding-down": "^5.0.4",
+    "hat": "0.0.3",
+    "ip": "^1.1.5",
+    "json-stable-stringify": "^1.0.1",
+    "jsonrpc-lite": "2.0.1",
+    "knuth-shuffle": "^1.0.8",
+    "lru-cache": "^4.1.1",
+    "merge": "^1.2.0",
+    "metapipe": "^2.0.2",
+    "mkdirp": "^0.5.1",
+    "ms": "^2.1.1",
+    "nat-pmp": "^1.0.0",
+    "nat-upnp": "^1.1.1",
+    "network": "^0.4.1",
+    "npid": "^0.4.0",
+    "pem": "1.13.1",
+    "pm2": "3.1.2",
+    "prompt": "^1.0.0",
+    "rc": "1.2.8",
+    "request": "2.88.0",
+    "safe-buffer": "5.1.2",
+    "secure-random": "^1.1.1",
+    "semver": "^5.1.0",
+    "serialport": "^7.0.2",
+    "split": "^1.0.1",
+    "sprintf-js": "^1.1.1",
+    "streembit-db": "git+https://github.com/streembit/streembit-db.git",
+    "streembit-errcodes": "git+https://github.com/streembit/streembit-errcodes.git",
+    "streembit-util": "git+https://github.com/streembit/streembit-util.git",
+    "through": "^2.3.8",
+    "tiny": "^0.0.10",
+    "uuid": "3.3.2",
+    "winston": "3.1.0",
+    "ws": "6.0.0",
+    "xml2js": "~0.4.19"
+  },
+  "scripts": {
+    "test": "mocha test"
+  },
+  "devDependencies": {
+    "mocha": "5.2.0",
+    "capture-console": "1.0.1",
+    "chai": "^4.1.2"
+  }
 }
