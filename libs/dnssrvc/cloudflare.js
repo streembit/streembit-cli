@@ -15,7 +15,6 @@ class Cloudflare {
     this.key = key;
     const options = {
       hostname: `api.cloudflare.com`,
-      port: 443,
       path: `/client/v4/zones?name=${domain}&page=1`,
       headers: {
         "X-Auth-Email": email,
@@ -34,12 +33,14 @@ class Cloudflare {
         this.dnsZone_id = ids.result[0].id;
         this.getRecords(this.dnsZone_id, callback);
       });
+      response.on("error", (error) => {
+        throw "Error with getting Cloudflare DNS zone id!";
+      });
     });
   }
   getRecords(zone, callback) {
     const options = {
       hostname: `api.cloudflare.com`,
-      port: 443,
       path: `/client/v4/zones/${zone}/dns_records?type=A&page=1&per_page=20&order=type&direction=desc&match=all`,
       headers: {
         "X-Auth-Email": this.email,
@@ -56,6 +57,9 @@ class Cloudflare {
       response.on("end", () => {
         let records = JSON.parse(result);
         callback(zone, records.result);
+      });
+      response.on("error", (error) => {
+        throw "Error with getting Cloudflare DNS records!";
       });
     });
   }
@@ -80,10 +84,6 @@ class Cloudflare {
           let result = "";
           response.on("data", function (chunk) {
             result += chunk;
-          });
-
-          response.on("end", () => {
-            let answer = JSON.parse(result);
           });
 
           req.on("error", (error) => {
