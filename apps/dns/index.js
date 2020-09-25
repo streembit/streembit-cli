@@ -29,6 +29,7 @@ const HTTPTransport = require("transport/http");
 const Account = require("libs/account");
 const peermsg = require("libs/message");
 const dns_providers = require("libs/dnssrvc");
+const publicIp = require("apps/dns/IPv4.js");
 const dnsinterval = 600000; // update in every 10 minutes
 
 function dnsupdate() {
@@ -53,16 +54,36 @@ function dnsupdate() {
       null,
       publickey
     );
-
-    if (config.dns.provider) {
+    let userIp;
+    (async () => {
+      userIp = await publicIp.v4();
+    })();
+    if (dns_providers.hasOwnProperty(config.dns.provider)) {
       const providerInstance = dns_providers[config.dns.provider];
-
       const provider = new providerInstance();
-
+      function dnsUpdateResult(res) {
+        logger.info(res);
+      }
+      function updateProviderRecords(zone, result) {
+        const names = [];
+        for (let record in result) {
+          names.push(result[record]);
+        }
+        provider.updateDns(
+          config.transport.host,
+          config.dns.api.email,
+          config.dns.api.auth,
+          zone,
+          userIp,
+          names,
+          dnsUpdateResult
+        );
+      }
       const result = provider.getZoneId(
         config.transport.host,
         config.dns.api.email,
-        config.dns.api.auth
+        config.dns.api.auth,
+        updateProviderRecords
       );
     }
 

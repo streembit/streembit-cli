@@ -1,6 +1,6 @@
 const https = require("https");
 const { logger } = require("streembit-util");
-
+const publicIp = require("../../apps/dns/IPv4");
 class Cloudflare {
   constructor() {
     this.provider_name = "Cloudflare";
@@ -9,7 +9,7 @@ class Cloudflare {
     this.email = "";
     this.key = "";
   }
-  getZoneId(domain, email, key) {
+  getZoneId(domain, email, key, callback) {
     this.domain_name = domain;
     this.email = email;
     this.key = key;
@@ -32,11 +32,11 @@ class Cloudflare {
       response.on("end", () => {
         let ids = JSON.parse(result);
         this.dnsZone_id = ids.result[0].id;
-        this.getRecords(this.dnsZone_id);
+        this.getRecords(this.dnsZone_id, callback);
       });
     });
   }
-  getRecords(zone) {
+  getRecords(zone, callback) {
     const options = {
       hostname: `api.cloudflare.com`,
       port: 443,
@@ -55,11 +55,47 @@ class Cloudflare {
 
       response.on("end", () => {
         let records = JSON.parse(result);
-        logger.error(records.result.length);
+        callback(zone, records.result);
       });
     });
   }
-  updateDns(domain, email, key) {}
+  updateDns(domain, email, key, zone, publicIP, dnsNames, callback) {
+    if (!domain || !email || !key || !dnsNames) {
+      throw "No enought data for DNS update";
+    } else {
+      for (let i = 0; i < dnsNames.length; i++) {
+        const options = {
+          hostname: `api.cloudflare.com`,
+          path: `/client/v4/zones/${zone}/dns_records/${dnsNames[i].id}`,
+          headers: {
+            "X-Auth-Email": this.email,
+            "X-Auth-Key": this.key,
+            "Content-Type": "application/json",
+          },
+          method: "PUT",
+          data: `{"type":"A","name":"${dnsNames[i].name}","content":"${publicIP}"}`,
+        };
+
+        const req = https.request(options, (response) => {
+          let result = "";
+          response.on("data", function (chunk) {
+            result += chunk;
+          });
+
+          response.on("end", () => {
+            let answer = JSON.parse(result);
+          });
+
+          req.on("error", (error) => {
+            throw "Error with updating Cloudflare DNS record!";
+          });
+        });
+        req.write(options.data);
+        req.end();
+      }
+      callback("DNS records updated");
+    }
+  }
 }
 
 module.exports = Cloudflare;
