@@ -61,6 +61,7 @@ function dnsupdate() {
     // let userIp = networkInterfaces.eth0
     //   ? networkInterfaces.eth0[0].address
     //   : networkInterfaces.wifi0[0].address;
+    let userIp;
     (async () => {
       userIp = await publicIp.v4();
     })();
@@ -78,7 +79,7 @@ function dnsupdate() {
           names.push(result[record]);
         }
         provider.updateDns(
-          config.transport.host,
+          config.dns.host,
           config.dns.api.email,
           config.dns.api.auth,
           zone,
