@@ -32,6 +32,9 @@ const dns_providers = require("libs/dnssrvc");
 const publicIp = require("apps/dns/IPv4.js");
 const dnsinterval = 600000; // update in every 10 minutes
 
+const os = require("os");
+const networkInterfaces = os.networkInterfaces();
+
 function dnsupdate() {
   try {
     logger.debug("DNS update");
@@ -54,7 +57,10 @@ function dnsupdate() {
       null,
       publickey
     );
-    let userIp;
+    // Get Used device IP
+    // let userIp = networkInterfaces.eth0
+    //   ? networkInterfaces.eth0[0].address
+    //   : networkInterfaces.wifi0[0].address;
     (async () => {
       userIp = await publicIp.v4();
     })();
@@ -62,7 +68,9 @@ function dnsupdate() {
       const providerInstance = dns_providers[config.dns.provider];
       const provider = new providerInstance();
       function dnsUpdateResult(res) {
-        logger.info(res);
+        if (res) {
+          return logger.info(res);
+        }
       }
       function updateProviderRecords(zone, result) {
         const names = [];
