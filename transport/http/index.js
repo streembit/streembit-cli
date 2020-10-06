@@ -257,14 +257,12 @@ class HTTPTransport {
         // disable the tcp nagle algorithm on the newly accepted socket:
         socket.setNoDelay(true);
       });
-
       this.server.listen(this.port, () => {
         var protocol = config.transport.ssl ? "HTTPS" : "HTTP";
         logger.info(protocol + " transport listening on port " + this.port);
         this.islistening = true;
         done();
       });
-
       var clihandler = new ClientRequestHandler();
       clihandler.on_request();
 

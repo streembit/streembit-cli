@@ -58,13 +58,15 @@ function dnsupdate() {
       publickey
     );
     // Get Used device IP
-    // let userIp = networkInterfaces.eth0
-    //   ? networkInterfaces.eth0[0].address
-    //   : networkInterfaces.wifi0[0].address;
-    let userIp;
-    (async () => {
-      userIp = await publicIp.v4();
-    })();
+    let userIp = networkInterfaces.eth0
+      ? networkInterfaces.eth0[0].address
+      : networkInterfaces.wifi0[0].address;
+
+    // let userIp;
+    // (async () => {
+    //   userIp = await publicIp.v4();
+    // })();
+
     if (dns_providers.hasOwnProperty(config.dns.provider)) {
       const providerInstance = dns_providers[config.dns.provider];
       const provider = new providerInstance();
@@ -89,41 +91,41 @@ function dnsupdate() {
         );
       }
       const result = provider.getZoneId(
-        config.transport.host,
+        config.dns.host,
         config.dns.api.email,
         config.dns.api.auth,
         updateProviderRecords
       );
     }
 
-    var message = JSON.stringify({ data: data });
+    //   var message = JSON.stringify({ data: data });
 
-    HTTPTransport.write(
-      message,
-      { host: config.dns.host, port: config.dns.port, protocol: "http" },
-      "/setdns",
-      (err, msg) => {
-        try {
-          if (err) {
-            return logger.error("dnsupdate HTTPTransport.write error: %j", err);
-          }
-          if (!msg) {
-            return logger.error("dnsupdate error: invalid response");
-          }
-          var resobj = JSON.parse(msg);
-          if (resobj.error) {
-            return logger.error("dnsupdate error: " + resobj.error);
-          }
-          if (resobj.status != 0) {
-            return logger.error("HTTP dnsupdate error: status is not SUCCESS");
-          }
+    //   HTTPTransport.write(
+    //     message,
+    //     { host: config.dns.host, port: config.dns.port, protocol: "http" },
+    //     "/setdns",
+    //     (err, msg) => {
+    //       try {
+    //         if (err) {
+    //           return logger.error("dnsupdate HTTPTransport.write error: %j", err);
+    //         }
+    //         if (!msg) {
+    //           return logger.error("dnsupdate error: invalid response");
+    //         }
+    //         var resobj = JSON.parse(msg);
+    //         if (resobj.error) {
+    //           return logger.error("dnsupdate error: " + resobj.error);
+    //         }
+    //         if (resobj.status != 0) {
+    //           return logger.error("HTTP dnsupdate error: status is not SUCCESS");
+    //         }
 
-          logger.debug("dnsupdate completed");
-        } catch (exc) {
-          logger.error("dnsupdate exception: " + exc.message);
-        }
-      }
-    );
+    //         logger.debug("dnsupdate completed");
+    //       } catch (exc) {
+    //         logger.error("dnsupdate exception: " + exc.message);
+    //       }
+    //     }
+    //   );
   } catch (err) {
     logger.error("DNS update error: %j", err);
   }
