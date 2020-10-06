@@ -72,3 +72,5 @@ package-lock.json
 
 streembit-cli.njsproj.user
 package-lock.json
+
+/.vs
