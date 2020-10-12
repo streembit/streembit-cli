@@ -148,7 +148,7 @@ class TaskManager {
   run(callback) {
     try {
       // initialize the task event handler
-      events.register(events.ONTASK, (task, payload) => {
+      events.register(events.ONTASKINIT, (task, payload) => {
         switch (task) {
           case constants.TASK_PUBLISHACCOUNT:
             this.publish_account();
