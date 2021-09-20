@@ -19,7 +19,7 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-'use strict';
+"use strict";
 
 const logger = require("streembit-util").logger;
 const async = require("async");
@@ -30,78 +30,73 @@ const bchmsg = require("./msghandlers/bch.js");
 const fnodemsg = require("./msghandlers/fnode.js");
 
 module.exports.on_transport_error = function (err) {
-    //TODO error handling
-    logger.error('KAD transport error: %j', err);
-}
+  //TODO error handling
+  logger.error("KAD transport error: %j", err);
+};
 
 function validate_contact(callback) {
-    logger.debug('validate_contact');
-    callback();
+  logger.debug("validate_contact");
+  callback();
 }
 
 function handle_msg(message, callback) {
-    try {
-        if (!message || !message.method) {
-            return callback();
-        }
-
-        logger.info(`RMTP message ${message.method} received`);
-
-        var method = message.method.toLowerCase(message.method);
-        switch (method) {
-            case "store":
-                storemsg(message, callback);
-                break;
-            case "txn":
-                txnmsg(message, callback);
-                break;
-            case "bch":
-                bchmsg(message, callback);
-                break;
-            case "find_node":
-                fnodemsg(message, callback);
-                break;
-            default:
-                return callback();
-        }
+  try {
+    if (!message || !message.method) {
+      return callback();
     }
-    catch (err) {
-        logger.error('handle_msg error: %j', err);
-        return callback(err);
+
+    logger.info(`RMTP message ${message.method} received`);
+
+    var method = message.method.toLowerCase(message.method);
+    switch (method) {
+      case "store":
+        storemsg(message, callback);
+        break;
+      case "txn":
+        txnmsg(message, callback);
+        break;
+      case "bch":
+        bchmsg(message, callback);
+        break;
+      case "find_node":
+        fnodemsg(message, callback);
+        break;
+      default:
+        return callback();
     }
+  } catch (err) {
+    logger.error("handle_msg error: %j", err);
+    return callback(err);
+  }
 }
 
-module.exports.on_kad_message = function (message, contact, next){
+module.exports.on_kad_message = function (message, contact, next) {
+  logger.debug("on_kad_message");
 
-    logger.debug("on_kad_message");
-
-    async.waterfall(
-        [
-            function (cb) {
-                try {
-                    validate_contact(cb)
-                }
-                catch (e) {
-                    cb(e);
-                }
-            },
-            function (cb) {
-                try {
-                    handle_msg(message, cb);
-                }
-                catch (e) {
-                    cb(e);
-                }
-            }
-        ],
-        function (err) {
-            next(err);
+  async.waterfall(
+    [
+      function (cb) {
+        try {
+          validate_contact(cb);
+        } catch (e) {
+          cb(e);
         }
-    );
-
-}
+      },
+      function (cb) {
+        try {
+          handle_msg(message, cb);
+        } catch (e) {
+          cb(e);
+        }
+      },
+    ],
+    function (err) {
+      next(err);
+    }
+  );
+};
 
 module.exports.on_peer_message = function (msg, callback) {
-    logger.debug("on_peer_message");
-    peermsg(msg, callback);
-}
+  logger.debug("on_peer_message");
+  peermsg(msg, callback);
+};

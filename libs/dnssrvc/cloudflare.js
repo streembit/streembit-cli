@@ -47,7 +47,7 @@ class Cloudflare {
         "X-Auth-Key": this.key,
       },
     };
-
+  
     https.get(options, (response) => {
       let result = "";
       response.on("data", function (chunk) {
@@ -79,7 +79,6 @@ class Cloudflare {
           method: "PUT",
           data: `{"type":"A","name":"${dnsNames[i].name}","content":"${publicIP}"}`,
         };
-
         const req = https.request(options, (response) => {
           let result = "";
           response.on("data", function (chunk) {

@@ -44,7 +44,6 @@ function dnsupdate() {
     var publickey = account.bs58pk;
     var domain = config.transport.host;
     var crypto_key = account.cryptokey;
-
     var payload = {
       domain: domain,
       pkeyhash: pkeyhash,
@@ -57,16 +56,18 @@ function dnsupdate() {
       null,
       publickey
     );
-    // Get Used device IP
-    let userIp = networkInterfaces.eth0
-      ? networkInterfaces.eth0[0].address
-      : networkInterfaces.wifi0[0].address;
+    
+    const userIp = Object.values(networkInterfaces).flat().find(i => i.family == 'IPv4' && !i.internal).address;
 
+    // Get Used device IP
+    // let userIp = networkInterfaces.eth0
+    //   ? networkInterfaces.eth0[0].address
+    //   : networkInterfaces.wifi0[0].address;
+  
     // let userIp;
     // (async () => {
     //   userIp = await publicIp.v4();
     // })();
-
     if (dns_providers.hasOwnProperty(config.dns.provider)) {
       const providerInstance = dns_providers[config.dns.provider];
       const provider = new providerInstance();
@@ -90,7 +91,7 @@ function dnsupdate() {
           dnsUpdateResult
         );
       }
-      const result = provider.getZoneId(
+      provider.getZoneId(
         config.dns.host,
         config.dns.api.email,
         config.dns.api.auth,
@@ -144,7 +145,7 @@ module.exports.run = function (callback) {
     setInterval(() => {
       dnsupdate();
     }, dnsinterval);
-
+  
     //call the DNS update at the begining
     dnsupdate();
 
