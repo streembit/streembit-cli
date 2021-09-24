@@ -1,4 +1,4 @@
-﻿/*
+﻿﻿/*
 This file is part of Streembit application.
 Streembit is an open source project to create a real time communication system for humans and machines.
 
@@ -173,12 +173,11 @@ class Node {
         
         const nodeIdentity = Buffer.from(`${options.contact.hostname}:${options.contact.port}`);
         options.identity = utils.hash160(nodeIdentity).toString('hex');
-
+    
         this.logger = options.logger;
 
         const node_param = Object.assign({}, options);
         this.node = new kad.KademliaNode(node_param);
-
         // enable pubsub system
         this.node.plugin(kad.quasar());
 

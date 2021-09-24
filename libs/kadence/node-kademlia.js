@@ -104,8 +104,7 @@ class KademliaNode extends AbstractNode {
             this.once('join', callback);
             this.once('error', callback);
         }
-
-        this.router.addContactByNodeId(identity, contact);
+        this.router.addContactByNodeId(this.identity, this.contact);
         async.series([
             (next) => this.iterativeFindNode(this.identity.toString('hex'), next),
             (next) => this.refresh(this.router.getClosestBucket() + 1, next)
@@ -114,10 +113,11 @@ class KademliaNode extends AbstractNode {
                 this.emit('error', err);
             }
             else {
-                let peer = this.router.getContactByNodeId(identity);
+                let peer = this.router.getContactByNodeId(this.identity);
+                // console.log(peer, this.identity)
                 if (!peer) {
                     // the seed couldn't connect
-                    this.emit('error', `unable to connect to seed id: ${identity} host: ${contact.hostname} port: ${contact.port}`);
+                    this.emit('error', `unable to connect to seed id1: ${this.identity} host: ${this.contact.hostname} port: ${this.contact.port}`);
                 }
                 else {
                     this.emit('join');
