@@ -19,252 +19,181 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-var nat = require('../index');
-var async = require('async');
+const { ssdp, device } = require('../index');
 
-var client = exports;
+module.exports = class Client {
+  get defaults() {
+    return {
+      timeout: 20*1000
+    }
+  }
+  constructor(userOptions = {}) {
+    this._options = Object.assign(this.defaults, userOptions);
+    this._ssdp = new ssdp();
+    this.timeout = this._options.timeout;
+  }
+  normalizePorts(options) {
+    const toObject = (addr) => {
+      if (typeof addr === 'number') return { port: addr };
+      if (typeof addr === 'string' && !isNaN(addr)) return { port: Number(addr) };
+      if (typeof addr === 'object') return addr;
 
-function Client(_logger) {
-    this.ssdp = nat.ssdp.create();
-    this.timeout = 1800;
-    this.logger = _logger;
-
-    this.logger.debug("UPnP client create");
-}
-
-client.create = function create(_logger) {
-    return new Client(_logger);
-};
-
-function normalizeOptions(options) {
-    function toObject(addr) {
-        if (typeof addr === 'number') {
-            return { port: addr };
-        }
-
-        if (typeof addr === 'object') {
-            return addr;
-        }
-
-        return {};
+      return {};
     }
 
     return {
-        remote: toObject(options.public),
-        internal: toObject(options.private)
+      remote: toObject(options.public),
+      internal: toObject(options.private)
     };
-}
+  }
+  async portMapping(options) {
+    console.log('postmappings')
 
-Client.prototype.portMapping = function portMapping(options, callback) {
-    var self = this;
+    const {gateway, address} = await this.findGateway();
+    const ports = this.normalizePorts(options);
+    let ttl = 60 * 30;
+    if (typeof options.ttl === 'number') { ttl = options.ttl; }
+    if (typeof options.ttl === 'string' && !isNaN(options.ttl)) { ttl = Number(options.ttl); }
 
-    if (!callback) {
-        callback = function () { };
-    }
-    
-    this.logger.debug("UPnP AddPortMapping internal IP: " + options.private + " remote IP: " + options.public);
+    return await gateway.run(options.any ? 'AddAnyPortMapping' : 'AddPortMapping', [
+      [ 'NewRemoteHost', ports.remote.host],
+      [ 'NewExternalPort', ports.remote.port ],
+      [ 'NewProtocol', options.protocol ?
+          options.protocol.toUpperCase() : 'TCP' ],
+      [ 'NewInternalPort', ports.internal.port ],
+      [ 'NewInternalClient', ports.internal.host || address ],
+      [ 'NewEnabled', 1 ],
+      [ 'NewPortMappingDescription', options.description || 'node:nat:upnp' ],
+      [ 'NewLeaseDuration', ttl ]
+    ]);
+  }
+  async portUnmapping(options) {
+    const {gateway} = await this.findGateway();
+    const ports = this.normalizePorts(options);
 
-    this.findGateway(function(err, gateway, address, local_address) {
-        if (err) {
-            self.logger.debug("findGateway error: %j", err);
-            return callback(err);
+    return await gateway.run('DeletePortMapping', [
+      [ 'NewRemoteHost', ports.remote.host ],
+      [ 'NewExternalPort', ports.remote.port ],
+      [ 'NewProtocol', options.protocol ?
+          options.protocol.toUpperCase() : 'TCP' ]
+    ]);
+  }
+  async getMappings(options = {}) {
+    const {gateway, address} = await this.findGateway();
+    let i = 0;
+    let results = [];
+    console.log('getmappings')
+    while (true) {
+      try {
+        var data = await gateway.run('GetGenericPortMappingEntry', [
+          [ 'NewPortMappingIndex', i++ ]
+        ]);
+      } catch (error) {
+        // If we got an error on index 0, ignore it in case this router starts indicies on 1
+        if (i !== 1) {
+          break;
         }
-        
-        self.upnp_gateway = address;
-        self.upnp_local_address = local_address;
+      }
 
-        var ports = normalizeOptions(options);
+      let key;
+      Object.keys(data).some((k) => {
+        if (!/:GetGenericPortMappingEntryResponse/.test(k)) return false;
 
-        gateway.run(
-            'AddPortMapping', 
-            [
-                [ 'NewRemoteHost', ports.remote.host ],
-                [ 'NewExternalPort', ports.remote.port ],
-                [ 'NewProtocol', options.protocol ? options.protocol.toUpperCase() : 'TCP' ],
-                [ 'NewInternalPort', ports.internal.port ],
-                [ 'NewInternalClient', local_address ? local_address : ports.internal.host || address ],
-                [ 'NewEnabled', 1 ],
-                [ 'NewPortMappingDescription', options.description || 'Streembit UPNP' ],
-                [ 'NewLeaseDuration', typeof options.ttl === 'number' ? options.ttl : 3600 ]
-            ], 
-            callback);
-    });
-};
+        key = k;
+        return true;
+      });
+      if (!key) {
+        break;
+      }
+      data = data[key];
 
-Client.prototype.portUnmapping = function portMapping(options, callback) {
-    if (!callback) callback = function() {};
+      var result = {
+        public: {
+          host: typeof data.NewRemoteHost === 'string' &&
+                data.NewRemoteHost || '',
+          port: parseInt(data.NewExternalPort, 10)
+        },
+        private: {
+          host: data.NewInternalClient,
+          port: parseInt(data.NewInternalPort, 10)
+        },
+        protocol: data.NewProtocol.toLowerCase(),
+        enabled: data.NewEnabled == 1,
+        description: data.NewPortMappingDescription,
+        ttl: parseInt(data.NewLeaseDuration, 10)
+      };
+      result.local = result.private.host === address;
 
-    this.findGateway(function(err, gateway/*, address*/) {
-        if (err) {
-            return callback(err);
-        }
-
-        var ports = normalizeOptions(options);
-
-        gateway.run('DeletePortMapping', [
-            [ 'NewRemoteHost', ports.remote.host ],
-            [ 'NewExternalPort', ports.remote.port ],
-            [ 'NewProtocol', options.protocol ? options.protocol.toUpperCase() : 'TCP' ]
-        ], callback);
-    });
-};
-
-Client.prototype.getMappings = function getMappings(options, callback) {
-    if (typeof options === 'function') {
-        callback = options;
-        options = null;
+      results.push(result);
     }
 
-    if (!options) {
-        options = {};
+    if (options.local) {
+      results = results.filter((item) => item.local);
     }
 
-    this.findGateway(function(err, gateway, address, local_address) {
-        if (err) return callback(err);
-        
-        var i = 0;
-        var end = false;
-        var results = [];
+    if (options.description) {
+      results = results.filter((item) => {
+        if (typeof item.description !== 'string')
+          return;
 
-        async.whilst(
-            function () {
-                return !end;
-            }, 
-            function (callback) {
-                
-                gateway.run(
-                    'GetGenericPortMappingEntry', [[ 'NewPortMappingIndex', ++i ]], 
-                    function (err, data) {                        
-                        if (err) {
-                            end = true;
-                            return callback(null);
-                        }
-
-                        var key;
-                        
-                        Object.keys(data).some(function (k) {
-                            if (!/:GetGenericPortMappingEntryResponse/.test(k))
-                                return false;
-
-                            key = k;
-                            return true;
-                        });
-                        
-                        data = data[key];
-
-                        var result = {
-                            public: {
-                                host: typeof data.NewRemoteHost === 'string' && data.NewRemoteHost || '',
-                                port: parseInt(data.NewExternalPort, 10)
-                            },
-                            
-                            private: {
-                                host: data.NewInternalClient,
-                                port: parseInt(data.NewInternalPort, 10)
-                            },
-                            
-                            protocol: data.NewProtocol.toLowerCase(),
-                            enabled: data.NewEnabled === 1,
-                            description: data.NewPortMappingDescription,
-                            ttl: parseInt(data.NewLeaseDuration, 10)
-                        };
-                        
-                        result.local = result.private.host === address;
-
-                        results.push(result);
-
-                        callback(null);
-                    });
-            }, 
-            function (err) {
-                if (err) return callback(err);
-
-                if (options.local) {
-                    results = results.filter(function(item) {
-                        return item.local;
-                    });
-                }
-
-                if (options.description) {
-                    results = results.filter(function(item) {
-                        if (options.description instanceof RegExp) {
-                            return item.description.match(options.description) !== null;
-                        } else {
-                            return item.description.indexOf(options.description) !== -1;
-                        }
-                    });
-                }
-
-                callback(null, results);
-            });
-    });
-};
-
-Client.prototype.externalIp = function externalIp(callback) {
-    this.findGateway(function(err, gateway/*, address*/) {
-        if (err) {
-            return callback(err);
+        if (options.description instanceof RegExp) {
+          return item.description.match(options.description) !== null;
+        } else {
+          return item.description.includes(options.description);
         }
+      });
+    }
 
-        gateway.run(
-            'GetExternalIPAddress', 
-            [], 
-            function (err, data) {
-                if (err)
-                    return callback(err);
-                
-                var key;
+    return results;
+  }
+  async externalIp() {
+    const {gateway} = await this.findGateway();
+    const data = await gateway.run('GetExternalIPAddress');
+    let key;
 
-                Object.keys(data).some(function(k) {
-                    if (!/:GetExternalIPAddressResponse$/.test(k))
-                        return false;
+    Object.keys(data).some((k) => {
+      if (!/:GetExternalIPAddressResponse$/.test(k)) return false;
 
-                    key = k;
-                    return true;
-                });
-
-                if (!key) {
-                    return callback(Error('Incorrect response'));
-                }
-                
-                callback(null, data[key].NewExternalIPAddress);
-            });
+      key = k;
+      return true;
     });
-};
 
-Client.prototype.findGateway = function findGateway(callback) {
-    var self = this;
+    if ( ! key) return reject(Error('Incorrect response'));
+    return data[key].NewExternalIPAddress;
+  }
+  async findGateway() {
+    console.log('findGateway')
 
-    var timeout;
-    var timeouted = false;
-    var p = this.ssdp.search(
+    return await new Promise((resolve, reject) => {
+      let timeout;
+      let timeouted = false;
+      const p = this._ssdp.search(
         'urn:schemas-upnp-org:device:InternetGatewayDevice:1'
-    );
+      );
 
-    timeout = setTimeout(
-        function () {
-            timeouted = true;
-            p.emit('end');
-            callback(new Error('timeout'));
-        }, 
-        this.timeout
-    );
-
-    p.on('device', function (info, device_addres, local_address) {
-        if (timeouted) {
-            return;
-        }
-
+      timeout = setTimeout(() => {
+        timeouted = true;
         p.emit('end');
-        
+        return reject(new Error('timeout'));
+      }, this._timeout);
+
+      p.on('device', (info, address) => {
+        if (timeouted) return;
+        p.emit('end');
         clearTimeout(timeout);
 
         // Create gateway
-        self.logger.debug("UPnP gateway location: " + info.location + ", gateway address: " + device_addres + ", local address: " + local_address);
-        callback(null, nat.device.create(info.location, self.logger), device_addres, local_address);
+        resolve({gateway: new device(info.location), address});
+      });
     });
-};
-
-Client.prototype.close = function close() {
-    this.ssdp.close();
-};
+  }
+  close() {
+    this._ssdp.close();
+  }
+  set timeout(val) {
+    this._timeout = val;
+  }
+  get timeout() {
+    return this._timeout;
+  }
+}

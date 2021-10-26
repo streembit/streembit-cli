@@ -19,212 +19,140 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-var nat = require("../index"),
-  request = require("request"),
-  url = require("url"),
-  xml2js = require("xml2js"),
-  Buffer = require("buffer").Buffer;
+const axios = require('axios');
+const url = require('url');
+const fastXmlParser = require('fast-xml-parser');
 
-var device = exports;
-
-function Device(url, _logger) {
-  this.description = url;
-  this.services = [
-    "urn:schemas-upnp-org:service:WANIPConnection:1",
-    "urn:schemas-upnp-org:service:WANPPPConnection:1",
-  ];
-  this.logger = _logger;
-}
-
-device.create = function create(url, _logger) {
-  return new Device(url, _logger);
-};
-
-Device.prototype._getXml = function _getXml(url, callback) {
-  var once = false;
-
-  function respond(err, body) {
-    if (once) {
-      return;
-    }
-
-    once = true;
-
-    callback(err, body);
+module.exports = class Device {
+  constructor(url) {
+    this._description = url;
+    this._services = [
+      'urn:schemas-upnp-org:service:WANIPConnection:2',
+      'urn:schemas-upnp-org:service:WANIPConnection:1',
+      'urn:schemas-upnp-org:service:WANPPPConnection:1'
+    ];
   }
+  async _getXml(url) {
+    let once = false;
 
-  request(url, function (err, res, body) {
-    if (err) {
-      return callback(err);
-    }
+    const {status, data} = await axios.get(url, {validateStatus: () => true});
 
-    if (res.statusCode !== 200) {
-      respond(Error("Failed to lookup device description"));
-      return;
-    }
+    if(fastXmlParser.validate(data) === true) {
+      const result = fastXmlParser.parse(data);
 
-    var parser = new xml2js.Parser();
-    parser.parseString(body, function (err, body) {
-      if (err) {
-        return respond(err);
+      if (status !== 200) {
+        throw new Error('Failed to lookup device description' + yJSON.stringify(result['s:Envelope']['s:Body']['s:Fault'], null, 2));
       }
 
-      respond(null, body);
-    });
-  });
-};
-
-Device.prototype.getService = function getService(types, callback) {
-  var self = this;
-
-  this._getXml(this.description, function (err, info) {
-    if (err) {
-      return callback(err);
+      return result.root;
+    } else {
+      throw new Error('XML Parse error');
     }
+  }
+  async getService(types) {
+    const info = await this._getXml(this._description);
 
-    var s = self.parseDescription(info).services.filter(function (service) {
-      return types.indexOf(service.serviceType) !== -1;
-    });
+    const s = this.parseDescription(info).services
+      .filter((service) => types.includes(service.serviceType));
 
     if (s.length === 0 || !s[0].controlURL || !s[0].SCPDURL) {
-      return callback(Error("Service not found"));
+      throw new Error('Service not found');
     }
 
-    var base = url.parse(info.baseURL || self.description);
+    const base = url.parse(info.baseURL || this._description);
+    const prefix = (u) => {
+      const uri = url.parse(u);
 
-    function prefix(u) {
-      var uri = url.parse(u);
       uri.host = uri.host || base.host;
       uri.protocol = uri.protocol || base.protocol;
 
       return url.format(uri);
     }
 
-    callback(null, {
+    return {
       service: s[0].serviceType,
       SCPDURL: prefix(s[0].SCPDURL),
-      controlURL: prefix(s[0].controlURL),
-    });
-  });
-};
-
-Device.prototype.parseDescription = function parseDescription(info) {
-  var self = this;
-  if (!info) {
-    return this.logger.debug("upnp invalid info at device parseDescription");
+      controlURL: prefix(s[0].controlURL)
+    };
   }
+  parseDescription(info) {
+    const services = [];
+    const devices = [];
 
-  var services = [],
-    devices = [];
+    const toArray = (item) => {
+      return Array.isArray(item) ? item : [ item ];
+    };
 
-  function toArray(item) {
-    return Array.isArray(item) ? item : [item];
-  }
-
-  function traverseServices(service) {
-    if (!service) {
-      return;
+    const traverseServices = (service) => {
+      if (!service) return;
+      services.push(service);
     }
 
-    services.push(service);
-  }
+    const traverseDevices = (device) => {
+      if (!device) return;
+      devices.push(device);
 
-  function traverseDevices(device) {
-    if (!device) {
-      self.logger.debug("UPnP invalid device at traverseDevices");
-      return;
-    }
-
-    devices.push(device);
-
-    if (device.deviceList && device.deviceList.device) {
-      toArray(device.deviceList.device).forEach(traverseDevices);
-    }
-
-    if (device.serviceList && device.serviceList.service) {
-      toArray(device.serviceList.service).forEach(traverseServices);
-    }
-  }
-
-  traverseDevices(info.device);
-
-  return {
-    services: services,
-    devices: devices,
-  };
-};
-
-Device.prototype.run = function run(action, args, callback) {
-  var self = this;
-  this.logger.debug("UPnP action: " + action);
-
-  this.getService(this.services, function (err, info) {
-    if (err) {
-      return callback(err);
-    }
-
-    self.logger.debug("UPnP controlURL: " + info.controlURL);
-
-    var body =
-      '<?xml version="1.0"?>' +
-      "<s:Envelope " +
-      'xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" ' +
-      's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">' +
-      "<s:Body>" +
-      "<u:" +
-      action +
-      " xmlns:u=" +
-      JSON.stringify(info.service) +
-      ">" +
-      args
-        .map(function (args) {
-          return (
-            "<" +
-            args[0] +
-            ">" +
-            (args[1] === undefined ? "" : args[1]) +
-            "</" +
-            args[0] +
-            ">"
-          );
-        })
-        .join("") +
-      "</u:" +
-      action +
-      ">" +
-      "</s:Body>" +
-      "</s:Envelope>";
-
-    request(
-      {
-        method: "POST",
-        url: info.controlURL,
-        headers: {
-          "Content-Type": 'text/xml; charset="utf-8"',
-          "Content-Length": Buffer.byteLength(body),
-          Connection: "close",
-          SOAPAction: JSON.stringify(info.service + "#" + action),
-        },
-        body: body,
-      },
-      function (err, res, body) {
-        if (err) {
-          return callback(err);
-        }
-
-        var parser = new xml2js.Parser();
-        parser.parseString(body, function (err, body) {
-          if (res.statusCode !== 200) {
-            return callback(Error("upnp request failed: " + res.statusCode));
-          }
-
-          var soapns = nat.utils.getNamespace(
-            body,
-            "http://schemas.xmlsoap.org/soap/envelope/"
-          );
-          callback(null, body[soapns + "Body"]);
-        });
+      if (device.deviceList && device.deviceList.device) {
+        toArray(device.deviceList.device).forEach(traverseDevices);
       }
-    );
-  });
-};
+
+      if (device.serviceList && device.serviceList.service) {
+        toArray(device.serviceList.service).forEach(traverseServices);
+      }
+    }
+
+    traverseDevices(info.device);
+
+    return {
+      services: services,
+      devices: devices
+    };
+  }
+  async run(action, args = []) {
+    const info = await this.getService(this._services);
+    const body = '<?xml version="1.0"?>' +
+               '<s:Envelope ' +
+                 'xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" ' +
+                 's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">' +
+               '<s:Body>' +
+                  '<u:' + action + ' xmlns:u=' +
+                          JSON.stringify(info.service) + '>' +
+                    args.map((args) => {
+                      return '<' + args[0]+ '>' +
+                             (args[1] === undefined ? '' : args[1]) +
+                             '</' + args[0] + '>';
+                    }).join('') +
+                  '</u:' + action + '>' +
+               '</s:Body>' +
+               '</s:Envelope>';
+
+    const options = {
+      headers: {
+        'Content-Type': 'text/xml; charset="utf-8"',
+        'Content-Length': Buffer.byteLength(body),
+        'Connection': 'close',
+        'SOAPAction': JSON.stringify(info.service + '#' + action)
+      },
+      validateStatus: () => true
+    };
+
+    var {status, data} = await axios.post(info.controlURL, body, options);
+
+
+    if(fastXmlParser.validate(data) === true) {
+      const result = fastXmlParser.parse(data);
+
+      if (status !== 200) {
+        throw new Error(`${action} failed: ` + JSON.stringify(result['s:Envelope']['s:Body']['s:Fault'], null, 2));
+      }
+
+      if (result && result['s:Envelope'] && result['s:Envelope']['s:Body']) {
+        return result['s:Envelope']['s:Body'];
+      } else {
+        throw new Error('SOAP Parse error');
+      }
+    } else {
+      throw new Error('XML Parse error');
+    }
+  }
+}

@@ -19,9 +19,8 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-var nat = exports;
+const nat = exports;
 
-nat.utils = require('./nat-upnp/utils');
 nat.ssdp = require('./nat-upnp/ssdp');
 nat.device = require('./nat-upnp/device');
-nat.createClient = require('./nat-upnp/client').create;
+nat.createClient = require('./nat-upnp/client');
