@@ -36,7 +36,7 @@ const interval = 600000; // 10 mins
 
 function upnpProc(callback) {
     try {
-        var upnpclient = natupnp.createClient(logger);
+        var upnpclient = new natupnp.createClient(logger);
         var wsport = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;
         var httpport = config.transport.port;
         async.waterfall([
