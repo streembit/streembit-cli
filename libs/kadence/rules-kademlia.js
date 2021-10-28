@@ -66,11 +66,11 @@ class KademliaRules {
      */
     store(request, response, next) {
         const [key, item] = request.params;
-        let itemPayload = item;
+        let itemPayload = typeof item.value === 'object' ? item.value : item;
 
         try {
             if (itemPayload.type === 'Buffer') {
-                itemPayload = JSON.parse(Buffer.from(item.data).toString('utf8'));
+                itemPayload = JSON.parse(Buffer.from(itemPayload.data).toString('utf8'));
                 if (typeof itemPayload === 'string') {
                     itemPayload = JSON.parse(itemPayload);
                 }

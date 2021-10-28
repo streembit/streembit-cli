@@ -70,3 +70,7 @@ db/leveldb/streembit/CURRENT
 package-lock.json
 **/package-lock.json
 
+streembit-cli.njsproj.user
+package-lock.json
+
+/.vs/streembit-cli/config/applicationhost.config

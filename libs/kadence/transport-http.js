@@ -114,20 +114,21 @@ class HTTPTransport extends DuplexStream {
      */
     _write([id, buffer, target], encoding, callback) {
         let [, contact] = target;
-
+    
         // NB: If responding to a received request...
         if (this._pending.has(id)) {
             this._pending.get(id).response.end(buffer);
             this._pending.delete(id);
             return callback(null);
         }
-
+    
         // NB: If originating an outbound request...
         const reqopts = {
             hostname: contact.hostname,
             port: contact.port,
             protocol: contact.protocol,
             method: 'POST',
+            rejectUnauthorized: !config.transport.ssl,
             headers: {
                 'x-kad-message-id': id
             }
@@ -140,9 +141,9 @@ class HTTPTransport extends DuplexStream {
         if (typeof contact.path === 'string') {
             reqopts.path = contact.path;
         }
-
+    
         const request = this._createRequest(reqopts);
-
+    
         request.on('response', (response) => {
             response.on('error', (err) => this.emit('error', err));
             response.pipe(concat((buffer) => {
@@ -153,13 +154,16 @@ class HTTPTransport extends DuplexStream {
                 }
             }));
         });
-
-        request.on('error', (err) => this.emit('error', err));
+    
+        request.on('error', (err) => {
+            err.dispose = id;
+            this.emit('error', err);
+        });
         request.end(buffer);
-
+    
         callback();
     }
-
+    
     /**
      * Default request handler
      * @private
