@@ -39,7 +39,7 @@ var Message = require('../message');
  * @param {Object} protocolspec - dictionary of methods
  * @returns {Function}
  */
-module.exports = function ProtocolFactory(protocolspec) {
+const ProtocolFactory = (protocolspec) => {
   assert(typeof protocolspec === 'object', 'Invalid protocol specification');
 
   return function protocol(message, contact, next) {
@@ -59,10 +59,10 @@ module.exports = function ProtocolFactory(protocolspec) {
     }
 
     // call the method and halt the middleware stack here
-    method.call(rpc, message.params, function(err, result) {
+    method.call(rpc, message.params, function (err, result) {
       var reply = new Message({
         error: err,
-        result:  merge({ contact: rpc._contact }, result),
+        result: merge({ contact: rpc._contact }, result),
         id: message.id
       });
 
@@ -70,3 +70,5 @@ module.exports = function ProtocolFactory(protocolspec) {
     });
   };
 };
+
+module.exports = ProtocolFactory;

@@ -38,7 +38,7 @@ var assert = require('assert');
  * @param {Array} whitelist - list of nodeID's to allow
  * @returns {Function}
  */
-module.exports = function WhitelistFactory(whitelist) {
+const WhitelistFactory = (whitelist) => {
   assert(Array.isArray(whitelist), 'Invalid whitelist supplied');
 
   return function whitelister(message, contact, next) {
@@ -49,3 +49,5 @@ module.exports = function WhitelistFactory(whitelist) {
     next();
   };
 };
+
+module.exports = WhitelistFactory;
