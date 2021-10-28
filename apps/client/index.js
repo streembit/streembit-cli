@@ -134,7 +134,7 @@ function resolveHost(callback, initUpdater = null) {
     }
 }
 
-module.exports = exports = function (callback) {
+module.exports =  function (callback) {
     try {
         config.net = constants.CLIENTNET;
 
