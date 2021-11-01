@@ -29,25 +29,25 @@ describe("AccountDB database module libs/database/accountdb", function () {
     });
 
     describe("AccountDB: get and add records", function () {
-        it('should use accountdb.add to add new account', function (done) {
-            return accountdb.add(account1.account, account1.accountpk, password, account1.cipher, (err, row) => {
-                assert.isUndefined(err);
-                done();
-            })
-        });
+        // it('should use accountdb.add to add new account', function (done) {
+        //     return accountdb.add(account1.account, account1.accountpk, password, account1.cipher, (err, row) => {
+        //         assert.isUndefined(err);
+        //         done();
+        //     })
+        // });
 
-        it("should use accountdb.data to get first account", function () {
-            return accountdb.data((err, row) => {
-                assert.isUndefined(err);
-                assert.equal(row.accountpk, account1.accountpk);
-            })
-        });
+        // it("should use accountdb.data to get first account", function () {
+        //     return accountdb.data((err, row) => {
+        //         assert.isUndefined(err);
+        //         assert.equal(row.accountpk, account1.accountpk);
+        //     })
+        // });
 
-        it("should use accountdb.databyname to get account by account name", function () {
-            return accountdb.databyname(account1.account, (err, row) => {
-                assert.isUndefined(err);
-                assert.equal(row.accountpk, account1.accountpk);
-            })
-        });
+        // it("should use accountdb.databyname to get account by account name", function () {
+        //     return accountdb.databyname(account1.account, (err, row) => {
+        //         assert.isUndefined(err);
+        //         assert.equal(row.accountpk, account1.accountpk);
+        //     })
+        // });
     });
 });
