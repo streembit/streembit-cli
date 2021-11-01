@@ -51,80 +51,87 @@ var merge = require('merge');
  * @param {Object} spec.result - Result data for response message
  * @param {Error} spec.error - Error object to convert to message
  */
-function Message(spec) {
-    if (!(this instanceof Message)) {
-        return new Message(spec);
-    }
 
-    this.jsonrpc = '2.0';
-
-    if (Message.isRequest(spec)) {
-        this.id = spec.id || Message.createID();
-        this.method = spec.method;
-        this.params = spec.params;
-    } else if (Message.isResponse(spec)) {
-        this.id = spec.id;
-        this.result = merge({}, spec.result);
-        if (spec.error) {
-            this.error = {
-                code: -32603,
-                message: spec.error.message
-            };
+class Message {
+    constructor(spec) {
+        if (!(this instanceof Message)) {
+            return new Message(spec);
         }
-    } else {
-        throw new Error('Invalid message specification');
+
+        this.jsonrpc = '2.0';
+
+        if (this.isRequest(spec)) {
+            this.id = spec.id || this.createID();
+            this.method = spec.method;
+            this.params = spec.params;
+        } else if (this.isResponse(spec)) {
+            this.id = spec.id;
+            this.result = merge({}, spec.result);
+            if (spec.error) {
+                this.error = {
+                    code: -32603,
+                    message: spec.error.message
+                };
+            }
+        } else {
+            throw new Error('Invalid message specification');
+        }
     }
+
+
+    /**
+     * Serialize message to a Buffer
+     * @returns {Buffer}
+     */
+    serialize() {
+        return new Buffer(JSON.stringify(this), 'utf8');
+    };
+
+    /**
+     * Returns a boolean indicating if this message is a request
+     * @param {Message} message - Message instance to inspect
+     * @returns {Boolean}
+     */
+    isRequest(parsed) {
+        return !!(parsed.method && parsed.params);
+    };
+
+    /**
+     * Returns a boolean indicating if this message is a response
+     * @param {Message} message - Message instance to inspect
+     * @returns {Boolean}
+     */
+    isResponse(parsed) {
+        return !!(parsed.id && (parsed.result || parsed.error));
+    };
+
+    /**
+     * Create a Message instance from a buffer
+     * @param {Buffer} buffer - Binary blob to convert to message object
+     * @returns {Message}
+     */
+    fromBuffer(buffer) {
+        const _convertByteArrays = (key, value) => {
+            return value && value.type === 'Buffer' ? new Buffer(value.data) : value;
+        }
+
+        var jsonstr = buffer.toString('utf8');
+        var parsed = JSON.parse(jsonstr, _convertByteArrays);
+        var message = new Message(parsed);
+
+        return message;
+    };
+
+    /**
+     * Returns a message id
+     * @returns {String}
+     */
+    createID() {
+        return hat.rack(constants.B)();
+    };
+
+
 }
 
-/**
- * Serialize message to a Buffer
- * @returns {Buffer}
- */
-Message.prototype.serialize = function () {
-    return new Buffer(JSON.stringify(this), 'utf8');
-};
-
-/**
- * Returns a boolean indicating if this message is a request
- * @param {Message} message - Message instance to inspect
- * @returns {Boolean}
- */
-Message.isRequest = function (parsed) {
-    return !!(parsed.method && parsed.params);
-};
-
-/**
- * Returns a boolean indicating if this message is a response
- * @param {Message} message - Message instance to inspect
- * @returns {Boolean}
- */
-Message.isResponse = function (parsed) {
-    return !!(parsed.id && (parsed.result || parsed.error));
-};
-
-/**
- * Create a Message instance from a buffer
- * @param {Buffer} buffer - Binary blob to convert to message object
- * @returns {Message}
- */
-Message.fromBuffer = function (buffer) {
-    function _convertByteArrays(key, value) {
-        return value && value.type === 'Buffer' ? new Buffer(value.data) : value;
-    }
-
-    var jsonstr = buffer.toString('utf8');
-    var parsed = JSON.parse(jsonstr, _convertByteArrays);
-    var message = new Message(parsed);
-
-    return message;
-};
-
-/**
- * Returns a message id
- * @returns {String}
- */
-Message.createID = function () {
-    return hat.rack(constants.B)();
-};
 
 module.exports = Message;
