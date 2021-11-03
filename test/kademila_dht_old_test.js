@@ -189,7 +189,9 @@ describe("KademilaDHT peer put and get libs/kad/node", function () {
 
   });
   describe('KademilaDHT listen', function() {
-
+  
+  
+    
     it('should use kad rules and setup refresh/replicate', function(done) {
       let sandbox = sinon.createSandbox();
       let clock2 = sinon.useFakeTimers(Date.now(), 'setTimeout');
@@ -199,9 +201,10 @@ describe("KademilaDHT peer put and get libs/kad/node", function () {
       let expire = sandbox.stub(kademliaNode, 'expire');
       sandbox.stub(transport, 'listen');
       kademliaNode.listen();
-      clock.tick(constants.T_REPLICATE);
+      clock.tick(constants.T_REPLICATE,done());
       clock2.tick(ms('30m')); // Account for convoy prevention
       setImmediate(() => {
+        refresh.restore();
         sandbox.restore();
         clock2.restore();
         expect(use.calledWithMatch('PING')).to.equal(true);
@@ -218,105 +221,125 @@ describe("KademilaDHT peer put and get libs/kad/node", function () {
 
   });
 
-  // describe('@method join', function() {
+  describe('@method join', function() {
 
-  //   it('should insert contact, lookup, and refresh buckets', function(done) {
-  //     let sandbox = sinon.createSandbox();
+    it('should insert contact, lookup, and refresh buckets', function(done) {
+      let sandbox = sinon.createSandbox();
 
-  //     let addContactByNodeId = sandbox.stub(
-  //       kademliaNode.router,
-  //       'addContactByNodeId'
-  //     );
-  //     let iterativeFindNode = sinsandboxon.stub(
-  //       kademliaNode,
-  //       'iterativeFindNode'
-  //     ).callsFake(function(p, cb) {
-  //       addContactByNodeId.restore();
-  //       kademliaNode.router.addContactByNodeId(
-  //         'da48d3f07a5241291ed0b4cab6483fa8b8fcc128',
-  //         {}
-  //       );
-  //       kademliaNode.router.addContactByNodeId(
-  //         'ca48d3f07a5241291ed0b4cab6483fa8b8fcc128',
-  //         {}
-  //       );
-  //       kademliaNode.router.addContactByNodeId(
-  //         'ba48d3f07a5241291ed0b4cab6483fa8b8fcc128',
-  //         {}
-  //       );
-  //       cb();
-  //     });
-  //     let getClosestBucket = sandbox.stub(
-  //       kademliaNode.router,
-  //       'getClosestBucket'
-  //     ).returns([constants.B - 1, kademliaNode.router.get(constants.B - 1)]);
-  //     let refresh = sandbox.stub(kademliaNode, 'refresh').callsArg(1);
-  //     kademliaNode.join(['ea48d3f07a5241291ed0b4cab6483fa8b8fcc128', {
-  //       hostname: 'localhost',
-  //       port: 8080
-  //     }], (err) => {
-  //       kademliaNode.router.removeContactByNodeId(
-  //         'da48d3f07a5241291ed0b4cab6483fa8b8fcc128'
-  //       );
-  //       kademliaNode.router.removeContactByNodeId(
-  //         'ca48d3f07a5241291ed0b4cab6483fa8b8fcc128'
-  //       );
-  //       kademliaNode.router.removeContactByNodeId(
-  //         'ba48d3f07a5241291ed0b4cab6483fa8b8fcc128'
-  //       );
-  //       iterativeFindNode.restore();
-  //       getClosestBucket.restore();
-  //       refresh.restore();
-  //       expect(err).to.not.be.instanceOf(Error);
-  //       expect(addContactByNodeId.calledWithMatch(
-  //         'ea48d3f07a5241291ed0b4cab6483fa8b8fcc128'
-  //       )).to.equal(true);
-  //       expect(iterativeFindNode.calledWithMatch(
-  //         kademliaNode.identity.toString('hex')
-  //       )).to.equal(true);
-  //       expect(refresh.callCount).to.equal(1);
-  //       done();
-  //     });
-  //     done();
-  //   });
+      let addContactByNodeId = sandbox.stub(
+        kademliaNode.router,
+        'addContactByNodeId'
+      );
+      let iterativeFindNode = sinon.stub(
+        kademliaNode,
+        'iterativeFindNode'
+      ).callsFake(function(p, cb) {
+        addContactByNodeId.restore();
+        kademliaNode.router.addContactByNodeId(
+          'da48d3f07a5241291ed0b4cab6483fa8b8fcc128',
+          {}
+        );
+        kademliaNode.router.addContactByNodeId(
+          'ca48d3f07a5241291ed0b4cab6483fa8b8fcc128',
+          {}
+        );
+        kademliaNode.router.addContactByNodeId(
+          'ba48d3f07a5241291ed0b4cab6483fa8b8fcc128',
+          {}
+        );
+        cb();
+      });
+      let getClosestBucket = sandbox.stub(
+        kademliaNode.router,
+        'getClosestBucket'
+      ).returns([constants.B - 1, kademliaNode.router.get(constants.B - 1)]);
+      let refresh = sandbox.stub(kademliaNode, 'refresh').callsArg(1);
 
-  //   it('should error if lookup fails', function(done) {
-  //     let addContactByNodeId = sinon.stub(
-  //       kademliaNode.router,
-  //       'addContactByNodeId'
-  //     );
-  //     let iterativeFindNode = sinon.stub(
-  //       kademliaNode,
-  //       'iterativeFindNode'
-  //     ).callsArgWith(1, new Error('Lookup failed'));
-  //     let getClosestBucket = sinon.stub(
-  //       kademliaNode.router,
-  //       'getClosestBucket'
-  //     ).returns([constants.B - 1, kademliaNode.router.get(constants.B - 1)]);
-  //     let refresh = sinon.stub(kademliaNode, 'refresh').callsArg(1);
-  //     kademliaNode.join(['ea48d3f07a5241291ed0b4cab6483fa8b8fcc128', {
-  //       hostname: 'localhost',
-  //       port: 8080
-  //     }], (err) => {
-  //       addContactByNodeId.restore();
-  //       iterativeFindNode.restore();
-  //       getClosestBucket.restore();
-  //       refresh.restore();
-  //       expect(err.message).to.equal('Lookup failed');
-  //       expect(addContactByNodeId.calledWithMatch(
-  //         'ea48d3f07a5241291ed0b4cab6483fa8b8fcc128'
-  //       )).to.equal(true);
-  //       expect(iterativeFindNode.calledWithMatch(
-  //         kademliaNode.identity.toString('hex')
-  //       )).to.equal(true);
-  //       expect(refresh.callCount).to.equal(0);
-  //       done();
-  //     });
-  //   });
+      kademliaNode.join(['ea48d3f07a5241291ed0b4cab6483fa8b8fcc128', {
+        hostname: 'localhost',
+        port: 8080
+      }], (err) => {
+        kademliaNode.router.removeContactByNodeId(
+          'da48d3f07a5241291ed0b4cab6483fa8b8fcc128'
+        );
+        kademliaNode.router.removeContactByNodeId(
+          'ca48d3f07a5241291ed0b4cab6483fa8b8fcc128'
+        );
+        kademliaNode.router.removeContactByNodeId(
+          'ba48d3f07a5241291ed0b4cab6483fa8b8fcc128'
+        );
+        iterativeFindNode.restore();
+        getClosestBucket.restore();
+      
+        expect(err).to.not.be.instanceOf(Error);
+        expect(addContactByNodeId.calledWithMatch(
+          'ea48d3f07a5241291ed0b4cab6483fa8b8fcc128'
+        )).to.equal(true);
+        expect(iterativeFindNode.calledWithMatch(
+          kademliaNode.identity.toString('hex')
+        )).to.equal(true);
+        expect(refresh.callCount).to.equal(1);
+        refresh.restore();
+        done();
+      });
+      done();
+    });
 
-  // });
+    it('should error if lookup fails', function(done) {
+      let addContactByNodeId = sinon.stub(
+        kademliaNode.router,
+        'addContactByNodeId'
+      );
+      let iterativeFindNode = sinon.stub(
+        kademliaNode,
+        'iterativeFindNode'
+      ).callsArgWith(1, new Error('Lookup failed'));
+      let getClosestBucket = sinon.stub(
+        kademliaNode.router,
+        'getClosestBucket'
+      ).returns([constants.B - 1, kademliaNode.router.get(constants.B - 1)]);
+      let refresh = sinon.stub(kademliaNode, 'refresh').callsArg(1);
+      kademliaNode.join(['ea48d3f07a5241291ed0b4cab6483fa8b8fcc128', {
+        hostname: 'localhost',
+        port: 8080
+      }], (err) => {
+        addContactByNodeId.restore();
+        iterativeFindNode.restore();
+        getClosestBucket.restore();
+        refresh.restore();
+        expect(err.message).to.equal('Lookup failed');
+        expect(addContactByNodeId.calledWithMatch(
+          'ea48d3f07a5241291ed0b4cab6483fa8b8fcc128'
+        )).to.equal(true);
+        expect(iterativeFindNode.calledWithMatch(
+          kademliaNode.identity.toString('hex')
+        )).to.equal(true);
+        expect(refresh.callCount).to.equal(0);
+        done();
+      });
+    });
 
+  });
 
+describe('KademilaDHT: ping',    function() {
+  it('should call send with PING message',  function(done) {
+    let send =   sinon.stub(kademliaNode, 'send').callsFake((a, b, c, d) => {
+      setTimeout(d, 10);
+      done()
+    });
+    let contact = ['ea48d3f07a5241291ed0b4cab6483fa8b8fcc128', {
+      hostname: 'localhost',
+      port: 8080
+    }];
+    kademliaNode.ping(contact, (err, latency) => {
+      send.restore();
+      expect(send.calledWithMatch('PING', [], contact)).to.equal(true);
+      expect(latency > 0).to.equal(true);
+      done();
+    });
+  });
+
+});
 
   describe('KademilaDHT: expire', function() {
     it('should expire the correct items', function(done) {
@@ -407,22 +430,3 @@ describe("KademilaDHT peer put and get libs/kad/node", function () {
 });
 
 
-describe('KademilaDHT: ping',    function() {
-  it('should call send with PING message',  function(done) {
-    let send =   sinon.stub(kademliaNode, 'send').callsFake((a, b, c, d) => {
-      setTimeout(d, 10);
-      done()
-    });
-    let contact = ['ea48d3f07a5241291ed0b4cab6483fa8b8fcc128', {
-      hostname: 'localhost',
-      port: 8080
-    }];
-    kademliaNode.ping(contact, (err, latency) => {
-      send.restore();
-      expect(send.calledWithMatch('PING', [], contact)).to.equal(true);
-      expect(latency > 0).to.equal(true);
-      done();
-    });
-  });
-
-});
