@@ -134,6 +134,10 @@ class HTTPTransport extends DuplexStream {
             }
         };
     
+        if (config.transport.ssl) {
+            reqopts.rejectUnauthorized = false;
+        }
+
         if (typeof contact.path === 'string') {
             reqopts.path = contact.path;
         }

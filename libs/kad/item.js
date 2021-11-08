@@ -42,7 +42,7 @@ var utils = require('./utils');
  * @param {String} publisher - Original publisher's nodeID
  * @param {Number} timestamp - Optional UNIX timestamp of original publication
  */
-function Item(key, value, publisher, timestamp) {
+const Item = (key, value, publisher, timestamp) => {
     if (!(this instanceof Item)) {
         return new Item(key, value, publisher, timestamp);
     }

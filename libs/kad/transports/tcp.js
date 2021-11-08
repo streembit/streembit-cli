@@ -31,13 +31,12 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var assert = require('assert');
-var inherits = require('util').inherits;
-var clarinet = require('clarinet');
-var net = require('net');
-var StreembitContact = require('../contacts/streembit-contact');
-var RPC = require('../rpc');
-var Message = require('../message');
+const assert = require('assert');
+const clarinet = require('clarinet');
+const net = require('net');
+const StreembitContact = require('../contacts/streembit-contact');
+const RPC = require('../rpc');
+const Message = require('../message');
 
 /**
  * Transport adapter that sends and receives messages over a TCP socket
@@ -45,205 +44,201 @@ var Message = require('../message');
  * @extends {RPC}
  * @param {StreembitContact} contact - Your node's {@link Contact} instance
  */
-function TCPTransport(contact, options) {
-    if (!(this instanceof TCPTransport)) {
-        return new TCPTransport(contact, options);
-    }
 
-    assert(contact instanceof StreembitContact , 'Invalid contact supplied');
-    assert(typeof contact.host === 'string' && contact.host.length > 0, 'Invalid host was supplied');
-    assert(typeof contact.port === 'number' && contact.port > 0, 'Invalid port was supplied');
+class TCPTransport extends RPC {
 
-    RPC.call(this, contact, options);
-    this.on('MESSAGE_DROP', this._handleDroppedMessage.bind(this));
-}
-
-inherits(TCPTransport, RPC);
-
-/**
- * Create a TCP socket and listen for messages
- * @private
- * @param {Function} done
- */
-TCPTransport.prototype._open = function(done) {
-  var self = this;
-
-  this._socket = net.createServer(this._handleConnection.bind(this));
-  this._queuedResponses = {};
-
-  this._socket.on('error', function(err) {
-    self._log.error('rpc encountered and error: %s', err.message);
-  });
-
-  this._socket.on('listening', done);
-  this._socket.listen(this._contact.port);
-};
-
-/**
- * Send a RPC to the given contact
- * @private
- * @param {Buffer} data
- * @param {Contact} contact
- */
-TCPTransport.prototype._send = function(data, contact) {
-    var self = this;
-    var parsed = JSON.parse(data.toString());
-
-    if (this._queuedResponses[parsed.id]) {
-        this._queuedResponses[parsed.id].end(data);
-        delete this._queuedResponses[parsed.id];
-        return;
-    }
+    constructor(contact, options) {
+        super(contact, options);
+        if (!(this instanceof TCPTransport)) {
+            return new TCPTransport(contact, options);
+        }
     
-    if (!contact.valid()) {
-        this._log.warn('Refusing to send message to invalid contact');
-        return this.receive(null);
+        assert(contact instanceof StreembitContact , 'Invalid contact supplied');
+        assert(typeof contact.host === 'string' && contact.host.length > 0, 'Invalid host was supplied');
+        assert(typeof contact.port === 'number' && contact.port > 0, 'Invalid port was supplied');
+
+        RPC.call(this, contact, options);
+        this.on('MESSAGE_DROP', this._handleDroppedMessage.bind(this));
     }
 
-    var sock = net.createConnection(contact.port, contact.host);
+    /**
+     * Create a TCP socket and listen for messages
+     * @private
+     * @param {Function} done
+     */
+    _open(done) {
+        const self = this;
 
-    sock.on('error', function(err) {
-        //self._log.error('error connecting to peer: ' + err.message);
-    });
+        this._socket = net.createServer(this._handleConnection.bind(this));
+        this._queuedResponses = {};
 
-    this._queuedResponses[parsed.id] = sock;
+        this._socket.on('error', (err) => {
+        self._log.error('rpc encountered and error: %s', err.message);
+        });
 
-    this._handleConnection(sock);
-    sock.write(data);
-};
+        this._socket.on('listening', done);
+        this._socket.listen(this._contact.port);
+    };
 
-/**
- * Close the underlying socket
- * @private
- */
-TCPTransport.prototype._close = function() {
-  this._socket.close();
-};
+    /**
+     * Send a RPC to the given contact
+     * @private
+     * @param {Buffer} data
+     * @param {Contact} contact
+     */
+    _send(data, contact) {
+        const self = this;
+        const parsed = JSON.parse(data.toString());
 
-/**
- * Handle incoming connection
- * @private
- * @param {Object} connection
- */
-TCPTransport.prototype._handleConnection = function (connection) {
+        if (this._queuedResponses[parsed.id]) {
+            this._queuedResponses[parsed.id].end(data);
+            delete this._queuedResponses[parsed.id];
+            return;
+        }
 
-    var self = this;
+        if (!contact.valid()) {
+            this._log.warn('Refusing to send message to invalid contact');
+            return this.receive(null);
+        }
 
-    var parser = clarinet.createStream();
-    var buffer = '';
-    var opened = 0;
-    var closed = 0;
-    
-    function handleInvalidMsg() {
-        buffer = '';
-        opened = 0;
-        closed = 0;
-        // TODO list on the blacklist
-    }
+        const sock = net.createConnection(contact.port, contact.host);
 
-    parser.on('openobject', function() {
-        opened++;
-    });
+        sock.on('error', (err) => {
+            //self._log.error('error connecting to peer: ' + err.message);
+        });
 
-    parser.on('closeobject', function() {
-        closed++;
+        this._queuedResponses[parsed.id] = sock;
 
-        if (opened === closed) {
-            var parsed;
-            try {
-                parsed = JSON.parse(buffer);
-            } 
-            catch (err) {               
-                return handleInvalidMsg();
-            }
-            
-            if (!parsed) {
-                return handleInvalidMsg();
-            }
-            
-            try {
-                if (parsed.type) {
-                    switch (parsed.type) {
-                        case "DISCOVERY":
-                            self._log.debug('DISCOVERY message');
-                            var addr = connection.remoteAddress;
-                            var reply = JSON.stringify({ address: addr });
-                            connection.write(reply);
-                            connection.end();
-                            break;
+        this._handleConnection(sock);
+        sock.write(data);
+    };
 
-                        case "PEERMSG":
-                            var addr = connection.remoteAddress;
-                            var port = connection.remotePort;
-                            self.emit('PEERMSG', parsed, { host: addr, port: port });
-                            break;
+    /**
+     * Close the underlying socket
+     * @private
+     */
+    _close() {
+        this._socket.close();
+    };
 
-                        default:
-                            handleInvalidMsg();
-                            connection.end();
-                            break;
-                    }
-                }
-                else{
-                    // all other messages
-                    if (parsed.id && !self._queuedResponses[parsed.id]) {
-                        self._queuedResponses[parsed.id] = connection;
-                    }
-                    
-                    self.receive(new Buffer(buffer), connection);
-                }
-            }
-            catch (e) {
-                self._log.error('TCP handleConnection error: %j', e);
-                connection.end();
-            }
+    /**
+     * Handle incoming connection
+     * @private
+     * @param {Object} connection
+     */
+    _handleConnection(connection) {
 
+        const self = this;
+
+        const parser = clarinet.createStream();
+        let buffer = '';
+        let opened = 0;
+        let closed = 0;
+
+        const handleInvalidMsg = () => {
             buffer = '';
             opened = 0;
             closed = 0;
+            // TODO list on the blacklist
         }
-    });
 
-    parser.on('error', function(err) {
-        self._log.error(err.message);
-        self._log.warn('failed to parse incoming message');
-        connection.end();
-    });
+        parser.on('openobject', () => {
+            opened++;
+        });
 
-    connection.on('error', function (err) {
-        //var clientaddr = connection.remoteAddress + ":" + connection.remotePort;
-        //self._log.error('error communicating with peer ' + clientaddr + ' error: ' + err.message);
-    });
+        parser.on('closeobject', () => {
+            closed++;
 
-    connection.on('data', function(data) {
-        buffer += data.toString('utf8');
-        parser.write(data.toString('utf8'));
-    });
-};
+            if (opened === closed) {
+                let parsed;
+                try {
+                    parsed = JSON.parse(buffer);
+                } catch (err) {
+                    return handleInvalidMsg();
+                }
 
+                if (!parsed) {
+                    return handleInvalidMsg();
+                }
 
-TCPTransport.prototype._handleDroppedMessage = function (buffer) {
-    var message;
+                try {
+                    if (parsed.type) {
+                        const addr = connection.remoteAddress;
+                        switch (parsed.type) {
+                            case "DISCOVERY":
+                                self._log.debug('DISCOVERY message');
+                                const reply = JSON.stringify({ address: addr });
+                                connection.write(reply);
+                                connection.end();
+                                break;
 
-    try {
-        message = Message.fromBuffer(buffer);
-    }
-    catch (err) {
-        this._log.error('_handleDroppedMessage Message error: ' + err.message);
-        return false;
-    }
+                            case "PEERMSG":
+                                const port = connection.remotePort;
+                                self.emit('PEERMSG', parsed, { host: addr, port: port });
+                                break;
 
-    try {
-        if (this._queuedResponses[message.id]) {
-            this._queuedResponses[message.id].end();
-            delete this._queuedResponses[message.id];
+                            default:
+                                handleInvalidMsg();
+                                connection.end();
+                                break;
+                        }
+                    } else{
+                        // all other messages
+                        if (parsed.id && !self._queuedResponses[parsed.id]) {
+                            self._queuedResponses[parsed.id] = connection;
+                        }
+
+                        self.receive(new Buffer(buffer), connection);
+                    }
+                } catch (e) {
+                    self._log.error('TCP handleConnection error: %j', e);
+                    connection.end();
+                }
+
+                buffer = '';
+                opened = 0;
+                closed = 0;
+            }
+        });
+
+        parser.on('error', (err) => {
+            self._log.error(err.message);
+            self._log.warn('failed to parse incoming message');
+            connection.end();
+        });
+
+        connection.on('error', (err) => {
+            //var clientaddr = connection.remoteAddress + ":" + connection.remotePort;
+            //self._log.error('error communicating with peer ' + clientaddr + ' error: ' + err.message);
+        });
+
+        connection.on('data', (data) => {
+            buffer += data.toString('utf8');
+            parser.write(data.toString('utf8'));
+        });
+    };
+
+    _handleDroppedMessage(buffer) {
+        let message;
+
+        try {
+            message = Message.fromBuffer(buffer);
+        } catch (err) {
+            this._log.error('_handleDroppedMessage Message error: ' + err.message);
+            return false;
         }
-    }
-    catch (err) {
-        this._log.error('_handleDroppedMessage _queuedResponses error: ' + err.message);
-    }
 
-    return true;
-};
+        try {
+            if (this._queuedResponses[message.id]) {
+                this._queuedResponses[message.id].end();
+                delete this._queuedResponses[message.id];
+            }
+        } catch (err) {
+            this._log.error('_handleDroppedMessage _queuedResponses error: ' + err.message);
+        }
+
+        return true;
+    };
+}
 
 module.exports = TCPTransport;

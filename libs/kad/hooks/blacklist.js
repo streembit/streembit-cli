@@ -38,7 +38,7 @@ var assert = require('assert');
  * @param {Array} blacklist - array of nodeID's to ban
  * @returns {Function}
  */
-module.exports = function BlacklistFactory(blacklist) {
+const BlacklistFactory = (blacklist) => {
   assert(Array.isArray(blacklist), 'Invalid blacklist supplied');
 
   return function blacklister(message, contact, next) {
@@ -49,3 +49,5 @@ module.exports = function BlacklistFactory(blacklist) {
     next();
   };
 };
+
+module.exports = BlacklistFactory;

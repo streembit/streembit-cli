@@ -34,53 +34,58 @@ var utils = require('./utils');
 
 /**
  * The base class from which custom contacts inherit; used by the included
- * {@link StreembitContact}. Nodes provide each other with contact
+ * {link StreembitContact}. Nodes provide each other with contact
  * information which indicates how others should communicate with them.
  * @constructor
  * @param {Object} options
  * @param {String} options.nodeID - Optional known 160 bit node ID
  */
-function Contact(options) {
-    if (!(this instanceof Contact)) {
-        return new Contact(options);
+
+
+class Contact {
+
+    constructor(options) {
+        if (!(this instanceof Contact)) {
+            return new Contact(options);
+        }
+        this.nodeID = options.nodeID || this.createNodeID();
+
+        assert(typeof options === 'object', 'Invalid options were supplied');
+
+
+
+        assert(utils.isValidKey(this.nodeID), 'Invalid nodeID was supplied');
+
+        this.seen();
     }
 
-    assert(typeof options === 'object', 'Invalid options were supplied');
+    /**
+     * Updates the lastSeen property to right now
+     */
+    seen() {
+        this.lastSeen = Date.now();
+    };
 
-    Object.defineProperty(this, 'nodeID', {
-        value: options.nodeID || this._createNodeID(),
-        configurable: false,
-        enumerable: true
-    });
+    /**
+     * Validator function for determining if contact is okay
+     * @abstract
+     * @returns {Boolean}
+     */
+    valid() {
+        return true;
+    };
 
-    assert(utils.isValidKey(this.nodeID), 'Invalid nodeID was supplied');
 
-    this.seen();
+    /**
+     * Unimplemented stub, called when no nodeID is passed to constructor.
+     * @private
+     * @abstract
+     */
+
+    createNodeID() {
+        throw new Error('Method not implemented');
+    };
+
 }
-
-/**
- * Updates the lastSeen property to right now
- */
-Contact.prototype.seen = function () {
-    this.lastSeen = Date.now();
-};
-
-/**
- * Validator function for determining if contact is okay
- * @abstract
- * @returns {Boolean}
- */
-Contact.prototype.valid = function () {
-    return true;
-};
-
-/**
- * Unimplemented stub, called when no nodeID is passed to constructor.
- * @private
- * @abstract
- */
-Contact.prototype._createNodeID = function () {
-    throw new Error('Method not implemented');
-};
 
 module.exports = Contact;

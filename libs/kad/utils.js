@@ -41,7 +41,7 @@ var constants = require('./constants');
  * @param {String} key - Key to test
  * @returns {Boolean}
  */
-exports.isValidKey = function (key) {
+exports.isValidKey =  (key) => {
     return !!key && key.length === constants.B / 4;
 };
 
@@ -50,7 +50,7 @@ exports.isValidKey = function (key) {
  * @param {String|Buffer} data - Data to SHA1 hash
  * @returns {String}
  */
-exports.createID = function (data) {
+exports.createID =  (data) => {
     //if (exports.isValidKey(data)) {
     //    return data;
     //}
@@ -64,7 +64,7 @@ exports.createID = function (data) {
  * @param {String} hexString
  * @returns {Buffer}
  */
-exports.hexToBuffer = function (hexString) {
+exports.hexToBuffer =  (hexString) => {
     //var buf = new Buffer(constants.B / 8);
     //buf.write(hexString, 0, 'hex');
     var buf = Buffer.from(hexString, 'hex');
@@ -77,7 +77,7 @@ exports.hexToBuffer = function (hexString) {
  * @param {String} key2
  * @returns {Number}
  */
-exports.getDistance = function (id1, id2) {
+exports.getDistance =  (id1, id2) => {
     assert(exports.isValidKey(id1), 'Invalid key supplied');
     assert(exports.isValidKey(id2), 'Invalid key supplied');
 
@@ -98,7 +98,7 @@ exports.getDistance = function (id1, id2) {
  * @param {Buffer} b2
  * @returns {Number}
  */
-exports.compareKeys = function (b1, b2) {
+exports.compareKeys =  (b1, b2) => {
     assert.equal(b1.length, b2.length);
 
     for (var i = 0; i < b1.length; ++i) {
@@ -120,7 +120,7 @@ exports.compareKeys = function (b1, b2) {
  * @param {String} id2
  * @returns {Number}
  */
-exports.getBucketIndex = function (id1, id2) {
+exports.getBucketIndex =  (id1, id2) => {
     assert(exports.isValidKey(id1), 'Invalid key supplied');
     assert(exports.isValidKey(id2), 'Invalid key supplied');
 
@@ -150,7 +150,7 @@ exports.getBucketIndex = function (id1, id2) {
  * @param {Number} exp
  * @returns {Buffer}
  */
-exports.getPowerOfTwoBuffer = function (exp) {
+exports.getPowerOfTwoBuffer =  (exp) => {
     assert.ok(exp >= 0 && exp < constants.B);
 
     var buffer = new Buffer(constants.K);
@@ -168,7 +168,7 @@ exports.getPowerOfTwoBuffer = function (exp) {
  * (index = n has nodes within distance 2^n <= distance < 2^(n+1))
  * @param {Number} index
  */
-exports.getRandomInBucketRangeBuffer = function (index) {
+exports.getRandomInBucketRangeBuffer =  (index) => {
     var base = exports.getPowerOfTwoBuffer(index);
     var byte = parseInt(index / 8); // randomize bytes below the power of two
 

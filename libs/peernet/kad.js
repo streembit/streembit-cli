@@ -168,6 +168,14 @@ class KadHandler {
             seeds: options.seeds
         };
 
+        if (config.transport.ssl) {
+            init_options.contact.cert = fs.readFileSync(config.transport.cert);
+            init_options.contact.key = fs.readFileSync(config.transport.key);
+            if (init_options.contact.ca) {
+                init_options.contact.ca = fs.readFileSync(config.transport.ca);
+            }
+        }
+
         var node = new kad.Node();
         node.init(init_options, (err, peer, peercount) => {
             if (err) {

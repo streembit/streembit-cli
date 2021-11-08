@@ -54,7 +54,10 @@ class KademliaNode extends AbstractNode {
      */
     constructor(options) {
         if (!options.hasOwnProperty('transport')) {
-            const http_transport = config.transport.ssl ?
+            if (options.contact.key) {
+                console.log("Creating transport-https");
+            }
+            const http_transport = options.contact.key ?
                 require('./transport-https') :
                 require('./transport-http');
 
