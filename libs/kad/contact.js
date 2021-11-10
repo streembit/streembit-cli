@@ -48,7 +48,7 @@ class Contact {
         if (!(this instanceof Contact)) {
             return new Contact(options);
         }
-        this.nodeID = options.nodeID || this.createNodeID();
+        this.nodeID = options.nodeID;
 
         assert(typeof options === 'object', 'Invalid options were supplied');
 

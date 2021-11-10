@@ -110,7 +110,7 @@ class Message {
      * @param {Buffer} buffer - Binary blob to convert to message object
      * @returns {Message}
      */
-    fromBuffer(buffer) {
+    static fromBuffer(buffer) {
         const _convertByteArrays = (key, value) => {
             return value && value.type === 'Buffer' ? new Buffer(value.data) : value;
         }
