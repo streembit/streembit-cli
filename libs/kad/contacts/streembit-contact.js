@@ -60,7 +60,7 @@ class StreembitContact extends Contact {
             assert(str.length <= 128, 'Invalid public key was supplied');
 
         }
-        options.nodeID = options.publickey;
+        options.nodeID = options.nodeID || options.publickey;
         super(options);
 
         if (!(this instanceof StreembitContact)) {
