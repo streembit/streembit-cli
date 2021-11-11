@@ -21,7 +21,11 @@ Copyright (C) 2016 The Streembit software development team
 
 "use strict";
 
-import { default as pinfo } from "./package.json";
+// These lines make "require" available
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const pinfo = require('./package.json');
+// import * as pinfo from "./package.json";
 import { Command } from "commander";
 import { Utils } from "./libs/utils/index.js";
 import { App } from "./app.js";
@@ -85,6 +89,38 @@ try {
       );
       process.exit(1);
     }
+  }
+
+  if (!bcclient && (!pwd || typeof pwd !== "string" || pwd.length < 6)) {
+    console.log(
+      "\x1b[31m%s\x1b[0m",
+      "Error:",
+      "Password required! Restart the app with --pwd PASSWORD or --pwd=PASSWORD"
+    );
+    process.exit(1);
+  }
+
+  switch (true) {
+    case (data):
+      app.display_data(pwd);
+      break;
+    case (backup):
+      app.backup(pwd);
+      break;
+    case (users):
+      app.list_users(pwd);
+    case (whitelist):
+      if (!addpk && !deluser) {
+        throw new Error('-w command option requires user private key being provided');
+      } else if (addpk && addpk.length < 64 || deluser && deluser.length < 64) {
+          throw new Error('Invalid public key');
+      }
+
+      app.whitelist_update(pwd, addpk || deluser, !!deluser);
+      break;
+    case (deluser):
+      app.delete_user(pwd);
+      break;
   }
 
   app.init(port, ip, pwd, !!cmd, bcclient);
