@@ -1,7 +1,10 @@
-const dbinstance = require("streembit-db").instance;
-const config = require("libs/config");
+// const dbinstance = require("streembit-db").instance;
+// const config = require("libs/config");
+import { config } from '../config/index.js';
+import Database from "streembit-db";
+const dbinstance = Database.instance;
 
-class database {
+export class database {
     constructor() {
         this.m_database = 0;
     }
@@ -23,4 +26,5 @@ class database {
     }
 }
 
-module.exports = database;
+
+// module.exports = database;

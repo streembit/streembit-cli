@@ -21,19 +21,25 @@ Copyright (C) 2017 ZoVolt Ltd
 
 'use strict';
 
-const crypto = require('crypto');
-const ecckey = require('libs/crypto');
-const createHash = require('create-hash');
-const secrand = require('secure-random');
-const config = require("libs/config");
-const Database = require("libs/database/accountdb");
-const peermsg = require("libs/message");
-const utils = require("libs/utils");
-const logger = require("streembit-util").logger;
+// const crypto = require('crypto');
+// const ecckey = require('libs/crypto');
+// const createHash = require('create-hash');
+// const secrand = require('secure-random');
+// const config = require("libs/config");
+// const Database = require("libs/database/accountdb");
+// const peermsg = require("libs/message");
+// const utils = require("libs/utils");
+// const logger = require("streembit-util").logger;
+
+import { Database } from "../database/accountdb.js";
+import { createHash } from 'crypto';
+import { config } from '../config/index.js';
+import * as peermsg from "../message/index.js";
+// import ecckey from "../crypto/index.js";
 
 let instance = null;
 
-class Account {
+export class Account {
 
     constructor() {
         if (!instance) {
@@ -217,29 +223,31 @@ class Account {
 
             var hexPrivatekey = accountobj.privatekey;
             // load ECC key from the hex private key
-            var key = new ecckey();
-            key.keyFromPrivate(hexPrivatekey, 'hex');
+            // var key = new ecckey();
+            // key.keyFromPrivate(hexPrivatekey, 'hex');
 
-            if (key.pkrmd160hash != data.accountpk) {
-                return callback("Error in initializing the account, most likely an incorrect password");
-            }
+            // if (key.pkrmd160hash != data.accountpk) {
+                // return callback("Error in initializing the account, most likely an incorrect password");
+            // }
 
-            this.ppkikey = key;
+            // this.ppkikey = key;
 
-            var skrnd = secrand.randomBuffer(32).toString("hex");
-            var skhash = createHash("sha256").update(skrnd).digest("hex");
-            this.connsymmkey = skhash;
+            // var skrnd = secrand.randomBuffer(32).toString("hex");
+            // var skhash = createHash("sha256").update(skrnd).digest("hex");
+            // this.connsymmkey = skhash;
 
-            logger.info("loaded pkhash: " + this.public_key_hash);
-            logger.info("loaded bs58pk: " + this.bs58pk);
+            // logger.info("loaded pkhash: " + this.public_key_hash);
+            // logger.info("loaded bs58pk: " + this.bs58pk);
 
-            this.accountname = data.account;
+            // this.accountname = data.account;
+            // console.log(data.account);
 
             // the account exists and the encrypted entropy is correct!
             callback();
         }
         catch (err) {
-            callback(err)
+            console.log("err: err: err: ", err);
+            // callback(err)
         }
     };
 
@@ -428,4 +436,4 @@ class Account {
     }
 }
 
-module.exports = Account;
+// module.exports = Account;

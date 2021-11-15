@@ -20,8 +20,11 @@ Copyright (C) 2016 The Streembit software development team
 */
 
 
-var jwt = require('./jwt');
-var jwe = require('./jwe');
+// var jwt = require('./jwt');
+// var jwe = require('./jwe');
+
+import { jwt } from './jwt.js';
+import { jwe } from './jwe.js';
 
 
 var MSGTYPE = {
@@ -299,33 +302,33 @@ function decrypt(symmetric_key, payload) {
 }
 
 
-function aes256decrypt(symmetric_key, cipher_text) {
+export function aes256decrypt(symmetric_key, cipher_text) {
     return jwe.aes256decrypt(symmetric_key, cipher_text);
 }
 
-function aes256encrypt(symmetric_key, data) {
+export function aes256encrypt(symmetric_key, data) {
     return jwe.aes256encrypt(symmetric_key, data);
 }
 
 
-module.exports = {
-    getpayload: get_message_payload,
-    decode: decode,
-    base64decode: base64decode,
-    create_jwt_token: create_jwt_token,
-    create_typedmsg: create_typedmsg,
-    create_symm_msg: create_symm_msg,
-    get_msg_array: get_msg_array,
-    ecdh_encypt: ecdh_encypt,
-    ecdh_decrypt: ecdh_decrypt,
-    decrypt: decrypt,
-    MSGTYPE: MSGTYPE,
-    MSGFIELD: MSGFIELD,
-    PEERMSG: PEERMSG,
-    //decrypt_ecdh: decrypt_ecdh, TODO use ecdh_decrypt
-    aes256encrypt: aes256encrypt,
-    aes256decrypt: aes256decrypt
-}
+// module.exports = {
+//     getpayload: get_message_payload,
+//     decode: decode,
+//     base64decode: base64decode,
+//     create_jwt_token: create_jwt_token,
+//     create_typedmsg: create_typedmsg,
+//     create_symm_msg: create_symm_msg,
+//     get_msg_array: get_msg_array,
+//     ecdh_encypt: ecdh_encypt,
+//     ecdh_decrypt: ecdh_decrypt,
+//     decrypt: decrypt,
+//     MSGTYPE: MSGTYPE,
+//     MSGFIELD: MSGFIELD,
+//     PEERMSG: PEERMSG,
+//     //decrypt_ecdh: decrypt_ecdh, TODO use ecdh_decrypt
+//     aes256encrypt: aes256encrypt,
+//     aes256decrypt: aes256decrypt
+// }
 
 
 

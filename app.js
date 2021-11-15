@@ -21,9 +21,19 @@ Copyright (C) 2016 The Streembit software development team
 
 "use strict";
 
-/*
-    Imports here
-*/
+import async from "async";
+import { config } from './libs/config/index.js';
+import { logger } from "streembit-util";
+import HTTPTransport from "./transport/http/index.js";
+import Database from "streembit-db";
+import dbschema from "./dbschema.json";
+import { Account } from './libs/account/index.js';
+
+// const dbschema = require("./dbschema");
+
+const database = Database.instance;
+
+// const config = new StreembitConfig();
 
 // initialize the logger
 export class App {
@@ -46,8 +56,7 @@ export class App {
                 logger.init(loglevel, null, ["file"]);
               } else {
                 logger.init(loglevel);
-              }
-
+              }  
               callback();
             } catch (e) {
               callback(e);
@@ -57,14 +66,15 @@ export class App {
             if (config.bcclient) {
               return callback();
             }
-
-            database.init(dbschema, callback);
+            try {
+              database.init(dbschema, callback);
+            } catch (e) {
+            }
           },
           function (callback) {
             if (config.bcclient) {
               return callback();
             }
-
             try {
               const account = new Account();
               account.init(password, callback);
@@ -76,21 +86,21 @@ export class App {
             if (config.bcclient) {
               return callback();
             }
-
+  
             var options = {
               port: config.transport.port,
             };
-            var httptransport = new HttpTransport(options);
+            var httptransport = new HTTPTransport(options);
             httptransport.init(callback);
           },
           function (callback) {
             if (config.bcclient) {
               return callback();
             }
-
+  
             try {
-              var tasks = new Tasks();
-              tasks.run(callback);
+              // var tasks = new Tasks();
+              // tasks.run(callback);
             } catch (e) {
               callback("Task init error: " + e.message);
             }
@@ -99,7 +109,7 @@ export class App {
             if (config.bcclient) {
               return callback();
             }
-
+  
             try {
               var users = new Users();
               users.init(callback);
@@ -109,9 +119,7 @@ export class App {
           },
           function (callback) {
             let port =
-              config.transport &&
-              config.transport.ws &&
-              config.transport.ws.port
+              config.transport && config.transport.ws && config.transport.ws.port
                 ? config.transport.ws.port
                 : constants.DEFAULT_WS_PORT;
             let maxconn =
@@ -135,17 +143,16 @@ export class App {
             if (config.bcclient) {
               return callback();
             }
-
+  
             const pubsub = new PubSub();
             pubsub.init(callback);
           },
         ],
         function (err) {
           if (err) {
-            console.log(err);
             return logger.error("application init error: %j", err);
           }
-
+  
           logger.info("The application has been initialized.");
 
           // app init event
@@ -155,7 +162,7 @@ export class App {
     } catch (e) {
       console.log("app error: " + e.message);
     }
-  }
+  };
 
   display_data(password) {
     async.waterfall(

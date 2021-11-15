@@ -19,7 +19,8 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-const database = require("libs/database/database");
+// const database = require("libs/database/database");
+import { database } from "./database.js";
 
 'use strict';
 
@@ -128,4 +129,7 @@ class AccountsDb extends database{
     }
 }
 
-module.exports = AccountsDb;
+// module.exports = AccountsDb;
+export {
+    AccountsDb as Database
+}

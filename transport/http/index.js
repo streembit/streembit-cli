@@ -20,14 +20,22 @@ Copyright (C) 2018 The Streembit software development team
 
 'use strict';
 
-const http = require('http');
-const https = require('https');
-const fs = require('fs');
-const events = require("streembit-util").events;
-const logger = require("streembit-util").logger;
-const constants = require("libs/constants");
-const config = require("libs/config");
-const ClientRequestHandler = require("./clihandler");
+// const http = require('http');
+import http from 'http';
+// const https = require('https');
+import https from 'https';
+import fs from 'fs';
+// const fs = require('fs');
+// const events = require("streembit-util").events;
+import { logger, events } from "streembit-util";
+import { constants } from "../../libs/constants/index.js";
+import { config } from '../../libs/config/index.js';
+
+// const config = new StreembitConfig();
+// const logger = require("streembit-util").logger;
+// const constants = require("libs/constants");
+// const config = require("libs/config");
+// const ClientRequestHandler = require("./clihandler");
 
 // create agents to enable http persistent connections:
 var httpagent = new http.Agent({keepAlive: true, keepAliveMsecs: 25000});
@@ -274,8 +282,8 @@ class HTTPTransport {
                 done();
             });
 
-            var clihandler = new ClientRequestHandler();
-            clihandler.on_request();
+            // var clihandler = new ClientRequestHandler();
+            // clihandler.on_request();
 
             //
         }
@@ -294,5 +302,8 @@ class HTTPTransport {
 
 }
 
-
-module.exports = HTTPTransport;
+// export {
+//     HTTPTransport
+// }
+export { HTTPTransport as default}
+// module.exports = HTTPTransport;
