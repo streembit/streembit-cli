@@ -96,7 +96,6 @@ exports.hexToBuffer = (hexString) => {
  * @returns {Number}
  */
 exports.getDistance = (id1, id2) => {
-    console.log("=====id1, id2=====", id1, id2);
     assert(exports.isValidKey(id1), 'Invalid key supplied');
     assert(exports.isValidKey(id2), 'Invalid key supplied');
 

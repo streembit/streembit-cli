@@ -29,9 +29,9 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var constants = require('./constants');
-var hat = require('hat');
-var merge = require('merge');
+let constants = require('./constants');
+let hat = require('hat');
+let merge = require('merge');
 
 /**
  * Represents a [JSON-RPC 2.0](http://www.jsonrpc.org/specification) request or
@@ -115,9 +115,9 @@ class Message {
             return value && value.type === 'Buffer' ? new Buffer(value.data) : value;
         }
 
-        var jsonstr = buffer.toString('utf8');
-        var parsed = JSON.parse(jsonstr, _convertByteArrays);
-        var message = new Message(parsed);
+        let jsonstr = buffer.toString('utf8');
+        let parsed = JSON.parse(jsonstr, _convertByteArrays);
+        let message = new Message(parsed);
 
         return message;
     };
