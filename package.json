@@ -71,6 +71,7 @@
         "start": "node streembit --pwd 123456Aa"
     },
     "devDependencies": {
+        "bunyan": "^1.8.15",
         "capture-console": "1.0.1",
         "chai": "^4.1.2",
         "levelup": "^5.1.1",

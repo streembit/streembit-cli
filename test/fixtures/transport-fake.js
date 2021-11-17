@@ -31,7 +31,11 @@ class FakeTransport extends DuplexStream {
     callback();
   }
 
-  listen() {}
+  listen() { }
+
+  toString() {
+    return 'that';
+  }
 
 }
 

@@ -438,6 +438,7 @@ class Node extends events.EventEmitter {
         this._rpc.on('ready', function () {
             self._log.debug('node listening on %j', self._self.toString());
         });
+        return true;
     };
 
     /**
