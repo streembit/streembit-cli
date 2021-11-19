@@ -28,8 +28,9 @@ import HTTPTransport from "./transport/http/index.js";
 import Database from "streembit-db";
 import dbschema from "./dbschema.json";
 import { Account } from './libs/account/index.js';
-
-// const dbschema = require("./dbschema");
+import { Tasks } from './libs/tasks/index.js';
+import { Users } from './libs/users/index.js';
+import { WsServer as WebSocket } from './transport/ws/index.js'
 
 const database = Database.instance;
 
@@ -99,8 +100,8 @@ export class App {
             }
   
             try {
-              // var tasks = new Tasks();
-              // tasks.run(callback);
+              var tasks = new Tasks();
+              tasks.run(callback);
             } catch (e) {
               callback("Task init error: " + e.message);
             }

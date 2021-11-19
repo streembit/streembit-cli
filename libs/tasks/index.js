@@ -22,14 +22,13 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
-const constants = require("libs/constants");
-const PeerNet = require("libs/peernet");
-const Users = require("libs/users");
-const async = require("async");
-const Account = require("libs/account");
-const config = require("libs/config");
+import async from "async";
+import { logger, events } from "streembit-util";
+import { constants } from "../constants/index.js";
+// import { PeerNet } from "../peernet/index.js";
+// import { Users } from '../users/index.js';
+import { Account } from '../account/index.js';
+import { config } from '../config/index.js';
 
 class TaskManager {
 
@@ -150,4 +149,7 @@ class TaskManager {
     }
 }
 
-module.exports = TaskManager;
+export {
+    TaskManager as Tasks
+}
+// module.exports = TaskManager;

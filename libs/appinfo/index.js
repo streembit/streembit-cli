@@ -63,5 +63,7 @@ class AppInfo {
     }
 }
 
-
-module.exports = AppInfo.instance;
+export {
+    AppInfo
+}
+// module.exports = AppInfo.instance;

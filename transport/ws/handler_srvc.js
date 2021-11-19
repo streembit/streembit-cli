@@ -20,30 +20,38 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const constants = require("libs/constants");
-const Wshandler = require("./handler");
-const iotdefinitions = require("apps/iot/definitions");
-const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
-const WebSocket = require('ws');
-const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
-const createHmac = require('create-hmac');
-const secrand = require('secure-random');
-const WsDb = require("libs/database/wsdb");
-const appinfo = require('libs/appinfo');
-const PeerNet = require("libs/peernet");
-const peersrvc = require('libs/peernet/msghandlers/peer');
-const peermsg = require("libs/message");
-const errcodes = require('streembit-errcodes');
-const Account = require("libs/account");
-const config = require("libs/config");
-const bs58check = require('bs58check');
-const createHash = require("create-hash");
+import { constants } from "../../libs/constants/index.js";
+import { logger, events } from "streembit-util";
+import { Account } from "../../libs/account/index.js";
+import { WsHandler } from "./handler.js";
+import { WsDb } from "../../libs/database/wsdb.js"
+
+// const Wshandler = require("./handler");
+
+// const constants = require("libs/constants");
+// const Wshandler = require("./handler");
+// const iotdefinitions = require("apps/iot/definitions");
+// const logger = require("streembit-util").logger;
+// const events = require("streembit-util").events;
+// const WebSocket = require('ws');
+// const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
+// const createHmac = require('create-hmac');
+// const secrand = require('secure-random');
+// const WsDb = require("libs/database/wsdb");
+// const appinfo = require('libs/appinfo');
+// const PeerNet = require("libs/peernet");
+// const peersrvc = require('libs/peernet/msghandlers/peer');
+// const peermsg = require("libs/message");
+// const errcodes = require('streembit-errcodes');
+// const Account = require("libs/account");
+// const config = require("libs/config");
+// const bs58check = require('bs58check');
+// const createHash = require("create-hash");
 
 // 
 // Service WS handler
 //
-class SrvcWsHandler extends Wshandler {
+class SrvcWsHandler extends WsHandler {
     constructor() {
         super();
         this.database = new WsDb();
@@ -299,5 +307,5 @@ class SrvcWsHandler extends Wshandler {
     }
 }
 
-
-module.exports = SrvcWsHandler;
+export { SrvcWsHandler };
+// module.exports = SrvcWsHandler;

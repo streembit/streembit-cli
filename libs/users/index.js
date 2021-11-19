@@ -22,17 +22,21 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const bs58check = require('bs58check');
-const createHash = require('create-hash');
+import async from "async";
+import { logger } from "streembit-util";
+import { UsersDb as Database } from "../database/usersdb.js";
 
-const logger = require("streembit-util").logger;
-const async = require("async");
-const config = require("libs/config");
-const Database = require("libs/database/usersdb");
+// const bs58check = require('bs58check');
+// const createHash = require('create-hash');
+
+// const logger = require("streembit-util").logger;
+// const async = require("async");
+// const config = require("libs/config");
+// const Database = require("libs/database/usersdb");
 
 let instance = null;
 
-class Users {
+export class Users {
 
     constructor() {
         if (!instance) {
@@ -225,4 +229,4 @@ class Users {
 }
 
 
-module.exports = Users;
+// module.exports = Users;

@@ -20,15 +20,25 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const https = require('https');
-const fs = require('fs');
-const constants = require("libs/constants");
-const config = require("libs/config");
-const logger = require("streembit-util").logger;
-const WebSocket = require('ws');
-const IoTWsHandler = require('./handler_iot');
-const SrvcWsHandler = require('./handler_srvc');
-const appinfo = require('libs/appinfo');
+import https from "https";
+import fs from "fs";
+import { constants } from "../../libs/constants/index.js";
+import { config } from "../../libs/config/index.js";
+import { logger } from "streembit-util";
+import * as WebSocket from "ws";
+import { AppInfo as appinfo } from "../../libs/appinfo/index.js"
+import { SrvcWsHandler } from "./handler_srvc.js";
+// const  = require('./handler_srvc');
+
+// const https = require('https');
+// const fs = require('fs');
+// const constants = require("libs/constants");
+// const config = require("libs/config");
+// const logger = require("streembit-util").logger;
+// const WebSocket = require('ws');
+// const IoTWsHandler = require('./handler_iot');
+// const SrvcWsHandler = require('./handler_srvc');
+// const appinfo = require('libs/appinfo');
 
 class WsServer {
     constructor(port, max_connections) {
@@ -245,4 +255,7 @@ class WsServer {
     }
 }
 
-module.exports = WsServer;
+// module.exports = WsServer;
+export {
+    WsServer
+}

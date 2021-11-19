@@ -19,9 +19,11 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-const database = require("libs/database/database");
+// const database = require("libs/database/database");
 
 'use strict';
+
+import { database } from "./database.js"
 
 class WsDb extends database {
     constructor() {
@@ -166,4 +168,5 @@ class WsDb extends database {
 
 }
 
-module.exports = WsDb;
+export { WsDb };
+// module.exports = WsDb;
