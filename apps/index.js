@@ -21,19 +21,23 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
+import { logger } from "streembit-util";
+import { seed } from "./seed/index.js"
+import async from "async";
+import { default as client } from './client/index.js'
 
-const logger = require("streembit-util").logger;
-const seed = require("./seed");
-const client = require("./client");
-const bcclient = require("./bcclient");
-const iot = require("./iot");
-const BlockchainHandler = require("./blockchain");
-const CmdHandler = require("./cmd");
-const dnshandler = require("./dns");
-const async = require('async');
+// const logger = require("streembit-util").logger;
+// const seed = require("./seed");
+// const client = require("./client");
+// const bcclient = require("./bcclient");
+// const iot = require("./iot");
+// const BlockchainHandler = require("./blockchain");
+// const CmdHandler = require("./cmd");
+// const dnshandler = require("./dns");
+// const async = require('async');
 
 
-class ModulesHandler {
+export class ModulesHandler {
     constructor() {
     }
 
@@ -47,7 +51,7 @@ class ModulesHandler {
                     client(callback);
                 },
                 function (callback) {
-                    iot.run(callback);
+                    // iot.run(callback);
                 },
                 function (callback) {
                     const blockchain = new BlockchainHandler();
@@ -71,4 +75,4 @@ class ModulesHandler {
     }
 }
 
-module.exports = ModulesHandler;
+// module.exports = ModulesHandler;

@@ -21,17 +21,22 @@ Copyright (C) 2018 The Streembit software development team
 
 'use strict';
 
-const constants = require("libs/constants");
-const async = require("async");
-const config = require("libs/config");
-const logger = require("streembit-util").logger;
-const peerutils = require("libs/peernet/peerutils");
-const events = require("streembit-util").events;
-const natupnp = require("libs/upnp");
-const PeerClient = require("libs/peernet/peerclient");
-const libutils = require("libs/utils");
+// const constants = require("libs/constants");
+// const async = require("async");
+// const config = require("libs/config");
+// const logger = require("streembit-util").logger;
+// const peerutils = require("libs/peernet/peerutils");
+// const events = require("streembit-util").events;
+// const natupnp = require("libs/upnp");
+// const PeerClient = require("libs/peernet/peerclient");
+// const libutils = require("libs/utils");
 
-const peerclient = new PeerClient();
+import { constants } from '../../libs/constants/index.js';
+import { config } from '../../libs/config/index.js';
+import { logger, events } from 'streembit-util';
+import async from 'async';
+
+// const peerclient = new PeerClient();
 const interval = 600000; // 10 mins
 
 function upnpProc(callback) {
@@ -134,7 +139,7 @@ function resolveHost(callback, initUpdater = null) {
     }
 }
 
-module.exports = exports = function (callback) {
+export default function (callback) {
     try {
         config.net = constants.CLIENTNET;
 

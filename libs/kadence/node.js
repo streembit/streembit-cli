@@ -24,13 +24,18 @@ Based on
 
 'use strict';
 
-const async = require('async');
-const constants = require('libs/constants');
-const events = require('streembit-util').events;
-const utils = require('./utils');
-const kad = require('libs/kadence');
+import async from "async";
+import * as utils from "./utils.js"
+import * as kad from './index.js'
+import { events } from 'streembit-util'
 
-class Node {
+// const async = require('async');
+// const constants = require('libs/constants');
+// const events = require('streembit-util').events;
+// const utils = require('./utils');
+// const kad = require('libs/kadence');
+
+export class Node {
 
     constructor() {
         this.node = null;
@@ -220,4 +225,4 @@ class Node {
     }
 }
 
-module.exports = Node;
+// module.exports = Node;

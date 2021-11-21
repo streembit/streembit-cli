@@ -31,6 +31,7 @@ import { Account } from './libs/account/index.js';
 import { Tasks } from './libs/tasks/index.js';
 import { Users } from './libs/users/index.js';
 import { WsServer as WebSocket } from './transport/ws/index.js'
+import { ModulesHandler as AppsHandler } from "./apps/index.js"
 
 const database = Database.instance;
 
@@ -151,6 +152,7 @@ export class App {
         ],
         function (err) {
           if (err) {
+            console.log(err);
             return logger.error("application init error: %j", err);
           }
   

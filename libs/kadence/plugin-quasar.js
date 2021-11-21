@@ -24,15 +24,25 @@ Based on
 
 'use strict';
 
-const assert = require('assert');
-const merge = require('merge');
-const async = require('async');
-const { knuthShuffle } = require('knuth-shuffle');
-const uuid = require('uuid');
-const constants = require('./constants');
-const utils = require('./utils');
-const BloomFilter = require('atbf');
-const LruCache = require('lru-cache');
+import assert from 'assert'
+import merge from 'merge'
+import async from 'async'
+import { knuthShuffle } from 'knuth-shuffle'
+import uuid from 'uuid'
+import * as constants from './constants.js'
+import * as utils from './utils.js'
+import BloomFilter from 'atbf'
+import LruCache from 'lru-cache'
+
+// const assert = require('assert');
+// const merge = require('merge');
+// const async = require('async');
+// const { knuthShuffle } = require('knuth-shuffle');
+// const uuid = require('uuid');
+// const constants = require('./constants');
+// const utils = require('./utils');
+// const BloomFilter = require('atbf');
+// const LruCache = require('lru-cache');
 
 
 /**
@@ -418,11 +428,22 @@ class QuasarPlugin {
 /**
  * Registers a {@link module:kadence/quasar~QuasarPlugin} with a {@link KademliaNode}
  */
-module.exports = function() {
+// module.exports = function() {
+//     return function(node) {
+//         return new QuasarPlugin(node);
+//     };
+// };
+
+export default function () {
     return function(node) {
         return new QuasarPlugin(node);
     };
-};
+}
 
-module.exports.QuasarPlugin = QuasarPlugin;
-module.exports.QuasarRules = QuasarRules;
+export {
+    QuasarPlugin,
+    QuasarRules
+}
+
+// module.exports.QuasarPlugin = QuasarPlugin;
+// module.exports.QuasarRules = QuasarRules;

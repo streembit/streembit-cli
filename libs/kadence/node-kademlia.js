@@ -24,23 +24,29 @@ Based on
 
 'use strict';
 
-const async = require('async');
-const { Writable: WritableStream } = require('stream');
-const constants = require('./constants');
-const config = require('libs/config');
-const utils = require('./utils');
-const AbstractNode = require('./node-abstract');
-const KademliaRules = require('./rules-kademlia');
-const ContactList = require('./contact-list');
-const MetaPipe = require('metapipe');
+// const async = require('async');
+// const { Writable: WritableStream } = require('stream');
+// const constants = require('./constants');
+// const config = require('libs/config');
+// const utils = require('./utils');
+// const AbstractNode = require('./node-abstract');
+// const KademliaRules = require('./rules-kademlia');
+// const ContactList = require('./contact-list');
+// const MetaPipe = require('metapipe');
 
+import async from 'async'
+import { AbstractNode } from './node-abstract.js'
+import HTTPSTransport from './transport-https.js'
+import HTTPTransport from './transport-http.js'
+import KademliaRules from './rules-kademlia.js'
+import * as constants from './constants.js'
 
 /**
  * Extends {@link AbstractNode} with Kademlia-specific rules
  * @class
  * @extends {AbstractNode}
  */
-class KademliaNode extends AbstractNode {
+export class KademliaNode extends AbstractNode {
 
     /**
      * @typedef {object} KademliaNode~entry
@@ -58,10 +64,10 @@ class KademliaNode extends AbstractNode {
                 console.log("Creating transport-https");
             }
             const http_transport = options.contact.key ?
-                require('./transport-https') :
-                require('./transport-http');
+                new HTTPSTransport(options.contact) :
+                new HTTPTransport(options.contact);
 
-            options.transport = new http_transport(options.contact);
+            options.transport = http_transport;
         }
         super(options);
 
@@ -603,4 +609,4 @@ class KademliaNode extends AbstractNode {
     };
 }
 
-module.exports = KademliaNode;
+// module.exports = KademliaNode;

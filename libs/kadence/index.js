@@ -24,56 +24,59 @@ Based on
 
 'use strict';
 
-/**
- * Returns a new {@link KademliaNode}
- */
-module.exports = function(options) {
-    return new module.exports.KademliaNode(options);
-};
+// /**
+//  * Returns a new {@link KademliaNode}
+//  */
+// module.exports = function(options) {
+//     return new module.exports.KademliaNode(options);
+// };
 
 /** {@link KademliaNode} */
-module.exports.KademliaNode = require('./node-kademlia');
+export { KademliaNode } from './node-kademlia.js';
 
-/** {@link KademliaRules} */
-module.exports.KademliaRules = require('./rules-kademlia');
+// /** {@link KademliaRules} */
+// module.exports.KademliaRules = require('./rules-kademlia');
 
-/** {@link AbstractNode} */
-module.exports.AbstractNode = require('./node-abstract');
+// /** {@link AbstractNode} */
+// module.exports.AbstractNode = require('./node-abstract');
 
-/** {@link ErrorRules} */
-module.exports.ErrorRules = require('./rules-errors');
+// /** {@link ErrorRules} */
+// module.exports.ErrorRules = require('./rules-errors');
 
-/** {@link Bucket} */
-module.exports.Bucket = require('./bucket');
+// /** {@link Bucket} */
+// module.exports.Bucket = require('./bucket');
 
-/** {@link Messenger} */
-module.exports.Messenger = require('./messenger');
+// /** {@link Messenger} */
+// module.exports.Messenger = require('./messenger');
 
-/** {@link RoutingTable} */
-module.exports.RoutingTable = require('./routing-table');
+// /** {@link RoutingTable} */
+// module.exports.RoutingTable = require('./routing-table');
 
-/** {@link UDPTransport} */
-module.exports.UDPTransport = require('./transport-udp');
+// /** {@link UDPTransport} */
+// module.exports.UDPTransport = require('./transport-udp');
 
-/** {@link HTTPTransport} */
-module.exports.HTTPTransport = require('./transport-http');
+// /** {@link HTTPTransport} */
+// module.exports.HTTPTransport = require('./transport-http');
 
-/** {@link HTTPSTransport} */
-module.exports.HTTPSTransport = require('./transport-https');
+// /** {@link HTTPSTransport} */
+// module.exports.HTTPSTransport = require('./transport-https');
 
 /** {@link module:kadence/quasar} */
-module.exports.quasar = require('./plugin-quasar');
+export { default as quasar } from './plugin-quasar.js';
 
 /** {@link module:kadence/seedlist} */
-module.exports.seedlist = require('./plugin-seedlist');
+export { default as seedlist } from './plugin-seedlist.js'
+// module.exports.seedlist = require('./plugin-seedlist');
 
-/** {@link module:kadence/constants} */
-module.exports.constants = require('./constants');
+// /** {@link module:kadence/constants} */
+// module.exports.constants = require('./constants');
 
-/** {@link module:kadence/utils} */
-module.exports.utils = require('./utils');
+// /** {@link module:kadence/utils} */
+// module.exports.utils = require('./utils');
 
-/** {@link module:kadence/logger} */
-module.exports.logger = require('./logger');
+// /** {@link module:kadence/logger} */
+// module.exports.logger = require('./logger');
 
-module.exports.Node = require('./node');
+// module.exports.Node = require('./node');
+
+export { Node } from './node.js'

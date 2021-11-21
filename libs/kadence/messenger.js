@@ -24,12 +24,17 @@ Based on
 
 'use strict';
 
-const { EventEmitter } = require('events');
-const { Transform: TransformStream } = require('stream');
-const merge = require('merge');
-const jsonrpc = require('jsonrpc-lite');
-const uuid = require('uuid');
-const MetaPipe = require('metapipe');
+import { EventEmitter } from 'events'
+import merge from 'merge'
+import MetaPipe from 'metapipe'
+import { Transform as TransformStream } from 'stream'
+
+// const { EventEmitter } = require('events');
+// const { Transform: TransformStream } = require('stream');
+// const merge = require('merge');
+// const jsonrpc = require('jsonrpc-lite');
+// const uuid = require('uuid');
+// const MetaPipe = require('metapipe');
 
 
 /**
@@ -186,4 +191,5 @@ class Messenger extends EventEmitter {
 
 }
 
-module.exports = Messenger;
+export default Messenger;
+// module.exports = Messenger;

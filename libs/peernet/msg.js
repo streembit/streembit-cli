@@ -21,15 +21,18 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("streembit-util").logger;
-const async = require("async");
-const peermsg = require("./msghandlers/peer.js");
-const storemsg = require("./msghandlers/store.js");
-const txnmsg = require("./msghandlers/txn.js");
-const bchmsg = require("./msghandlers/bch.js");
-const fnodemsg = require("./msghandlers/fnode.js");
+import { logger } from "streembit-util";
+import async from "async";
 
-module.exports.on_transport_error = function (err) {
+// const logger = require("streembit-util").logger;
+// const async = require("async");
+// const peermsg = require("./msghandlers/peer.js");
+// const storemsg = require("./msghandlers/store.js");
+// const txnmsg = require("./msghandlers/txn.js");
+// const bchmsg = require("./msghandlers/bch.js");
+// const fnodemsg = require("./msghandlers/fnode.js");
+
+export const on_transport_error = function (err) {
     //TODO error handling
     logger.error('KAD transport error: %j', err);
 }
@@ -71,7 +74,7 @@ function handle_msg(message, callback) {
     }
 }
 
-module.exports.on_kad_message = function (message, contact, next){
+export const on_kad_message = function (message, contact, next){
 
     logger.debug("on_kad_message");
 
@@ -101,7 +104,7 @@ module.exports.on_kad_message = function (message, contact, next){
 
 }
 
-module.exports.on_peer_message = function (msg, callback) {
+export const on_peer_message = function (msg, callback) {
     logger.debug("on_peer_message");
     peermsg(msg, callback);
 }

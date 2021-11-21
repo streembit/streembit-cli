@@ -68,4 +68,5 @@ class ErrorRules {
 
 }
 
-module.exports = ErrorRules;
+export default ErrorRules;
+// module.exports = ErrorRules;

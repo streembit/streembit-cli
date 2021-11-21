@@ -19,7 +19,8 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-const database = require("libs/database/database");
+// const database = require("libs/database/database");
+import { database } from './database.js'
 
 'use strict';
 
@@ -106,4 +107,5 @@ class SeedlistDb extends database {
 
 }
 
-module.exports = SeedlistDb;
+export default SeedlistDb;
+// module.exports = SeedlistDb;

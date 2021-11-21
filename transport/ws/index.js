@@ -25,7 +25,7 @@ import fs from "fs";
 import { constants } from "../../libs/constants/index.js";
 import { config } from "../../libs/config/index.js";
 import { logger } from "streembit-util";
-import * as WebSocket from "ws";
+import WebSocket, { WebSocketServer } from 'ws';
 import { AppInfo as appinfo } from "../../libs/appinfo/index.js"
 import { SrvcWsHandler } from "./handler_srvc.js";
 // const  = require('./handler_srvc');
@@ -178,13 +178,13 @@ class WsServer {
                 }
 
                 const server = https.createServer(options);
-                this.wsserver = new WebSocket.Server({ server });
+                this.wsserver = new WebSocket({ server });
                 server.listen(this.port, () => {
                     logger.info("HTTPS server for WS handler is listening on port " + this.port);
                 });
             }
             else {
-                this.wsserver = new WebSocket.Server({ port: this.port });
+                this.wsserver = new WebSocketServer({ port: this.port });
             }
 
             // set the connection handler

@@ -24,17 +24,26 @@ Based on
 
 'use strict';
 
-const uuid = require('uuid');
-const async = require('async');
-const assert = require('assert');
-const merge = require('merge');
-const constants = require('./constants');
-const utils = require('./utils');
-const { EventEmitter } = require('events');
-const RoutingTable = require('./routing-table');
-const Messenger = require('./messenger');
-const ErrorRules = require('./rules-errors');
+import merge from "merge";
+import * as utils from "./utils.js"
+import Messenger from "./messenger.js"
+import assert from "assert"
+import RoutingTable from "./routing-table.js"
+import * as constants from './constants.js'
+import ErrorRules from './rules-errors.js'
 
+// const uuid = require('uuid');
+// const async = require('async');
+// const assert = require('assert');
+// const merge = require('merge');
+// const constants = require('./constants');
+// const utils = require('./utils');
+// const { EventEmitter } = require('events');
+// const RoutingTable = require('./routing-table');
+// const Messenger = require('./messenger');
+// const ErrorRules = require('./rules-errors');
+
+import { EventEmitter } from 'events'
 
 /**
  * @typedef {object} AbstractNode~logger
@@ -93,7 +102,7 @@ const ErrorRules = require('./rules-errors');
 /**
  * Represents a network node
  */
-class AbstractNode extends EventEmitter {
+export class AbstractNode extends EventEmitter {
 
     /**
      * Join event is triggered when the routing table is no longer empty
@@ -424,4 +433,4 @@ class AbstractNode extends EventEmitter {
 
 }
 
-module.exports = AbstractNode;
+// module.exports = AbstractNode;

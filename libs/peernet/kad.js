@@ -21,17 +21,26 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const config = require("libs/config");
-const logger = require("streembit-util").logger;
-const db = require("streembit-db").instance;
-const kad = require('libs/kadence');
-const Account = require("libs/account");
-const utils = require("libs/utils");
-const async = require("async");
-const constants = require("libs/constants");
-const util = require('util');
-const assert = require('assert');
-const fs = require('fs');
+import { config } from '../../libs/config/index.js';
+import { logger } from "streembit-util";
+import Database from "streembit-db";
+import fs from "fs";
+import assert from 'assert';
+import * as kad from '../../libs/kadence/index.js'
+
+const db = Database.instance;
+
+// const config = require("libs/config");
+// const logger = require("streembit-util").logger;
+// const db = require("streembit-db").instance;
+// const kad = require('libs/kadence');
+// const Account = require("libs/account");
+// const utils = require("libs/utils");
+// const async = require("async");
+// const constants = require("libs/constants");
+// const util = require('util');
+// const assert = require('assert');
+// const fs = require('fs');
 
 let instance = null;
 
@@ -191,4 +200,8 @@ class KadHandler {
     }
 }
 
-module.exports.KadHandler = KadHandler;
+// module.exports.KadHandler = KadHandler;
+
+export {
+    KadHandler
+}
