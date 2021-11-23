@@ -25,22 +25,12 @@ import fs from "fs";
 import { constants } from "../../libs/constants/index.js";
 import { config } from "../../libs/config/index.js";
 import { logger } from "streembit-util";
-import WebSocket, { WebSocketServer } from 'ws';
+import { WebSocketServer } from 'ws';
 import { AppInfo as appinfo } from "../../libs/appinfo/index.js"
 import { SrvcWsHandler } from "./handler_srvc.js";
-// const  = require('./handler_srvc');
+import { IoTWsHandler } from "./handler_iot.js";
 
-// const https = require('https');
-// const fs = require('fs');
-// const constants = require("libs/constants");
-// const config = require("libs/config");
-// const logger = require("streembit-util").logger;
-// const WebSocket = require('ws');
-// const IoTWsHandler = require('./handler_iot');
-// const SrvcWsHandler = require('./handler_srvc');
-// const appinfo = require('libs/appinfo');
-
-class WsServer {
+export class WsServer {
     constructor(port, max_connections) {
         if (!port || !max_connections) {
             throw new Error("invalid WsServer start parameters")
@@ -66,7 +56,7 @@ class WsServer {
  
 
     handler_factory() {
-        var obj;
+        let obj;
         if (this.wsmode == constants.WSMODE_SRVC) {
             obj = new SrvcWsHandler();
         }
@@ -86,7 +76,7 @@ class WsServer {
     }
 
     canconnect() {
-        var count = 0; 
+        let count = 0;
         if (this.wsserver.clients && this.wsserver.clients.size) {
             count = this.wsserver.clients.size;
         }
@@ -98,14 +88,14 @@ class WsServer {
             // update the AppInfo
             appinfo.wsclientcount = this.wsserver.clients.size;
 
-            var token = (ws && ws.clienttoken) ? ws.clienttoken : "";
+            const token = (ws && ws.clienttoken) ? ws.clienttoken : "";
             if (!token) {
                 // the clienttoken must exist to identify the socket
                 return;
             }
 
-            var pkhash;
-            for (var [key, value] of this.handler.list_of_sessions) {
+            let pkhash;
+            for (let [key, value] of this.handler.list_of_sessions) {
                 if (value.token == ws.clienttoken) {
                     pkhash = key;
                 }
@@ -178,7 +168,7 @@ class WsServer {
                 }
 
                 const server = https.createServer(options);
-                this.wsserver = new WebSocket({ server });
+                this.wsserver = new WebSocketServer({ server });
                 server.listen(this.port, () => {
                     logger.info("HTTPS server for WS handler is listening on port " + this.port);
                 });
@@ -189,18 +179,17 @@ class WsServer {
 
             // set the connection handler
             this.wsserver.on('connection', (ws) => {
-                try {  
+                try {
                     // upon connection set the AppInfo wsclientcount variable
                     appinfo.wsclientcount = this.wsserver.clients.size;
 
-                    var available = this.canconnect();
+                    const available = this.canconnect();
                     appinfo.wsavailable = available;
                     if (!available) {
                         // close the connection and don't setup the event handlers
                         return ws.terminate();
                     }
                     
-                    //console.log("ws client connected");
                     ws.on('message', (message) => {
                         this.processmsg(ws, message);
                     });
@@ -213,23 +202,21 @@ class WsServer {
                         this.removeclient(ws);
                     });
 
-                    ws.on('pong', function() {
+                    ws.on('pong', () => {
                         this.isAlive = true;
                     });
-
-                    //
                 }
                 catch (err) {
                     logger.error("ws on_connection error: " + err.message);
                 }
             });
 
-            this.wsserver.on('close', function() {
+            this.wsserver.on('close', () => {
                 //TODO signal the app that the server was closed
                 logger.info("Web socket server was closed");
             });
 
-            this.wsserver.on('error', function(e) {
+            this.wsserver.on('error', (e) => {
                 logger.error('ws error: %s', e.message);
             });
 
@@ -253,9 +240,4 @@ class WsServer {
             callback("WS server init error: " + err.message);
         }
     }
-}
-
-// module.exports = WsServer;
-export {
-    WsServer
 }

@@ -24,7 +24,7 @@ Copyright (C) 2016 The Streembit software development team
 const UNDEFINED = 0;
 const NOTHANDLED = -1;
 
-var definitions = {
+export const definitions = {
 
     ZIGBEE: "zigbee",
     ZWAVE: "zwave",
@@ -179,5 +179,3 @@ var definitions = {
         20: UNDEFINED
     }
 };
-
-module.exports = definitions;

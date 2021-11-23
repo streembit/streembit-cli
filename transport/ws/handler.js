@@ -22,7 +22,7 @@ Copyright (C) 2017 The Streembit software development team
 
 import * as errcodes from 'streembit-errcodes';
 
-class WsHandler{
+export class WsHandler {
     constructor() {
         this.list_of_sessions = new Map();
     }
@@ -42,7 +42,7 @@ class WsHandler{
             errcode = errcode.WS;
         }
 
-        var errobj = {
+        const errobj = {
             txn: txn,
             error: errcode,
             msg: ''
@@ -72,11 +72,7 @@ class WsHandler{
         }
         catch (e) { }
 
-        var errmsg = JSON.stringify(errobj);
+        const errmsg = JSON.stringify(errobj);
         return errmsg;
     }
 }
-
-
-// module.exports = WsHandler;
-export { WsHandler };
