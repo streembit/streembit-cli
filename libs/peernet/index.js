@@ -21,14 +21,16 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const config = require("libs/config");
-const constants = require("libs/constants");
-const peermsg = require("libs/message");
-const bs58check = require('bs58check');
-const createHash = require("create-hash");
-const secrand = require('secure-random');
-const kad = require("./kad");
-const PeerClient = require("./peerclient");
+import { constants } from "../../libs/constants/index.js";
+import { config } from "../../libs/config/index.js";
+import * as peermsg from "../../libs/message/index.js";
+import bs58check from "bs58check";
+import createHash from "create-hash";
+import secrand from "secure-random";
+import { KadHandler } from "./kad.js";
+import PeerClient from "./peerclient.js";
+
+const kad = new KadHandler();
 
 //
 // Net Factory
@@ -55,7 +57,7 @@ class NetFactory {
     }
 }
 
-class PeerNet {
+export class PeerNet {
     constructor() {
     }
 
@@ -187,6 +189,3 @@ class PeerNet {
         }
     }
 }
-
-
-module.exports = PeerNet;
