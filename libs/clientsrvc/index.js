@@ -26,12 +26,9 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const constants = require("libs/constants");
-const config = require("libs/config");
-const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
-const appinfo = require("libs/appinfo");
-
+import { logger } from 'streembit-util';
+import { config } from '../config/index.js';
+import { AppInfo as appinfo } from '../appinfo/index.js';
 
 class ClientSrvc {
     constructor() {
@@ -87,7 +84,4 @@ class ClientSrvc {
 }
 
 
-module.exports = ClientSrvc;
-
-
-
+export default ClientSrvc;

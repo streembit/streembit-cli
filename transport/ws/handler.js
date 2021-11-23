@@ -20,8 +20,6 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-// const errcodes = require('streembit-errcodes');
-
 import * as errcodes from 'streembit-errcodes';
 
 class WsHandler{

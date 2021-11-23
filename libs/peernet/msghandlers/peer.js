@@ -21,41 +21,35 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("streembit-util").logger;
-const kad = require("libs/peernet/kad");
-const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
+import { logger } from 'streembit-util';
+import { KadHandler } from '../kad.js';
+import * as msgvalidator from './msg_validator.js';
 
-function dhtget(message, callback) {
+const kad = new KadHandler();
+
+export const dhtget = (message, callback) => {
     logger.debug("get value for peer");
-
-    //msgvalidator.validate(message, function (e) {
-    //    if (e) {
-    //        return callback(e);
-    //    }
-
-        var key = message.key;
-        var kadnet = new kad.KadHandler();
-        kadnet.get(key, callback);
-
-    //});
+    const key = message.key;
+    const kadnet = new kad.KadHandler();
+    kadnet.get(key, callback);
 }
 
-function dhtput(message, callback) {
+const dhtput = (message, callback) => {
     logger.debug("PUT for peer");
 
-    msgvalidator.validate(message, function (e) {
+    msgvalidator.validate(message, (e) => {
         if (e) {
             return callback(e);
         }
 
-        var key = message.key;
-        var value = message.value;
-        var kadnet = new kad.KadHandler();
+        const key = message.key;
+        const value = message.value;
+        const kadnet = new kad.KadHandler();
         kadnet.put(key, value, (err) => callback(err));
     });    
 }
 
-module.exports = (msg, callback) => {
+export default (msg, callback) => {
     try {
         switch (msg.type) {
             case "PUT":
@@ -69,7 +63,3 @@ module.exports = (msg, callback) => {
         callback("peer msg handler error, " + err.message);
     }
 };
-
-module.exports.put = dhtput;
-module.exports.get = dhtget;
-

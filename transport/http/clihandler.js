@@ -20,13 +20,13 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const constants = require("libs/constants");
-const config = require("libs/config");
-const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
-const clientsrvc = require("libs/clientsrvc");
-const errcodes = require('streembit-errcodes');
-const peersrvc = require('libs/peernet/msghandlers/peer');
+import { logger, events } from 'streembit-util';
+import { constants } from '../../libs/constants/index.js';
+import ClientSrvc from '../../libs/clientsrvc/index.js';
+import * as errcodes from 'streembit-errcodes';
+import * as peersrvc from '../../libs/peernet/msghandlers/peer.js';
+
+const clientsrvc = new ClientSrvc();
 
 // 
 // Service WS handler
@@ -257,5 +257,4 @@ class ClientRequestHandler  {
     }
 }
 
-
-module.exports = ClientRequestHandler;
+export default ClientRequestHandler;

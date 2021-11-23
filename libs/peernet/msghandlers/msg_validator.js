@@ -21,24 +21,22 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("streembit-util").logger;
-const async = require("async");
-const peermsg = require("libs/message");
-const bs58check = require('bs58check');
-const createHash = require('create-hash');
-const config = require("libs/config");
-const Account = require('libs/account');
-const Users = require('libs/users');
+import { logger } from 'streembit-util';
+import { Account } from '../../account/index.js';
+import { Users } from '../../users/index.js';
+import * as peermsg from '../../message/index.js';
+import createHash from 'create-hash';
+import bs58check from 'bs58check';
 
-function verify_signature(params, callback) {
+const verify_signature = (params, callback) => {
 
     try {
-        var payload = peermsg.getpayload(params.value);
+        const payload = peermsg.getpayload(params.value);
         if (!payload || !payload.data || !payload.data.type) {
             return callback("validate() error invalid payload");
         }
 
-        var is_update_key = false;
+        let is_update_key = false;
         if (payload.data.type == peermsg.MSGTYPE.PUBPK || payload.data.type == peermsg.MSGTYPE.UPDPK || payload.data.type == peermsg.MSGTYPE.DELPK) {
             if (!payload.iss || typeof payload.iss != "string" || !payload.iss.length) {
                 return callback("validate() error invalid public key payload");
@@ -46,23 +44,23 @@ function verify_signature(params, callback) {
             is_update_key = true;
         }
 
-        var items = payload.data[peermsg.MSGFIELD.KEYDATA].split("/");
+        const items = payload.data[peermsg.MSGFIELD.KEYDATA].split("/");
         if (!items || items.lentgh == 1) {
             return callback("validate() invalid message key");
         }
 
-        var checkkey = items[0];
+        const checkkey = items[0];
 
         //  check if the bs58 key is correctly computed from the hex public key
         //  and then the JWT signature will validate the integrity of message
-        var publickey;
+        let publickey;
         try {
             // payload.iss is a BS58check encoded key
-            var bs58buffer = bs58check.decode(payload.iss);
-            var publickey = bs58buffer.toString("hex");
-            var buffer = new Buffer(publickey, 'hex');
-            var rmd160buffer = createHash('rmd160').update(buffer).digest();
-            var bs58pk = bs58check.encode(rmd160buffer);
+            const bs58buffer = bs58check.decode(payload.iss);
+            const publickey = bs58buffer.toString("hex");
+            const buffer = new Buffer(publickey, 'hex');
+            const rmd160buffer = createHash('rmd160').update(buffer).digest();
+            const bs58pk = bs58check.encode(rmd160buffer);
             if (checkkey != bs58pk) {
                 return callback("validate() error invalid key value or public key mismatch");
             }
@@ -75,7 +73,7 @@ function verify_signature(params, callback) {
             return callback('invalid public key');
         }
 
-        var decoded_msg = peermsg.decode(params.value, publickey);
+        const decoded_msg = peermsg.decode(params.value, publickey);
         if (!decoded_msg) {
             return callback('VERIFYFAIL ' + checkkey);
         }
@@ -92,7 +90,7 @@ function verify_signature(params, callback) {
 
 }
 
-module.exports.validate = function (message, callback) {
+export const validate = (message, callback) => {
     try {
         logger.debug('validate');
 
@@ -100,7 +98,7 @@ module.exports.validate = function (message, callback) {
             return callback(new Error('Invalid message detected at validate'));
         }
 
-        var params;
+        let params;
         if (message.method) {
             if (message.method != "STORE" || !message.params || !message.params.item) {
                 // only validate the STORE messages
@@ -119,7 +117,7 @@ module.exports.validate = function (message, callback) {
 
         logger.debug('validate PUT key: ' + params.key);
 
-        verify_signature(params, function (err, isvalid) {
+        verify_signature(params, (err, isvalid) => {
             if (err) {
                 return callback(new Error('Message dropped ' + ((typeof err === 'string') ? err : (err.message ? err.message : "validation failed"))));
             }
@@ -136,15 +134,15 @@ module.exports.validate = function (message, callback) {
     }
 }
 
-function get_user(pubkey) {
-    var users = new Users();
+const get_user = (pubkey) => {
+    const users = new Users();
     return users.get_user_bypublickey(pubkey);
 }
 
-module.exports.verify_wsjwt = function (msg, callback) {
+export const verify_wsjwt = (msg, callback) => {
 
     // parse the message
-    var payload = peermsg.getpayload(msg);
+    const payload = peermsg.getpayload(msg);
     if (!payload || !payload.data || !payload.data.type || payload.data.type != peermsg.MSGTYPE.IOTAUTH) {
         throw new Error("authentication failed, invalid payload");
     }
@@ -153,28 +151,28 @@ module.exports.verify_wsjwt = function (msg, callback) {
         throw new Error("authentication failed, invalid iss field in the payload");
     }
 
-    var bs58buffer = bs58check.decode(payload.iss);
-    var publickey = bs58buffer.toString("hex");
-    var user = get_user(publickey);
+    const bs58buffer = bs58check.decode(payload.iss);
+    const publickey = bs58buffer.toString("hex");
+    const user = get_user(publickey);
     if (!user) {
         throw new Error("authentication failed, user definition doesn't exist ");
     }
 
-    var decoded = peermsg.decode(msg, publickey);
+    const decoded = peermsg.decode(msg, publickey);
     if (!decoded || !decoded.data) {
         throw new Error("authentication failed, invalid encoded payload");
     }
 
-    var cipher = decoded.data.cipher;
+    const cipher = decoded.data.cipher;
     if (!cipher) {
         throw new Error("authentication failed, invalid cipher in the request payload");
     }
 
-    var plaintext = 0;
+    let plaintext = 0;
     try {
-        var account = new Account();
+        const account = new Account();
         plaintext = peermsg.ecdh_decrypt(account.cryptokey, publickey, cipher);
-        var obj = JSON.parse(plaintext);
+        const obj = JSON.parse(plaintext);
         if (!obj) {
             throw new Error("authentication AES decryption failed");
         }
@@ -183,7 +181,7 @@ module.exports.verify_wsjwt = function (msg, callback) {
         throw new Error("authentication AES decryption error " + err.message);
     }
 
-    var token = obj.session_token;
+    const token = obj.session_token;
     if (!token) {
         throw new Error("authentication failed, invalid session token");
     }
@@ -192,9 +190,8 @@ module.exports.verify_wsjwt = function (msg, callback) {
         throw new Error("authentication failed, invalid pkhash");
     }
 
-    var devices = obj.devices;
+    const devices = obj.devices;
 
-    //
     return { pkhash: user.pkhash, token: token, devices: devices };
 
 }

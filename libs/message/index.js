@@ -19,15 +19,10 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-
-// var jwt = require('./jwt');
-// var jwe = require('./jwe');
-
 import { jwt } from './jwt.js';
 import { jwe } from './jwe.js';
 
-
-var MSGTYPE = {
+const MSGTYPE = {
     PUBPK: 0x01,    //  Add public key to the network. Must perform this when the node joins first time to the P2P network    
     DELPK: 0x02,    //  Remove the existing public key from the network
     DATA: 0x03,     //  Publish data to the network
@@ -38,7 +33,7 @@ var MSGTYPE = {
     IOTAUTH: 0x08,  //  IoT authentication request
 };
 
-var MSGFIELD = {
+const MSGFIELD = {
     NODEID: "node_id",
     PUBKEY: "public_key",
     LASTPKEY: "last_pkey",
@@ -66,7 +61,7 @@ var MSGFIELD = {
     KEYDATA: "keydata"
 };
 
-var PEERMSG = {
+const PEERMSG = {
     DHOP: 0xDAD,    //  DHOP = Diffie Hellman Operation, DH encrypted message. Use it only for encrypting the session symmetric key
     EXCH: 0xDAE,    //  Key exchange operation, the peer sends its DH public key part to the other peer
     SYMD: 0xDAF,    //  Data encrypted with the exchanged symmetric key
@@ -96,8 +91,8 @@ var PEERMSG = {
 };
 
 
-function serialize(input) {
-    var text = null;
+const serialize = (input) => {
+    let text = null;
     try {
         if (typeof input != 'string') {
             if (typeof input == 'object') {
@@ -127,7 +122,7 @@ function serialize(input) {
 }
 
 
-function decode(payload, public_key) {
+const decode = (payload, public_key) => {
     if (!public_key) {
         throw new Error("WoTMessage decode error: public_key parameter is missing");
     }
@@ -136,12 +131,12 @@ function decode(payload, public_key) {
         throw new Error("WoTMessage decode error: payload parameter is missing");
     }
 
-    var message = jwt.decode(payload, public_key);
+    const message = jwt.decode(payload, public_key);
 
     return message;
 }
 
-function create_jwt_token(private_key, jti, payload, algorithm, expires, issuer, subject, audience) {
+const create_jwt_token = (private_key, jti, payload, algorithm, expires, issuer, subject, audience) => {
     if (!private_key) {
         throw new Error("WoTMessage private_key parameter is missing");
     }
@@ -154,7 +149,7 @@ function create_jwt_token(private_key, jti, payload, algorithm, expires, issuer,
         throw new Error("WoTMessage jti parameter is missing");
     }
 
-    var input = {};
+    let input = {};
 
     // create a data field for the actual data if not exists
     if (payload.hasOwnProperty('data') == false) {
@@ -164,7 +159,7 @@ function create_jwt_token(private_key, jti, payload, algorithm, expires, issuer,
         input = payload;
     }
 
-    var options = {};
+    let options = {};
 
     options.jti = jti;
 
@@ -185,32 +180,32 @@ function create_jwt_token(private_key, jti, payload, algorithm, expires, issuer,
     }
 
     // create a json web token
-    var token = jwt.encode(input, private_key, options);
+    const token = jwt.encode(input, private_key, options);
 
     return token;
 }
 
 
-function get_msg_array(buffer) {
+const get_msg_array = (buffer) => {
     if (!buffer || typeof buffer != "string") {
         throw new Error("get_msg_array error: invalid buffer");
     }
 
-    var elements = jwt.parse(buffer);
+    const elements = jwt.parse(buffer);
     return elements;
 }
 
-function get_message_payload(msg) {
-    var payload = jwt.get_message_payload(msg);
+const get_message_payload = (msg) => {
+    const payload = jwt.get_message_payload(msg);
     return payload;
 }
 
 
-function base64decode(data) {
+const base64decode = (data) => {
     return jwt.base64decode(data);
 }
 
-function ecdh_encypt(ECDH_key, ECDH_public, data) {
+const ecdh_encypt = (ECDH_key, ECDH_public, data) => {
     if (!ECDH_key) {
         throw new Error("WoTMessage ecdh_encypt ECDH key parameter is missing");
     }
@@ -221,13 +216,13 @@ function ecdh_encypt(ECDH_key, ECDH_public, data) {
         throw new Error("WoTMessage ecdh_encypt payload parameter is missing");
     }
 
-    var datastr = serialize(data);
-    var cipher_text = jwe.encrypt(ECDH_key, ECDH_public, datastr);
+    const datastr = serialize(data);
+    const cipher_text = jwe.encrypt(ECDH_key, ECDH_public, datastr);
 
     return cipher_text;
 }
 
-function ecdh_decrypt(ECDH_key, ECDH_public, data) {
+const ecdh_decrypt = (ECDH_key, ECDH_public, data) => {
     if (!ECDH_key) {
         throw new Error("WoTMessage ecdh_decrypt ECDH key parameter is missing");
     }
@@ -238,11 +233,11 @@ function ecdh_decrypt(ECDH_key, ECDH_public, data) {
         throw new Error("WoTMessage ecdh_decrypt payload parameter is missing");
     }
 
-    var plain_text = jwe.decrypt(ECDH_key, ECDH_public, data);
+    const plain_text = jwe.decrypt(ECDH_key, ECDH_public, data);
     return plain_text;
 }
 
-function create_typedmsg(msgtype, jti, ECC_private_key, payload, issuer, audience, expires, algorithm) {
+const create_typedmsg = (msgtype, jti, ECC_private_key, payload, issuer, audience, expires, algorithm) => {
     if (!msgtype) {
         throw new Error("WoTMessage create_msg error: msgtype parameter is missing");
     }
@@ -253,11 +248,11 @@ function create_typedmsg(msgtype, jti, ECC_private_key, payload, issuer, audienc
         throw new Error("WoTMessage create_msg error: payload parameter is missing");
     }
 
-    var datastr = serialize(payload);
-    var data = { data: datastr }
+    const datastr = serialize(payload);
+    const data = { data: datastr }
 
     // create a JSON Web Token (JWT)
-    var token = create(ECC_private_key, jti, data, algorithm, expires, issuer, msgtype, audience);
+    const token = create(ECC_private_key, jti, data, algorithm, expires, issuer, msgtype, audience);
     if (!token || (typeof token != 'string')) {
         throw new Error("Invalid JWT token, token must be string");
     }
@@ -265,7 +260,7 @@ function create_typedmsg(msgtype, jti, ECC_private_key, payload, issuer, audienc
     return token;
 }
 
-function create_symm_msg(msgtype, jti, ECC_private_key, session_symmetric_key, payload, issuer, audience, expires, algorithm) {
+const create_symm_msg = (msgtype, jti, ECC_private_key, session_symmetric_key, payload, issuer, audience, expires, algorithm) => {
     if (!ECC_private_key) {
         throw new Error("WoTMessage create_symm_peermsg private_key parameter is missing");
     }
@@ -276,20 +271,20 @@ function create_symm_msg(msgtype, jti, ECC_private_key, session_symmetric_key, p
         throw new Error("WoTMessage create_symm_peermsg payload parameter is missing");
     }
 
-    var datastr = serialize(payload);
+    const datastr = serialize(payload);
 
     // get JSON Web Encryption (JWE) encrypted structure
-    var cipher_text = jwe.symm_encrypt(session_symmetric_key, datastr);
-    var data = { data: cipher_text }
+    const cipher_text = jwe.symm_encrypt(session_symmetric_key, datastr);
+    const data = { data: cipher_text }
 
     // create a JSON Web Token (JWT)
-    var token = create(ECC_private_key, jti, data, algorithm, expires, issuer, msgtype, audience);
+    const token = create(ECC_private_key, jti, data, algorithm, expires, issuer, msgtype, audience);
     assert(token && (typeof token == 'string'), "Invalid JWT token, token must be string");
 
     return token;
 }
 
-function decrypt(symmetric_key, payload) {
+const decrypt = (symmetric_key, payload) => {
     if (!symmetric_key) {
         throw new Error("WoTMessage decrypt symmetric_key parameter is missing");
     }
@@ -297,38 +292,33 @@ function decrypt(symmetric_key, payload) {
         throw new Error("WoTMessage create_symm_peermsg payload parameter is missing");
     }
 
-    var plain_text = jwe.symm_decrypt(symmetric_key, payload);
+    const plain_text = jwe.symm_decrypt(symmetric_key, payload);
     return plain_text;
 }
 
 
-export function aes256decrypt(symmetric_key, cipher_text) {
+const aes256decrypt = (symmetric_key, cipher_text) => {
     return jwe.aes256decrypt(symmetric_key, cipher_text);
 }
 
-export function aes256encrypt(symmetric_key, data) {
+const aes256encrypt = (symmetric_key, data) => {
     return jwe.aes256encrypt(symmetric_key, data);
 }
 
-
-// module.exports = {
-//     getpayload: get_message_payload,
-//     decode: decode,
-//     base64decode: base64decode,
-//     create_jwt_token: create_jwt_token,
-//     create_typedmsg: create_typedmsg,
-//     create_symm_msg: create_symm_msg,
-//     get_msg_array: get_msg_array,
-//     ecdh_encypt: ecdh_encypt,
-//     ecdh_decrypt: ecdh_decrypt,
-//     decrypt: decrypt,
-//     MSGTYPE: MSGTYPE,
-//     MSGFIELD: MSGFIELD,
-//     PEERMSG: PEERMSG,
-//     //decrypt_ecdh: decrypt_ecdh, TODO use ecdh_decrypt
-//     aes256encrypt: aes256encrypt,
-//     aes256decrypt: aes256decrypt
-// }
-
-
-
+export {
+    get_message_payload as getpayload,
+    decode,
+    base64decode,
+    create_jwt_token,
+    create_typedmsg,
+    create_symm_msg,
+    get_msg_array,
+    ecdh_encypt,
+    ecdh_decrypt,
+    decrypt,
+    MSGTYPE,
+    MSGFIELD,
+    PEERMSG,
+    aes256encrypt,
+    aes256decrypt
+}

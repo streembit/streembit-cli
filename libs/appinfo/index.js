@@ -23,7 +23,7 @@ Copyright(C) 2017 ZoVolt Ltd
 const singleton = Symbol();
 const singleton_verifier = Symbol();
 
-class AppInfo {
+export class AppInfo {
     constructor(enforcer) {
         if (enforcer != singleton_verifier) {
             throw "AppInfo must be a singleton";
@@ -62,8 +62,3 @@ class AppInfo {
         this.m_wsmaxconn = value;
     }
 }
-
-export {
-    AppInfo
-}
-// module.exports = AppInfo.instance;
