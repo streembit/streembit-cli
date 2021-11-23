@@ -35,24 +35,22 @@ import { ModulesHandler as AppsHandler } from "./apps/index.js"
 
 const database = Database.instance;
 
-// const config = new StreembitConfig();
-
 // initialize the logger
 export class App {
   init(port, ip, password, cmd, bcclient) {
     try {
       async.waterfall(
         [
-          function (callback) {
+          (callback) => {
             try {
               config.init(port, ip, cmd, bcclient, callback);
             } catch (e) {
               callback(e);
             }
           },
-          function (callback) {
+          (callback) => {
             try {
-              var loglevel =
+              const loglevel =
                 config.log && config.log.level ? config.log.level : "debug";
               if (config.cmdinput || config.bcclient) {
                 logger.init(loglevel, null, ["file"]);
@@ -64,7 +62,7 @@ export class App {
               callback(e);
             }
           },
-          function (callback) {
+          (callback) => {
             if (config.bcclient) {
               return callback();
             }
@@ -73,7 +71,7 @@ export class App {
             } catch (e) {
             }
           },
-          function (callback) {
+          (callback) => {
             if (config.bcclient) {
               return callback();
             }
@@ -84,42 +82,42 @@ export class App {
               callback("Account init error: " + e.message);
             }
           },
-          function (callback) {
+          (callback) => {
             if (config.bcclient) {
               return callback();
             }
   
-            var options = {
+            const options = {
               port: config.transport.port,
             };
-            var httptransport = new HTTPTransport(options);
+            const httptransport = new HTTPTransport(options);
             httptransport.init(callback);
           },
-          function (callback) {
+          (callback) => {
             if (config.bcclient) {
               return callback();
             }
   
             try {
-              var tasks = new Tasks();
+              const tasks = new Tasks();
               tasks.run(callback);
             } catch (e) {
               callback("Task init error: " + e.message);
             }
           },
-          function (callback) {
+          (callback) => {
             if (config.bcclient) {
               return callback();
             }
   
             try {
-              var users = new Users();
+              const users = new Users();
               users.init(callback);
             } catch (e) {
               callback("Users init error: " + e.message);
             }
           },
-          function (callback) {
+          (callback) => {
             let port =
               config.transport && config.transport.ws && config.transport.ws.port
                 ? config.transport.ws.port
@@ -133,7 +131,7 @@ export class App {
             let wsserver = new WebSocket(port, maxconn);
             wsserver.init(callback);
           },
-          function (callback) {
+          (callback) => {
             try {
               let apps = new AppsHandler();
               apps.init(callback);
@@ -141,7 +139,7 @@ export class App {
               callback(e);
             }
           },
-          function (callback) {
+          (callback) => {
             if (config.bcclient) {
               return callback();
             }
@@ -150,9 +148,8 @@ export class App {
             pubsub.init(callback);
           },
         ],
-        function (err) {
+        (err) => {
           if (err) {
-            console.log(err);
             return logger.error("application init error: %j", err);
           }
   
@@ -170,18 +167,18 @@ export class App {
   display_data(password) {
     async.waterfall(
       [
-        function (callback) {
+        (callback) => {
           config.init_account_params(callback);
         },
-        function (callback) {
+        (callback) => {
           database.init(dbschema, callback);
         },
-        function (callback) {
+        (callback) => {
           const account = new Account();
           account.load(password, callback);
         },
       ],
-      function (err, result) {
+      (err, result) => {
         if (err) {
           return console.log(err.message || err);
         }
@@ -205,32 +202,32 @@ export class App {
     console.log("list users");
     async.waterfall(
       [
-        function (callback) {
+        (callback) => {
           config.init_account_params(callback);
         },
-        function (callback) {
+        (callback) => {
           database.init(dbschema, callback);
         },
-        function (callback) {
+        (callback) => {
           const account = new Account();
           account.load(password, callback);
         },
-        function (callback) {
+        (callback) => {
           try {
-            var users = new Users();
+            const users = new Users();
             users.init(callback);
           } catch (e) {
             callback("Users init error: " + e.message);
           }
         },
       ],
-      function (err, result) {
+      (err, result) => {
         if (err) {
           return console.log(err.message || err);
         }
 
-        var users = new Users();
-        var list = users.list();
+        const users = new Users();
+        const list = users.list();
         console.log("\nUsers:");
         console.log(util.inspect(list));
       }
@@ -239,7 +236,7 @@ export class App {
 
   delete_user(password) {
     // get the password from the command prompt
-    utils.prompt_for_userid(function (err, userid) {
+    utils.prompt_for_userid((err, userid) => {
       if (err) {
         return console.log(err.message || err);
       }
@@ -247,33 +244,33 @@ export class App {
       //delete the user id
       async.waterfall(
         [
-          function (callback) {
+          (callback) => {
             config.init_account_params(callback);
           },
-          function (callback) {
+          (callback) => {
             database.init(dbschema, callback);
           },
-          function (callback) {
+          (callback) => {
             const account = new Account();
             account.load(password, callback);
           },
-          function (callback) {
+          (callback) => {
             try {
-              var users = new Users();
+              const users = new Users();
               users.init(callback);
             } catch (e) {
               callback("Users init error: " + e.message);
             }
           },
         ],
-        function (err, result) {
+        (err, result) => {
           if (err) {
             return console.log(err.message || err);
           }
 
           console.log("deleting user ID: " + userid);
 
-          var users = new Users();
+          const users = new Users();
           users
             .delete_user(userid)
             .then(() => {
@@ -292,24 +289,24 @@ export class App {
 
     async.waterfall(
       [
-        function (callback) {
+        (callback) => {
           config.init_account_params(callback);
         },
-        function (callback) {
+        (callback) => {
           try {
             database.init(dbschema, callback);
           } catch (err) {
             callback(err);
           }
         },
-        function (callback) {
+        (callback) => {
           const account = new Account();
-          account.load(password, function (err) {
+          account.load(password, (err) => {
             if (err) {
               return callback(err);
             }
 
-            var data = {
+            const data = {
               bs58pk: account.bs58pk,
               pkhex: account.public_key,
               encoded_pkhash: account.public_key_hash,
@@ -320,15 +317,15 @@ export class App {
             callback(null, data);
           });
         },
-        function (data, callback) {
+        (data, callback) => {
           try {
             // write to file
             data.timestamp = Date.now();
-            var str = JSON.stringify(data, null, 4);
-            var wdir = process.cwd();
-            var datadir = path.join(wdir, "data");
-            var backupfile = path.join(datadir, "account.json");
-            fs.writeFile(backupfile, str, function (err) {
+            const str = JSON.stringify(data, null, 4);
+            const wdir = process.cwd();
+            const datadir = path.join(wdir, "data");
+            const backupfile = path.join(datadir, "account.json");
+            fs.writeFile(backupfile, str, (err) => {
               if (err) {
                 return callback(err);
               }
@@ -340,7 +337,7 @@ export class App {
           }
         },
       ],
-      function (err) {
+      (err) => {
         if (err) {
           return console.log("Backup error: %j", err.message || err);
         }
@@ -355,22 +352,22 @@ export class App {
   whitelist_update(password, pkey, rm) {
     async.waterfall(
       [
-        function (callback) {
+        (callback) => {
           config.init_account_params(callback);
         },
-        function (callback) {
+        (callback) => {
           database.init(dbschema, callback);
         },
-        function (callback) {
+        (callback) => {
           const account = new Account();
           account.load(password, callback);
         },
-        function (callback) {
+        (callback) => {
           const db = new WhitelistDB();
           callback(null, db);
         },
       ],
-      function (err, wlDb) {
+      (err, wlDb) => {
         if (err) {
           return console.log(err.message || err);
         }
@@ -405,22 +402,22 @@ export class App {
   get_wl(password) {
     async.waterfall(
       [
-        function (callback) {
+        (callback) => {
           config.init_account_params(callback);
         },
-        function (callback) {
+        (callback) => {
           database.init(dbschema, callback);
         },
-        function (callback) {
+        (callback) => {
           const account = new Account();
           account.load(password, callback);
         },
-        function (callback) {
+        (callback) => {
           const db = new WhitelistDB();
           callback(null, db);
         },
       ],
-      function (err, wlDb) {
+      (err, wlDb) => {
         if (err) {
           return console.log(err.message || err);
         }
