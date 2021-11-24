@@ -67,9 +67,9 @@ class PubSub {
         return this.kad.publish(topic, payload);
     }
 
-    init(callback) {
+    init() {
         try {
-            for(var a = 0, sl = this.subscribeTo.length; a < sl; ++a) {
+            for (var a = 0, sl = this.subscribeTo.length; a < sl; ++a) {
                 if (this.subscribeTo[a].callbacks.length) {
                     this.kad.subscribe(
                         this.subscribeTo[a].topic,
@@ -111,9 +111,9 @@ class PubSub {
                     catch (err) {
                         logger.error("SUBSCRIBE_EVENT error %j", err);
                     }
-            });
+                });
 
-            callback();
+            return true;
         } catch (err) {
             logger.error("Publish/Subscribe module error: %j", err);
         }

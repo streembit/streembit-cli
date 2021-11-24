@@ -60,6 +60,7 @@ program
   .option("-a, --addpk [pkey]", "Add/Remove a user to/from whitelist")
   .parse(process.argv);
 
+
 try {
   const {
     pwd,
@@ -113,7 +114,7 @@ try {
       if (!addpk && !deluser) {
         throw new Error('-w command option requires user private key being provided');
       } else if (addpk && addpk.length < 64 || deluser && deluser.length < 64) {
-          throw new Error('Invalid public key');
+        throw new Error('Invalid public key');
       }
 
       app.whitelist_update(pwd, addpk || deluser, !!deluser);
@@ -122,8 +123,9 @@ try {
       app.delete_user(pwd);
       break;
   }
-
+  console.log("======port======", port);
   app.init(port, ip, pwd, !!cmd, bcclient);
 } catch (e) {
   console.log("\x1b[31m%s\x1b[0m", "app command handler error: " + e.message);
 }
+;

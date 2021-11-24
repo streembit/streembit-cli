@@ -24,7 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 import async from "async";
 import { seed } from "./seed/index.js"
 import { default as client } from "./client/index.js";
-import { IoTRunner as iot }from "./iot/index.js";
+import { IoTRunner as iot } from "./iot/index.js";
 import { BlockchainHandler } from "./blockchain/index.js";
 import * as dnshandler from "./dns/index.js";
 import { CmdHandler } from "./cmd/index.js";
@@ -36,37 +36,40 @@ export class ModulesHandler {
     constructor() {
     }
 
-    init(callback) {
-        async.waterfall(
-            [
-                function (callback) {
-                    seed(callback);
-                },
-                function (callback) {
-                    client(callback);
-                },
-                function (callback) {
-                    iot.run(callback);
-                },
-                function (callback) {
-                    const blockchain = new BlockchainHandler();
-                    blockchain.run(callback);
-                },
-                function (callback) {
-                    dnshandler.run(callback);
-                },
-                function (callback) {
-                    bcclient(callback);
-                },
-                function (callback) {
-                    const cmd = new CmdHandler();
-                    cmd.run(callback);
+    async init() {
+        return new Promise((resolve, reject) => {
+            async.waterfall(
+                [
+                    function (resolve) {
+                        seed(resolve);
+                    },
+                    function (resolve) {
+                        client(resolve);
+                    },
+                    function (resolve) {
+                        iot.run(resolve);
+                    },
+                    function (resolve) {
+                        const blockchain = new BlockchainHandler();
+                        blockchain.run(resolve);
+                    },
+                    function (resolve) {
+                        dnshandler.run(resolve);
+                    },
+                    function (resolve) {
+                        bcclient(resolve);
+                    },
+                    function (resolve) {
+                        const cmd = new CmdHandler();
+                        cmd.run(resolve);
+                    }
+                ],
+                function (err) {
+                    reject(err);
                 }
-            ],
-            function (err) {
-                callback(err);
-            }
-        );
+            );
+        });
+
     }
 }
 

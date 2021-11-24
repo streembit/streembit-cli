@@ -69,7 +69,7 @@
     },
     "scripts": {
         "test": "mocha test",
-        "start": "node streembit --pwd 123456Aa"
+        "start": "node --experimental-json-modules streembit --pwd 123456Aa"
     },
     "devDependencies": {
         "capture-console": "1.0.1",

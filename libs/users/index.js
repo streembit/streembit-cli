@@ -110,7 +110,7 @@ export class Users {
                     (err) => {
                         reject(err);
                     }
-                );            
+                );
         });
     }
 
@@ -168,14 +168,14 @@ export class Users {
         }
     }
 
-    async init(callback) {
+    async init() {
 
         try {
             await this.populate();
         }
         catch (err) {
-            return callback("users populate error: " + err.message);
-        }            
+            throw new Error(`users populate error:  + ${err.message}`);
+        }
 
         var namesarr = [];
         this.users.forEach(
@@ -186,8 +186,6 @@ export class Users {
 
         var list = namesarr.length ? namesarr.join() : "-";
         logger.info("Users: " + list);
-
-        callback();
     }
 
     validateUsername(username) {
