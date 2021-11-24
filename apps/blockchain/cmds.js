@@ -22,7 +22,7 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-class BlockchainCmds {
+export class BlockchainCmds {
     constructor() {}
 
     processCommand(command, params) {
@@ -690,5 +690,3 @@ class BlockchainCmds {
         }
     }
 }
-
-module.exports = BlockchainCmds;

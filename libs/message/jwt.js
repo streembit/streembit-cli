@@ -19,16 +19,13 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-// var EC = require('elliptic').ec;
-import elliptic from 'elliptic'; 
+import elliptic from "elliptic";
+import { Buffer } from "buffer";
+
 const EC = elliptic.ec;
-//FOR-BROWSER
-// var Buffer = require('buffer').Buffer;
-import {Buffer} from 'buffer';
+const DEFAULT_CURVE = 'secp256k1';
 
-var DEFAULT_CURVE = 'secp256k1';
-
-var jwt = {};
+export var jwt = {};
 
 jwt.decode = function decode(token, key) {
     // check token
@@ -260,8 +257,3 @@ function base64urlEncode(str) {
 function base64urlEscape(str) {
     return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
-
-export {
-    jwt
-}
-// module.exports = jwt;

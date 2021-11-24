@@ -22,14 +22,12 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-const config = require('libs/config');
-const constants = require('libs/constants');
-const { events, logger } = require('streembit-util');
-const merkle = require('./merkle');
-const BlockchainCmds = require('./cmds');
+import { config } from "../../libs/config/index.js";
+import { constants } from "../../libs/constants/index.js";
+import { events, logger } from "streembit-util";
+import { BlockchainCmds } from "./cmds.js";
 
-
-class BlockchainHandler {
+export class BlockchainHandler {
     constructor() {
 
     }
@@ -119,4 +117,3 @@ class BlockchainHandler {
     }
 }
 
-module.exports = BlockchainHandler;

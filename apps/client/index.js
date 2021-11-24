@@ -167,6 +167,7 @@ export default (callback) => {
       });
     }, 1);
   } catch (err) {
+    console.log("err: ------------- ", err);
     callback(err.message);
   }
 };

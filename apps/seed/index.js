@@ -30,16 +30,6 @@ import * as msghandler from "../../libs/peernet/msg.js";
 import { KadHandler } from "../../libs/peernet/kad.js";
 import { logger } from 'streembit-util';
 
-// const async = require("async");
-// const config = require("libs/config");
-// const logger = require("streembit-util").logger;
-// const db = require("streembit-db").instance
-// const kad = require("libs/peernet/kad");
-// const msghandler = require("libs/peernet/msg");
-// const constants = require("libs/constants");
-
-// const PubSub = require('libs/pubsub');
-
 export function seed(callback) {
     try {
 

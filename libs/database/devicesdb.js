@@ -21,9 +21,9 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const database = require("libs/database/database");
+import { database } from "./database.js";
 
-class IoTDevicesDb extends database{
+class IoTDevicesDb extends database {
     constructor() {
         super();
     }
@@ -161,5 +161,4 @@ class IoTDevicesDb extends database{
 
 }
 
-module.exports = IoTDevicesDb;
-
+export default IoTDevicesDb;

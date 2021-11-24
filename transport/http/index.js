@@ -291,8 +291,4 @@ class HTTPTransport {
 
 }
 
-// export {
-//     HTTPTransport
-// }
-export { HTTPTransport as default}
-// module.exports = HTTPTransport;
+export default HTTPTransport;

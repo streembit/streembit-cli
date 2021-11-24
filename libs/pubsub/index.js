@@ -21,20 +21,20 @@ Based on kadence library https://github.com/kadence author Gordon Hall https://g
 
 'use strict';
 
-const constants = require("libs/constants");
-const { events, logger } = require("streembit-util");
-const kad = require("libs/peernet/kad");
+import { constants } from "../constants/index.js";
+import { events, logger } from "streembit-util";
+import { KadHandler } from "../peernet/kad.js";
 
 let instance = null;
 
-class Pubsub {
+class PubSub {
 
     /*
      * Singleton with default subscription types initialization
      */
     constructor() {
         if (!instance) {
-            this.kad = new kad.KadHandler();
+            this.kad = new KadHandler();
             /* initial subscriptions maybe, somewhere in pubsub/txn_subs etc. */
             this.subscribeTo = [
                 { topic: constants.PUBSUB_TXN, callbacks: [] },
@@ -120,4 +120,4 @@ class Pubsub {
     }
 }
 
-module.exports = Pubsub;
+export default PubSub;

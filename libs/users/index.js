@@ -22,17 +22,10 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-import async from "async";
+import bs58check from "bs58check";
+import createHash from "create-hash";
 import { logger } from "streembit-util";
-import { UsersDb as Database } from "../database/usersdb.js";
-
-// const bs58check = require('bs58check');
-// const createHash = require('create-hash');
-
-// const logger = require("streembit-util").logger;
-// const async = require("async");
-// const config = require("libs/config");
-// const Database = require("libs/database/usersdb");
+import UsersDb from "../database/usersdb.js";
 
 let instance = null;
 
@@ -82,12 +75,12 @@ export class Users {
     }
 
     delete_user(userid) {
-        var db = new Database();
+        var db = new UsersDb();
         return db.delete_user(userid);
     }
 
     add_user(user) {
-        const db = new Database();
+        const db = new UsersDb();
 
         const buffer = new Buffer(user.publickey, 'hex');
         const rmd160buffer = createHash('rmd160').update(buffer).digest();
@@ -97,14 +90,14 @@ export class Users {
     }
 
     update_user(user) {
-        const db = new Database();
+        const db = new UsersDb();
         delete user.userid;
         return db.update_user(user.pkhash, user);
     }
 
     populate() {
         return new Promise((resolve, reject) => {
-            var db = new Database();
+            var db = new UsersDb();
             db.getall().then(
                 rows => {
                     instance.m_users = new Map();
@@ -128,7 +121,7 @@ export class Users {
                 return Promise.resolve();
             }
 
-            var db = new Database();
+            var db = new UsersDb();
 
             const dbusers = await db.getall();
 
@@ -227,6 +220,3 @@ export class Users {
         return true;
     }
 }
-
-
-// module.exports = Users;

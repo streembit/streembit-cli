@@ -21,10 +21,10 @@ Copyright (C) 2018 The Streembit software development team
 
 'use strict';
 
-const constants = require("libs/constants");
-const config = require("libs/config");
-const logger = require("streembit-util").logger;
-const PeerClient = require("libs/peernet/peerclient");
+import { logger } from "streembit-util";
+import { constants } from "../../libs/constants/index.js";
+import { config } from "../../libs/config/index.js";
+import PeerClient from "../../libs/peernet/peerclient.js";
 
 const peerclient = new PeerClient();
 
@@ -86,7 +86,7 @@ class BcCmdHandler {
     }
 }
 
-module.exports = exports = function (callback) {
+export default function (callback) {
     try {
         if (!config.bcclient) {
             logger.info("Config blockchain client handler -> not running");

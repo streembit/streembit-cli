@@ -114,7 +114,4 @@ class UsersDb extends database{
 
 }
 
-export {
-    UsersDb
-}
-// module.exports = UsersDb;
+export default UsersDb;

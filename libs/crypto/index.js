@@ -1,10 +1,12 @@
 ﻿'use strict';
 
-var EC = require('elliptic').ec;
-var bs58check = require('bs58check');
-var createHash = require('create-hash');
+import elliptic from "elliptic";
+import bs58check from "bs58check";
+import createHash from "create-hash";
 
-function EccKey(ecccurve) {
+const EC = elliptic.ec;
+
+export function EccKey(ecccurve) {
     if (!(this instanceof EccKey)) {
         return new EccKey(ecccurve)
     }
@@ -110,5 +112,3 @@ Object.defineProperty(EccKey.prototype, 'cryptoKey', {
         return this.key;
     }
 })
-
-module.exports = EccKey;

@@ -21,21 +21,13 @@ Copyright (C) 2017 ZoVolt Ltd
 
 'use strict';
 
-// const crypto = require('crypto');
-// const ecckey = require('libs/crypto');
-// const createHash = require('create-hash');
-// const secrand = require('secure-random');
-// const config = require("libs/config");
-// const Database = require("libs/database/accountdb");
-// const peermsg = require("libs/message");
-// const utils = require("libs/utils");
-// const logger = require("streembit-util").logger;
-
-import { Database } from "../database/accountdb.js";
+import AccountsDb from "../database/accountdb.js";
 import { createHash } from 'crypto';
 import { config } from '../config/index.js';
 import * as peermsg from "../message/index.js";
-// import ecckey from "../crypto/index.js";
+import secrand from "secure-random";
+import { logger } from "streembit-util";
+import { EccKey } from "../crypto/index.js";
 
 let instance = null;
 
@@ -116,7 +108,7 @@ export class Account {
     }
 
     addToDB(password, cipher, callback) {
-        var database = new Database();
+        var database = new AccountsDb();
         database.add(
             this.accountname,
             this.accountpk,
@@ -140,7 +132,7 @@ export class Account {
         var entropy = createHash("sha256").update(rndstr).digest("hex");
 
         // create ECC key
-        var key = new ecckey();
+        var key = new EccKey();
         key.generateKey(entropy);
 
         //  encrypt the account data
@@ -223,31 +215,29 @@ export class Account {
 
             var hexPrivatekey = accountobj.privatekey;
             // load ECC key from the hex private key
-            // var key = new ecckey();
-            // key.keyFromPrivate(hexPrivatekey, 'hex');
+            var key = new EccKey();
+            key.keyFromPrivate(hexPrivatekey, 'hex');
 
-            // if (key.pkrmd160hash != data.accountpk) {
-                // return callback("Error in initializing the account, most likely an incorrect password");
-            // }
+            if (key.pkrmd160hash != data.accountpk) {
+                return callback("Error in initializing the account, most likely an incorrect password");
+            }
 
-            // this.ppkikey = key;
+            this.ppkikey = key;
 
-            // var skrnd = secrand.randomBuffer(32).toString("hex");
-            // var skhash = createHash("sha256").update(skrnd).digest("hex");
-            // this.connsymmkey = skhash;
+            var skrnd = secrand.randomBuffer(32).toString("hex");
+            var skhash = createHash("sha256").update(skrnd).digest("hex");
+            this.connsymmkey = skhash;
 
-            // logger.info("loaded pkhash: " + this.public_key_hash);
-            // logger.info("loaded bs58pk: " + this.bs58pk);
+            logger.info("loaded pkhash: " + this.public_key_hash);
+            logger.info("loaded bs58pk: " + this.bs58pk);
 
-            // this.accountname = data.account;
-            // console.log(data.account);
+            this.accountname = data.account;
 
             // the account exists and the encrypted entropy is correct!
             callback();
         }
         catch (err) {
-            console.log("err: err: err: ", err);
-            // callback(err)
+            callback(err)
         }
     };
 
@@ -289,7 +279,7 @@ export class Account {
             var hexPrivatekey = accountobj.privatekey;
 
             // create ECC key
-            var key = new ecckey();
+            var key = new EccKey();
             key.keyFromPrivate(hexPrivatekey, 'hex');
             if (key.pkrmd160hash != accountobj.accountpk) {
                 return callback("Error in restoring the account, incorrect password or invalid backup data");
@@ -356,7 +346,7 @@ export class Account {
                return callback("Password syntax validation error: Invalid password, the password must be at least 6 characters long, must include both lower case and upper case characters, a number and special character.");
            }
 
-            const db = new Database();
+            const db = new AccountsDb();
             db.data(
                 (err, data) => {
                     if (err) {
@@ -389,7 +379,7 @@ export class Account {
     load(password, callback) {
         // get the account details from the database
         try {
-            var db = new Database();
+            var db = new AccountsDb();
             db.data(
                 (err, data) => {
                     if (err) {
@@ -435,5 +425,3 @@ export class Account {
         return true;
     }
 }
-
-// module.exports = Account;

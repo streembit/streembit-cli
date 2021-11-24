@@ -19,11 +19,11 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-const database = require("libs/database/database");
+import { database } from "./database.js";
 
 'use strict';
 
-class WhitelistDb extends database {
+class WhitelistDB extends database {
     constructor() {
         super();
     }
@@ -150,4 +150,4 @@ class WhitelistDb extends database {
     }
 }
 
-module.exports = WhitelistDb;
+export default WhitelistDB;

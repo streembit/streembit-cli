@@ -20,15 +20,11 @@ Copyright (C) 2016 The Streembit software development team
 */
 
 // var EC = require('elliptic').ec;
-import elliptic from 'elliptic'; 
-const EC = elliptic.ec;
-
-// var aes = require("browserify-aes");
 import aes from "browserify-aes";
 
-var DEFAULT_CURVE = 'secp256k1';
+const DEFAULT_CURVE = 'secp256k1';
 
-var jwe = (function () {
+export var jwe = (function () {
     var obj = {};   
     
     function create_symmetric_key(master_key, other_public_key) {
@@ -212,9 +208,3 @@ var jwe = (function () {
     
     return obj;
 }());
-
-export {
-    jwe
-}
-
-// module.exports = jwe;

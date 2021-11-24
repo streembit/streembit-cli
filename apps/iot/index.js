@@ -21,18 +21,16 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-const constants = require("libs/constants");
-const config = require("libs/config");
-const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
-const util = require("util");
-const Devices = require("libs/devices");
-const ZigbeeGateway = require('apps/iot/device/zigbee/gateway');
-const ZigbeeDevice = require('apps/iot/device/zigbee/device');
-const TrackingEvent = require('apps/iot/device/tracking_event');
-const iotdefinitions = require("apps/iot/definitions");
-const async = require('async');
-const UsersDb = require("libs/database/usersdb");
+import util from "util";
+import async from "async";
+import { config } from "../../libs/config/index.js";
+import { logger, events } from "streembit-util";
+import { definitions as iotdefinitions } from "../iot/definitions.js";
+import Devices from "../../libs/devices/index.js";
+
+// const ZigbeeGateway = require('apps/iot/device/zigbee/gateway');
+// const ZigbeeDevice = require('apps/iot/device/zigbee/device');
+// const TrackingEvent = require('apps/iot/device/tracking_event');
 
 class IoTHandler {
     constructor() {
@@ -697,7 +695,7 @@ class IoTHandler {
 
 }
 
-class IoTRunner {
+export class IoTRunner {
     constructor() { }
 
     static run(callback) {
@@ -735,10 +733,8 @@ class IoTRunner {
             //
         }
         catch (err) {
+            console.log("---------- IoT module init error: -------------", err);
             callback("IoT module init error: " + err.message);
         }
     }
 }
-
-module.exports = IoTRunner; 
-
