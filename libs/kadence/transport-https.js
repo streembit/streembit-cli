@@ -24,12 +24,9 @@ Based on
 
 'use strict';
 
-import HTTPTransport from './transport-http.js'
-import https from 'https'
-import merge from 'merge'
-// const HTTPTransport = require('./transport-http');
-// const https = require('https');
-// const merge = require('merge');
+import https from "https";
+import merge from "merge";
+import HTTPTransport from "./transport-http.js";
 
 /**
  * Extends the HTTP transport with SSL
@@ -72,4 +69,3 @@ class HTTPSTransport extends HTTPTransport {
 }
 
 export default HTTPSTransport;
-// module.exports = HTTPSTransport;

@@ -24,22 +24,16 @@ Based on
 
 'use strict';
 
-// const async = require('async');
-// const { Writable: WritableStream } = require('stream');
-// const constants = require('./constants');
-// const config = require('libs/config');
-// const utils = require('./utils');
-// const AbstractNode = require('./node-abstract');
-// const KademliaRules = require('./rules-kademlia');
-// const ContactList = require('./contact-list');
-// const MetaPipe = require('metapipe');
-
-import async from 'async'
-import { AbstractNode } from './node-abstract.js'
-import HTTPSTransport from './transport-https.js'
-import HTTPTransport from './transport-http.js'
-import KademliaRules from './rules-kademlia.js'
-import * as constants from './constants.js'
+import async from 'async';
+import { AbstractNode } from './node-abstract.js';
+import HTTPSTransport from './transport-https.js';
+import HTTPTransport from './transport-http.js';
+import KademliaRules from './rules-kademlia.js';
+import * as constants from './constants.js';
+import MetaPipe from 'metapipe';
+import { Writable as WritableStream } from 'stream';
+import * as utils from './utils.js';
+import ContactList from './contact-list.js';
 
 /**
  * Extends {@link AbstractNode} with Kademlia-specific rules
@@ -608,5 +602,3 @@ export class KademliaNode extends AbstractNode {
         })
     };
 }
-
-// module.exports = KademliaNode;

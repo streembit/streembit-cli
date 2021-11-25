@@ -24,7 +24,7 @@ Based on
 
 'use strict';
 
-const utils = require('./utils');
+import * as utils from './utils.js';
 
 /**
  * Manages contact lists returned from FIND_NODE queries
@@ -116,4 +116,4 @@ class ContactList {
 
 }
 
-module.exports = ContactList;
+export default ContactList;

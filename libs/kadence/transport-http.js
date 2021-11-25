@@ -24,20 +24,13 @@ Based on
 
 'use strict';
 
-import http from 'http'
-import https from 'https'
-import { Duplex as DuplexStream } from 'stream'
-import merge from 'merge'
-import * as constants from './constants.js';
-
-// const http = require('http');
-// const https = require('https');
-// const { Duplex: DuplexStream } = require('stream');
-// const merge = require('merge');
-// const concat = require('concat-stream');
-// const constants = require('./constants');
-// const config = require('libs/config');
-
+import http from "http";
+import https from "https";
+import merge from "merge";
+import concat from "concat-stream";
+import * as constants from "./constants.js";
+import { Duplex as DuplexStream } from "stream";
+import { config } from "../config/index.js";
 
 /**
  * Represents a transport adapter over HTTP

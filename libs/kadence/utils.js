@@ -22,80 +22,46 @@ Based on
 -------------------------------------------------------------------------------------------------------------------------
 */
 
+"use strict";
 
-'use strict';
-
+import ip from "ip";
+import url from "url";
+import semver from "semver";
+import assert from "assert";
 import { randomBytes, createHash } from "crypto";
-import * as constants from "./constants.js"
-import assert from "assert"
-// const url = require('url');
-// const constants = require('./constants');
-// const semver = require('semver');
-// const ip = require('ip');
-// const { randomBytes, createHash } = require('crypto');
-// const assert = require('assert');
+import * as constants from "./constants.js";
 
 /**
- * Returns the RMD-160 hash of the input
- * @param {buffer} input - Data to hash
+ * Returns a random valid key/identity as a string
+ * @returns {string}
  */
- export const hash160 = function(input) {
-    return createHash('rmd160').update(input).digest();
+export const getRandomKeyString = () => {
+  return getRandomKeyBuffer().toString("hex");
 };
 
 /**
  * Returns a random valid key/identity as a buffer
  * @returns {buffer}
  */
-export const getRandomKeyBuffer = function() {
-    return randomBytes(constants.B / 8);
+export const getRandomKeyBuffer = () => {
+  return randomBytes(constants.B / 8);
 };
 
 /**
- * Validates the given object is a storage adapter
- * @param {AbstractNode~storage} storageAdapter
+ * Determines if the given string key is valid
+ * @param {string} key - Node ID or item key
+ * @returns {boolean}
  */
-export const validateStorageAdapter = function(storage) {
-    assert(typeof storage === 'object',
-        'No storage adapter supplied');
-    assert(typeof storage.get === 'function',
-        'Store has no get method');
-    assert(typeof storage.put === 'function',
-        'Store has no put method');
-    assert(typeof storage.del === 'function',
-        'Store has no del method');
-    assert(typeof storage.createReadStream === 'function',
-        'Store has no createReadStream method');
-};
+export const keyStringIsValid = (key) => {
+  let buf;
 
-/**
- * Validates the given object is a logger
- * @param {AbstractNode~logger} logger
- */
-export const validateLogger = function(logger) {
-    assert(typeof logger === 'object',
-        'No logger object supplied');
-    assert(typeof logger.debug === 'function',
-        'Logger has no debug method');
-    assert(typeof logger.info === 'function',
-        'Logger has no info method');
-    assert(typeof logger.warn === 'function',
-        'Logger has no warn method');
-    assert(typeof logger.error === 'function',
-        'Logger has no error method');
-};
+  try {
+    buf = Buffer.from(key, "hex");
+  } catch (err) {
+    return false;
+  }
 
-/**
- * Validates the given object is a transport
- * @param {AbstractNode~transport} transport
- */
-export const validateTransport = function(transport) {
-    assert(typeof transport === 'object',
-        'No transport adapter supplied');
-    assert(typeof transport.read === 'function',
-        'Transport has no read method');
-    assert(typeof transport.write === 'function',
-        'Transport has no write method');
+  return keyBufferIsValid(buf);
 };
 
 /**
@@ -103,401 +69,354 @@ export const validateTransport = function(transport) {
  * @param {buffer} key - Node ID or item key
  * @returns {boolean}
  */
-export const keyBufferIsValid = function(key) {
-    return Buffer.isBuffer(key) && key.length === constants.B / 8;
+export const keyBufferIsValid = (key) => {
+  return Buffer.isBuffer(key) && key.length === constants.B / 8;
 };
 
-// /**
-//  * Returns a random valid key/identity as a string
-//  * @returns {string}
-//  */
-// exports.getRandomKeyString = function() {
-//     return exports.getRandomKeyBuffer().toString('hex');
-// };
+/**
+ * Calculate the distance between two keys
+ * @param {string} key1 - Identity key to compare
+ * @param {string} key2 - Identity key to compare
+ * @returns {buffer}
+ */
+export const getDistance = (id1, id2) => {
+  id1 = !Buffer.isBuffer(id1) ? Buffer.from(id1, "hex") : id1;
+  id2 = !Buffer.isBuffer(id2) ? Buffer.from(id2, "hex") : id2;
 
-// /**
-//  * Returns a random valid key/identity as a buffer
-//  * @returns {buffer}
-//  */
-// exports.getRandomKeyBuffer = function() {
-//     return randomBytes(constants.B / 8);
-// };
+  assert(keyBufferIsValid(id1), "Invalid key supplied");
+  assert(keyBufferIsValid(id2), "Invalid key supplied");
 
-// /**
-//  * Determines if the given string key is valid
-//  * @param {string} key - Node ID or item key
-//  * @returns {boolean}
-//  */
-// exports.keyStringIsValid = function(key) {
-//     let buf;
+  return Buffer(constants.B / 8).map((b, index) => id1[index] ^ id2[index]);
+};
 
-//     try {
-//         buf = Buffer.from(key, 'hex');
-//     } catch (err) {
-//         return false;
-//     }
+/**
+ * Compare two buffers for sorting
+ * @param {buffer} b1 - Buffer to compare
+ * @param {buffer} b2 - Buffer to compare
+ * @returns {number}
+ */
+export const compareKeyBuffers = (b1, b2) => {
+  assert(keyBufferIsValid(b1), "Invalid key supplied");
+  assert(keyBufferIsValid(b2), "Invalid key supplied");
 
-//     return exports.keyBufferIsValid(buf);
-// };
+  for (let index = 0; index < b1.length; index++) {
+    let bits = b1[index];
 
-// /**
-//  * Determines if the given buffer key is valid
-//  * @param {buffer} key - Node ID or item key
-//  * @returns {boolean}
-//  */
-// exports.keyBufferIsValid = function(key) {
-//     return Buffer.isBuffer(key) && key.length === constants.B / 8;
-// };
+    if (bits !== b2[index]) {
+      return bits < b2[index] ? -1 : 1;
+    }
+  }
 
-// /**
-//  * Calculate the distance between two keys
-//  * @param {string} key1 - Identity key to compare
-//  * @param {string} key2 - Identity key to compare
-//  * @returns {buffer}
-//  */
-// exports.getDistance = function(id1, id2) {
-//     id1 = !Buffer.isBuffer(id1)
-//         ? Buffer.from(id1, 'hex')
-//         : id1;
-//     id2 = !Buffer.isBuffer(id2)
-//         ? Buffer.from(id2, 'hex')
-//         : id2;
+  return 0;
+};
 
-//     assert(exports.keyBufferIsValid(id1), 'Invalid key supplied');
-//     assert(exports.keyBufferIsValid(id2), 'Invalid key supplied');
+/**
+ * Calculate the index of the bucket that key would belong to
+ * @param {string} referenceKey - Key to compare
+ * @param {string} foreignKey - Key to compare
+ * @returns {number}
+ */
+export const getBucketIndex = (referenceKey, foreignKey) => {
+  let distance = getDistance(referenceKey, foreignKey);
+  let bucketIndex = constants.B;
 
-//     return Buffer(constants.B / 8).map((b, index) => id1[index] ^ id2[index]);
-// };
+  for (let byteValue of distance) {
+    if (byteValue === 0) {
+      bucketIndex -= 8;
+      continue;
+    }
 
-// /**
-//  * Compare two buffers for sorting
-//  * @param {buffer} b1 - Buffer to compare
-//  * @param {buffer} b2 - Buffer to compare
-//  * @returns {number}
-//  */
-// exports.compareKeyBuffers = function(b1, b2) {
-//     assert(exports.keyBufferIsValid(b1), 'Invalid key supplied');
-//     assert(exports.keyBufferIsValid(b2), 'Invalid key supplied');
+    for (let i = 0; i < 8; i++) {
+      if (byteValue & (0x80 >> i)) {
+        return --bucketIndex;
+      } else {
+        bucketIndex--;
+      }
+    }
+  }
 
-//     for (let index = 0; index < b1.length; index++) {
-//         let bits = b1[index];
+  return bucketIndex;
+};
 
-//         if (bits !== b2[index]) {
-//             return bits < b2[index] ? -1 : 1;
-//         }
-//     }
+/**
+ * Returns a buffer with a power-of-two value given a bucket index
+ * @param {string|buffer} referenceKey - Key to find next power of two
+ * @param {number} bucketIndex - Bucket index for key
+ * @returns {buffer}
+ */
+export const getPowerOfTwoBufferForIndex = (referenceKey, exp) => {
+  assert(exp >= 0 && exp < constants.B, "Index out of range");
 
-//     return 0;
-// };
+  const buffer = Buffer.isBuffer(referenceKey)
+    ? Buffer.from(referenceKey)
+    : Buffer.from(referenceKey, "hex");
+  const byteValue = parseInt(exp / 8);
 
-// /**
-//  * Calculate the index of the bucket that key would belong to
-//  * @param {string} referenceKey - Key to compare
-//  * @param {string} foreignKey - Key to compare
-//  * @returns {number}
-//  */
-// exports.getBucketIndex = function(referenceKey, foreignKey) {
-//     let distance = exports.getDistance(referenceKey, foreignKey);
-//     let bucketIndex = constants.B;
+  // NB: We set the byte containing the bit to the right left shifted amount
+  buffer[constants.K - byteValue - 1] = 1 << exp % 8;
 
-//     for (let byteValue of distance) {
-//         if (byteValue === 0) {
-//             bucketIndex -= 8;
-//             continue;
-//         }
+  return buffer;
+};
 
-//         for (let i = 0; i < 8; i++) {
-//             if (byteValue & (0x80 >> i)) {
-//                 return --bucketIndex;
-//             } else {
-//                 bucketIndex--;
-//             }
-//         }
-//     }
+/**
+ * Generate a random number within the bucket's range
+ * @param {buffer} referenceKey - Key for bucket distance reference
+ * @param {number} index - Bucket index for random buffer selection
+ */
+export const getRandomBufferInBucketRange = (referenceKey, index) => {
+  let base = getPowerOfTwoBufferForIndex(referenceKey, index);
+  let byte = parseInt(index / 8); // NB: Randomize bytes below the power of two
 
-//     return bucketIndex;
-// };
+  for (let i = constants.K - 1; i > constants.K - byte - 1; i--) {
+    base[i] = parseInt(Math.random() * 256);
+  }
 
-// /**
-//  * Returns a buffer with a power-of-two value given a bucket index
-//  * @param {string|buffer} referenceKey - Key to find next power of two
-//  * @param {number} bucketIndex - Bucket index for key
-//  * @returns {buffer}
-//  */
-// exports.getPowerOfTwoBufferForIndex = function(referenceKey, exp) {
-//     assert(exp >= 0 && exp < constants.B, 'Index out of range');
+  // NB: Also randomize the bits below the number in that byte and remember
+  // NB: arrays are off by 1
+  for (let j = index - 1; j >= byte * 8; j--) {
+    let one = Math.random() >= 0.5;
+    let shiftAmount = j - byte * 8;
 
-//     const buffer = Buffer.isBuffer(referenceKey)
-//         ? Buffer.from(referenceKey)
-//         : Buffer.from(referenceKey, 'hex');
-//     const byteValue = parseInt(exp / 8);
+    base[constants.K - byte - 1] |= one ? 1 << shiftAmount : 0;
+  }
 
-//     // NB: We set the byte containing the bit to the right left shifted amount
-//     buffer[constants.K - byteValue - 1] = 1 << (exp % 8);
+  return base;
+};
 
-//     return buffer;
-// };
+/**
+ * Validates the given object is a storage adapter
+ * @param {AbstractNode~storage} storageAdapter
+ */
+export const validateStorageAdapter = (storage) => {
+  assert(typeof storage === "object", "No storage adapter supplied");
+  assert(typeof storage.get === "function", "Store has no get method");
+  assert(typeof storage.put === "function", "Store has no put method");
+  assert(typeof storage.del === "function", "Store has no del method");
+  assert(
+    typeof storage.createReadStream === "function",
+    "Store has no createReadStream method"
+  );
+};
 
-// /**
-//  * Generate a random number within the bucket's range
-//  * @param {buffer} referenceKey - Key for bucket distance reference
-//  * @param {number} index - Bucket index for random buffer selection
-//  */
-// exports.getRandomBufferInBucketRange = function(referenceKey, index) {
-//     let base = exports.getPowerOfTwoBufferForIndex(referenceKey, index);
-//     let byte = parseInt(index / 8); // NB: Randomize bytes below the power of two
+/**
+ * Validates the given object is a logger
+ * @param {AbstractNode~logger} logger
+ */
+export const validateLogger = (logger) => {
+  assert(typeof logger === "object", "No logger object supplied");
+  assert(typeof logger.debug === "function", "Logger has no debug method");
+  assert(typeof logger.info === "function", "Logger has no info method");
+  assert(typeof logger.warn === "function", "Logger has no warn method");
+  assert(typeof logger.error === "function", "Logger has no error method");
+};
 
-//     for (let i = constants.K - 1; i > (constants.K - byte - 1); i--) {
-//         base[i] = parseInt(Math.random() * 256);
-//     }
+/**
+ * Validates the given object is a transport
+ * @param {AbstractNode~transport} transport
+ */
+export const validateTransport = function (transport) {
+  assert(typeof transport === "object", "No transport adapter supplied");
+  assert(typeof transport.read === "function", "Transport has no read method");
+  assert(
+    typeof transport.write === "function",
+    "Transport has no write method"
+  );
+};
 
-//     // NB: Also randomize the bits below the number in that byte and remember
-//     // NB: arrays are off by 1
-//     for (let j = index - 1; j >= byte * 8; j--) {
-//         let one = Math.random() >= 0.5;
-//         let shiftAmount = j - byte * 8;
+/**
+ * Returns the SHA-256 hash of the input
+ * @param {buffer} input - Data to hash
+ */
+export const hash256 = (input) => {
+  return createHash("sha256").update(input).digest();
+};
 
-//         base[constants.K - byte - 1] |= one ? (1 << shiftAmount) : 0;
-//     }
+/**
+ * Returns the RMD-160 hash of the input
+ * @param {buffer} input - Data to hash
+ */
+export const hash160 = (input) => {
+  return createHash("rmd160").update(input).digest();
+};
 
-//     return base;
-// };
+/**
+ * Returns 33 bytes of random data
+ * @returns {buffer}
+ */
+export const noise33 = () => {
+  return randomBytes(33);
+};
 
-// /**
-//  * Validates the given object is a storage adapter
-//  * @param {AbstractNode~storage} storageAdapter
-//  */
-// exports.validateStorageAdapter = function(storage) {
-//     assert(typeof storage === 'object',
-//         'No storage adapter supplied');
-//     assert(typeof storage.get === 'function',
-//         'Store has no get method');
-//     assert(typeof storage.put === 'function',
-//         'Store has no put method');
-//     assert(typeof storage.del === 'function',
-//         'Store has no del method');
-//     assert(typeof storage.createReadStream === 'function',
-//         'Store has no createReadStream method');
-// };
+/**
+ * Returns a stringified URL from the supplied contact object
+ * @param {Bucket~contact} contact
+ * @returns {string}
+ */
+export const getContactURL = (contact) => {
+  const [id, info] = contact;
 
-// /**
-//  * Validates the given object is a logger
-//  * @param {AbstractNode~logger} logger
-//  */
-// exports.validateLogger = function(logger) {
-//     assert(typeof logger === 'object',
-//         'No logger object supplied');
-//     assert(typeof logger.debug === 'function',
-//         'Logger has no debug method');
-//     assert(typeof logger.info === 'function',
-//         'Logger has no info method');
-//     assert(typeof logger.warn === 'function',
-//         'Logger has no warn method');
-//     assert(typeof logger.error === 'function',
-//         'Logger has no error method');
-// };
+  return `${info.protocol}//${info.hostname}:${info.port}/#${id}`;
+};
 
-// /**
-//  * Validates the given object is a transport
-//  * @param {AbstractNode~transport} transport
-//  */
-// exports.validateTransport = function(transport) {
-//     assert(typeof transport === 'object',
-//         'No transport adapter supplied');
-//     assert(typeof transport.read === 'function',
-//         'Transport has no read method');
-//     assert(typeof transport.write === 'function',
-//         'Transport has no write method');
-// };
+/**
+ * Returns a parsed contact object from a URL
+ * @returns {object}
+ */
+export const parseContactURL = (addr) => {
+  const { protocol, hostname, port, hash } = url.parse(addr);
+  const contact = [
+    (hash ? hash.substr(1) : null) || Buffer.alloc(20).fill(0).toString("hex"),
+    {
+      protocol,
+      hostname,
+      port,
+    },
+  ];
 
-// /**
-//  * Returns the SHA-256 hash of the input
-//  * @param {buffer} input - Data to hash
-//  */
-// module.exports.hash256 = function(input) {
-//     return createHash('sha256').update(input).digest();
-// };
+  return contact;
+};
 
-// /**
-//  * Returns the RMD-160 hash of the input
-//  * @param {buffer} input - Data to hash
-//  */
-// export const hash160 = function(input) {
-//     return createHash('rmd160').update(input).digest();
-// };
+/**
+ * Returns whether or not the supplied semver tag is compatible
+ * @param {string} version - The semver tag from the contact
+ * @returns {boolean}
+ */
+export const isCompatibleVersion = (version) => {
+  const local = require("./version").protocol;
+  const remote = version;
+  const sameMajor = semver.major(local) === semver.major(remote);
+  const diffs = ["prerelease", "prepatch", "preminor", "premajor"];
 
-// /**
-//  * Returns 33 bytes of random data
-//  * @returns {buffer}
-//  */
-// module.exports.noise33 = function() {
-//     return randomBytes(33);
-// };
+  if (diffs.indexOf(semver.diff(remote, local)) !== -1) {
+    return false;
+  } else {
+    return sameMajor;
+  }
+};
 
-// /**
-//  * Returns a stringified URL from the supplied contact object
-//  * @param {Bucket~contact} contact
-//  * @returns {string}
-//  */
-// module.exports.getContactURL = function(contact) {
-//     const [id, info] = contact;
+/**
+ * Determines if the supplied contact is valid
+ * @param {Bucket~contact} contact - The contact information for a given peer
+ * @param {boolean} loopback - Allows contacts that are localhost
+ * @returns {boolean}
+ */
+export const isValidContact = (contact, loopback) => {
+  const [, info] = contact;
+  const isValidAddr =
+    ip.isV4Format(info.hostname) ||
+    ip.isV6Format(info.hostname) ||
+    ip.isPublic(info.hostname);
+  const isValidPort = info.port > 0;
+  const isAllowedAddr = ip.isLoopback(info.hostname) ? !!loopback : true;
 
-//     return `${info.protocol}//${info.hostname}:${info.port}/#${id}`;
-// };
+  return isValidPort && isValidAddr && isAllowedAddr;
+};
 
-// /**
-//  * Returns a parsed contact object from a URL
-//  * @returns {object}
-//  */
-// module.exports.parseContactURL = function(addr) {
-//     const { protocol, hostname, port, hash } = url.parse(addr);
-//     const contact = [
-//         (hash ? hash.substr(1) : null) || Buffer.alloc(20).fill(0).toString('hex'),
-//         {
-//             protocol,
-//             hostname,
-//             port
-//         }
-//     ];
+/**
+ * Determines if a value is hexadecimal string
+ * @param {string} a - The value to be tested
+ * @returns {boolean}
+ */
+export const isHexaString = (a) => {
+  if (typeof a !== "string") {
+    return false;
+  }
 
-//     return contact;
-// };
+  return /^[0-9a-fA-F]+$/.test(a);
+};
 
-// /**
-//  * Returns whether or not the supplied semver tag is compatible
-//  * @param {string} version - The semver tag from the contact
-//  * @returns {boolean}
-//  */
-// module.exports.isCompatibleVersion = function(version) {
-//     const local = require('./version').protocol;
-//     const remote = version;
-//     const sameMajor = semver.major(local) === semver.major(remote);
-//     const diffs = ['prerelease', 'prepatch', 'preminor', 'premajor'];
+/**
+ * Checks if the supplied HD key is valid (base58 encoded) and proper length
+ * @param {string} hdKey - The HD key in base 58 encoding
+ * @returns {boolean} isValidHDKey
+ */
+export const isValidHDNodeKey = (hdKey) => {
+  return (
+    typeof hdKey === "string" && /^[1-9a-km-zA-HJ-NP-Z]{1,111}$/.test(hdKey)
+  );
+};
 
-//     if (diffs.indexOf(semver.diff(remote, local)) !== -1) {
-//         return false;
-//     } else {
-//         return sameMajor;
-//     }
-// };
+/**
+ * Checks if the input is a non-hardened HD key index
+ * @param {number} hdIndex - The HD key index
+ * @returns {boolean} isValidHDKeyIndex
+ */
+export const isValidNodeIndex = (n) => {
+  return (
+    !Number.isNaN(n) &&
+    parseInt(n) === n &&
+    n >= 0 &&
+    n <= constants.MAX_NODE_INDEX
+  );
+};
 
-// /**
-//  * Determines if the supplied contact is valid
-//  * @param {Bucket~contact} contact - The contact information for a given peer
-//  * @param {boolean} loopback - Allows contacts that are localhost
-//  * @returns {boolean}
-//  */
-// module.exports.isValidContact = function(contact, loopback) {
-//     const [, info] = contact;
-//     const isValidAddr = ip.isV4Format(info.hostname) ||
-//         ip.isV6Format(info.hostname) ||
-//         ip.isPublic(info.hostname);
-//     const isValidPort = info.port > 0;
-//     const isAllowedAddr = ip.isLoopback(info.hostname) ? !!loopback : true;
+/**
+ * Converts a buffer to a string representation of binary
+ * @param {buffer} buffer - Byte array to convert to binary string
+ * @returns {string}
+ */
+export const toBinaryStringFromBuffer = (buffer) => {
+  const mapping = {
+    0: "0000",
+    1: "0001",
+    2: "0010",
+    3: "0011",
+    4: "0100",
+    5: "0101",
+    6: "0110",
+    7: "0111",
+    8: "1000",
+    9: "1001",
+    a: "1010",
+    b: "1011",
+    c: "1100",
+    d: "1101",
+    e: "1110",
+    f: "1111",
+  };
+  const hexaString = buffer.toString("hex").toLowerCase();
+  const bitmaps = [];
 
-//     return isValidPort && isValidAddr && isAllowedAddr;
-// };
+  for (let i = 0; i < hexaString.length; i++) {
+    bitmaps.push(mapping[hexaString[i]]);
+  }
 
-// /**
-//  * Determines if a value is hexadecimal string
-//  * @param {string} a - The value to be tested
-//  * @returns {boolean}
-//  */
-// module.exports.isHexaString = function(a) {
-//     if (typeof a !== 'string') {
-//         return false;
-//     }
+  return bitmaps.join("");
+};
 
-//     return /^[0-9a-fA-F]+$/.test(a);
-// };
+/**
+ * Returns a boolean indicating if the supplied buffer meets the given
+ * difficulty requirement
+ * @param {buffer} buffer - Buffer to check difficulty
+ * @param {number} difficulty - Number of leading zeroes
+ * @returns {boolean}
+ */
+export const satisfiesDifficulty = (buffer, difficulty) => {
+  const binString = toBinaryStringFromBuffer(buffer);
+  const prefix = Array(difficulty).fill("0").join("");
 
-// /**
-//  * Checks if the supplied HD key is valid (base58 encoded) and proper length
-//  * @param {string} hdKey - The HD key in base 58 encoding
-//  * @returns {boolean} isValidHDKey
-//  */
-// module.exports.isValidHDNodeKey = function(hdKey) {
-//     return typeof hdKey === 'string' &&
-//         /^[1-9a-km-zA-HJ-NP-Z]{1,111}$/.test(hdKey);
-// };
+  return binString.substr(0, difficulty) === prefix;
+};
 
-// /**
-//  * Checks if the input is a non-hardened HD key index
-//  * @param {number} hdIndex - The HD key index
-//  * @returns {boolean} isValidHDKeyIndex
-//  */
-// module.exports.isValidNodeIndex = function(n) {
-//     return !Number.isNaN(n) && (parseInt(n) === n) && n >= 0 &&
-//         n <= constants.MAX_NODE_INDEX;
-// };
+/**
+ * @private
+ */
+export const _sha256 = (input) => {
+  return createHash("sha256").update(input).digest();
+};
 
-// /**
-//  * Converts a buffer to a string representation of binary
-//  * @param {buffer} buffer - Byte array to convert to binary string
-//  * @returns {string}
-//  */
-// module.exports.toBinaryStringFromBuffer = function(buffer) {
-//     const mapping = {
-//         '0': '0000',
-//         '1': '0001',
-//         '2': '0010',
-//         '3': '0011',
-//         '4': '0100',
-//         '5': '0101',
-//         '6': '0110',
-//         '7': '0111',
-//         '8': '1000',
-//         '9': '1001',
-//         'a': '1010',
-//         'b': '1011',
-//         'c': '1100',
-//         'd': '1101',
-//         'e': '1110',
-//         'f': '1111'
-//     };
-//     const hexaString = buffer.toString('hex').toLowerCase();
-//     const bitmaps = [];
+/**
+ * @private
+ */
+export const _rmd160 = (input) => {
+  return createHash("rmd160").update(input).digest();
+};
 
-//     for (let i = 0; i < hexaString.length; i++) {
-//         bitmaps.push(mapping[hexaString[i]]);
-//     }
-
-//     return bitmaps.join('');
-// };
-
-// /**
-//  * Returns a boolean indicating if the supplied buffer meets the given
-//  * difficulty requirement
-//  * @param {buffer} buffer - Buffer to check difficulty
-//  * @param {number} difficulty - Number of leading zeroes
-//  * @returns {boolean}
-//  */
-// module.exports.satisfiesDifficulty = function (buffer, difficulty) {
-//     const binString = module.exports.toBinaryStringFromBuffer(buffer);
-//     const prefix = Array(difficulty).fill('0').join('');
-
-//     return binString.substr(0, difficulty) === prefix;
-// };
-
-// /**
-//  * @private
-//  */
-// module.exports._sha256 = function (input) {
-//     return createHash('sha256').update(input).digest();
-// };
-
-// /**
-//  * @private
-//  */
-// module.exports._rmd160 = function (input) {
-//     return createHash('rmd160').update(input).digest();
-// };
-
-// /**
-//  * Takes a public key are returns the identity
-//  * @param {buffer} publicKey - Raw public key bytes
-//  * @returns {buffer}
-//  */
-// module.exports.toPublicKeyHash = function (publicKey) {
-//     return exports._rmd160(exports._sha256(publicKey));
-// };
+/**
+ * Takes a public key are returns the identity
+ * @param {buffer} publicKey - Raw public key bytes
+ * @returns {buffer}
+ */
+export const toPublicKeyHash = (publicKey) => {
+  return _rmd160(_sha256(publicKey));
+};

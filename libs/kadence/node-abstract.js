@@ -31,18 +31,8 @@ import assert from "assert"
 import RoutingTable from "./routing-table.js"
 import * as constants from './constants.js'
 import ErrorRules from './rules-errors.js'
-
-// const uuid = require('uuid');
-// const async = require('async');
-// const assert = require('assert');
-// const merge = require('merge');
-// const constants = require('./constants');
-// const utils = require('./utils');
-// const { EventEmitter } = require('events');
-// const RoutingTable = require('./routing-table');
-// const Messenger = require('./messenger');
-// const ErrorRules = require('./rules-errors');
-
+import uuid from "uuid";
+import async from "async";
 import { EventEmitter } from 'events'
 
 /**
@@ -432,5 +422,3 @@ export class AbstractNode extends EventEmitter {
     }
 
 }
-
-// module.exports = AbstractNode;
