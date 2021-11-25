@@ -31,8 +31,18 @@ import assert from "assert"
 import RoutingTable from "./routing-table.js"
 import * as constants from './constants.js'
 import ErrorRules from './rules-errors.js'
-import uuid from "uuid";
-import async from "async";
+
+import { v4 as uuid } from 'uuid';
+// const async = require('async');
+// const assert = require('assert');
+// const merge = require('merge');
+// const constants = require('./constants');
+// const utils = require('./utils');
+// const { EventEmitter } = require('events');
+// const RoutingTable = require('./routing-table');
+// const Messenger = require('./messenger');
+// const ErrorRules = require('./rules-errors');
+
 import { EventEmitter } from 'events'
 
 /**
@@ -181,7 +191,7 @@ export class AbstractNode extends EventEmitter {
             .on('unpipe', (source) =>
                 source.pipe(this.transport)
             );
-    
+
         setInterval(() => this._timeout(), constants.T_RESPONSETIMEOUT);
     }
 
@@ -197,23 +207,23 @@ export class AbstractNode extends EventEmitter {
         if (message.type === 'request') {
             return this.receive(
                 merge({}, message.payload, { contact: contact.payload.params }), {
-                    send: (data) => {
-                        this.rpc.serializer.write([
-                            merge({ id: message.payload.id }, { result: data }),
-                            [this.identity.toString('hex'), this.contact],
-                            contact.payload.params
-                        ])
-                    },
-                    error: (msg, code = -32000) => {
-                        this.rpc.serializer.write([
-                            merge({ id: message.payload.id }, {
-                                error: { message: msg, code }
-                            }),
-                            [this.identity.toString('hex'), this.contact],
-                            contact.payload.params
-                        ])
-                    }
+                send: (data) => {
+                    this.rpc.serializer.write([
+                        merge({ id: message.payload.id }, { result: data }),
+                        [this.identity.toString('hex'), this.contact],
+                        contact.payload.params
+                    ])
+                },
+                error: (msg, code = -32000) => {
+                    this.rpc.serializer.write([
+                        merge({ id: message.payload.id }, {
+                            error: { message: msg, code }
+                        }),
+                        [this.identity.toString('hex'), this.contact],
+                        contact.payload.params
+                    ])
                 }
+            }
             );
         }
 

@@ -187,27 +187,34 @@ export const getRandomBufferInBucketRange = (referenceKey, index) => {
  * Validates the given object is a storage adapter
  * @param {AbstractNode~storage} storageAdapter
  */
-export const validateStorageAdapter = (storage) => {
-  assert(typeof storage === "object", "No storage adapter supplied");
-  assert(typeof storage.get === "function", "Store has no get method");
-  assert(typeof storage.put === "function", "Store has no put method");
-  assert(typeof storage.del === "function", "Store has no del method");
-  assert(
-    typeof storage.createReadStream === "function",
-    "Store has no createReadStream method"
-  );
+export const validateStorageAdapter = function (storage) {
+    assert(typeof storage === 'object',
+        'No storage adapter supplied');
+    assert(typeof storage.get === 'function',
+        'Store has no get method');
+    assert(typeof storage.put === 'function',
+        'Store has no put method');
+    assert(typeof storage.del === 'function',
+        'Store has no del method');
+    assert(typeof storage.createReadStream === 'function',
+        'Store has no createReadStream method');
 };
 
 /**
  * Validates the given object is a logger
  * @param {AbstractNode~logger} logger
  */
-export const validateLogger = (logger) => {
-  assert(typeof logger === "object", "No logger object supplied");
-  assert(typeof logger.debug === "function", "Logger has no debug method");
-  assert(typeof logger.info === "function", "Logger has no info method");
-  assert(typeof logger.warn === "function", "Logger has no warn method");
-  assert(typeof logger.error === "function", "Logger has no error method");
+export const validateLogger = function (logger) {
+    assert(typeof logger === 'object',
+        'No logger object supplied');
+    assert(typeof logger.debug === 'function',
+        'Logger has no debug method');
+    assert(typeof logger.info === 'function',
+        'Logger has no info method');
+    assert(typeof logger.warn === 'function',
+        'Logger has no warn method');
+    assert(typeof logger.error === 'function',
+        'Logger has no error method');
 };
 
 /**
@@ -268,12 +275,12 @@ export const parseContactURL = (addr) => {
     (hash ? hash.substr(1) : null) || Buffer.alloc(20).fill(0).toString("hex"),
     {
       protocol,
-      hostname,
-      port,
-    },
-  ];
-
-  return contact;
+    assert(typeof transport === 'object',
+        'No transport adapter supplied');
+    assert(typeof transport.read === 'function',
+        'Transport has no read method');
+    assert(typeof transport.write === 'function',
+        'Transport has no write method');
 };
 
 /**

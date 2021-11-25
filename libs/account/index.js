@@ -56,7 +56,7 @@ export class Account {
         return this.m_key;
     }
 
-    set ppkikey (value) {
+    set ppkikey(value) {
         this.m_key = value;
     }
 
@@ -64,7 +64,7 @@ export class Account {
         return this.m_key ? this.m_key.cryptoKey : '';
     }
 
-    get private_key () {
+    get private_key() {
         return this.m_key ? this.m_key.privateKey : '';
     }
 
@@ -72,7 +72,7 @@ export class Account {
         return this.m_key ? this.m_key.privateKeyHex : '';
     }
 
-    get public_key () {
+    get public_key() {
         return this.m_key ? this.m_key.publicKeyHex : '';
     }
 
@@ -88,7 +88,7 @@ export class Account {
         return this.m_key ? this.m_key.pkrmd160hash : '';
     }
 
-    get is_user_initialized () {
+    get is_user_initialized() {
         return this.m_key ? true : false;
     }
 
@@ -116,7 +116,7 @@ export class Account {
             cipher,
             (err) => {
                 if (err) {
-                    return callback("Database update error: " + ( err.message || err));
+                    return callback("Database update error: " + (err.message || err));
                 }
 
                 if (callback) {
@@ -159,7 +159,7 @@ export class Account {
             const cipher_context = this.genCipher(symcrypt_key);
             const skrnd = secrand.randomBuffer(32).toString("hex");
             const skhash = createHash("sha256").update(skrnd).digest("hex");
-            this.connsymmkey = skhash;    
+            this.connsymmkey = skhash;
 
             this.accountname = account;
 
@@ -205,7 +205,7 @@ export class Account {
             var accountobj;
             try {
                 accountobj = JSON.parse(plain_text);
-                if (!accountobj || !accountobj.privatekey || !accountobj.timestamp ) {
+                if (!accountobj || !accountobj.privatekey || !accountobj.timestamp) {
                     return callback("invalid password or invalid user object stored");
                 }
             }
@@ -241,7 +241,7 @@ export class Account {
         }
     };
 
-    restore (account, password, data, callback) {
+    restore(account, password, data, callback) {
         try {
             if (!user || !user.account) {
                 throw new Error("invalid user data");
@@ -273,7 +273,7 @@ export class Account {
                 }
             }
             catch (e) {
-               return callback("Account initialize error. Select a saved account and enter the valid password.");
+                return callback("Account initialize error. Select a saved account and enter the valid password.");
             }
 
             var hexPrivatekey = accountobj.privatekey;
@@ -303,19 +303,19 @@ export class Account {
 
             this.accountname = account;
 
-            this.addToDB(cipher_context, function () {               
+            this.addToDB(cipher_context, function () {
                 callback();
             });
         }
         catch (e) {
-           return callback("Account restore error: %j", e);
+            return callback("Account restore error: %j", e);
         }
     };
 
-    change_password (password, callback) {
+    change_password(password, callback) {
         try {
             if (!password) {
-               return callback("Invalid parameters, the account and passwords are required");
+                return callback("Invalid parameters, the account and passwords are required");
             }
 
 
@@ -340,40 +340,44 @@ export class Account {
         this.ppkikey = null;
     }
 
-    init(password, callback) {
-       try {
-           if (!this.validatePassword(password)) {
-               return callback("Password syntax validation error: Invalid password, the password must be at least 6 characters long, must include both lower case and upper case characters, a number and special character.");
-           }
+    init(password) {
+        //Todo need to change
+        return new Promise((resolve, reject) => {
+            try {
+                if (!this.validatePassword(password)) {
+                    return reject("Password syntax validation error: Invalid password, the password must be at least 6 characters long, must include both lower case and upper case characters, a number and special character.");
+                }
 
-            const db = new AccountsDb();
-            db.data(
-                (err, data) => {
-                    if (err) {
-                        return callback("Account database error: " + (err.message || err));
-                    }
-
-                    if (!data) {
-                        this.create_account('streembit-cli', password, callback);
-                    }
-                    else {
-                        //logger.debug("pwd : %s", password);
-                        const password_hash = createHash('sha256').update(password).digest('hex');
-                        //logger.debug("param pwd hash: %s", password_hash);
-                        //logger.debug("dbase pwd hash: %s", data.password);
-                        if (password_hash !== data.password) {
-                            return callback("Account initialization error: Invalid password");
+                const db = new AccountsDb();
+                db.data(
+                    (err, data) => {
+                        if (err) {
+                            return reject("Account database error: " + (err.message || err));
                         }
 
-                        config.account = data.account;
-                        this.load_account(password, data, callback);
+                        if (!data) {
+                            this.create_account('streembit-cli', password, resolve);
+                        }
+                        else {
+                            //logger.debug("pwd : %s", password);
+                            const password_hash = createHash('sha256').update(password).digest('hex');
+                            //logger.debug("param pwd hash: %s", password_hash);
+                            //logger.debug("dbase pwd hash: %s", data.password);
+                            if (password_hash !== data.password) {
+                                return reject("Account initialization error: Invalid password");
+                            }
+
+                            config.account = data.account;
+                            this.load_account(password, data, resolve);
+                        }
                     }
-                }
-            );
-        }
-        catch (err) {
-            callback(err);
-        }
+                );
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
+
     }
 
     load(password, callback) {

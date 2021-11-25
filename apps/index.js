@@ -24,7 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 import async from "async";
 import { seed } from "./seed/index.js"
 import { default as client } from "./client/index.js";
-import { IoTRunner as iot }from "./iot/index.js";
+import { IoTRunner as iot } from "./iot/index.js";
 import { BlockchainHandler } from "./blockchain/index.js";
 import * as dnshandler from "./dns/index.js";
 import { CmdHandler } from "./cmd/index.js";
@@ -32,41 +32,51 @@ import { default as bcclient } from "./bcclient/index.js";
 
 // const bcclient = require("./bcclient");
 
+
+
 export class ModulesHandler {
     constructor() {
     }
 
-    init(callback) {
-        async.waterfall(
-            [
-                function (callback) {
-                    seed(callback);
-                },
-                function (callback) {
-                    client(callback);
-                },
-                function (callback) {
-                    iot.run(callback);
-                },
-                function (callback) {
-                    const blockchain = new BlockchainHandler();
-                    blockchain.run(callback);
-                },
-                function (callback) {
-                    dnshandler.run(callback);
-                },
-                function (callback) {
-                    bcclient(callback);
-                },
-                function (callback) {
-                    const cmd = new CmdHandler();
-                    cmd.run(callback);
+    async init() {
+
+        return new Promise((resolve, reject) => {
+            async.waterfall(
+                [
+                    function (cb) {
+                        seed(cb);
+                    },
+                    function (cb) {
+                        client(cb);
+                    },
+                    function (cb) {
+                        iot.run(cb);
+                    },
+                    function (cb) {
+                        const blockchain = new BlockchainHandler();
+                        blockchain.run(cb);
+                    },
+                    function (cb) {
+                        dnshandler.run(cb);
+                    },
+                    function (cb) {
+                        bcclient(cb);
+                    },
+                    function (cb) {
+                        const cmd = new CmdHandler();
+                        cmd.run(cb);
+                    }
+                ],
+                function (err) {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve(true);
+
                 }
-            ],
-            function (err) {
-                callback(err);
-            }
-        );
+            );
+        });
+
     }
 }
 

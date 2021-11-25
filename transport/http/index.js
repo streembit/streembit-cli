@@ -29,8 +29,8 @@ import { config } from '../../libs/config/index.js';
 import ClientRequestHandler from './clihandler.js'
 
 // create agents to enable http persistent connections:
-var httpagent = new http.Agent({keepAlive: true, keepAliveMsecs: 25000});
-var httpsagent = new https.Agent({keepAlive: true, keepAliveMsecs: 25000});
+let httpagent = new http.Agent({ keepAlive: true, keepAliveMsecs: 25000 });
+let httpsagent = new https.Agent({ keepAlive: true, keepAliveMsecs: 25000 });
 
 let messageid = 0;
 const HTTPTIMEOUT = 15000;
@@ -73,7 +73,7 @@ class HTTPTransport {
         }
     }
 
-    static add_crossorigin_headers (req, res) {
+    static add_crossorigin_headers(req, res) {
         res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
         res.setHeader('Access-Control-Allow-Methods', '*');
         res.setHeader('Access-Control-Allow-Headers', '*');
@@ -103,7 +103,7 @@ class HTTPTransport {
             if (!res || !res.end) {
                 return logger.error("HTTPTransport routemsg error: invalid res object");
             }
-    
+
             if (!payload) {
                 // return a success status for the GET request
                 // GET request is only for health check
@@ -111,12 +111,12 @@ class HTTPTransport {
                     res.statusCode = 200;
                     return res.end();
                 }
-        
+
                 // for POST method the payload must exists
                 throw new Error("invalid payload");
             }
 
-            var message;
+            let message;
             try {
                 message = JSON.parse(payload);
             }
@@ -139,14 +139,14 @@ class HTTPTransport {
                 res.statusCode = 405;
                 res.end();
             }
-            catch (e){ }            
+            catch (e) { }
         }
     }
 
     handler(req, res) {
         try {
-            var payload = '';
-            var message = null;
+            let payload = '';
+            let message = null;
 
             HTTPTransport.add_crossorigin_headers(req, res);
 
@@ -177,7 +177,7 @@ class HTTPTransport {
 
             logger.debug("peer transport write");
 
-            if (!message  || typeof message != "string") {
+            if (!message || typeof message != "string") {
                 return callback("http write data must be string");
             }
 
@@ -185,10 +185,10 @@ class HTTPTransport {
                 action = '/';
             }
 
-            var handleResponse = function handleResponse(res) {
-                var payload = '';
-                var status = res.statusCode;
-                var statusmsg = res.statusMessage;
+            let handleResponse = function handleResponse(res) {
+                let payload = '';
+                let status = res.statusCode;
+                let statusmsg = res.statusMessage;
 
                 res.on('data', function (chunk) {
                     payload += chunk.toString();
@@ -208,7 +208,7 @@ class HTTPTransport {
                 });
             }
 
-            var options = {
+            let options = {
                 host: target.host,
                 path: action,
                 port: target.port,
@@ -219,18 +219,18 @@ class HTTPTransport {
                 options.headers = target.headers;
             }
 
-            var isssl = config.transport.ssl;
+            let isssl = config.transport.ssl;
             if (target.protocol === 'http') {
                 isssl = false;
             } else if (target.protocol === 'https') {
                 isssl = true;
             }
 
-            var req;
+            let req;
             if (isssl) {
                 options.strictSSL = false;
                 options.rejectUnauthorized = false;
-                logger.debug("HTTPS.request to " + target.host + ":" + target.port );
+                logger.debug("HTTPS.request to " + target.host + ":" + target.port);
                 req = https.request(options, handleResponse);
             }
             else {
@@ -254,31 +254,34 @@ class HTTPTransport {
         }
     }
 
-    init(done) {
-        try {
-            this.server = this.create_server(this.handler);
+    async init() {
+        return new Promise((resolve, reject) => {
+            try {
+                this.server = this.create_server(this.handler);
 
-            this.server.on(
-                'connection',
-                (socket) => {
-                    // disable the tcp nagle algorithm on the newly accepted socket:
-                    socket.setNoDelay(true);
-                }
-            );
+                this.server.on(
+                    'connection',
+                    (socket) => {
+                        // disable the tcp nagle algorithm on the newly accepted socket:
+                        socket.setNoDelay(true);
+                    }
+                );
 
-            this.server.listen(this.port, () => {
-                var protocol = config.transport.ssl ? "HTTPS" : "HTTP";
-                logger.info(protocol + ' transport listening on port ' + this.port);
-                this.islistening = true;
-                done();
-            });
+                this.server.listen(this.port, () => {
+                    let protocol = config.transport.ssl ? "HTTPS" : "HTTP";
+                    logger.info(protocol + ' transport listening on port ' + this.port);
+                    this.islistening = true;
+                    resolve(true);
+                });
 
-            var clihandler = new ClientRequestHandler();
-            clihandler.on_request();
-        }
-        catch (err) {
-            done(err);
-        }
+                let clihandler = new ClientRequestHandler();
+                clihandler.on_request();
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
+
     }
 
     close(callback) {

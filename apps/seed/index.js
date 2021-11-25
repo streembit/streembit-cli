@@ -34,7 +34,6 @@ export function seed(callback) {
     try {
 
         config.net = constants.KADNET;
-
         var conf = config.seed_config;
         if (!conf.run) {
             logger.info("Config seed handler -> not running");

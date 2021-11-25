@@ -38,12 +38,17 @@ import { WsServer as WebSocket } from './transport/ws/index.js'
 import { ModulesHandler as AppsHandler } from "./apps/index.js"
 import WhitelistDB from "./libs/database/whitelistdb.js";
 import PubSub from "./libs/pubsub/index.js";
+import { es6Wrapper } from "./libs/es6Wrapper.js";
+
 
 const database = Database.instance;
 
+
+
+
 // initialize the logger
 export class App {
-  init(port, ip, password, cmd, bcclient) {
+  /*init(port, ip, password, cmd, bcclient) {
     try {
       async.waterfall(
         [
@@ -62,7 +67,7 @@ export class App {
                 logger.init(loglevel, null, ["file"]);
               } else {
                 logger.init(loglevel);
-              }  
+              }
               callback();
             } catch (e) {
               callback(e);
@@ -92,7 +97,7 @@ export class App {
             if (config.bcclient) {
               return callback();
             }
-  
+
             const options = {
               port: config.transport.port,
             };
@@ -103,7 +108,7 @@ export class App {
             if (config.bcclient) {
               return callback();
             }
-  
+
             try {
               const tasks = new Tasks();
               tasks.run(callback);
@@ -115,7 +120,7 @@ export class App {
             if (config.bcclient) {
               return callback();
             }
-  
+
             try {
               const users = new Users();
               users.init(callback);
@@ -130,8 +135,8 @@ export class App {
                 : constants.DEFAULT_WS_PORT;
             let maxconn =
               config.transport &&
-              config.transport.ws &&
-              config.transport.ws.maxconn
+                config.transport.ws &&
+                config.transport.ws.maxconn
                 ? config.transport.ws.maxconn
                 : constants.DEFAULT_WS_MAXCONN;
             let wsserver = new WebSocket(port, maxconn);
@@ -149,7 +154,7 @@ export class App {
             if (config.bcclient) {
               return callback();
             }
-  
+
             const pubsub = new PubSub();
             pubsub.init(callback);
           },
@@ -158,7 +163,7 @@ export class App {
           if (err) {
             return logger.error("application init error: %j", err);
           }
-  
+
           logger.info("The application has been initialized.");
 
           // app init event
@@ -167,6 +172,88 @@ export class App {
       );
     } catch (e) {
       console.log("app error: " + e.message);
+    }
+  }; */
+
+  async init(_port, ip, password, cmd, bcclient) {
+    try {
+      await config.init(_port, ip, cmd, bcclient);
+
+      const loglevel =
+        config.log && config.log.level ? config.log.level : "debug";
+      if (config.cmdinput || config.bcclient) {
+        logger.init(loglevel, null, ["file"]);
+      } else {
+        logger.init(loglevel);
+      }
+
+      if (!config.bcclient) {
+
+        await es6Wrapper.initDatabase(database, dbschema);
+
+        try {
+          const account = new Account();
+          account.init(password);
+        } catch (e) {
+          throw new Error(`Account init error:   ${e.message}`);
+        }
+
+        const options = {
+          port: config.transport.port,
+        };
+        const httptransport = new HTTPTransport(options);
+        await httptransport.init();
+
+        try {
+          const tasks = new Tasks();
+          await tasks.run();
+        } catch (e) {
+          throw new Error(`Task init error:   ${e.message}`);
+
+        }
+
+        try {
+          const users = new Users();
+          await users.init();
+        } catch (e) {
+          throw new Error(`Users init error:   ${e.message}`);
+        }
+
+      }
+
+      let port =
+        config.transport && config.transport.ws && config.transport.ws.port
+          ? config.transport.ws.port
+          : constants.DEFAULT_WS_PORT;
+      let maxconn =
+        config.transport &&
+          config.transport.ws &&
+          config.transport.ws.maxconn
+          ? config.transport.ws.maxconn
+          : constants.DEFAULT_WS_MAXCONN;
+      let wsserver = new WebSocket(port, maxconn);
+      await wsserver.init();
+
+      try {
+        let apps = new AppsHandler();
+        await apps.init();
+      } catch (e) {
+        console.log(e);
+        throw new Error(`AppsHandler error: ${e.message}`);
+      }
+      if (!config.bcclient) {
+        const pubsub = new PubSub();
+        pubsub.init();
+      }
+
+      logger.info("The application has been initialized.");
+
+      // app init event
+      events.appinit();
+
+    } catch (e) {
+      console.log(e);
+      logger.error("application init error: %j", e)
     }
   };
 

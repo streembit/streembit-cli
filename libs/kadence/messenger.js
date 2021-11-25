@@ -29,7 +29,7 @@ import merge from "merge";
 import MetaPipe from "metapipe";
 import { Transform as TransformStream } from "stream";
 import jsonrpc from "jsonrpc-lite";
-import uuid from "uuid";
+import { v4 as uuid } from "uuid";
 
 /**
  * Represents and duplex stream for dispatching messages to a given transport
@@ -55,7 +55,7 @@ class Messenger extends EventEmitter {
      * @param {function} callback - Transform stream callback(err, data)
      */
     static get JsonRpcSerializer() {
-        return function([object, sender, receiver], callback) {
+        return function ([object, sender, receiver], callback) {
             let message = jsonrpc.parseObject(
                 merge({ jsonrpc: '2.0', id: uuid() }, object)
             );
@@ -89,7 +89,7 @@ class Messenger extends EventEmitter {
      * @param {function} callback - Transform stream callback(err, data)
      */
     static get JsonRpcDeserializer() {
-        return function(buffer, callback) {
+        return function (buffer, callback) {
             let [message, notification] = jsonrpc.parse(buffer.toString('utf8'));
 
             switch (message.type) {

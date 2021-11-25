@@ -60,70 +60,74 @@ program
   .option("-a, --addpk [pkey]", "Add/Remove a user to/from whitelist")
   .parse(process.argv);
 
-try {
-  const {
-    pwd,
-    data,
-    backup,
-    users,
-    whitelist,
-    addpk,
-    deluser,
-    port,
-    ip,
-    cmd,
-    rpcuser,
-    rpcpassword,
-    rpcport,
-    args,
-  } = program;
 
-  let bcclient = false;
-  if (rpcuser && rpcuser.length && rpcpassword && rpcpassword.length) {
-    bcclient = { rpcuser, rpcpassword, rpcport, args };
-    if (bcclient.args.length < 1) {
+(async () => {
+  try {
+    const {
+      pwd,
+      data,
+      backup,
+      users,
+      whitelist,
+      addpk,
+      deluser,
+      port,
+      ip,
+      cmd,
+      rpcuser,
+      rpcpassword,
+      rpcport,
+      args,
+    } = program;
+
+    let bcclient = false;
+    if (rpcuser && rpcuser.length && rpcpassword && rpcpassword.length) {
+      bcclient = { rpcuser, rpcpassword, rpcport, args };
+      if (bcclient.args.length < 1) {
+        console.log(
+          "\x1b[31m%s\x1b[0m",
+          "Error:",
+          "Blockchain client does not see a command to execute"
+        );
+        process.exit(1);
+      }
+    }
+
+    if (!bcclient && (!pwd || typeof pwd !== "string" || pwd.length < 6)) {
       console.log(
         "\x1b[31m%s\x1b[0m",
         "Error:",
-        "Blockchain client does not see a command to execute"
+        "Password required! Restart the app with --pwd PASSWORD or --pwd=PASSWORD"
       );
       process.exit(1);
     }
-  }
 
-  if (!bcclient && (!pwd || typeof pwd !== "string" || pwd.length < 6)) {
-    console.log(
-      "\x1b[31m%s\x1b[0m",
-      "Error:",
-      "Password required! Restart the app with --pwd PASSWORD or --pwd=PASSWORD"
-    );
-    process.exit(1);
-  }
-
-  switch (true) {
-    case (data):
-      app.display_data(pwd);
-      break;
-    case (backup):
-      app.backup(pwd);
-      break;
-    case (users):
-      app.list_users(pwd);
-    case (whitelist):
-      if (!addpk && !deluser) {
-        throw new Error('-w command option requires user private key being provided');
-      } else if (addpk && addpk.length < 64 || deluser && deluser.length < 64) {
+    switch (true) {
+      case (data):
+        app.display_data(pwd);
+        break;
+      case (backup):
+        app.backup(pwd);
+        break;
+      case (users):
+        app.list_users(pwd);
+      case (whitelist):
+        if (!addpk && !deluser) {
+          throw new Error('-w command option requires user private key being provided');
+        } else if (addpk && addpk.length < 64 || deluser && deluser.length < 64) {
           throw new Error('Invalid public key');
-      }
+        }
 
-      app.whitelist_update(pwd, addpk || deluser, !!deluser);
-      break;
-    case (deluser):
-      app.delete_user(pwd);
-      break;
+        app.whitelist_update(pwd, addpk || deluser, !!deluser);
+        break;
+      case (deluser):
+        app.delete_user(pwd);
+        break;
+    }
+
+    await app.init(port, ip, pwd, !!cmd, bcclient);
+  } catch (e) {
+    console.log("\x1b[31m%s\x1b[0m", "app command handler error: " + e.message);
   }
-
-  app.init(port, ip, pwd, !!cmd, bcclient);
-} catch (e) {
-  console.log("\x1b[31m%s\x1b[0m", "app command handler error: " + e.message);
-}
+  ;
+})()

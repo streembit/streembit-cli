@@ -35,11 +35,11 @@ export class WsServer {
         if (!port || !max_connections) {
             throw new Error("invalid WsServer start parameters")
         }
+
         this.port = port;
-        this.max_connections = max_connections;   
+        this.max_connections = max_connections;
         // update the appinfo maxconn
         appinfo.wsmaxconn = this.max_connections;
-
         this.wsmode = config.wsmode;
         this.handler = null;
         this.wsserver = null;
@@ -50,10 +50,10 @@ export class WsServer {
             this.handler.processmsg(ws, request);
         }
         catch (err) {
-            logger.error("WS processmsg error %j", errmsg)   
+            logger.error("WS processmsg error %j", errmsg)
         }
     }
- 
+
 
     handler_factory() {
         let obj;
@@ -145,15 +145,15 @@ export class WsServer {
             30000);
     }
 
-    init(callback) {
+    async init() {
         try {
 
             if (this.wsmode == constants.WSMODE_NONE) {
-                logger.info("Not starting WS server");                
-                return callback();
+                logger.info("Not starting WS server");
+                return true;
             }
 
-            logger.info("Starting WS, wsmode: " + this.wsmode);  
+            logger.info("Starting WS, wsmode: " + this.wsmode);
 
             // must create the handler, the type of handler depends on the WS mode
             this.handler = this.handler_factory();
@@ -172,10 +172,10 @@ export class WsServer {
                 server.listen(this.port, () => {
                     logger.info("HTTPS server for WS handler is listening on port " + this.port);
                 });
-            }
-            else {
+            } else {
                 this.wsserver = new WebSocketServer({ port: this.port });
             }
+
 
             // set the connection handler
             this.wsserver.on('connection', (ws) => {
@@ -189,7 +189,7 @@ export class WsServer {
                         // close the connection and don't setup the event handlers
                         return ws.terminate();
                     }
-                    
+
                     ws.on('message', (message) => {
                         this.processmsg(ws, message);
                     });
@@ -232,12 +232,12 @@ export class WsServer {
 
             appinfo.wsavailable = true;
 
-            callback();
+            return true;
 
             //
         }
         catch (err) {
-            callback("WS server init error: " + err.message);
+            throw new Error(`WS server init error:  ${err.message}`);
         }
     }
 }

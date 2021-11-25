@@ -29,7 +29,7 @@ import * as utils from './utils.js';
 /**
  * Manages contact lists returned from FIND_NODE queries
  */
-class ContactList {
+export class ContactList {
 
     /**
      * @constructor
@@ -116,4 +116,3 @@ class ContactList {
 
 }
 
-export default ContactList;

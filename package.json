@@ -62,14 +62,14 @@
         "streembit-util": "git+https://github.com/streembit/streembit-util.git",
         "through": "^2.3.8",
         "tiny": "^0.0.10",
-        "uuid": "3.3.2",
+        "uuid": "^8.3.2",
         "winston": "3.1.0",
         "ws": "^8.2.3",
         "xml2js": "~0.4.19"
     },
     "scripts": {
         "test": "mocha test",
-        "start": "node streembit --pwd 123456Aa"
+        "start": "node --experimental-json-modules streembit --pwd 123456Aa"
     },
     "devDependencies": {
         "capture-console": "1.0.1",
