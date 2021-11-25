@@ -133,6 +133,7 @@ class HTTPTransport {
             //
         }
         catch (err) {
+            console.error(err);
             // bad request
             try {
                 logger.error("HTTPTransport routemsg exception handler error: " + err.message);

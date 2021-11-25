@@ -33,7 +33,7 @@ import * as constants from './constants.js';
 import MetaPipe from 'metapipe';
 import { Writable as WritableStream } from 'stream';
 import * as utils from './utils.js';
-import ContactList from './contact-list.js';
+import { ContactList } from './contact-list.js';
 
 /**
  * Extends {@link AbstractNode} with Kademlia-specific rules
