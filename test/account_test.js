@@ -8,7 +8,6 @@ const ecckey = require('libs/crypto');
 const config = require("libs/config");
 const dbschema = require("dbschematest");
 const database = require("streembit-db").instance;
-const Database = require("libs/database/accountdb");
 const account_config = require('./account_config.json');
 //const peerutils = require("libs/peernet/peerutils");
 //const stutils = require("libs/utils");

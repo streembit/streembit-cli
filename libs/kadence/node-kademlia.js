@@ -28,10 +28,10 @@ Based on
 // const { Writable: WritableStream } = require('stream');
 // const constants = require('./constants');
 // const config = require('libs/config');
-// const utils = require('./utils');
+import * as  utils from './utils.js';
 // const AbstractNode = require('./node-abstract');
 // const KademliaRules = require('./rules-kademlia');
-// const ContactList = require('./contact-list');
+import { ContactList } from './contact-list.js';
 // const MetaPipe = require('metapipe');
 
 import async from 'async'
@@ -92,8 +92,8 @@ export class KademliaNode extends AbstractNode {
 
         setInterval(() => this.refresh(0), constants.T_REFRESH);
         setInterval(() => this.replicate(
-                err => err ? this.logger.error('Replicate error: %j', err) : ''
-            ), constants.T_REPLICATE);
+            err => err ? this.logger.error('Replicate error: %j', err) : ''
+        ), constants.T_REPLICATE);
 
         super.listen(...arguments);
     }
@@ -446,7 +446,7 @@ export class KademliaNode extends AbstractNode {
 
                     // NB: we found a value, so stop searching
                     callback(null, result, contact);
-                    callback = () => {};
+                    callback = () => { };
                 })
             }, () => {
 
@@ -582,7 +582,7 @@ export class KademliaNode extends AbstractNode {
                 result = JSON.parse(resultBufString);
             }
 
-            this.logger.debug('get value for key:' +key);
+            this.logger.debug('get value for key:' + key);
 
             if (result.length < 1) {
                 // find value in local storage
@@ -590,7 +590,7 @@ export class KademliaNode extends AbstractNode {
                     valueEncoding: 'json'
                 }, (err, item) => {
                     if (!err && item) {
-                        this.logger.debug('get value from storage for key:' +key, item);
+                        this.logger.debug('get value from storage for key:' + key, item);
                         callback(null, JSON.parse(item).value);
                     }
                     else {

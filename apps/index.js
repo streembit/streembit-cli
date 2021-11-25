@@ -32,40 +32,47 @@ import { default as bcclient } from "./bcclient/index.js";
 
 // const bcclient = require("./bcclient");
 
+
+
 export class ModulesHandler {
     constructor() {
     }
 
     async init() {
+
         return new Promise((resolve, reject) => {
             async.waterfall(
                 [
-                    function (resolve) {
-                        seed(resolve);
+                    function (cb) {
+                        seed(cb);
                     },
-                    function (resolve) {
-                        client(resolve);
+                    function (cb) {
+                        client(cb);
                     },
-                    function (resolve) {
-                        iot.run(resolve);
+                    function (cb) {
+                        iot.run(cb);
                     },
-                    function (resolve) {
+                    function (cb) {
                         const blockchain = new BlockchainHandler();
-                        blockchain.run(resolve);
+                        blockchain.run(cb);
                     },
-                    function (resolve) {
-                        dnshandler.run(resolve);
+                    function (cb) {
+                        dnshandler.run(cb);
                     },
-                    function (resolve) {
-                        bcclient(resolve);
+                    function (cb) {
+                        bcclient(cb);
                     },
-                    function (resolve) {
+                    function (cb) {
                         const cmd = new CmdHandler();
-                        cmd.run(resolve);
+                        cmd.run(cb);
                     }
                 ],
                 function (err) {
-                    reject(err);
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve(true);
+
                 }
             );
         });

@@ -32,7 +32,7 @@ import Devices from "../../libs/devices/index.js";
 // const ZigbeeDevice = require('apps/iot/device/zigbee/device');
 // const TrackingEvent = require('apps/iot/device/tracking_event');
 
-class IoTHandler {
+export class IoTHandler {
     constructor() {
         this.protocol_handlers = new Map();
         this.devicelist = new Map();
@@ -40,12 +40,12 @@ class IoTHandler {
     }
 
     getdevice(id) {
-        var lowercase_id = id.toLowerCase();
+        let lowercase_id = id.toLowerCase();
         return this.devicelist.get(lowercase_id);
     }
 
     setdevice(id, device) {
-        var lowercase_id = id.toLowerCase();
+        let lowercase_id = id.toLowerCase();
         this.devicelist.set(lowercase_id, device);
     }
 
@@ -69,7 +69,7 @@ class IoTHandler {
             throw new Error("Device type " + device.type + " is not implemented. Provide the correct configuration settings in the config.js file.");
         }
 
-        var protocolhandler = this.protocol_handlers.get(device.protocol);
+        let protocolhandler = this.protocol_handlers.get(device.protocol);
 
         let deviceid = device.deviceid;
         if (!deviceid) {
@@ -81,7 +81,7 @@ class IoTHandler {
         }
 
         return new device_instance(deviceid, device, protocolhandler.mcuhandler);
-        
+
     }
 
     taskhandler() {
@@ -122,7 +122,7 @@ class IoTHandler {
 
             let device = 0;
             // try to get the device from the database
-            var dbdevice = Devices.get_device(id);
+            let dbdevice = Devices.get_device(id);
             if (dbdevice) {
                 dbdevice.id = id;
                 dbdevice.address64 = payload.address64;
@@ -131,7 +131,7 @@ class IoTHandler {
                 }
                 device = dbdevice;
             }
-            else {                
+            else {
                 let mcu = payload.mcu;
                 device = {
                     "type": iotdefinitions.IOT_DEVICE_ENDDEVICE,
@@ -170,7 +170,7 @@ class IoTHandler {
                 }
             );
 
-            var data = {
+            let data = {
                 payload: {
                     event: iotdefinitions.IOT_DEVICES_LIST_RESPONSE,
                     deviceid: deviceid,
@@ -220,7 +220,7 @@ class IoTHandler {
                 }
             );
 
-            var data = {
+            let data = {
                 payload: {
                     event: iotdefinitions.IOT_ALLDEVICES_LIST_RESPONSE,
                     deviceid: deviceid,
@@ -252,7 +252,7 @@ class IoTHandler {
                         if (err) {
                             logger.error("delete_device() error: %j", err);
                             return callback(err);
-                        }                    
+                        }
                         // return the set permission
                         let data = {
                             payload: {
@@ -282,10 +282,10 @@ class IoTHandler {
 
     enable_join(payload, callback) {
         try {
-            var enabled = false;
-            var gatewayid = payload.id.toLowerCase();
-            var deviceid;
-            var interval = payload.interval;
+            let enabled = false;
+            let gatewayid = payload.id.toLowerCase();
+            let deviceid;
+            let interval = payload.interval;
             this.devicelist.forEach(
                 (device) => {
                     deviceid = device.id.toLowerCase();
@@ -316,7 +316,7 @@ class IoTHandler {
     }
 
     send_gateway_details(payload, callback) {
-        var protocol = payload.protocol;
+        let protocol = payload.protocol;
         this.devicelist.forEach(
             (device) => {
                 if (device.type == iotdefinitions.IOT_DEVICE_GATEWAY && device.protocol == payload.protocol) {
@@ -336,7 +336,7 @@ class IoTHandler {
                     }
                 }
             );
-            
+
             setTimeout(
                 (err) => {
                     if (err) {
@@ -349,7 +349,7 @@ class IoTHandler {
                         this.setdevice(deviceid, device);
                         device.init();
                     }
-                    else{
+                    else {
                         // must exists in the database
                         device = Devices.get_device(deviceid);
                         if (!device) {
@@ -358,12 +358,12 @@ class IoTHandler {
                         let deviceobj = this.device_factory(device);
                         this.setdevice(deviceid, deviceobj);
                         deviceobj.init();
-                    }                  
+                    }
 
                     //
                 },
                 2000
-            ); 
+            );
         }
         catch (cerr) {
             logger.error("on_device_allowed() error: %j", cerr);
@@ -423,7 +423,7 @@ class IoTHandler {
                         };
                         callback(null, data);
 
-                        
+
                         if (permission == iotdefinitions.PERMISSION_ALLOWED) {
                             // the device has been just commissioned (approved), init the features, etc.
                             this.on_device_allowed(deviceid);
@@ -459,7 +459,7 @@ class IoTHandler {
                 return callback("Empty list was submitted at device configuration");
             }
 
-            var updatelist = [];
+            let updatelist = [];
             for (let i = 0; i < list.length; i++) {
                 let deviceid = list[i].deviceid;
                 let permission = list[i].permission;
@@ -471,7 +471,7 @@ class IoTHandler {
                     return callback("the device does not exists at the Devices manager.");
                 }
 
-                localdevice.permission = permission;                
+                localdevice.permission = permission;
 
                 if (permission == iotdefinitions.PERMISSION_ALLOWED) {
                     localdevice.name = name;
@@ -510,12 +510,12 @@ class IoTHandler {
                 (err) => {
                     if (err) {
                         logger.error("device_list_configure error: %j", err);
-                        return callback(err);                        
+                        return callback(err);
                     }
 
                     try {
                         // reply with the permitted devices
-                        let allowed_devices = [];    
+                        let allowed_devices = [];
                         this.devicelist.forEach(
                             (device) => {
                                 if (device.permission == iotdefinitions.PERMISSION_ALLOWED) {
@@ -525,7 +525,7 @@ class IoTHandler {
                             }
                         );
 
-                        var data = {
+                        let data = {
                             payload: {
                                 deviceid: id,
                                 devicelist: allowed_devices
@@ -542,7 +542,7 @@ class IoTHandler {
                         logger.error("device_list_configure after complete error: %j", cerr);
                     }
                 }
-            );       
+            );
 
             //
         }
@@ -583,7 +583,7 @@ class IoTHandler {
                             this.send_gateway_details(payload, callback);
                             break;
                         default:
-                            var device = this.getdevice(payload.id);
+                            let device = this.getdevice(payload.id);
                             if (!device) {
                                 throw new Error("device for id " + id + " does not exists at the gateway");
                             }
@@ -616,7 +616,7 @@ class IoTHandler {
                         );
                     }
                     else {
-                        var device = this.getdevice(payload.deviceid);
+                        let device = this.getdevice(payload.deviceid);
                         if (device) {
                             device.on_data_received(payload);
                         }
@@ -636,7 +636,7 @@ class IoTHandler {
     }
 
     initdevices(callback) {
-        var devices = new Devices();
+        let devices = new Devices();
         devices.init(callback);
     }
 
@@ -661,7 +661,7 @@ class IoTHandler {
                     logger.debug("skip device " + devices[i].deviceid + " PERMISSION_DENIED");
                 }
                 else {
-                    var device = this.device_factory(devices[i]);
+                    let device = this.device_factory(devices[i]);
                     this.setdevice(devices[i].deviceid, device);
                 }
             }
@@ -709,12 +709,12 @@ export class IoTRunner {
 
             logger.info("Run IoT handler");
 
-            var iot = new IoTHandler();
+            let iot = new IoTHandler();
 
             async.series(
                 [
                     function (cbfn) {
-                        iot.initdevices(cbfn);                        
+                        iot.initdevices(cbfn);
                     },
                     function (cbfn) {
                         iot.initapp(cbfn);

@@ -34,7 +34,7 @@ export class BlockchainHandler {
 
     run(callback) {
         try {
-            var conf = config.blockchain_config;
+            let conf = config.blockchain_config;
             if (!conf.run) {
                 logger.info("Config blockchain handler -> not running");
                 return callback();
@@ -64,7 +64,7 @@ export class BlockchainHandler {
                         ? Array.isArray(req.headers['x-forwarded-for'])
                             ? req.headers['x-forwarded-for'][0] : req.headers['x-forwarded-for']
                         : req.connection.remoteAddress || req.socket.remoteAddress
-                    ).split(',')[0].split(':').pop();
+                ).split(',')[0].split(':').pop();
 
                 logger.debug(`Incoming blockchain client(${ip}) message, command:`, message.command, message.params);
 
@@ -77,7 +77,7 @@ export class BlockchainHandler {
                         throw new Error('Invalid RPC password');
                     }
                     if (!~config.blockchain_config.rpcallowip.indexOf(ip)) {
-                        throw new Error('This IP is not whitelisted by Blockchain Server: ' +ip);
+                        throw new Error('This IP is not whitelisted by Blockchain Server: ' + ip);
                     }
                     if (!~constants.VALID_BLCOKCHAIN_CMDS.indexOf(command) && command !== 'help') {
                         throw new Error('Invalid Blcokchain command');

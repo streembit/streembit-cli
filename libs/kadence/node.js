@@ -52,19 +52,19 @@ export class Node {
                 req.on('error', (err) => {
                     this.node.transport.emit('error', err)
                 });
-                
+
                 if (!this.validateMessageIdentity(message[1])) {
                     return res.emit('error', new Error('Invalid KAD sender identity'));
                 }
-                
+
                 const m_json = JSON.stringify(message);
-                
+
                 res.setHeader('x-kad-message-id', req.headers['x-kad-message-id']);
                 res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
                 res.setHeader('Access-Control-Allow-Methods', '*');
                 res.setHeader('Access-Control-Allow-Headers', '*');
                 res.setHeader('Access-Control-Allow-Credentials', 'true');
-    
+
                 const buffer = Buffer.from(m_json);
 
                 this.node.transport._pending.set(req.headers['x-kad-message-id'], {
@@ -75,13 +75,13 @@ export class Node {
             }
         );
     }
-    
+
     validateMessageIdentity(msg) {
         try {
             const { method, params } = msg;
             const identity = params[0];
             const { hostname, port } = params[1];
-            
+
             if (~this.validIdentities.indexOf(identity)) {
                 return true;
             }
@@ -89,14 +89,14 @@ export class Node {
             if (method !== 'IDENTIFY' || !hostname || !port) {
                 throw new Error;
             }
-            
+
             const verifyId = utils.hash160(Buffer.from(`${hostname}:${port}`)).toString('hex');
             if (verifyId !== identity) {
                 throw new Error;
             }
-            
+
             this.validIdentities = [...this.validIdentities, identity];
-            
+
             return true;
         } catch (e) {
             return false;
@@ -127,7 +127,7 @@ export class Node {
                         port: item.port
                     }
                 ];
-                var result = { seed: seed, error: null };
+                let result = { seed: seed, error: null };
                 try {
                     this.node.join(seed, (err) => {
                         if (err) {
@@ -139,7 +139,7 @@ export class Node {
                         catch (ferr) { }
                     });
                 }
-                catch (e) {                    
+                catch (e) {
                     result.error = e;
                     cbfunc(null, result);
                 }
@@ -154,8 +154,9 @@ export class Node {
                     return callback(0);
                 }
 
-                var seed_success_count = 0;
+                let seed_success_count = 0;
                 results.forEach((item, index, array) => {
+
                     if (item.error) {
                         this.logger.error(item.error);
                     }
@@ -171,11 +172,11 @@ export class Node {
         );
     }
 
-    async init (options, callback) {
+    async init(options, callback) {
         if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
             return callback("A logger that implements the error, info, warn and debug methods must be passed to the Kademlia node");
         }
-        
+
         const nodeIdentity = Buffer.from(`${options.contact.hostname}:${options.contact.port}`);
         options.identity = utils.hash160(nodeIdentity).toString('hex');
 
@@ -193,7 +194,6 @@ export class Node {
         // enable storage for seen contacts
         const seedlist = this.node.plugin(kad.seedlist());
         const peers = await seedlist.getBootstrapCandidates();
-
         this.seeds = [...options.seeds, ...peers.filter(p => options.seeds.every(s => p.id !== s.id))];
 
         this.node.listen(options.contact.port, options.contact.hostname, err => {
@@ -205,8 +205,8 @@ export class Node {
 
             // join the Kademlia network
             this.join((count) => {
-                var routcount = this.node.router.size;
-                this.peercount = routcount > count ? routcount : count;                
+                let routcount = this.node.router.size;
+                this.peercount = routcount > count ? routcount : count;
                 if (this.peercount > 0) {
                     this.logger.info(`Kademlia node connected to ${this.peercount} peers`);
                 }
@@ -214,7 +214,7 @@ export class Node {
                     if (this.seeds.length) {
                         // there is seeds exists, but failed to connect
                         this.logger.error("Failed to connect to any seed");
-                    }                   
+                    }
                 }
 
                 callback(null, this.node, this.peercount);

@@ -28,7 +28,8 @@ import assert from 'assert'
 import merge from 'merge'
 import async from 'async'
 import { knuthShuffle } from 'knuth-shuffle'
-import uuid from 'uuid'
+import { v4 as uuid } from 'uuid';
+
 import * as constants from './constants.js'
 import * as utils from './utils.js'
 import BloomFilter from 'atbf'
@@ -435,7 +436,7 @@ class QuasarPlugin {
 // };
 
 export default function () {
-    return function(node) {
+    return function (node) {
         return new QuasarPlugin(node);
     };
 }

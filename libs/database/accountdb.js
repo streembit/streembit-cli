@@ -23,7 +23,7 @@ import { database } from "./database.js";
 
 'use strict';
 
-class AccountsDb extends database{
+class AccountsDb extends database {
     constructor() {
         super();
     }
@@ -33,11 +33,12 @@ class AccountsDb extends database{
     }
 
     data(cbfn) {
+
         this.database.get(
             "SELECT * FROM accounts ORDER BY ROWID ASC LIMIT 1",
             [],
             function (err, row) {
-                cbfn(err, row);            
+                cbfn(err, row);
             }
         );
     }

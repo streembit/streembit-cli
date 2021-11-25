@@ -30,7 +30,8 @@ Based on
 // const constants = require('./constants');
 
 import { EventEmitter } from 'events'
-import * as constants from './constants.js'
+import * as constants from './constants.js';
+import * as utils from "./utils.js";
 import Bucket from './bucket.js'
 
 /**

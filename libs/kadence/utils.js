@@ -39,7 +39,7 @@ import assert from "assert"
  * Returns the RMD-160 hash of the input
  * @param {buffer} input - Data to hash
  */
- export const hash160 = function(input) {
+export const hash160 = function (input) {
     return createHash('rmd160').update(input).digest();
 };
 
@@ -47,7 +47,7 @@ import assert from "assert"
  * Returns a random valid key/identity as a buffer
  * @returns {buffer}
  */
-export const getRandomKeyBuffer = function() {
+export const getRandomKeyBuffer = function () {
     return randomBytes(constants.B / 8);
 };
 
@@ -55,7 +55,7 @@ export const getRandomKeyBuffer = function() {
  * Validates the given object is a storage adapter
  * @param {AbstractNode~storage} storageAdapter
  */
-export const validateStorageAdapter = function(storage) {
+export const validateStorageAdapter = function (storage) {
     assert(typeof storage === 'object',
         'No storage adapter supplied');
     assert(typeof storage.get === 'function',
@@ -72,7 +72,7 @@ export const validateStorageAdapter = function(storage) {
  * Validates the given object is a logger
  * @param {AbstractNode~logger} logger
  */
-export const validateLogger = function(logger) {
+export const validateLogger = function (logger) {
     assert(typeof logger === 'object',
         'No logger object supplied');
     assert(typeof logger.debug === 'function',
@@ -89,7 +89,7 @@ export const validateLogger = function(logger) {
  * Validates the given object is a transport
  * @param {AbstractNode~transport} transport
  */
-export const validateTransport = function(transport) {
+export const validateTransport = function (transport) {
     assert(typeof transport === 'object',
         'No transport adapter supplied');
     assert(typeof transport.read === 'function',
@@ -103,7 +103,7 @@ export const validateTransport = function(transport) {
  * @param {buffer} key - Node ID or item key
  * @returns {boolean}
  */
-export const keyBufferIsValid = function(key) {
+export const keyBufferIsValid = function (key) {
     return Buffer.isBuffer(key) && key.length === constants.B / 8;
 };
 
@@ -155,19 +155,19 @@ export const keyBufferIsValid = function(key) {
 //  * @param {string} key2 - Identity key to compare
 //  * @returns {buffer}
 //  */
-// exports.getDistance = function(id1, id2) {
-//     id1 = !Buffer.isBuffer(id1)
-//         ? Buffer.from(id1, 'hex')
-//         : id1;
-//     id2 = !Buffer.isBuffer(id2)
-//         ? Buffer.from(id2, 'hex')
-//         : id2;
+export const getDistance = function (id1, id2) {
+    id1 = !Buffer.isBuffer(id1)
+        ? Buffer.from(id1, 'hex')
+        : id1;
+    id2 = !Buffer.isBuffer(id2)
+        ? Buffer.from(id2, 'hex')
+        : id2;
 
-//     assert(exports.keyBufferIsValid(id1), 'Invalid key supplied');
-//     assert(exports.keyBufferIsValid(id2), 'Invalid key supplied');
+    assert(keyBufferIsValid(id1), 'Invalid key supplied');
+    assert(keyBufferIsValid(id2), 'Invalid key supplied');
 
-//     return Buffer(constants.B / 8).map((b, index) => id1[index] ^ id2[index]);
-// };
+    return Buffer(constants.B / 8).map((b, index) => id1[index] ^ id2[index]);
+};
 
 // /**
 //  * Compare two buffers for sorting
@@ -175,20 +175,20 @@ export const keyBufferIsValid = function(key) {
 //  * @param {buffer} b2 - Buffer to compare
 //  * @returns {number}
 //  */
-// exports.compareKeyBuffers = function(b1, b2) {
-//     assert(exports.keyBufferIsValid(b1), 'Invalid key supplied');
-//     assert(exports.keyBufferIsValid(b2), 'Invalid key supplied');
+export const compareKeyBuffers = function (b1, b2) {
+    assert(keyBufferIsValid(b1), 'Invalid key supplied');
+    assert(keyBufferIsValid(b2), 'Invalid key supplied');
 
-//     for (let index = 0; index < b1.length; index++) {
-//         let bits = b1[index];
+    for (let index = 0; index < b1.length; index++) {
+        let bits = b1[index];
 
-//         if (bits !== b2[index]) {
-//             return bits < b2[index] ? -1 : 1;
-//         }
-//     }
+        if (bits !== b2[index]) {
+            return bits < b2[index] ? -1 : 1;
+        }
+    }
 
-//     return 0;
-// };
+    return 0;
+};
 
 // /**
 //  * Calculate the index of the bucket that key would belong to
@@ -196,27 +196,27 @@ export const keyBufferIsValid = function(key) {
 //  * @param {string} foreignKey - Key to compare
 //  * @returns {number}
 //  */
-// exports.getBucketIndex = function(referenceKey, foreignKey) {
-//     let distance = exports.getDistance(referenceKey, foreignKey);
-//     let bucketIndex = constants.B;
+export const getBucketIndex = function (referenceKey, foreignKey) {
+    let distance = getDistance(referenceKey, foreignKey);
+    let bucketIndex = constants.B;
 
-//     for (let byteValue of distance) {
-//         if (byteValue === 0) {
-//             bucketIndex -= 8;
-//             continue;
-//         }
+    for (let byteValue of distance) {
+        if (byteValue === 0) {
+            bucketIndex -= 8;
+            continue;
+        }
 
-//         for (let i = 0; i < 8; i++) {
-//             if (byteValue & (0x80 >> i)) {
-//                 return --bucketIndex;
-//             } else {
-//                 bucketIndex--;
-//             }
-//         }
-//     }
+        for (let i = 0; i < 8; i++) {
+            if (byteValue & (0x80 >> i)) {
+                return --bucketIndex;
+            } else {
+                bucketIndex--;
+            }
+        }
+    }
 
-//     return bucketIndex;
-// };
+    return bucketIndex;
+};
 
 // /**
 //  * Returns a buffer with a power-of-two value given a bucket index
@@ -224,44 +224,44 @@ export const keyBufferIsValid = function(key) {
 //  * @param {number} bucketIndex - Bucket index for key
 //  * @returns {buffer}
 //  */
-// exports.getPowerOfTwoBufferForIndex = function(referenceKey, exp) {
-//     assert(exp >= 0 && exp < constants.B, 'Index out of range');
+export const getPowerOfTwoBufferForIndex = function (referenceKey, exp) {
+    assert(exp >= 0 && exp < constants.B, 'Index out of range');
 
-//     const buffer = Buffer.isBuffer(referenceKey)
-//         ? Buffer.from(referenceKey)
-//         : Buffer.from(referenceKey, 'hex');
-//     const byteValue = parseInt(exp / 8);
+    const buffer = Buffer.isBuffer(referenceKey)
+        ? Buffer.from(referenceKey)
+        : Buffer.from(referenceKey, 'hex');
+    const byteValue = parseInt(exp / 8);
 
-//     // NB: We set the byte containing the bit to the right left shifted amount
-//     buffer[constants.K - byteValue - 1] = 1 << (exp % 8);
+    // NB: We set the byte containing the bit to the right left shifted amount
+    buffer[constants.K - byteValue - 1] = 1 << (exp % 8);
 
-//     return buffer;
-// };
+    return buffer;
+};
 
 // /**
 //  * Generate a random number within the bucket's range
 //  * @param {buffer} referenceKey - Key for bucket distance reference
 //  * @param {number} index - Bucket index for random buffer selection
 //  */
-// exports.getRandomBufferInBucketRange = function(referenceKey, index) {
-//     let base = exports.getPowerOfTwoBufferForIndex(referenceKey, index);
-//     let byte = parseInt(index / 8); // NB: Randomize bytes below the power of two
+export const getRandomBufferInBucketRange = function (referenceKey, index) {
+    let base = getPowerOfTwoBufferForIndex(referenceKey, index);
+    let byte = parseInt(index / 8); // NB: Randomize bytes below the power of two
 
-//     for (let i = constants.K - 1; i > (constants.K - byte - 1); i--) {
-//         base[i] = parseInt(Math.random() * 256);
-//     }
+    for (let i = constants.K - 1; i > (constants.K - byte - 1); i--) {
+        base[i] = parseInt(Math.random() * 256);
+    }
 
-//     // NB: Also randomize the bits below the number in that byte and remember
-//     // NB: arrays are off by 1
-//     for (let j = index - 1; j >= byte * 8; j--) {
-//         let one = Math.random() >= 0.5;
-//         let shiftAmount = j - byte * 8;
+    // NB: Also randomize the bits below the number in that byte and remember
+    // NB: arrays are off by 1
+    for (let j = index - 1; j >= byte * 8; j--) {
+        let one = Math.random() >= 0.5;
+        let shiftAmount = j - byte * 8;
 
-//         base[constants.K - byte - 1] |= one ? (1 << shiftAmount) : 0;
-//     }
+        base[constants.K - byte - 1] |= one ? (1 << shiftAmount) : 0;
+    }
 
-//     return base;
-// };
+    return base;
+};
 
 // /**
 //  * Validates the given object is a storage adapter

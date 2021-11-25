@@ -7,19 +7,22 @@ export class database {
         this.m_database = 0;
     }
 
-    get database () {
-        if(!config.database_name){
+    get database() {
+
+        if (!config.database_name) {
             throw new Error("database_name is missing from the configuration file.");
         }
         const dbnamekey = config.database_name;
 
         if (!this.m_database) {
+
             this.m_database = dbinstance.databases[dbnamekey];
         }
+
         return this.m_database;
     }
 
-    set database (db) {
+    set database(db) {
         this.m_database = db;
     }
 }

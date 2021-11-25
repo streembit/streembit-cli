@@ -40,7 +40,6 @@ export class WsServer {
         this.max_connections = max_connections;
         // update the appinfo maxconn
         appinfo.wsmaxconn = this.max_connections;
-
         this.wsmode = config.wsmode;
         this.handler = null;
         this.wsserver = null;

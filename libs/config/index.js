@@ -517,53 +517,53 @@ class StreembitConfig {
 
 
   get cmdinput() {
-    return this.m_cmdinput;
+    return this.cnfobj.cmdinput;
   }
 
   set cmdinput(value) {
-    this.m_cmdinput = value;
+    this.cnfobj.cmdinput = value;
   }
 
   get seed_config() {
-    return this.m_seed_config;
+    return this.cnfobj.seed_config;
   }
 
   set seed_config(value) {
-    this.m_seed_config = value;
+    this.cnfobj.seed_config = value;
   }
 
 
   get client_config() {
-    return this.m_client_config;
+    return this.cnfobj.client_config.run;
   }
 
   set client_config(value) {
-    this.m_client_config = value;
+    this.cnfobj.client_config.run = value;
   }
 
 
   get iot_config() {
-    return this.m_iot_config;
+    return this.cnfobj.iot_config;
   }
 
   set iot_config(value) {
-    this.m_iot_config = value;
+    this.cnfobj.iot_config = value;
   }
 
   get blockchain_config() {
-    return this.m_blockchain_config;
+    return this.cnfobj.blockchain_config;
   }
 
   set blockchain_config(value) {
-    this.m_blockchain_config = value;
+    this.cnfobj.blockchain_config = value;
   }
 
   get wsmode() {
-    return this.m_wsmode;
+    return this.cnfobj.wsmode;
   }
 
   set wsmode(value) {
-    this.m_wsmode = value;
+    this.cnfobj.wsmode = value;
   }
 
 
@@ -585,19 +585,11 @@ class StreembitConfig {
   }
 
   get seeds() {
-    return this.m_seeds;
+    return this.cnfobj.seeds;
   }
 
   set seeds(value) {
-    this.m_seeds = value;
-  }
-
-  get seeds() {
-    return this.m_seeds;
-  }
-
-  set seeds(value) {
-    this.m_seeds = value;
+    this.cnfobj.seeds = value;
   }
 
   get usertype() {
@@ -618,11 +610,11 @@ class StreembitConfig {
   }
 
   get database_name() {
-    return this.m_database_name;
+    return this.cnfobj.database_name;
   }
 
   set database_name(value) {
-    this.m_database_name = value;
+    this.cnfobj.database_name = value;
   }
   get users() {
     return this.m_users;
@@ -630,6 +622,35 @@ class StreembitConfig {
 
   set users(value) {
     this.m_users = value;
+  }
+
+  get transport() {
+    return this.cnfobj.transport;
+  }
+
+  set transport(value) {
+    this.cnfobj.transport = value;
+  }
+  get limits() {
+    return this.cnfobj.limits;
+  }
+
+  set limits(value) {
+    this.cnfobj.limits = value;
+  }
+  get dns() {
+    return this.cnfobj.dns;
+  }
+
+  set dns(value) {
+    this.cnfobj.dns = value;
+  }
+  get bcclient() {
+    return this.cnfobj.bcclient;
+  }
+
+  set bcclient(value) {
+    this.cnfobj.bcclient = value;
   }
 
   init(argv_port, argv_ip, cmd, bcclient) {

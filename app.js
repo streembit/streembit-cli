@@ -38,6 +38,7 @@ import { WsServer as WebSocket } from './transport/ws/index.js'
 import { ModulesHandler as AppsHandler } from "./apps/index.js"
 import WhitelistDB from "./libs/database/whitelistdb.js";
 import PubSub from "./libs/pubsub/index.js";
+import { es6Wrapper } from "./libs/es6Wrapper.js";
 
 
 const database = Database.instance;
@@ -185,9 +186,11 @@ export class App {
       } else {
         logger.init(loglevel);
       }
+
       if (!config.bcclient) {
 
-        await database.init(dbschema);
+        await es6Wrapper.initDatabase(database, dbschema);
+
         try {
           const account = new Account();
           account.init(password);
@@ -235,6 +238,7 @@ export class App {
         let apps = new AppsHandler();
         await apps.init();
       } catch (e) {
+        console.log(e);
         throw new Error(`AppsHandler error: ${e.message}`);
       }
       if (!config.bcclient) {
