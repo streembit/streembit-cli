@@ -140,7 +140,7 @@ export class PeerNet {
                 return cbfunc("send_contact_offer error: invalid connsymmkey parameters");
             }
 
-            var pkey_hexbuffer = new Buffer(contact_public_key, 'hex');
+            var pkey_hexbuffer = Buffer.from(contact_public_key, 'hex');
             var rmd160buffer = createHash('rmd160').update(pkey_hexbuffer).digest();
             var contact_pkhash = bs58check.encode(rmd160buffer);
             if (contact_pkey_hash != contact_pkhash) {
@@ -176,7 +176,7 @@ export class PeerNet {
 
             var value = peermsg.create_jwt_token(crypto_key, id, payload, null, null, user_public_key, null, contact_bs58public_key);
 
-            var keybuffer = new Buffer(keydata);
+            var keybuffer = Buffer.from(keydata);
             var key = createHash('rmd160').update(keybuffer).digest('hex');
 
             // put the message to the network

@@ -87,7 +87,7 @@ class HTTPTransport extends RPC {
 
                 const create_error_buffer = (err) => {
                     const errmsg = JSON.stringify({ error: err.message ? err.message : err });
-                    const buffer = new Buffer(errmsg);
+                    const buffer = Buffer.from(errmsg);
                     return buffer;
                 }
 
@@ -109,7 +109,7 @@ class HTTPTransport extends RPC {
                 let message = JSON.parse(payload);
                 if (!message || !message.type) {
                     try {
-                        let buffer = new Buffer(payload);
+                        let buffer = Buffer.from(payload);
                         message = Message.fromBuffer(buffer);
 
                         if (Message.isRequest(message) && message.id) {
@@ -190,7 +190,7 @@ class HTTPTransport extends RPC {
                     return self.receive(null);
                 }
 
-                self.receive(new Buffer(payload), {});
+                self.receive(Buffer.from(payload), {});
             });
         }
 

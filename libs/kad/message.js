@@ -84,7 +84,7 @@ class Message {
      * @returns {Buffer}
      */
     serialize() {
-        return new Buffer(JSON.stringify(this), 'utf8');
+        return Buffer.from(JSON.stringify(this), 'utf8');
     };
 
     /**
@@ -112,7 +112,7 @@ class Message {
      */
     fromBuffer(buffer) {
         const _convertByteArrays = (key, value) => {
-            return value && value.type === 'Buffer' ? new Buffer(value.data) : value;
+            return value && value.type === 'Buffer' ? Buffer.from(value.data) : value;
         }
 
         var jsonstr = buffer.toString('utf8');

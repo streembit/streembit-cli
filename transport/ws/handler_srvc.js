@@ -167,7 +167,7 @@ export class SrvcWsHandler extends WsHandler {
                         const account = new Account();
                         const peernet = new PeerNet();
 
-                        const buffer = new Buffer(account.public_key, 'hex');
+                        const buffer = Buffer.from(account.public_key, 'hex');
                         const rmd160buffer = createHash('rmd160').update(buffer).digest();
                         const signature = bs58check.encode(rmd160buffer);
                         const jwt_plain = {

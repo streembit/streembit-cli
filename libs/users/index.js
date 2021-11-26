@@ -82,7 +82,7 @@ export class Users {
     add_user(user) {
         const db = new UsersDb();
 
-        const buffer = new Buffer(user.publickey, 'hex');
+        const buffer = Buffer.from(user.publickey, 'hex');
         const rmd160buffer = createHash('rmd160').update(buffer).digest();
         const pkhash = bs58check.encode(rmd160buffer);
 

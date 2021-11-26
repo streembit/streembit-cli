@@ -65,8 +65,6 @@ exports.createID =  (data) => {
  * @returns {Buffer}
  */
 exports.hexToBuffer =  (hexString) => {
-    //var buf = new Buffer(constants.B / 8);
-    //buf.write(hexString, 0, 'hex');
     var buf = Buffer.from(hexString, 'hex');
     return buf;
 };
@@ -81,7 +79,7 @@ exports.getDistance =  (id1, id2) => {
     assert(exports.isValidKey(id1), 'Invalid key supplied');
     assert(exports.isValidKey(id2), 'Invalid key supplied');
 
-    var distance = new Buffer(constants.B / 8);
+    var distance = Buffer.alloc(constants.B / 8);
     var id1Buf = exports.hexToBuffer(id1);
     var id2Buf = exports.hexToBuffer(id2);
 
@@ -153,7 +151,7 @@ exports.getBucketIndex =  (id1, id2) => {
 exports.getPowerOfTwoBuffer =  (exp) => {
     assert.ok(exp >= 0 && exp < constants.B);
 
-    var buffer = new Buffer(constants.K);
+    var buffer = Buffer.alloc(constants.K);
     var byte = parseInt(exp / 8);
 
     // we set the byte containing the bit to the right left shifted amount

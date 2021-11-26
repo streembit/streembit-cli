@@ -19,8 +19,10 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-import { jwt } from './jwt.js';
+import { JWT } from './jwt.js';
 import { jwe } from './jwe.js';
+
+const jwt = new JWT();
 
 const MSGTYPE = {
     PUBPK: 0x01,    //  Add public key to the network. Must perform this when the node joins first time to the P2P network    

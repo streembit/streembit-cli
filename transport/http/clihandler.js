@@ -26,8 +26,6 @@ import ClientSrvc from '../../libs/clientsrvc/index.js';
 import * as errcodes from 'streembit-errcodes';
 import * as peersrvc from '../../libs/peernet/msghandlers/peer.js';
 
-const clientsrvc = new ClientSrvc();
-
 // 
 // Service WS handler
 //
@@ -43,7 +41,7 @@ class ClientRequestHandler  {
                 errcode = errcode.HTTP;
             }
 
-            var errobj = {
+            const errobj = {
                 error: errcode,
                 msg: ''
             };
@@ -66,8 +64,8 @@ class ClientRequestHandler  {
             }
             catch (e) { }
 
-            var errmsg = JSON.stringify(errobj);
-            var buffer = new Buffer(errmsg);
+            const errmsg = JSON.stringify(errobj);
+            const buffer = Buffer.from(errmsg);
             res.statusCode = 200;
             res.end(buffer);
         }
@@ -95,7 +93,7 @@ class ClientRequestHandler  {
                 if (data && typeof data != "string") {
                     data = JSON.stringify(data);
                 }
-                var buffer = new Buffer(data);
+                const buffer = Buffer.from(data);
                 res.end(buffer);
             }
         }
@@ -133,7 +131,7 @@ class ClientRequestHandler  {
     //
     getwspeers(req, res, message) {
         try {
-            var result = clientsrvc.getwspeers();
+            const result = ClientSrvc.getwspeers();
             if (!result) {
                 throw new Error("failed to get wsinfo")
             }
@@ -191,7 +189,7 @@ class ClientRequestHandler  {
 
     getwsinfo(req, res) {
         try {
-            var result = clientsrvc.getwsinfo();
+            const result = ClientSrvc.getwsinfo();
             if (!result) {
                 throw new Error("failed to get wsinfo")
             }
@@ -208,19 +206,19 @@ class ClientRequestHandler  {
         try {
             if (!data) return;
 
-            var req = data.req;
-            var res = data.res;            
+            const req = data.req;
+            const res = data.res;
             if (!res || !res.end || typeof res.end != "function") {
                 // invalid response object, cannot continue as there is no transport to send back anything
                 return;
             }
 
-            var message = data.message;
+            const message = data.message;
             if (!message || !message.type) {
                 sendbadrequest(res);
             }
 
-            var type = message.type;
+            const type = message.type;
 
             switch (type) {
                 case "ping":

@@ -188,7 +188,7 @@ class TCPTransport extends RPC {
                             self._queuedResponses[parsed.id] = connection;
                         }
 
-                        self.receive(new Buffer(buffer), connection);
+                        self.receive(Buffer.from(buffer), connection);
                     }
                 } catch (e) {
                     self._log.error('TCP handleConnection error: %j', e);

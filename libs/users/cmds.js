@@ -200,7 +200,7 @@ class UsersCmds {
             settings = '{}';
         }
 
-        const buffer = new Buffer(pk, 'hex');
+        const buffer = Buffer.from(pk, 'hex');
         const rmd160buffer = createHash('rmd160').update(buffer).digest();
         const pkhash = bs58check.encode(rmd160buffer);
 
@@ -245,7 +245,7 @@ class UsersCmds {
                 }
                 if (pk && pk.length) {
                     update['publickey'] = pk;
-                    const buffer = new Buffer(pk, 'hex');
+                    const buffer = Buffer.from(pk, 'hex');
                     const rmd160buffer = createHash('rmd160').update(buffer).digest();
                     update['pkhash'] = bs58check.encode(rmd160buffer);
                 }
