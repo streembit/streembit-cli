@@ -66,17 +66,6 @@ export { default as quasar } from './plugin-quasar.js';
 
 /** {@link module:kadence/seedlist} */
 export { default as seedlist } from './plugin-seedlist.js'
-// module.exports.seedlist = require('./plugin-seedlist');
 
-// /** {@link module:kadence/constants} */
-// module.exports.constants = require('./constants');
-
-// /** {@link module:kadence/utils} */
-// module.exports.utils = require('./utils');
-
-// /** {@link module:kadence/logger} */
-// module.exports.logger = require('./logger');
-
-// module.exports.Node = require('./node');
 
 export { Node } from './node.js'

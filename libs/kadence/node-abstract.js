@@ -34,15 +34,6 @@ import ErrorRules from './rules-errors.js'
 
 import { v4 as uuid } from 'uuid';
 import async from "async";
-// const async = require('async');
-// const assert = require('assert');
-// const merge = require('merge');
-// const constants = require('./constants');
-// const utils = require('./utils');
-// const { EventEmitter } = require('events');
-// const RoutingTable = require('./routing-table');
-// const Messenger = require('./messenger');
-// const ErrorRules = require('./rules-errors');
 
 import { EventEmitter } from 'events'
 

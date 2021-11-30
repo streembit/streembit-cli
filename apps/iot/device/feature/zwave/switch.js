@@ -23,15 +23,13 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
 const SwitchFeature = require("../switch");
 const logger = require("streembit-util").logger;
 
 class ZwaveSwitchFeature extends SwitchFeature {
 
     constructor(device, feature) {
-        super(device, feature);        
+        super(device, feature);
         logger.debug("initialized a Zigbee switch measurement for deviceid: " + this.deviceid);
     }
 

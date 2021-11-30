@@ -59,7 +59,7 @@ export class Users {
     }
 
     get_user_bypublickey(publickey) {
-        var user;
+        let user;
         this.users.forEach(
             (item, key) => {
                 if (item.publickey == publickey) {
@@ -75,7 +75,7 @@ export class Users {
     }
 
     delete_user(userid) {
-        var db = new UsersDb();
+        let db = new UsersDb();
         return db.delete_user(userid);
     }
 
@@ -97,7 +97,7 @@ export class Users {
 
     populate() {
         return new Promise((resolve, reject) => {
-            var db = new UsersDb();
+            let db = new UsersDb();
             db.getall().then(
                 rows => {
                     instance.m_users = new Map();
@@ -121,7 +121,7 @@ export class Users {
                 return Promise.resolve();
             }
 
-            var db = new UsersDb();
+            let db = new UsersDb();
 
             const dbusers = await db.getall();
 
@@ -177,14 +177,14 @@ export class Users {
             throw new Error(`users populate error:  + ${err.message}`);
         }
 
-        var namesarr = [];
+        let namesarr = [];
         this.users.forEach(
             (value, key) => {
                 namesarr.push(value.username);
             }
         );
 
-        var list = namesarr.length ? namesarr.join() : "-";
+        let list = namesarr.length ? namesarr.join() : "-";
         logger.info("Users: " + list);
     }
 
@@ -200,7 +200,7 @@ export class Users {
     }
 
     validate10(val) {
-        var valid = /^[0-1]{0,1}$/.test(val);
+        let valid = /^[0-1]{0,1}$/.test(val);
         return valid;
     }
 

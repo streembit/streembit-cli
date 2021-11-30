@@ -23,30 +23,30 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const IoTFeature = require("./feature");
+
+
+import { IoTFeature } from "./feature.js";
 
 class OccupancyFeature extends IoTFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
-        super(deviceid, feature, feature_type, transport);  
-        this.occupancy = 0;        
+        super(deviceid, feature, feature_type, transport);
+        this.occupancy = 0;
     }
 
-    on_datareceive_event(data, event) {   
+    on_datareceive_event(data, event) {
         super.on_datareceive_event(data, event);
     }
 
     on_device_contacting(payload) {
     }
 
-    on_device_online(payload) {       
+    on_device_online(payload) {
         super.on_device_online(payload);
     }
 
     read_power(completefn) {
-       
+
     }
 
     read(payload, callback, timeout) {

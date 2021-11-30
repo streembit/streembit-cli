@@ -23,9 +23,10 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const IoTFeature = require("./feature");
+
+
+
+import { IoTFeature } from "./feature.js";
 
 class HumidityFeature extends IoTFeature {
 

@@ -23,8 +23,7 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
+
 const SwitchFeature = require("../switch");
 
 class SixLowPANSwitchFeature extends SwitchFeature {

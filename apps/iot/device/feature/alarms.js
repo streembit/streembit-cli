@@ -23,9 +23,8 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const IoTFeature = require("./feature");
+
+import { IoTFeature } from "./feature.js";
 
 class AlarmFeature extends IoTFeature {
 
@@ -62,4 +61,4 @@ class AlarmFeature extends IoTFeature {
     }
 }
 
-module.exports = AlarmFeature;
+export default AlarmFeature;

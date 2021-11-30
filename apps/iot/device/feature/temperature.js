@@ -23,15 +23,14 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const IoTFeature = require("./feature");
+
+import { IoTFeature } from "./feature.js";
 
 class TemperatureFeature extends IoTFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
-        super(deviceid, feature, feature_type, transport); 
-        this.temperature = 0;   
+        super(deviceid, feature, feature_type, transport);
+        this.temperature = 0;
     }
 
     on_datareceive_event(data, event) {
@@ -46,9 +45,9 @@ class TemperatureFeature extends IoTFeature {
     }
 
     read_temperature(callback) {
-    }   
+    }
 
-    read(payload, callback, timeout) {   
+    read(payload, callback, timeout) {
         super.read(payload, callback, timeout);
     }
 

@@ -30,7 +30,7 @@ import * as dnshandler from "./dns/index.js";
 import { CmdHandler } from "./cmd/index.js";
 import { default as bcclient } from "./bcclient/index.js";
 
-// const bcclient = require("./bcclient");
+
 
 
 

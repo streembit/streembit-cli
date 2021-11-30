@@ -28,9 +28,10 @@ import { logger, events } from "streembit-util";
 import { definitions as iotdefinitions } from "../iot/definitions.js";
 import Devices from "../../libs/devices/index.js";
 
-// const ZigbeeGateway = require('apps/iot/device/zigbee/gateway');
-// const ZigbeeDevice = require('apps/iot/device/zigbee/device');
-// const TrackingEvent = require('apps/iot/device/tracking_event');
+import { ZigbeeGateway } from './device/zigbee/gateway.js';
+import { ZigbeeDevice } from './device/zigbee/device.js';
+import { TrackingEvent } from './device/tracking_event.js';
+
 
 export class IoTHandler {
     constructor() {

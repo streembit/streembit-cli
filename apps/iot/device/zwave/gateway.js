@@ -23,10 +23,10 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
+
 const Device = require("apps/iot/device/device");
 const logger = require("streembit-util").logger;
-const iotdefinitions = require("apps/iot/definitions");
+
 
 class ZwaveGateway extends Device {
 
@@ -40,7 +40,7 @@ class ZwaveGateway extends Device {
         }
     }
 
-    create_event_handlers() {       
+    create_event_handlers() {
     }
 
 }
