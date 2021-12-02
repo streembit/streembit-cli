@@ -24,15 +24,17 @@ Copyright (C) 2017 The Streembit software development team
 
 
 
-const iotdefinitions = require("apps/iot/definitions");
-const AlarmFeature = require("../alarms").default;
-const logger = require("streembit-util").logger;
 
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
+import { definitions as iotdefinitions } from "../../../definitions.js";
+import { AlarmFeature } from "../alarms.js";
+
+
+import { logger } from "streembit-util";
+import { ZigbeeCommands as zigbeecmd } from '../../../protocols/zigbee/commands/index.js';
 
 let CLUSTERID = 0x0500;
 
-class ZigbeeAlarmFeature extends AlarmFeature {
+export class ZigbeeAlarmFeature extends AlarmFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
         super(deviceid, feature, feature_type, transport);
@@ -234,4 +236,3 @@ class ZigbeeAlarmFeature extends AlarmFeature {
 
 }
 
-module.exports = ZigbeeAlarmFeature;

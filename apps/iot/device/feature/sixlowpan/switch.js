@@ -24,7 +24,8 @@ Copyright (C) 2017 The Streembit software development team
 
 
 
-const SwitchFeature = require("../switch");
+
+import { SwitchFeature } from "../switch.js";
 
 class SixLowPANSwitchFeature extends SwitchFeature {
 

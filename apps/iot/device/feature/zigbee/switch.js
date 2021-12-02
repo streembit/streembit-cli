@@ -23,9 +23,10 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
+
 const iotdefinitions = require("apps/iot/definitions");
-const SwitchFeature = require("../switch");
+
+import { SwitchFeature } from "../switch.js";
 const logger = require("streembit-util").logger;
 const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
 const events = require("streembit-util").events;
@@ -35,7 +36,7 @@ let CLUSTERID = 0x0006;
 class ZigbeeSwitchFeature extends SwitchFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
-        super(deviceid, feature, feature_type, transport);  
+        super(deviceid, feature, feature_type, transport);
 
         this.cluster = feature.toLowerCase();
         let clusternum = parseInt(this.cluster, 16);
@@ -47,7 +48,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
         this.IEEEaddress = 0;
         this.NWKaddress = 0;
         this.property_names.push(iotdefinitions.PROPERTY_SWITCH_STATUS);
-        logger.debug("Initialized a Zigbee switch measurement" );        
+        logger.debug("Initialized a Zigbee switch measurement");
     }
 
     on_datareceive_event(properties) {
@@ -119,7 +120,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
         try {
             logger.debug("ZigbeeSwitchFeature " + this.IEEEaddress + " on_clusterlist_receive()");
             this.cluster_endpoint = endpoint;
-            this.bind();           
+            this.bind();
         }
         catch (err) {
             logger.error("ZigbeeSwitchFeature on_clusterlist_receive() error: %j", err);
@@ -140,7 +141,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
         );
 
         var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, CLUSTERID, reports, this.cluster_endpoint);
-        this.transport.send(cmd);     
+        this.transport.send(cmd);
     }
 
     on_bind_complete(payload) {
@@ -162,7 +163,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
         logger.debug("ZigbeeSwitchFeature " + this.IEEEaddress + " on_report_configured()");
     }
 
-    on_device_online(properties) {   
+    on_device_online(properties) {
         this.IEEEaddress = properties.address64;
         this.NWKaddress = properties.address16;
         if (this.IEEEaddress && this.NWKaddress) {
@@ -181,7 +182,7 @@ class ZigbeeSwitchFeature extends SwitchFeature {
             },
             500
         );
-    }    
+    }
 
     exec_toggle_switch() {
         var cmd = zigbeecmd.execToggleSwitch(this.IEEEaddress, this.NWKaddress, this.cluster_endpoint);

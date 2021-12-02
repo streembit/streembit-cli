@@ -24,7 +24,8 @@ Copyright (C) 2017 The Streembit software development team
 
 
 
-const EcMeasureFeature = require("../ecmeasure");
+
+import { EcMeasureFeature } from '../ecmeasure.js'
 
 class SixLowPANEcMeasureFeature extends EcMeasureFeature {
 

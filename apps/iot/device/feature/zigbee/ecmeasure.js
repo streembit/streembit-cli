@@ -23,12 +23,13 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const EcMeasureFeature = require("../ecmeasure");
-const logger = require("streembit-util").logger;
-const util = require('util');
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
+
+
+import { definitions as iotdefinitions } from '../../../definitions.js';
+import { EcMeasureFeature } from '../ecmeasure.js';
+import { logger } from 'streembit-util';
+import util from 'util';
+import { ZigbeeCommands as zigbeecmd } from '../../../protocols/zigbee/commands/index.js';
 
 let CLUSTERID = 0x0b04;
 
@@ -36,7 +37,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
 
     constructor(deviceid, feature, feature_type, transport, ieeeaddress, nwkaddress) {
         super(deviceid, feature, feature_type, transport);
-        
+
         this.cluster = feature.toLowerCase();
         let clusternum = parseInt(this.cluster, 16);
         if (clusternum != CLUSTERID) {
@@ -59,7 +60,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         this.IEEEaddress = ieeeaddress || 0;
         this.NWKaddress = nwkaddress || 0;
 
-        logger.debug("Initialized a Zigbee EC measuremenent feature, power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);        
+        logger.debug("Initialized a Zigbee EC measuremenent feature, power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);
     }
 
     on_datareceive_event(properties) {
@@ -81,7 +82,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                         if (this.power_multiplier) {
                             value = value * this.power_multiplier;
                         }
-                        this.power_consumption = value;                        
+                        this.power_consumption = value;
                         data.payload.power_consumption = value;
                         logger.debug("ZigbeeEcMeasureFeature power: %d Watt", this.power_consumption);
                     }
@@ -94,7 +95,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                             value = value * this.voltage_multiplier;
                         }
 
-                        this.voltage = value;                        
+                        this.voltage = value;
                         data.payload.voltage = value;
                         logger.debug("ZigbeeEcMeasureFeature voltage: %d Volt", this.voltage);
                     }
@@ -104,7 +105,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
                     }
                     else if (item.property == iotdefinitions.PROPERTY_POWERDIVISOR) {
                         this.power_divisor = item.value;
-                        logger.debug("set PROPERTY_POWERDIVISOR: %d", this.power_divisor);                        
+                        logger.debug("set PROPERTY_POWERDIVISOR: %d", this.power_divisor);
                     }
                     else if (item.property == iotdefinitions.PROPERTY_VOLTAGEMULTIPLIER) {
                         this.voltage_multiplier = item.value;
@@ -127,7 +128,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         catch (err) {
             logger.error("ZigbeeEcMeasureFeature on_datareceive_event() error: %j", err);
         }
-    }    
+    }
 
     iscluster(param) {
         return this.cluster == param;
@@ -151,7 +152,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
             }
         }
     }
-    
+
     bind() {
         var txn = 0x51;
         logger.debug("ZigbeeEcMeasureFeature cluster 0B04, send bind request at endpoint: " + this.cluster_endpoint);
@@ -163,8 +164,8 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
     on_clusterlist_receive(endpoint) {
         try {
             logger.debug("ZigbeeEcMeasureFeature " + this.IEEEaddress + " on_clusterlist_receive()");
-            this.cluster_endpoint = endpoint;     
-            this.bind();            
+            this.cluster_endpoint = endpoint;
+            this.bind();
         }
         catch (err) {
             logger.error("ZigbeeEcMeasureFeature on_clusterlist_receive() error: %j", err);
@@ -263,12 +264,12 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         if (this.IEEEaddress && this.NWKaddress) {
             super.on_device_online();
         }
-    }    
+    }
 
     readpower() {
         var attributes = [0x05, 0x05, 0x0b, 0x05];
         var cmd = zigbeecmd.readAttributes(this.IEEEaddress, this.NWKaddress, 0x0b04, attributes, this.cluster_endpoint);
-        this.transport.send(cmd);        
+        this.transport.send(cmd);
     }
 
     read_settings() {
@@ -288,7 +289,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
     }
 
     read(payload, callback) {
-        try {   
+        try {
             super.read(payload, callback, 7000);
             // do the reading
             this.readpower();
@@ -297,10 +298,10 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         catch (err) {
             callback(err);
         }
-    }   
+    }
 
     propread() {
-        try {            
+        try {
             setTimeout(
                 () => {
                     logger.debug("ZigbeeEcMeasureFeature propread()");
@@ -314,7 +315,7 @@ class ZigbeeEcMeasureFeature extends EcMeasureFeature {
         catch (err) {
             logger.error(`ZigbeeEcMeasureFeature propread() error: ${err.message}`);
         }
-    }   
+    }
 
     configure() {
     }

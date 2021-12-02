@@ -24,11 +24,12 @@ Copyright (C) 2017 The Streembit software development team
 
 
 
-const iotdefinitions = require("apps/iot/definitions");
+
+import { definitions as iotdefinitions } from '../../definitionsjs';
 
 import { IoTFeature } from "./feature.js";
 
-class EcMeasureFeature extends IoTFeature {
+export class EcMeasureFeature extends IoTFeature {
     constructor(deviceid, feature, feature_type, transport) {
         super(deviceid, feature, feature_type, transport);
         this.voltage = iotdefinitions.IOT_STATUS_UNKOWN;
@@ -73,4 +74,3 @@ class EcMeasureFeature extends IoTFeature {
     }
 }
 
-module.exports = EcMeasureFeature;

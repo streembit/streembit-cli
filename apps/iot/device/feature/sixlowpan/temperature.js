@@ -24,9 +24,8 @@ Copyright (C) 2017 The Streembit software development team
 
 
 
-const TemperatureFeature = require("../temperature");
+import { TemperatureFeature } from "../temperature.js";
 
-const TEMPSENS_TIMEOUT = 10000;
 
 class SixLowPANTemperatureFeature extends TemperatureFeature {
 
