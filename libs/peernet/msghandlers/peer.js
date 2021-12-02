@@ -27,7 +27,7 @@ import * as msgvalidator from './msg_validator.js';
 
 const kad = new KadHandler();
 
-export const dhtget = (message, callback) => {
+const dhtget = (message, callback) => {
     logger.debug("get value for peer");
     const key = message.key;
     const kadnet = new kad.KadHandler();
@@ -49,17 +49,7 @@ const dhtput = (message, callback) => {
     });    
 }
 
-export default (msg, callback) => {
-    try {
-        switch (msg.type) {
-            case "PUT":
-                dhtput(msg, callback);
-                break;
-            default:
-                return callback("Invalid message type");
-        }
-    }
-    catch (err) {
-        callback("peer msg handler error, " + err.message);
-    }
-};
+export {
+    dhtput as put,
+    dhtget as get
+}

@@ -19,8 +19,8 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-var nat = require('../index');
-var async = require('async');
+import { natupnp as nat } from "../index.js";
+import async from "async";
 
 var client = exports;
 

@@ -27,8 +27,7 @@ import { constants } from "../../libs/constants/index.js";
 import { config } from "../../libs/config/index.js";
 import PeerClient from "../../libs/peernet/peerclient.js";
 import * as libutils from "../../libs/utils/index.js";
-
-// import { natupnp } from "../../libs/upnp/index.js";
+import { natupnp } from "../../libs/upnp/index.js";
 
 const peerclient = new PeerClient();
 const interval = 600000; // 10 mins
