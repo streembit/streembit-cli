@@ -24,11 +24,13 @@ Copyright (C) 2017 The Streembit software development team
 
 
 
-const iotdefinitions = require("apps/iot/definitions");
 
+import { definitions as iotdefinitions } from '../../../definitions.js';
 import { SwitchFeature } from "../switch.js";
 const logger = require("streembit-util").logger;
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
+
+import { ZigbeeCommands as zigbeecmd } from '../../../protocols/zigbee/commands/index.js';
+
 const events = require("streembit-util").events;
 
 let CLUSTERID = 0x0006;

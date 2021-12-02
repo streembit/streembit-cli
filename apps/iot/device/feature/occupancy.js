@@ -27,7 +27,7 @@ Copyright (C) 2017 The Streembit software development team
 
 import { IoTFeature } from "./feature.js";
 
-class OccupancyFeature extends IoTFeature {
+export class OccupancyFeature extends IoTFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
         super(deviceid, feature, feature_type, transport);
@@ -63,4 +63,3 @@ class OccupancyFeature extends IoTFeature {
     }
 }
 
-module.exports = OccupancyFeature;
