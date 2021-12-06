@@ -22,10 +22,11 @@ Copyright (C) 2016 The Streembit software development team
 import * as utils from "./nat-upnp/utils.js";
 import { Ssdp } from "./nat-upnp/ssdp.js";
 import { Device } from "./nat-upnp/device.js";
-// import createClient from "./nat-upnp/client.js";
+import { Client } from "./nat-upnp/client.js";
 
 export const natupnp = {
     utils: utils,
     ssdp: Ssdp,
     Device: Device,
+    createClient: Client
 };
