@@ -24,9 +24,6 @@ Based on
 
 'use strict';
 
-// const assert = require('assert');
-// const utils = require('./utils');
-
 import assert from 'assert'
 import * as utils from './utils.js'
 
@@ -165,7 +162,5 @@ class KademliaRules {
     }
 
 }
-
-// module.exports = KademliaRules;
 
 export default KademliaRules;

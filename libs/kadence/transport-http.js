@@ -209,5 +209,4 @@ class HTTPTransport extends DuplexStream {
 
 }
 
-// module.exports = HTTPTransport;
 export default HTTPTransport;

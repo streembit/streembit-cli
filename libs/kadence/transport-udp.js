@@ -24,10 +24,9 @@ Based on
 
 'use strict';
 
-const merge = require('merge');
-const { Duplex: DuplexStream } = require('stream');
-const dgram = require('dgram');
-
+import merge from "merge";
+import { Duplex as DuplexStream } from "stream";
+import dgram from "dgram";
 
 /**
  * Implements a UDP transport adapter
@@ -85,4 +84,4 @@ class UDPTransport extends DuplexStream {
 
 }
 
-module.exports = UDPTransport;
+export default UDPTransport;
