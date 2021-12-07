@@ -31,7 +31,7 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var assert = require('assert');
+import assert from 'assert';
 
 /**
  * Factory for blacklist middleware

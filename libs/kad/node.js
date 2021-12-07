@@ -30,7 +30,7 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 let merge = require('merge');
-let assert = require('assert');
+import assert from 'assert';
 let async = require('async');
 let events = require('events');
 let constants = require('./constants');

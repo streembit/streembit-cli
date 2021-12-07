@@ -8,25 +8,26 @@
 
 'use strict';
 
-var C = require('./constants.js');
 
-var frame_parser = module.exports = {};
+import * as C from './constants.js';
+export const frame_parser = {};
 
-frame_parser[C.FRAME_TYPE.NODE_IDENTIFICATION] = function(frame, reader, options) {
+
+frame_parser[C.FRAME_TYPE.NODE_IDENTIFICATION] = function (frame, reader, options) {
   frame.sender64 = reader.nextString(8, 'hex');
   frame.sender16 = reader.nextString(2, 'hex');
   frame.receiveOptions = reader.nextUInt8();
   frame_parser.parseNodeIdentificationPayload(frame, reader, options);
 };
 
-frame_parser[C.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.ZIGBEE_RECEIVE_PACKET] = function (frame, reader, options) {
   frame.remote64 = reader.nextString(8, 'hex');
   frame.remote16 = reader.nextString(2, 'hex');
   frame.receiveOptions = reader.nextUInt8();
   frame.data = reader.nextAll();
 };
 
-frame_parser[C.FRAME_TYPE.ZIGBEE_EXPLICIT_RX] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.ZIGBEE_EXPLICIT_RX] = function (frame, reader, options) {
   frame.remote64 = reader.nextString(8, 'hex');
   frame.remote16 = reader.nextString(2, 'hex');
   frame.sourceEndpoint = reader.nextString(1, 'hex');
@@ -37,21 +38,21 @@ frame_parser[C.FRAME_TYPE.ZIGBEE_EXPLICIT_RX] = function(frame, reader, options)
   frame.data = reader.nextAll();
 };
 
-frame_parser[C.FRAME_TYPE.XBEE_SENSOR_READ] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.XBEE_SENSOR_READ] = function (frame, reader, options) {
   frame.remote64 = reader.nextString(8, 'hex');
   frame.remote16 = reader.nextString(2, 'hex');
   frame.receiveOptions = reader.nextUInt8();
   frame.sensors = reader.nextUInt8();
   frame.sensorValues = {
-      AD0: Math.round(1000 * (reader.nextUInt16BE() * 5.1) / 255.0),
-      AD1: Math.round(1000 * (reader.nextUInt16BE() * 5.1) / 255.0),
-      AD2: Math.round(1000 * (reader.nextUInt16BE() * 5.1) / 255.0),
-      AD3: Math.round(1000 * (reader.nextUInt16BE() * 5.1) / 255.0),
-      T:   reader.nextUInt16BE(),
-      temperature: undefined,
-      relativeHumidity: undefined,
-      trueHumidity: undefined,
-      waterPresent: frame.sensors === 0x60
+    AD0: Math.round(1000 * (reader.nextUInt16BE() * 5.1) / 255.0),
+    AD1: Math.round(1000 * (reader.nextUInt16BE() * 5.1) / 255.0),
+    AD2: Math.round(1000 * (reader.nextUInt16BE() * 5.1) / 255.0),
+    AD3: Math.round(1000 * (reader.nextUInt16BE() * 5.1) / 255.0),
+    T: reader.nextUInt16BE(),
+    temperature: undefined,
+    relativeHumidity: undefined,
+    trueHumidity: undefined,
+    waterPresent: frame.sensors === 0x60
   };
 
   if (frame.sensors === 2 || frame.sensors === 3) {
@@ -64,30 +65,30 @@ frame_parser[C.FRAME_TYPE.XBEE_SENSOR_READ] = function(frame, reader, options) {
 
   if (frame.sensors === 1 || frame.sensors === 3) {
     frame.sensorValues.relativeHumidity = Math.round(100 *
-        (((frame.sensorValues.AD3 / frame.sensorValues.AD2) -
-            0.16) / (0.0062))) / 100;
+      (((frame.sensorValues.AD3 / frame.sensorValues.AD2) -
+        0.16) / (0.0062))) / 100;
   }
 
   if (frame.sensors === 3) {
     frame.sensorValues.trueHumidity = Math.round(100 *
-        (frame.sensorValues.relativeHumidity / (1.0546 -
-            (0.00216 * frame.sensorValues.temperature)))) / 100;
+      (frame.sensorValues.relativeHumidity / (1.0546 -
+        (0.00216 * frame.sensorValues.temperature)))) / 100;
   }
 
 };
 
-frame_parser[C.FRAME_TYPE.MODEM_STATUS] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.MODEM_STATUS] = function (frame, reader, options) {
   frame.modemStatus = reader.nextUInt8();
 };
 
-frame_parser[C.FRAME_TYPE.ZIGBEE_IO_DATA_SAMPLE_RX] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.ZIGBEE_IO_DATA_SAMPLE_RX] = function (frame, reader, options) {
   frame.remote64 = reader.nextString(8, 'hex');
   frame.remote16 = reader.nextString(2, 'hex');
   frame.receiveOptions = reader.nextUInt8();
   frame_parser.ParseIOSamplePayload(frame, reader, options);
 };
 
-frame_parser[C.FRAME_TYPE.AT_COMMAND_RESPONSE] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.AT_COMMAND_RESPONSE] = function (frame, reader, options) {
   frame.id = reader.nextUInt8();
   frame.command = reader.nextString(2, 'ascii');
   frame.commandStatus = reader.nextUInt8();
@@ -99,13 +100,13 @@ frame_parser[C.FRAME_TYPE.AT_COMMAND_RESPONSE] = function(frame, reader, options
   }
 };
 
-frame_parser[C.FRAME_TYPE.REMOTE_COMMAND_RESPONSE] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.REMOTE_COMMAND_RESPONSE] = function (frame, reader, options) {
   frame.id = reader.nextUInt8();
   frame.remote64 = reader.nextString(8, 'hex');
   frame.remote16 = reader.nextString(2, 'hex');
   frame.command = reader.nextString(2, 'ascii');
   frame.commandStatus = reader.nextUInt8();
-  if(frame.command === "IS") {
+  if (frame.command === "IS") {
     frame_parser.ParseIOSamplePayload(frame, reader, options);
   } else if ((frame.command === "ND") && (frame.commandStatus == C.COMMAND_STATUS.OK)) {
     frame.nodeIdentification = {};
@@ -115,7 +116,7 @@ frame_parser[C.FRAME_TYPE.REMOTE_COMMAND_RESPONSE] = function(frame, reader, opt
   }
 };
 
-frame_parser[C.FRAME_TYPE.ZIGBEE_TRANSMIT_STATUS] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.ZIGBEE_TRANSMIT_STATUS] = function (frame, reader, options) {
   frame.id = reader.nextUInt8();
   frame.remote16 = reader.nextString(2, 'hex');
   frame.transmitRetryCount = reader.nextUInt8();
@@ -123,25 +124,25 @@ frame_parser[C.FRAME_TYPE.ZIGBEE_TRANSMIT_STATUS] = function(frame, reader, opti
   frame.discoveryStatus = reader.nextUInt8();
 };
 
-frame_parser[C.FRAME_TYPE.ROUTE_RECORD] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.ROUTE_RECORD] = function (frame, reader, options) {
   frame.remote64 = reader.nextString(8, 'hex');
   frame.remote16 = reader.nextString(2, 'hex');
   frame.receiveOptions = reader.nextUInt8();
   frame.hopCount = reader.nextUInt8();
   frame.addresses = [];
-  for (var i=0; i<frame.hopCount; i++) {
+  for (var i = 0; i < frame.hopCount; i++) {
     frame.addresses.push(reader.nextUInt16BE());
   }
 };
 
-frame_parser[C.FRAME_TYPE.AT_COMMAND] = 
-frame_parser[C.FRAME_TYPE.AT_COMMAND_QUEUE_PARAMETER_VALUE] = function(frame, reader, options) {
-  frame.id = reader.nextUInt8();
-  frame.command = reader.nextString(2, 'ascii');
-  frame.commandParameter = reader.nextAll();
-};
+frame_parser[C.FRAME_TYPE.AT_COMMAND] =
+  frame_parser[C.FRAME_TYPE.AT_COMMAND_QUEUE_PARAMETER_VALUE] = function (frame, reader, options) {
+    frame.id = reader.nextUInt8();
+    frame.command = reader.nextString(2, 'ascii');
+    frame.commandParameter = reader.nextAll();
+  };
 
-frame_parser[C.FRAME_TYPE.REMOTE_AT_COMMAND_REQUEST] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.REMOTE_AT_COMMAND_REQUEST] = function (frame, reader, options) {
   frame.id = reader.nextUInt8();
   frame.destination64 = reader.nextString(8, 'hex');
   frame.destination16 = reader.nextString(2, 'hex');
@@ -150,7 +151,7 @@ frame_parser[C.FRAME_TYPE.REMOTE_AT_COMMAND_REQUEST] = function(frame, reader, o
   frame.commandParameter = reader.nextAll();
 };
 
-frame_parser[C.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST] = function (frame, reader, options) {
   frame.id = reader.nextUInt8();
   frame.destination64 = reader.nextString(8, 'hex');
   frame.destination16 = reader.nextString(2, 'hex');
@@ -159,7 +160,7 @@ frame_parser[C.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST] = function(frame, reader, opt
   frame.data = reader.nextAll();
 };
 
-frame_parser[C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME] = function (frame, reader, options) {
   frame.id = reader.nextUInt8();
   frame.destination64 = reader.nextString(8, 'hex');
   frame.destination16 = reader.nextString(2, 'hex');
@@ -172,28 +173,28 @@ frame_parser[C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME] = function(f
   frame.data = reader.nextAll();
 };
 
-frame_parser[C.FRAME_TYPE.TX_REQUEST_64] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.TX_REQUEST_64] = function (frame, reader, options) {
   frame.id = reader.nextUInt8();
   frame.destination64 = reader.nextString(8, 'hex');
   frame.options = reader.nextUInt8();
   frame.data = reader.nextAll();
 };
 
-frame_parser[C.FRAME_TYPE.TX_REQUEST_16] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.TX_REQUEST_16] = function (frame, reader, options) {
   frame.id = reader.nextUInt8();
   frame.destination16 = reader.nextString(2, 'hex');
   frame.options = reader.nextUInt8();
   frame.data = reader.nextAll();
 };
 
-frame_parser.parseNodeIdentificationPayload = function(frame, reader, options) {
+frame_parser.parseNodeIdentificationPayload = function (frame, reader, options) {
   frame.remote16 = reader.nextString(2, 'hex');
   frame.remote64 = reader.nextString(8, 'hex');
 
   // Extract the NI string from the buffer
   frame.nodeIdentifier = reader.nextStringZero('ascii');
 
-  if(reader.buf.length > reader.tell()) {
+  if (reader.buf.length > reader.tell()) {
     frame.remoteParent16 = reader.nextString(2, 'hex');
     frame.deviceType = reader.nextUInt8();
     frame.sourceEvent = reader.nextUInt8();
@@ -202,14 +203,14 @@ frame_parser.parseNodeIdentificationPayload = function(frame, reader, options) {
   }
 };
 
-frame_parser.ParseIOSamplePayload = function(frame, reader, options) {
+frame_parser.ParseIOSamplePayload = function (frame, reader, options) {
   frame.digitalSamples = {};
   frame.analogSamples = {};
   frame.numSamples = 0;
   // When parsing responses to ATIS, there is no data to parse if IO lines are not enabled
   if (frame.commandStatus !== undefined && frame.commandStatus !== 0) return;
   frame.numSamples = reader.nextUInt8();
-  var mskD = reader.nextUInt16BE(); 
+  var mskD = reader.nextUInt16BE();
   var mskA = reader.nextUInt8();
 
   if (mskD > 0) {
@@ -225,11 +226,11 @@ frame_parser.ParseIOSamplePayload = function(frame, reader, options) {
     for (var abit in C.ANALOG_CHANNELS.MASK) {
       if ((mskA & (1 << abit)) >> abit) {
         var valA = reader.nextUInt16BE();
-        
+
         if (!options.convert_adc) {
           frame.analogSamples[C.ANALOG_CHANNELS.MASK[abit][0]] = valA;
         } else {
-        // Convert to mV, resolution is < 1mV, so rounding is OK
+          // Convert to mV, resolution is < 1mV, so rounding is OK
           frame.analogSamples[C.ANALOG_CHANNELS.MASK[abit][0]] = Math.round((valA * options.vref_adc) / 1023);
         }
       }
@@ -238,47 +239,47 @@ frame_parser.ParseIOSamplePayload = function(frame, reader, options) {
 };
 
 // Series 1 Support
-frame_parser.Recieved16BitPacketIO = function(frame, reader, options) {
+frame_parser.Recieved16BitPacketIO = function (frame, reader, options) {
   var hasDigital = 0;
   var data = {};
   // OFFSET 4
- //reader.move(4);
+  //reader.move(4);
   data.sampleQuantity = reader.nextUInt8();
-  data.channelMask    = reader.nextUInt16BE(); 
-  data.channels       = {};
-  data.analogSamples  = [];
+  data.channelMask = reader.nextUInt16BE();
+  data.channels = {};
+  data.analogSamples = [];
   data.digitalSamples = [];
 
   //analog channels
-  for( var a=0; a<=5; a++ ){
+  for (var a = 0; a <= 5; a++) {
     // exponent looks odd here because analog pins start at 0000001000000000
-    if( Boolean(data.channelMask & Math.pow(2,a+9)) ){
-      data.channels['ADC'+a] = 1;
+    if (Boolean(data.channelMask & Math.pow(2, a + 9))) {
+      data.channels['ADC' + a] = 1;
     }
   }
 
   // if any of the DIO pins are active, parse the digital samples 
   // 0x1ff = 0000000111111111
-  if(data.channelMask & 0x1ff){
+  if (data.channelMask & 0x1ff) {
     hasDigital = 1;
-    for( var i=0; i < data.sampleQuantity; i++ ){
-      data.digitalSamples.push( reader.nextUInt16BE().toString(2) );
+    for (var i = 0; i < data.sampleQuantity; i++) {
+      data.digitalSamples.push(reader.nextUInt16BE().toString(2));
     }
 
     //digital channels
-    for( var d=0; d<=8; d++ ){
-      if( Boolean(data.channelMask & Math.pow(2,d)) ){
-        data.channels['DIO'+d] = 1;
+    for (var d = 0; d <= 8; d++) {
+      if (Boolean(data.channelMask & Math.pow(2, d))) {
+        data.channels['DIO' + d] = 1;
       }
     }
   }
 
-  for( var si=0; si < data.sampleQuantity; si++ ){
+  for (var si = 0; si < data.sampleQuantity; si++) {
     var sample = {};
-    for( var j=0; j <= 5; j++ ){
-      if( data.channels['ADC'+j] ){
+    for (var j = 0; j <= 5; j++) {
+      if (data.channels['ADC' + j]) {
         // starts at the 7th byte and moved down by the Digital Samples section
-        sample['ADC'+j] = reader.nextUInt16BE();
+        sample['ADC' + j] = reader.nextUInt16BE();
       }
     }
     data.analogSamples.push(sample);
@@ -287,26 +288,26 @@ frame_parser.Recieved16BitPacketIO = function(frame, reader, options) {
   frame.data = data;
 };
 
-frame_parser[C.FRAME_TYPE.TX_STATUS] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.TX_STATUS] = function (frame, reader, options) {
   frame.id = reader.nextUInt8();
   frame.deliveryStatus = reader.nextUInt8();
 };
 
-frame_parser[C.FRAME_TYPE.RX_PACKET_64] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.RX_PACKET_64] = function (frame, reader, options) {
   frame.remote64 = reader.nextString(8, 'hex');
   frame.rssi = reader.nextUInt8();
   frame.receiveOptions = reader.nextUInt8();
   frame.data = reader.nextAll();
 };
 
-frame_parser[C.FRAME_TYPE.RX_PACKET_16] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.RX_PACKET_16] = function (frame, reader, options) {
   frame.remote16 = reader.nextString(2, 'hex');
   frame.rssi = reader.nextUInt8();
   frame.receiveOptions = reader.nextUInt8();
   frame.data = reader.nextAll();
 };
 
-frame_parser[C.FRAME_TYPE.RX_PACKET_64_IO] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.RX_PACKET_64_IO] = function (frame, reader, options) {
   frame.remote64 = reader.nextString(8, 'hex');
   frame.rssi = reader.nextUInt8();
   frame.receiveOptions = reader.nextUInt8();
@@ -315,7 +316,7 @@ frame_parser[C.FRAME_TYPE.RX_PACKET_64_IO] = function(frame, reader, options) {
 };
 
 
-frame_parser[C.FRAME_TYPE.RX_PACKET_16_IO] = function(frame, reader, options) {
+frame_parser[C.FRAME_TYPE.RX_PACKET_16_IO] = function (frame, reader, options) {
   frame.remote16 = reader.nextString(2, 'hex');
   frame.rssi = reader.nextUInt8();
   frame.receiveOptions = reader.nextUInt8();

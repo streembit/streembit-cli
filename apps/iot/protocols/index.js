@@ -21,7 +21,7 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-class IoTProtocolHandler {
+export class IoTProtocolHandler {
     constructor(protocol, mcu) {
         this.protocol = protocol;
         this.mcu = mcu;
@@ -48,9 +48,8 @@ class IoTProtocolHandler {
     dotasks() {
     }
 
-    init() {        
+    init() {
     }
 
 }
 
-module.exports = IoTProtocolHandler;

@@ -25,7 +25,7 @@ Copyright (C) 2017 The Streembit software development team
 
 
 import { EcMeasureFeature } from '../ecmeasure.js'
-const logger = require("streembit-util").logger;
+import { logger } from "streembit-util";
 
 
 class ZwaveEcMeasureFeature extends EcMeasureFeature {

@@ -21,7 +21,7 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("streembit-util").logger;
+import { logger } from "streembit-util";
 const async = require("async");
 const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
 

@@ -19,13 +19,13 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-// const database = require("libs/database/database");
+
 
 'use strict';
 
 import { database } from "./database.js"
 
-class UsersDb extends database{
+class UsersDb extends database {
     constructor() {
         super();
     }
@@ -40,12 +40,12 @@ class UsersDb extends database{
                 this.database.all(
                     "SELECT * FROM users",
                     [],
-                    function(err, rows) {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve(rows);
-                });
+                    function (err, rows) {
+                        if (err) {
+                            return reject(err.message);
+                        }
+                        resolve(rows);
+                    });
             }
         );
     }
@@ -55,13 +55,13 @@ class UsersDb extends database{
             (resolve, reject) => {
                 this.database.get(
                     "SELECT * FROM users WHERE pkhash = ? OR publickey = ?",
-                    [pk,pk],
-                    function(err, row) {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve(row);
-                });
+                    [pk, pk],
+                    function (err, row) {
+                        if (err) {
+                            return reject(err.message);
+                        }
+                        resolve(row);
+                    });
             }
         );
     }
@@ -72,12 +72,12 @@ class UsersDb extends database{
                 this.database.run(
                     "INSERT INTO users(pkhash, publickey, username, isadmin, settings) VALUES (?,?,?,?,?)",
                     [pkhash, publickey, username, isadmin, settings],
-                    function(err) {
-                    if (err) {
-                        return reject(err.message);
-                    }
-                    resolve();
-                });
+                    function (err) {
+                        if (err) {
+                            return reject(err.message);
+                        }
+                        resolve();
+                    });
             }
         );
     }
@@ -87,8 +87,8 @@ class UsersDb extends database{
             (resolve, reject) => {
                 this.database.run(
                     `UPDATE users SET ${Object.keys(user).map(v => `${v} = ?`).join(', ')} WHERE pkhash = ? OR publickey = ?`,
-                    [ ...Object.values(user), pk, pk ],
-                    function(err) {
+                    [...Object.values(user), pk, pk],
+                    function (err) {
                         if (err) {
                             return reject(err.message);
                         }

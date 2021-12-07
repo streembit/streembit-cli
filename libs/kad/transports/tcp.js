@@ -31,7 +31,7 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-const assert = require('assert');
+import assert from 'assert';
 const clarinet = require('clarinet');
 const net = require('net');
 const StreembitContact = require('../contacts/streembit-contact');
@@ -52,8 +52,8 @@ class TCPTransport extends RPC {
         if (!(this instanceof TCPTransport)) {
             return new TCPTransport(contact, options);
         }
-    
-        assert(contact instanceof StreembitContact , 'Invalid contact supplied');
+
+        assert(contact instanceof StreembitContact, 'Invalid contact supplied');
         assert(typeof contact.host === 'string' && contact.host.length > 0, 'Invalid host was supplied');
         assert(typeof contact.port === 'number' && contact.port > 0, 'Invalid port was supplied');
 
@@ -73,7 +73,7 @@ class TCPTransport extends RPC {
         this._queuedResponses = {};
 
         this._socket.on('error', (err) => {
-        self._log.error('rpc encountered and error: %s', err.message);
+            self._log.error('rpc encountered and error: %s', err.message);
         });
 
         this._socket.on('listening', done);
@@ -182,7 +182,7 @@ class TCPTransport extends RPC {
                                 connection.end();
                                 break;
                         }
-                    } else{
+                    } else {
                         // all other messages
                         if (parsed.id && !self._queuedResponses[parsed.id]) {
                             self._queuedResponses[parsed.id] = connection;

@@ -30,7 +30,7 @@ Copyright (C) 2016 The Streembit software development team
 
 
 var events = require('events');
-var assert = require('assert');
+import assert from 'assert';
 var async = require('async');
 var constants = require('./constants');
 var Contact = require('./contact');

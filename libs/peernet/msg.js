@@ -24,7 +24,7 @@ Copyright (C) 2017 The Streembit software development team
 import { logger } from "streembit-util";
 import async from "async";
 
-// const logger = require("streembit-util").logger;
+// import { logger } from "streembit-util";
 // const async = require("async");
 // const peermsg = require("./msghandlers/peer.js");
 // const storemsg = require("./msghandlers/store.js");
@@ -74,7 +74,7 @@ function handle_msg(message, callback) {
     }
 }
 
-export const on_kad_message = function (message, contact, next){
+export const on_kad_message = function (message, contact, next) {
 
     logger.debug("on_kad_message");
 

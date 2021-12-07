@@ -8,20 +8,26 @@
 
 'use strict';
 
-var util = require('util'),
-    assert = require('assert'),
-    events = require('events'),
-    Buffer = require('safe-buffer').Buffer,
-    BufferBuilder = require('buffer-builder'),
-    BufferReader = require('buffer-reader');
 
-exports = module.exports;
 
-var C = exports.constants = require('./constants.js');
-var frame_parser = exports._frame_parser = require('./frame-parser');
-var frame_builder = exports._frame_builder = require('./frame-builder');
+import util from 'util';
+import assert from 'assert';
+import events from 'events';
+import { Buffer } from 'safe-buffer';
+import BufferBuilder from 'buffer-builder';
+import BufferReader from 'buffer-reader';
+export const exports = {};
+import * as constants from './constants.js';
+import * as frame_parser from './frame-parser.js';
+import * as frame_builder from './frame-builder.js';
+exports.constants = constants;
+exports._frame_parser = frame_parser;
+exports._frame_builder = frame_builder;
 
-var _options = {
+let C = constants;
+
+
+let _options = {
   raw_frames: false,
   api_mode: 1,
   module: "Any",
@@ -52,13 +58,13 @@ util.inherits(XBeeAPI, events.EventEmitter);
 
 exports.XBeeAPI = XBeeAPI;
 
-XBeeAPI.prototype.escape = function(buffer) {
+XBeeAPI.prototype.escape = function (buffer) {
   if (this.escapeBuffer === undefined)
     this.escapeBuffer = Buffer.alloc(512);
 
-  var offset = 0;
+  let offset = 0;
   this.escapeBuffer.writeUInt8(buffer[0], offset++);
-  for (var i = 1; i < buffer.length; i++) {
+  for (let i = 1; i < buffer.length; i++) {
     if (C.ESCAPE_BYTES.indexOf(buffer[i]) > -1) {
       this.escapeBuffer.writeUInt8(C.ESCAPE, offset++);
       this.escapeBuffer.writeUInt8(buffer[i] ^ C.ESCAPE_WITH, offset++);
@@ -70,24 +76,24 @@ XBeeAPI.prototype.escape = function(buffer) {
   return Buffer.from(this.escapeBuffer.slice(0, offset));
 };
 
-XBeeAPI.prototype.buildFrame = function(frame) {
+XBeeAPI.prototype.buildFrame = function (frame) {
   assert(frame, 'Frame parameter must be a frame object');
 
-  var packet = Buffer.alloc(256); // Packet buffer
-  var payload = packet.slice(3); // Reference the buffer past the header
-  var builder = new BufferBuilder(payload);
+  let packet = Buffer.alloc(256); // Packet buffer
+  let payload = packet.slice(3); // Reference the buffer past the header
+  let builder = new BufferBuilder(payload);
 
-  if(!frame_builder[frame.type])
+  if (!frame_builder[frame.type])
     throw new Error('This library does not implement building the %d frame type.', frame.type);
 
   // Let the builder fill the payload
   frame_builder[frame.type](frame, builder);
 
   // Calculate & Append Checksum
-  var checksum = 0;
-  for (var i = 0; i < builder.length; i++) checksum += payload[i];
+  let checksum = 0;
+  for (let i = 0; i < builder.length; i++) checksum += payload[i];
   builder.appendUInt8(255 - (checksum % 256));
-  
+
   // Get just the payload
   payload = payload.slice(0, builder.length);
 
@@ -104,11 +110,11 @@ XBeeAPI.prototype.buildFrame = function(frame) {
 };
 
 // Note that this expects the whole frame to be escaped!
-XBeeAPI.prototype.parseFrame = function(rawFrame) {
+XBeeAPI.prototype.parseFrame = function (rawFrame) {
   // Trim the header and trailing checksum
-  var reader = new BufferReader(rawFrame.slice(3, rawFrame.length -1));
+  let reader = new BufferReader(rawFrame.slice(3, rawFrame.length - 1));
 
-  var frame = {
+  let frame = {
     type: reader.nextUInt8() // Read Frame Type
   };
 
@@ -118,28 +124,28 @@ XBeeAPI.prototype.parseFrame = function(rawFrame) {
   return frame;
 };
 
-XBeeAPI.prototype.canParse = function(buffer) {
-  var type = buffer.readUInt8(3);
+XBeeAPI.prototype.canParse = function (buffer) {
+  let type = buffer.readUInt8(3);
   return type in frame_parser;
 };
 
-XBeeAPI.prototype.canBuild = function(type) {
+XBeeAPI.prototype.canBuild = function (type) {
   return type in frame_builder;
 };
 
-XBeeAPI.prototype.nextFrameId = function() {
+XBeeAPI.prototype.nextFrameId = function () {
   return frame_builder.nextFrameId();
 };
 
-XBeeAPI.prototype.rawParser = function() {
-  return function(emitter, buffer) {
+XBeeAPI.prototype.rawParser = function () {
+  return function (emitter, buffer) {
     this.parseRaw(buffer);
   }.bind(this);
 };
 
-XBeeAPI.prototype.parseRaw = function(buffer) {
-  var S = this.parseState;
-  for(var i = 0; i < buffer.length; i++) {
+XBeeAPI.prototype.parseRaw = function (buffer) {
+  let S = this.parseState;
+  for (let i = 0; i < buffer.length; i++) {
     S.b = buffer[i];
     if ((S.waiting || (this.options.api_mode === 2 && !S.escape_next)) && S.b === C.START_BYTE) {
       S.buffer = Buffer.alloc(128);
@@ -162,20 +168,20 @@ XBeeAPI.prototype.parseRaw = function(buffer) {
     }
 
     if (!S.waiting) {
-        if (S.buffer.length > S.offset) {
-          S.buffer.writeUInt8(S.b, S.offset++);
-        } else {
-            console.log("We would have a problem...");
-            S.waiting = true;
-        }
+      if (S.buffer.length > S.offset) {
+        S.buffer.writeUInt8(S.b, S.offset++);
+      } else {
+        console.log("We would have a problem...");
+        S.waiting = true;
+      }
     }
-    
+
     if (S.offset === 1) {
       continue;
     }
 
     if (S.offset === 2) {
-      S.length  = S.b << 8; // most sign. bit of the length
+      S.length = S.b << 8; // most sign. bit of the length
       continue;
     }
     if (S.offset === 3) {
@@ -184,7 +190,7 @@ XBeeAPI.prototype.parseRaw = function(buffer) {
     }
 
     if (S.offset > 3) { // unnessary check
-      if (S.offset < S.length+4) {
+      if (S.offset < S.length + 4) {
         S.total += S.b;
         continue;
       } else {
@@ -194,15 +200,15 @@ XBeeAPI.prototype.parseRaw = function(buffer) {
 
     if (S.length > 0 && S.offset === S.length + 4) {
       if (S.checksum !== (255 - (S.total % 256))) {
-        var err = new Error("Checksum Mismatch " + JSON.stringify(S));
+        let err = new Error("Checksum Mismatch " + JSON.stringify(S));
         this.emit('error', err);
       }
 
-      var rawFrame = S.buffer.slice(0, S.offset);
+      let rawFrame = S.buffer.slice(0, S.offset);
       if (this.options.raw_frames || !this.canParse(rawFrame)) {
         this.emit("frame_raw", rawFrame);
       } else {
-        var frame = this.parseFrame(rawFrame);
+        let frame = this.parseFrame(rawFrame);
         this.emit("frame_object", frame);
       }
 

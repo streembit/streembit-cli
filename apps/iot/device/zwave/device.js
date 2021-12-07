@@ -20,8 +20,9 @@ Copyright (C) 2017 The Streembit software development team
 */
 
 'use strict';
-const Device = require("apps/iot/device/device");
-const logger = require("streembit-util").logger;
+
+import { Device } from '../device.js';
+import { logger } from "streembit-util";
 
 
 class ZwaveDevice extends Device {

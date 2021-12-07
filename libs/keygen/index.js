@@ -22,29 +22,31 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var crypto = require('crypto');
-var ecckey = require('../index').crypto;
-var secrand = require('secure-random');
 
-var password;
+import { createHash } from 'crypto';
+import { EccKey as ecckey } from '../crypto/index.js';
+import secrand from "secure-random";
+
+
+let password;
 try {
     if (process.argv.indexOf("-pksecret") != -1) {
-        password = process.argv[process.argv.indexOf("-pksecret") + 1]; 
+        password = process.argv[process.argv.indexOf("-pksecret") + 1];
     }
 }
 catch (err) {
 }
 
 if (password) {
-    password = crypto.createHash('sha256').update(password).digest('hex');
+    password = createHash('sha256').update(password).digest('hex');
 }
 else {
     password = secrand.randomBuffer(32).toString("hex");
 }
 
-var entropy = crypto.createHash('sha256').update(password).digest('hex');
+let entropy = createHash('sha256').update(password).digest('hex');
 
-var key = new ecckey();
+let key = new ecckey();
 key.generateKey(entropy);
 
 console.log("Key created");

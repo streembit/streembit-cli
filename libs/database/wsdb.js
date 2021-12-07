@@ -19,7 +19,7 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-// const database = require("libs/database/database");
+
 
 'use strict';
 
@@ -143,7 +143,7 @@ class WsDb extends database {
     }
 
     async register(pkhash, publickey, token, account) {
-        if (!pkhash  || !publickey || !token || !account) {
+        if (!pkhash || !publickey || !token || !account) {
             return Promise.reject(new Error("invalid parameter at wsdb register"));
         }
 

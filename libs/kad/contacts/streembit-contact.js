@@ -31,7 +31,7 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var assert = require('assert');
+import assert from 'assert';
 var Contact = require('../contact');
 var utils = require('../utils');
 
@@ -47,59 +47,59 @@ var utils = require('../utils');
  * @param {Number} options.publickey - Contacts public key
  */
 
- class StreembitContact extends Contact {
-     
-      constructor(options){
+class StreembitContact extends Contact {
+
+    constructor(options) {
         super(options);
         if (!(this instanceof StreembitContact)) {
             return new StreembitContact(options);
         }
-       
+
 
         assert(typeof options === 'object', 'Invalid options were supplied: options != object');
         assert(typeof options.host === 'string', 'Invalid host was supplied options.host != string');
         assert(typeof options.port === 'number', 'Invalid port was supplied options.port != number');
-    
+
         this.publickey = "";
         this.host = options.host;
         this.port = options.port;
         this.isseed = options.isseed ? false : true;
-    
+
         if (options.publickey) {
             assert(typeof options.publickey === 'string', 'Invalid public key was supplied');
             var str = options.publickey.trim();
-           
-           
+
+
             assert(str.length <= 128, 'Invalid public key was supplied');
             this.publickey = str;
         }
-       
-      }
 
-        /**
-        * Generate a NodeID by taking the SHA1 hash of the host and port
-        */
+    }
 
-       createNodeID () {
-            return utils.createID(this.toString());
-        };
+    /**
+    * Generate a NodeID by taking the SHA1 hash of the host and port
+    */
 
-        /**
-        * Generate a user-friendly string for the contact
-        */
-        toString () {
-            return this.publickey;
-        };
+    createNodeID() {
+        return utils.createID(this.toString());
+    };
+
+    /**
+    * Generate a user-friendly string for the contact
+    */
+    toString() {
+        return this.publickey;
+    };
 
 
- }
+}
 
- /*const  stc = new StreembitContact({
-    host:'sdfdsfdsfds',
-    port:8080,
-    nodeID:"986ac27d21b009f6ad2660b7586841afc889b145",
-    publickey: '5454545454534545454545454545454545345454545454545454545453454545454545454545454534545454545454545454545'
- });
+/*const  stc = new StreembitContact({
+   host:'sdfdsfdsfds',
+   port:8080,
+   nodeID:"986ac27d21b009f6ad2660b7586841afc889b145",
+   publickey: '5454545454534545454545454545454545345454545454545454545453454545454545454545454534545454545454545454545'
+});
 */
 module.exports = StreembitContact;
 

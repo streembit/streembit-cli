@@ -23,9 +23,11 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const logger = require("streembit-util").logger;
-const IoTProtocolHandler = require("apps/iot/protocols");
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
+import { logger } from "streembit-util";
+
+import { IoTProtocolHandler } from '../index.js';
+import { ZigbeeCommands as zigbeecmd } from '../../protocols/zigbee/commands/index.js';
+
 
 class ZigbeeHandler extends IoTProtocolHandler {
 

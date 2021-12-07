@@ -23,8 +23,9 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const logger = require("streembit-util").logger;
-const IoTProtocolHandler = require("apps/iot/protocols");
+import { logger } from "streembit-util";
+
+import { IoTProtocolHandler } from '../index.js'
 
 class ZWaveHandler extends IoTProtocolHandler {
 
@@ -34,7 +35,7 @@ class ZWaveHandler extends IoTProtocolHandler {
 
     init() {
         try {
-            logger.info("zwave init");             
+            logger.info("zwave init");
         }
         catch (err) {
             logger.error("zwave handler init error: " + err.message);

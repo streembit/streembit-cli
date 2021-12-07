@@ -33,7 +33,7 @@ Copyright (C) 2017 The Streembit software development team
 
 const StreembitContact = require('../contacts/streembit-contact');
 const Message = require('../message');
-const assert = require('assert');
+import assert from 'assert';
 const http = require('http');
 const https = require('https');
 const RPC = require('../rpc');

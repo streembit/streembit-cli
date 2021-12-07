@@ -19,7 +19,7 @@ Copyright (C) 2017 The Streembit software development team
 
 */
 
-// const database = require("libs/database/database");
+
 import { database } from './database.js'
 
 'use strict';
@@ -45,10 +45,10 @@ class SeedlistDb extends database {
             (resolve, reject) => {
                 this.database.run(
                     "INSERT INTO seedlist(key, host, port) " +
-                        "VALUES (?,?,?) ON CONFLICT(key) " +
-                        "DO UPDATE SET lastConnection=current_timestamp",
+                    "VALUES (?,?,?) ON CONFLICT(key) " +
+                    "DO UPDATE SET lastConnection=current_timestamp",
                     [identity, host, port],
-                    function(err) {
+                    function (err) {
                         if (err) {
                             return reject(err.message);
                         }
@@ -74,7 +74,7 @@ class SeedlistDb extends database {
                 this.database.all(
                     `SELECT key as id, host, port FROM seedlist ORDER BY lastConnection DESC LIMIT ${limit}`,
                     [],
-                    function(err, rows) {
+                    function (err, rows) {
                         if (err) {
                             return reject(err.message);
                         }
@@ -95,7 +95,7 @@ class SeedlistDb extends database {
                 this.database.get(
                     "SELECT * FROM seedlist WHERE key = ?",
                     [key],
-                    function(err, row) {
+                    function (err, row) {
                         if (err) {
                             return reject(err.message);
                         }

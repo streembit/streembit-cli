@@ -26,7 +26,7 @@ Copyright (C) 2017 The Streembit software development team
 
 
 import { SwitchFeature } from "../switch.js";
-const logger = require("streembit-util").logger;
+import { logger } from "streembit-util";
 
 class ZwaveSwitchFeature extends SwitchFeature {
 

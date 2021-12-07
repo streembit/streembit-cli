@@ -30,7 +30,7 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 let _ = require('lodash');
-let assert = require('assert');
+import assert from 'assert';
 let constants = require('./constants');
 let Contact = require('./contact');
 

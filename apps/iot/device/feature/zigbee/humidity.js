@@ -27,7 +27,7 @@ Copyright (C) 2017 The Streembit software development team
 
 import { definitions as iotdefinitions } from '../../../definitions.js';
 import { HumidityFeature } from '../humidity.js';
-const logger = require("streembit-util").logger;
+import { logger } from "streembit-util";
 import { ZigbeeCommands as zigbeecmd } from '../../../protocols/zigbee/commands/index.js';
 
 const CLUSTERID = 0x0405;

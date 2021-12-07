@@ -30,7 +30,7 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-let assert = require('assert');
+import assert from 'assert';
 let events = require('events');
 let async = require('async');
 let _ = require('lodash');
