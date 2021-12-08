@@ -4,17 +4,16 @@
 
 'use strict';
 
-const { EventEmitter } = require('events');
-const { Transform } = require('stream');
-const merge = require('merge');
-const bytes = require('bytes');
-const ms = require('ms');
-
+import { EventEmitter } from "events";
+import { Transform } from "stream";
+import merge from "merge";
+import bytes from "bytes"; 
+import ms from "ms";
 
 /**
  * Represents a bandwidth meter which will trigger hibernation
  */
-class HibernatePlugin extends EventEmitter {
+export class HibernatePlugin extends EventEmitter {
 
   static get DEFAULTS() {
     return {
@@ -140,10 +139,8 @@ class HibernatePlugin extends EventEmitter {
  * @param {string[]} [options.reject] - List of methods to reject during
  * hibernation
  */
-module.exports = function(options) {
-  return function(node) {
+ export default (options) => {
+  return (node) => {
     return new module.exports.HibernatePlugin(node, options);
   };
 };
-
-module.exports.HibernatePlugin = HibernatePlugin;

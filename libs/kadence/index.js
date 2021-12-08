@@ -24,48 +24,32 @@ Based on
 
 'use strict';
 
-// /**
-//  * Returns a new {@link KademliaNode}
-//  */
-// module.exports = function(options) {
-//     return new module.exports.KademliaNode(options);
-// };
+import { KademliaNode } from "./node-kademlia.js";
+import KademliaRules from "./rules-kademlia.js"
+import { AbstractNode } from "./node-abstract.js";
+import ErrorRules from "./rules-errors.js";
+import Bucket from "./bucket.js";
+import Messenger from "./messenger.js";
+import RoutingTable from "./routing-table.js";
+import UDPTransport from "./transport-udp.js";
+import HTTPTransport from "./transport-http.js";
+import HTTPSTransport from "./transport-https.js";
+import { default as quasar } from './plugin-quasar.js';
+import { default as seedlist } from './plugin-seedlist.js';
+import { Node } from './node.js';
 
-/** {@link KademliaNode} */
-export { KademliaNode } from './node-kademlia.js';
-
-// /** {@link KademliaRules} */
-// module.exports.KademliaRules = require('./rules-kademlia');
-
-// /** {@link AbstractNode} */
-// module.exports.AbstractNode = require('./node-abstract');
-
-// /** {@link ErrorRules} */
-// module.exports.ErrorRules = require('./rules-errors');
-
-// /** {@link Bucket} */
-// module.exports.Bucket = require('./bucket');
-
-// /** {@link Messenger} */
-// module.exports.Messenger = require('./messenger');
-
-// /** {@link RoutingTable} */
-// module.exports.RoutingTable = require('./routing-table');
-
-// /** {@link UDPTransport} */
-// module.exports.UDPTransport = require('./transport-udp');
-
-// /** {@link HTTPTransport} */
-// module.exports.HTTPTransport = require('./transport-http');
-
-// /** {@link HTTPSTransport} */
-// module.exports.HTTPSTransport = require('./transport-https');
-
-/** {@link module:kadence/quasar} */
-export { default as quasar } from './plugin-quasar.js';
-
-/** {@link module:kadence/seedlist} */
-export { default as seedlist } from './plugin-seedlist.js'
-
-
-export { Node } from './node.js'
+export {
+    Node,
+    quasar,
+    seedlist,
+    KademliaNode,
+    KademliaRules,
+    AbstractNode,
+    ErrorRules,
+    Bucket,
+    Messenger,
+    RoutingTable,
+    UDPTransport,
+    HTTPTransport,
+    HTTPSTransport
+}

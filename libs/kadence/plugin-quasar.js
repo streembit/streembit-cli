@@ -35,21 +35,10 @@ import * as utils from './utils.js'
 import BloomFilter from 'atbf'
 import LruCache from 'lru-cache'
 
-// const assert = require('assert');
-// const merge = require('merge');
-// const async = require('async');
-// const { knuthShuffle } = require('knuth-shuffle');
-// const uuid = require('uuid');
-// const constants = require('./constants');
-// const utils = require('./utils');
-// const BloomFilter = require('atbf');
-// const LruCache = require('lru-cache');
-
-
 /**
  * Implements the handlers for Quasar message types
  */
-class QuasarRules {
+export class QuasarRules {
 
     /**
      * @constructor
@@ -200,7 +189,7 @@ class QuasarRules {
  * Implements the primary interface for the publish-subscribe system
  * and decorates the given node object with it's public methods
  */
-class QuasarPlugin {
+export class QuasarPlugin {
 
     static get PUBLISH_METHOD() {
         return 'PUBLISH';
@@ -429,22 +418,8 @@ class QuasarPlugin {
 /**
  * Registers a {@link module:kadence/quasar~QuasarPlugin} with a {@link KademliaNode}
  */
-// module.exports = function() {
-//     return function(node) {
-//         return new QuasarPlugin(node);
-//     };
-// };
-
-export default function () {
-    return function (node) {
+export default () => {
+    return (node) => {
         return new QuasarPlugin(node);
     };
 }
-
-export {
-    QuasarPlugin,
-    QuasarRules
-}
-
-// module.exports.QuasarPlugin = QuasarPlugin;
-// module.exports.QuasarRules = QuasarRules;

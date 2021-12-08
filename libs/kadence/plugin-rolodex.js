@@ -22,16 +22,14 @@ Based on kadence library https://github.com/kadence author Gordon Hall https://g
 
 'use strict';
 
-const utils = require('./utils');
-const tiny = require('tiny');
-const fs = require('fs');
-
+import tiny from "tiny";
+import fs from "fs";
 
 /**
  * Keeps track of seen contacts in a compact file so they can be used as
  * bootstrap nodes
  */
-class RolodexPlugin {
+export class RolodexPlugin {
 
     static get EXTERNAL_PREFIX() {
         return 'external';
@@ -98,7 +96,6 @@ class RolodexPlugin {
                 }
             }, () => {
                 resolve(candidates.sort((a, b) => b.timestamp - a.timestamp));
-                //.map(utils.getContactURL));
             });
         });
     }
@@ -198,10 +195,8 @@ class RolodexPlugin {
  * {@link KademliaNode}
  * @param {string} peerCacheFilePath - Path to file to use for storing peers
  */
-module.exports = function (peerCacheFilePath) {
-    return function (node) {
+export default (peerCacheFilePath) => {
+    return (node) => {
         return new RolodexPlugin(node, peerCacheFilePath);
     }
 };
-
-module.exports.RolodexPlugin = RolodexPlugin;
