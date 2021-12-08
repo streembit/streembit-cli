@@ -30,7 +30,8 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 import assert from 'assert';
-var utils = require('./utils');
+
+import * as utils from './utils.js'
 
 /**
  * The base class from which custom contacts inherit; used by the included
@@ -42,7 +43,7 @@ var utils = require('./utils');
  */
 
 
-class Contact {
+export class Contact {
 
     constructor(options) {
         if (!(this instanceof Contact)) {
@@ -88,4 +89,4 @@ class Contact {
 
 }
 
-module.exports = Contact;
+

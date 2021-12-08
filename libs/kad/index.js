@@ -28,20 +28,32 @@ Copyright (C) 2016 The Streembit software development team
  */
 
 'use strict';
+import async from 'async';
+import { Bucket } from './bucket.js';
+import { Contact } from './contact.js';
+import { Message } from './message.js';
+import { Node } from './node.js';
+import { Router } from './router.js';
+export {
+    // {@link Bucket} */
+    Bucket,
+    // {@link Contact} */
+    Contact,
+    // {@link Message} 
+    Message,
+    /*// {@link Node} */
+    Node,
+    // {@link Router} */
+    Router
 
-module.exports = {};
+}
 
-/** {@link Bucket} */
-module.exports.Bucket = require('./bucket');
-/** {@link Contact} */
-module.exports.Contact = require('./contact');
 
-/** {@link Message} */
-module.exports.Message = require('./message');
-/** {@link Node} */
-module.exports.Node = require('./node');
-/** {@link Router} */
-module.exports.Router = require('./router');
+
+
+
+
+
 /** {@link RPC} */
 module.exports.RPC = require('./rpc');
 /** {@link module:kad/contacts} */
@@ -65,35 +77,35 @@ module.exports.constants = require('./constants');
 
 
 
-module.exports.create = function (options, callback) {
-    var async = require('async');
-    var node = require('./node');
-    
+export const create = function (options, callback) {
+
+    let node = require('./node');
+
     if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
         throw new Error("alogger that implements the error, info, warn and debug methods must be passed to the node");
     }
-    
-    var transport = options.transport;
-    var seeds = options.seeds;
-    
+
+    let transport = options.transport;
+    let seeds = options.seeds;
+
     //  create the node
-    var peer = node(options);
+    let peer = node(options);
 
     if (!seeds || seeds.length == 0) {
         options.logger.warn("there are no seeds defined, the node is not connected to any seeds");
         // There are no seeds, this must be the very first partcicipant of the Streembit network
         return callback(null, peer);
     }
-    
+
     if (!Array.isArray(seeds)) {
         //  must be an array   
         throw new Error("the seeds must be an array");
     }
-    
+
     async.mapSeries(
         seeds,
         function (seed, done) {
-            var result = { seed: seed, error: null };
+            let result = { seed: seed, error: null };
             try {
                 peer.connect(seed, function (err) {
                     if (err) {
@@ -101,12 +113,12 @@ module.exports.create = function (options, callback) {
                         return done(null, result);
                     }
 
-                    var contact = peer._rpc._createContact(seed);
+                    let contact = peer._rpc._createContact(seed);
                     peer._router.findNode(contact.nodeID, function (err) {
                         result.error = err;
                         done(null, result);
                     });
-                }); 
+                });
             }
             catch (e) {
                 options.logger.error("peer.connect error: %j", e);
@@ -118,18 +130,18 @@ module.exports.create = function (options, callback) {
             if (err || results.length == 0) {
                 return callback("Failed to connect to any seed", peer);
             }
-            
-            var seed_success_count = 0;
+
+            let seed_success_count = 0;
             results.forEach(function (item, index, array) {
                 if (item.seed && !item.error) {
                     seed_success_count++;
                     options.logger.debug("seed connected: %j", item.seed);
                 }
             });
-            
+
             if (!seed_success_count) {
                 err = "Failed to connect to any seed";
-            }            
+            }
 
             callback(err, peer);
         }
@@ -138,15 +150,15 @@ module.exports.create = function (options, callback) {
 };
 
 
-module.exports.create_node = function (options) {
-    var node = require('./node');
+export const create_node = function (options) {
+    let node = require('./node');
 
     if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
         throw new Error("alogger that implements the error, info, warn and debug methods must be passed to the node");
     }
 
-    var transport = options.transport;
-    var seeds = options.seeds;
+    let transport = options.transport;
+    let seeds = options.seeds;
 
     if (!seeds || !Array.isArray(seeds) || seeds.length == 0) {
         //  must be an array   
@@ -159,6 +171,6 @@ module.exports.create_node = function (options) {
     }
 
     //  create the node
-    var peernode = node(options);
+    let peernode = node(options);
     return peernode;
 };

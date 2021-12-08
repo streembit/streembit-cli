@@ -33,15 +33,16 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 import assert from 'assert';
-var crypto = require('crypto');
-var constants = require('./constants');
+import crypto from 'crypto'
+import { constants } from './constants.js';
+
 
 /**
  * Validate a key
  * @param {String} key - Key to test
  * @returns {Boolean}
  */
-exports.isValidKey = (key) => {
+export const isValidKey = (key) => {
     return !!key && key.length === constants.B / 4;
 };
 
@@ -50,7 +51,7 @@ exports.isValidKey = (key) => {
  * @param {String|Buffer} data - Data to SHA1 hash
  * @returns {String}
  */
-exports.createID = (data) => {
+export const createID = (data) => {
     //if (exports.isValidKey(data)) {
     //    return data;
     //}
@@ -64,7 +65,7 @@ exports.createID = (data) => {
  * @param {String} hexString
  * @returns {Buffer}
  */
-exports.hexToBuffer = (hexString) => {
+export const hexToBuffer = (hexString) => {
     var buf = Buffer.from(hexString, 'hex');
     return buf;
 };
@@ -75,13 +76,13 @@ exports.hexToBuffer = (hexString) => {
  * @param {String} key2
  * @returns {Number}
  */
-exports.getDistance = (id1, id2) => {
-    assert(exports.isValidKey(id1), 'Invalid key supplied');
-    assert(exports.isValidKey(id2), 'Invalid key supplied');
+export const getDistance = (id1, id2) => {
+    assert(isValidKey(id1), 'Invalid key supplied');
+    assert(isValidKey(id2), 'Invalid key supplied');
 
     var distance = Buffer.alloc(constants.B / 8);
-    var id1Buf = exports.hexToBuffer(id1);
-    var id2Buf = exports.hexToBuffer(id2);
+    var id1Buf = hexToBuffer(id1);
+    var id2Buf = hexToBuffer(id2);
 
     for (var i = 0; i < constants.B / 8; ++i) {
         distance[i] = id1Buf[i] ^ id2Buf[i];
@@ -96,7 +97,7 @@ exports.getDistance = (id1, id2) => {
  * @param {Buffer} b2
  * @returns {Number}
  */
-exports.compareKeys = (b1, b2) => {
+export const compareKeys = (b1, b2) => {
     assert.equal(b1.length, b2.length);
 
     for (var i = 0; i < b1.length; ++i) {
@@ -118,11 +119,11 @@ exports.compareKeys = (b1, b2) => {
  * @param {String} id2
  * @returns {Number}
  */
-exports.getBucketIndex = (id1, id2) => {
-    assert(exports.isValidKey(id1), 'Invalid key supplied');
-    assert(exports.isValidKey(id2), 'Invalid key supplied');
+export const getBucketIndex = (id1, id2) => {
+    assert(isValidKey(id1), 'Invalid key supplied');
+    assert(isValidKey(id2), 'Invalid key supplied');
 
-    var distance = exports.getDistance(id1, id2);
+    var distance = getDistance(id1, id2);
     var bucketNum = constants.B;
 
     for (var i = 0; i < distance.length; i++) {
@@ -148,7 +149,7 @@ exports.getBucketIndex = (id1, id2) => {
  * @param {Number} exp
  * @returns {Buffer}
  */
-exports.getPowerOfTwoBuffer = (exp) => {
+export const getPowerOfTwoBuffer = (exp) => {
     assert.ok(exp >= 0 && exp < constants.B);
 
     var buffer = Buffer.alloc(constants.K);
@@ -166,8 +167,8 @@ exports.getPowerOfTwoBuffer = (exp) => {
  * (index = n has nodes within distance 2^n <= distance < 2^(n+1))
  * @param {Number} index
  */
-exports.getRandomInBucketRangeBuffer = (index) => {
-    var base = exports.getPowerOfTwoBuffer(index);
+export const getRandomInBucketRangeBuffer = (index) => {
+    var base = getPowerOfTwoBuffer(index);
     var byte = parseInt(index / 8); // randomize bytes below the power of two
 
     for (var i = constants.K - 1; i > (constants.K - byte - 1); i--) {

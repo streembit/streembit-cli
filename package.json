@@ -38,7 +38,7 @@
         "jsonrpc-lite": "2.0.1",
         "knuth-shuffle": "^1.0.8",
         "lru-cache": "^4.1.1",
-        "merge": "^1.2.0",
+        "merge": "^2.1.1",
         "metapipe": "^2.0.2",
         "mkdirp": "^0.5.1",
         "ms": "^2.1.1",

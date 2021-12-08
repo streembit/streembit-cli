@@ -31,7 +31,8 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 import assert from 'assert';
-var utils = require('./utils');
+import * as utils from './utils.js';
+
 
 /**
  * Storage model for DHT items, which is serialized to JSON before being passed
@@ -42,7 +43,7 @@ var utils = require('./utils');
  * @param {String} publisher - Original publisher's nodeID
  * @param {Number} timestamp - Optional UNIX timestamp of original publication
  */
-const Item = (key, value, publisher, timestamp) => {
+export const Item = (key, value, publisher, timestamp) => {
     if (!(this instanceof Item)) {
         return new Item(key, value, publisher, timestamp);
     }
@@ -61,4 +62,3 @@ const Item = (key, value, publisher, timestamp) => {
     this.timestamp = timestamp || Date.now();
 }
 
-module.exports = Item;

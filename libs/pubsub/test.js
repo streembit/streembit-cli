@@ -1,13 +1,16 @@
 'use strict';
 
-const constants = require('libs/constants');
-const { events, logger } = require('streembit-util');
-const PubSub = require('./');
-const config = require('libs/config');
+
+import * as constants from '../constants/index.js';
+import { events, logger } from 'streembit-util';
+import { config } from '../config/index.js';
+import PubSub from './index.js';
+
+
 
 const pubsub = new PubSub();
 
-module.exports = function() {
+module.exports = function () {
     // Register dynamic account subscriber
     try {
         setTimeout(() => {
@@ -16,7 +19,7 @@ module.exports = function() {
                 console.log(`(SEED ${config.transport.port}) dynamic ACCOUNT subscriber:`, ...arguments);
             });
         }, 5000);
-    } catch(err) {
+    } catch (err) {
         logger.error('Account subscriber error: %j', err);
     }
 
@@ -78,7 +81,7 @@ module.exports = function() {
         setTimeout(() => {
             const stressInt = setInterval(() => {
                 (stress < 2000)
-                    ? events.emit(constants.PUBLISH_EVENT, { topic: 'STRESS_TEST', payload: { seed: config.transport.port, counter: stress++ }})
+                    ? events.emit(constants.PUBLISH_EVENT, { topic: 'STRESS_TEST', payload: { seed: config.transport.port, counter: stress++ } })
                     : clearInterval(stressInt);
             }, 50)
         }, 85000);

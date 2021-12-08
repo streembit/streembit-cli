@@ -24,13 +24,12 @@ Copyright (C) 2017 The Streembit software development team
 import { logger } from "streembit-util";
 import async from "async";
 
-// import { logger } from "streembit-util";
-// const async = require("async");
-// const peermsg = require("./msghandlers/peer.js");
-// const storemsg = require("./msghandlers/store.js");
-// const txnmsg = require("./msghandlers/txn.js");
-// const bchmsg = require("./msghandlers/bch.js");
-// const fnodemsg = require("./msghandlers/fnode.js");
+
+import * as peermsg from './msghandlers/peer.js'
+import * as txnmsg from './msghandlers/txn.js'
+import * as bchmsg from './msghandlers/bch.js'
+import * as fnodemsg from './msghandlers/fnode.js'
+
 
 export const on_transport_error = function (err) {
     //TODO error handling

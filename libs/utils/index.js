@@ -94,14 +94,14 @@ export class Utils {
     });
   }
 
-  is_ipaddress(address) {
+  static is_ipaddress(address) {
     var ipPattern =
       /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/; // /^(\d{ 1, 3 })\.(\d { 1, 3 })\.(\d { 1, 3 })\.(\d { 1, 3 })$/;
     var valid = ipPattern.test(address);
     return valid;
   }
 
-  is_valid_domain(v) {
+  static is_valid_domain(v) {
     if (!v) return false;
     var re =
       /^(?!:\/\/)([a-zA-Z0-9-]+\.){0,5}[a-zA-Z0-9-][a-zA-Z0-9-]+\.[a-zA-Z]{2,64}?$/gi;

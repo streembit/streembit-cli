@@ -29,9 +29,11 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var constants = require('./constants');
-var hat = require('hat');
-var merge = require('merge');
+
+import { constants } from './constants';
+import hat from 'hat';
+import merge from 'merge';
+
 
 /**
  * Represents a [JSON-RPC 2.0](http://www.jsonrpc.org/specification) request or
@@ -52,7 +54,7 @@ var merge = require('merge');
  * @param {Error} spec.error - Error object to convert to message
  */
 
-class Message {
+export class Message {
     constructor(spec) {
         if (!(this instanceof Message)) {
             return new Message(spec);
@@ -134,4 +136,4 @@ class Message {
 }
 
 
-module.exports = Message;
+

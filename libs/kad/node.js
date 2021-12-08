@@ -29,11 +29,13 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-let merge = require('merge');
+
+import merge from 'merge';
 import assert from 'assert';
-let async = require('async');
-let events = require('events');
-let constants = require('./constants');
+import async from 'async';
+import events from 'events';
+import { constants } from './constants.js';
+
 let Router = require('./router');
 let Message = require('./message');
 let Item = require('./item');
@@ -55,7 +57,7 @@ let Logger = require('./logger');
  * @emits Node#error
  */
 
-class Node extends events.EventEmitter {
+export class Node extends events.EventEmitter {
     static DEFAULTS = {
         logger: new Logger(4)
     };
@@ -801,4 +803,3 @@ class Node extends events.EventEmitter {
 
 
 
-module.exports = Node;

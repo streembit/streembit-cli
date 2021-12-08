@@ -21,31 +21,35 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-var http = require("http");
-var stutils = require("libs/utils");
-var logger = require("streembit-util").logger;
+
+import http from 'http';
+import { logger } from 'streembit-util';
+import async from 'async';
+import { Utils as stutils } from '../utils/index.js';
+
+
 
 /*
     Discover the ipaddress of this node
     In order to communicate on the KAD network the ip or domain must be reachable by other nodes
 */
-module.exports.discovery = function (host, seeds, callback) {
-    var result_ipaddress = 0;
+export const discovery = function (host, seeds, callback) {
+    let result_ipaddress = 0;
 
-    var isdomain = false;
-    var isip = stutils.is_ipaddress(host);
+    let isdomain = false;
+    let isip = stutils.is_ipaddress(host);
     if (isip) {
         return callback(null, host);
     }
 
-    var isdomain = stutils.is_valid_domain(host);
+    let isdomain = stutils.is_valid_domain(host);
     if (isdomain) {
         return callback(null, host);
     }
-    
+
     function discover_address(seed, asyncfn) {
 
-        var options = {
+        let options = {
             host: seed.host,
             path: '/',
             //since we are listening on a custom port, we need to specify it by hand
@@ -54,16 +58,16 @@ module.exports.discovery = function (host, seeds, callback) {
             method: 'POST'
         };
 
-        var cbfn = function (response) {
-            var result = ''
+        let cbfn = function (response) {
+            let result = ''
             response.on('data', function (chunk) {
                 result += chunk;
             });
 
             response.on('end', function () {
-                var reply = JSON.parse(result.toString());
+                let reply = JSON.parse(result.toString());
                 if (reply && reply.address) {
-                    var ipv6prefix = "::ffff:";
+                    let ipv6prefix = "::ffff:";
                     if (reply.address.indexOf(ipv6prefix) > -1) {
                         reply.address = reply.address.replace(ipv6prefix, '');
                     }
@@ -83,19 +87,19 @@ module.exports.discovery = function (host, seeds, callback) {
             });
         }
 
-        var req = http.request(options, cbfn);
+        let req = http.request(options, cbfn);
 
         req.on('error', function (err) {
             logger.error("address discovery failed at " + seed.host + ":" + seed.port + ". " + (err.message ? err.message : err));
             asyncfn(null, false);
         });
 
-        var data = JSON.stringify({ type: 'DISCOVERY' });
+        let data = JSON.stringify({ type: 'DISCOVERY' });
         req.write(data);
-        req.end();        
+        req.end();
     }
 
-    var async = require("async");
+
 
     async.detectSeries(
         seeds,

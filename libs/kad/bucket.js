@@ -29,10 +29,12 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-let _ = require('lodash');
+
+import * as _ from 'lodash';
 import assert from 'assert';
-let constants = require('./constants');
-let Contact = require('./contact');
+import { constants } from './constants.js';
+import { Contact } from './contact.js';
+
 
 /**
 * A bucket is a "column" of the routing table. It is an array-like object that
@@ -40,7 +42,7 @@ let Contact = require('./contact');
 * @constructor
 */
 
-class Bucket {
+export class Bucket {
 
     constructor() {
         if (!(this instanceof Bucket)) {
@@ -152,5 +154,5 @@ class Bucket {
 }
 
 
-module.exports = Bucket;
+
 

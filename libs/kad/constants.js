@@ -33,9 +33,10 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var ms = require('ms');
 
-module.exports = {
+import ms from 'ms';
+
+export const constants = {
 
     /** @constant {Number} ALPHA - Degree of parallelism */
     ALPHA: 3,

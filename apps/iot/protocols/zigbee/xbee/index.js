@@ -22,9 +22,8 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const xbeeapi = require('./xbeeapi');
 
-
+import * as xbeeapi from './xbeeapi.js';
 import { logger, events } from "streembit-util";
 
 
@@ -59,7 +58,7 @@ let serialport = 0;
 let devices = {};
 let neighbortable = [];
 
-class XbeeHandler {
+export class XbeeHandler {
 
     constructor() {
         this.is_portopened = false;
@@ -1432,5 +1431,5 @@ class XbeeHandler {
     }
 }
 
-module.exports = XbeeHandler;
+
 
