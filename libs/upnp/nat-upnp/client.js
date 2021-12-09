@@ -31,11 +31,11 @@ export class Client {
     this.logger.debug("UPnP client create");
   }
 
-  create() {
+  static create() {
     return new Client(_logger);
   }
 
-  normalizeOptions(options) {
+  static normalizeOptions(options) {
     const toObject = (addr) => {
       if (typeof addr === "number") {
         return { port: addr };
@@ -54,7 +54,7 @@ export class Client {
     };
   }
 
-  static portMapping(options, callback) {
+  portMapping(options, callback) {
     const self = this;
 
     if (!callback) {
@@ -77,7 +77,7 @@ export class Client {
       self.upnp_gateway = address;
       self.upnp_local_address = local_address;
 
-      const ports = normalizeOptions(options);
+      const ports = self.normalizeOptions(options);
 
       gateway.run(
         "AddPortMapping",
@@ -108,7 +108,7 @@ export class Client {
     });
   }
 
-  static portUnmapping(options, callback) {
+  portUnmapping(options, callback) {
     if (!callback) {
       callback = () => {};
     }
@@ -135,7 +135,7 @@ export class Client {
     });
   }
 
-  static getMappings(options, callback) {
+  getMappings(options, callback) {
     if (typeof options === "function") {
       callback = options;
       options = null;
@@ -231,7 +231,7 @@ export class Client {
     });
   }
 
-  static externalIp(callback) {
+  externalIp(callback) {
     this.findGateway((err, gateway) => {
       if (err) {
         return callback(err);
@@ -258,7 +258,7 @@ export class Client {
     });
   }
 
-  static findGateway(callback) {
+  findGateway(callback) {
     const self = this;
 
     let timeout;
@@ -300,7 +300,7 @@ export class Client {
     });
   }
 
-  static close() {
+  close() {
     this.ssdp.close();
   }
 }

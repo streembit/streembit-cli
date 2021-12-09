@@ -35,11 +35,11 @@ export class Device {
     this.logger = _logger;
   }
 
-  create(url, _logger) {
+  static create(url, _logger) {
     return new Device(url, _logger);
   }
 
-  static _getXml(url, callback) {
+  _getXml(url, callback) {
     let once = false;
 
     const respond = (err, body) => {
@@ -73,7 +73,7 @@ export class Device {
     });
   }
 
-  static getService(types, callback) {
+  getService(types, callback) {
     const self = this;
 
     this._getXml(this.description, (err, info) => {
@@ -107,7 +107,7 @@ export class Device {
     });
   }
 
-  static parseDescription(info) {
+  parseDescription(info) {
     if (!info) {
       return this.logger.debug("upnp invalid info at device parseDescription");
     }
@@ -152,7 +152,7 @@ export class Device {
     };
   }
 
-  static run(action, args, callback) {
+  run(action, args, callback) {
     const self = this;
 
     this.logger.debug("UPnP action: " + action);

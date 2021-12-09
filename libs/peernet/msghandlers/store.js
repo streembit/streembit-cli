@@ -25,7 +25,7 @@ import { logger } from "streembit-util";
 
 import { validate } from './msg_validator.js';
 
-module.exports = (message, callback) => {
+export default (message, callback) => {
     try {
         logger.debug("handle STORE message");
         validate(message, callback);
@@ -33,4 +33,4 @@ module.exports = (message, callback) => {
     catch (err) {
         callback(err);
     }
-};
+}

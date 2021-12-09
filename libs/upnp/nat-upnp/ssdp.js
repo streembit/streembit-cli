@@ -25,7 +25,7 @@ import { EventEmitter } from "events";
 
 export class Ssdp extends EventEmitter {
   constructor(opts) {
-    super();
+    EventEmitter.call(this);
     this._opts = opts || {};
     this._sourcePort = this._opts.sourcePort || 0;
     this.multicast = "239.255.255.250";
@@ -34,13 +34,16 @@ export class Ssdp extends EventEmitter {
     this._boundCount = 0;
     this._closed = false;
     this._queue = [];
+
+    // Create sockets on all external interfaces
+    this.createSockets();
   }
 
-  create() {
+  static create() {
     return new Ssdp();
   }
 
-  parseMimeHeader(headerStr) {
+  static parseMimeHeader(headerStr) {
     const lines = headerStr.split(/\r\n/g);
 
     // Parse headers from lines to hashmap
@@ -52,7 +55,7 @@ export class Ssdp extends EventEmitter {
     }, {});
   }
 
-  static createSockets() {
+  createSockets() {
     const self = this;
     const interfaces = os.networkInterfaces();
 
@@ -69,7 +72,7 @@ export class Ssdp extends EventEmitter {
     }, []);
   }
 
-  static search(device, promise) {
+  search(device, promise) {
     if (!promise) {
       promise = new EventEmitter();
       promise._ended = false;
@@ -124,7 +127,7 @@ export class Ssdp extends EventEmitter {
     return promise;
   }
 
-  static createSocket(item) {
+  createSocket(item) {
     const self = this;
 
     const socket = dgram.createSocket(item.family === "IPv4" ? "udp4" : "udp6");
@@ -173,7 +176,7 @@ export class Ssdp extends EventEmitter {
 
   // TODO create separate logic for parsing unsolicited upnp broadcasts,
   // if and when that need arises
-  static parseResponse(response, addr, remote) {
+  parseResponse(response, addr, remote) {
     // Ignore incorrect packets
     if (!/^(HTTP|NOTIFY)/m.test(response)) {
       return;
@@ -188,7 +191,7 @@ export class Ssdp extends EventEmitter {
     this.emit("_device", headers, remote.address, addr);
   }
 
-  static close() {
+  close() {
     this.sockets.forEach((socket) => {
       socket.close();
     });
