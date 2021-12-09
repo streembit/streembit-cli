@@ -30,8 +30,10 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 import assert from 'assert';
-var merge = require('merge');
-var Message = require('../message');
+
+import merge from 'merge';
+import { Message } from '../message.js';
+
 
 /**
  * Factory for protocol extentions
@@ -39,7 +41,7 @@ var Message = require('../message');
  * @param {Object} protocolspec - dictionary of methods
  * @returns {Function}
  */
-const ProtocolFactory = (protocolspec) => {
+export const ProtocolFactory = (protocolspec) => {
   assert(typeof protocolspec === 'object', 'Invalid protocol specification');
 
   return function protocol(message, contact, next) {
@@ -71,4 +73,3 @@ const ProtocolFactory = (protocolspec) => {
   };
 };
 
-module.exports = ProtocolFactory;

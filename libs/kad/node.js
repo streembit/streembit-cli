@@ -35,11 +35,12 @@ import assert from 'assert';
 import async from 'async';
 import events from 'events';
 import { constants } from './constants.js';
+import { Router } from './router.js';
+import { Message } from './message.js';
 
-let Router = require('./router');
-let Message = require('./message');
-let Item = require('./item');
-let Logger = require('./logger');
+import { Item } from './item.js';
+import { Logger } from './logger.js';
+
 
 /**
  * Represents a Kademlia node

@@ -32,8 +32,9 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 import assert from 'assert';
-var Contact = require('../contact');
-var utils = require('../utils');
+import { Contact } from '../contact.js';
+import * as utils from '../utils.js';
+
 
 
 
@@ -47,7 +48,7 @@ var utils = require('../utils');
  * @param {Number} options.publickey - Contacts public key
  */
 
-class StreembitContact extends Contact {
+export class StreembitContact extends Contact {
 
     constructor(options) {
         super(options);
@@ -101,5 +102,5 @@ class StreembitContact extends Contact {
    publickey: '5454545454534545454545454545454545345454545454545454545453454545454545454545454534545454545454545454545'
 });
 */
-module.exports = StreembitContact;
+
 

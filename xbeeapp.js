@@ -3,8 +3,9 @@
 import util from 'util';
 
 import SerialPort from 'serialport';
-let xbeeapi = require('apps/iot/iot_protocols/zigbee/xbee/xbeeapi');
-//let devicelist = require('./devicelist');
+
+import * as xbeeapi from './apps/iot/protocols/zigbee/xbee/xbeeapi.js';
+
 import BufferReader from "buffer-reader";
 
 

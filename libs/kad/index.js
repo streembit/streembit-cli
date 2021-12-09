@@ -34,6 +34,12 @@ import { Contact } from './contact.js';
 import { Message } from './message.js';
 import { Node } from './node.js';
 import { Router } from './router.js';
+import { RPC } from './rpc.js';
+import * as contacts from './contacts/index.js';
+import * as trasports from './transports.js';
+import * as hooks from './hooks.js';
+import * as utils from './utils.js';
+import { constants } from './constants.js';
 export {
     // {@link Bucket} */
     Bucket,
@@ -44,7 +50,15 @@ export {
     /*// {@link Node} */
     Node,
     // {@link Router} */
-    Router
+    Router,
+    /*/ {@link RPC} */
+    RPC,
+    contacts,
+    trasports,
+    hooks,
+    utils,
+    constants
+
 
 }
 
@@ -54,20 +68,13 @@ export {
 
 
 
-/** {@link RPC} */
-module.exports.RPC = require('./rpc');
-/** {@link module:kad/contacts} */
-module.exports.contacts = require('./contacts');
-/** {@link module:kad/transports} */
-module.exports.transports = require('./transports');
-/** {@link module:kad/hooks} */
-module.exports.hooks = require('./hooks');
-/** {@link module:kad.storage} */
-//module.exports.storage = require('./storage');
-/** {@link module:kad/utils} */
-module.exports.utils = require('./utils');
-/** {@link module:kad/constants} */
-module.exports.constants = require('./constants');
+
+
+
+
+
+
+
 
 /*
  *  Creates the node

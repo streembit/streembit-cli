@@ -32,11 +32,13 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 import assert from 'assert';
-const clarinet = require('clarinet');
-const net = require('net');
-const StreembitContact = require('../contacts/streembit-contact');
-const RPC = require('../rpc');
-const Message = require('../message');
+
+import clarinet from 'clarinet';
+import net from 'net';
+import { StreembitContact } from '../contacts/streembit-contact.js';
+import { RPC } from '../rpc.js';
+import { Message } from '../message.js';
+
 
 /**
  * Transport adapter that sends and receives messages over a TCP socket
@@ -45,7 +47,7 @@ const Message = require('../message');
  * @param {StreembitContact} contact - Your node's {@link Contact} instance
  */
 
-class TCPTransport extends RPC {
+export class TCPTransport extends RPC {
 
     constructor(contact, options) {
         super(contact, options);
@@ -241,4 +243,4 @@ class TCPTransport extends RPC {
     };
 }
 
-module.exports = TCPTransport;
+

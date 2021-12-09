@@ -38,7 +38,7 @@ import assert from 'assert';
  * @param {Array} whitelist - list of nodeID's to allow
  * @returns {Function}
  */
-const WhitelistFactory = (whitelist) => {
+export const WhitelistFactory = (whitelist) => {
   assert(Array.isArray(whitelist), 'Invalid whitelist supplied');
 
   return function whitelister(message, contact, next) {
@@ -50,4 +50,4 @@ const WhitelistFactory = (whitelist) => {
   };
 };
 
-module.exports = WhitelistFactory;
+

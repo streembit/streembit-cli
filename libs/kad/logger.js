@@ -98,4 +98,3 @@ export class Logger {
 }
 
 
-module.exports = Logger;

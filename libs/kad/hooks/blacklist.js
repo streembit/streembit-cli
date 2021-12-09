@@ -38,7 +38,7 @@ import assert from 'assert';
  * @param {Array} blacklist - array of nodeID's to ban
  * @returns {Function}
  */
-const BlacklistFactory = (blacklist) => {
+export const BlacklistFactory = (blacklist) => {
   assert(Array.isArray(blacklist), 'Invalid blacklist supplied');
 
   return function blacklister(message, contact, next) {
@@ -50,4 +50,4 @@ const BlacklistFactory = (blacklist) => {
   };
 };
 
-module.exports = BlacklistFactory;
+

@@ -31,13 +31,14 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const StreembitContact = require('../contacts/streembit-contact');
-const Message = require('../message');
+import { StreembitContact } from '../contacts/streembit-contact.js';
+import { Message } from '../message.js';
 import assert from 'assert';
-const http = require('http');
-const https = require('https');
-const RPC = require('../rpc');
-const events = require("streembit-util").events;
+import http from 'http';
+import https from 'https';
+import { RPC } from '../rpc.js';
+import { events } from 'streembit-util';
+
 
 
 // create agents to enable http persistent connections:
@@ -54,7 +55,7 @@ var httpsagent = new https.Agent({ keepAlive: true, keepAliveMsecs: 25000 });
  * @param {Object} options.ssl - Options to pass to https.createServer()
  */
 
-class HTTPTransport extends RPC {
+export class HTTPTransport extends RPC {
 
 
     constructor(contact, options) {
@@ -260,4 +261,4 @@ class HTTPTransport extends RPC {
 
 }
 
-module.exports = HTTPTransport;
+

@@ -28,7 +28,7 @@ Copyright (C) 2016 The Streembit software development team
  */
 
 'use strict';
-
-module.exports = {
-    StreembitContact: require('./streembit-contact')
+import { StreembitContact } from './streembit-contact.js';
+export {
+    StreembitContact
 };
