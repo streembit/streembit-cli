@@ -25,12 +25,10 @@ import { logger } from 'streembit-util';
 import { KadHandler } from '../kad.js';
 import * as msgvalidator from './msg_validator.js';
 
-const kad = new KadHandler();
-
 const dhtget = (message, callback) => {
     logger.debug("get value for peer");
     const key = message.key;
-    const kadnet = new kad.KadHandler();
+    const kadnet = new KadHandler();
     kadnet.get(key, callback);
 }
 
@@ -44,7 +42,7 @@ const dhtput = (message, callback) => {
 
         const key = message.key;
         const value = message.value;
-        const kadnet = new kad.KadHandler();
+        const kadnet = new KadHandler();
         kadnet.put(key, value, (err) => callback(err));
     });    
 }

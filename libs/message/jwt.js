@@ -60,7 +60,7 @@ export class JWT {
         // verify signature.
         const signbase64 = this.base64urlUnescape(signatureSeg);
         const signingInput = [headerSeg, payloadSeg].join('.');
-        if (!verify(signingInput, key, signbase64)) {
+        if (!this.verify(signingInput, key, signbase64)) {
             throw new Error('JWT signature verification failed');
         }
 
