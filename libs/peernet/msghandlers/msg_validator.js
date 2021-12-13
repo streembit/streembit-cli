@@ -57,7 +57,7 @@ const verify_signature = (params, callback) => {
         try {
             // payload.iss is a BS58check encoded key
             const bs58buffer = bs58check.decode(payload.iss);
-            const publickey = bs58buffer.toString("hex");
+            publickey = bs58buffer.toString("hex");
             const buffer = Buffer.from(publickey, 'hex');
             const rmd160buffer = createHash('rmd160').update(buffer).digest();
             const bs58pk = bs58check.encode(rmd160buffer);
