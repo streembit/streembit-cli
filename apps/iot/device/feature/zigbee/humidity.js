@@ -32,7 +32,7 @@ import { ZigbeeCommands as zigbeecmd } from '../../../protocols/zigbee/commands/
 
 const CLUSTERID = 0x0405;
 
-class ZigbeeHumidityFeature extends HumidityFeature {
+export class ZigbeeHumidityFeature extends HumidityFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
         super(deviceid, feature, feature_type, transport);
@@ -228,4 +228,3 @@ class ZigbeeHumidityFeature extends HumidityFeature {
 
 }
 
-module.exports = ZigbeeHumidityFeature;

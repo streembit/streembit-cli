@@ -86,8 +86,6 @@ export {
 
 export const create = function (options, callback) {
 
-    let node = require('./node');
-
     if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
         throw new Error("alogger that implements the error, info, warn and debug methods must be passed to the node");
     }
@@ -96,7 +94,7 @@ export const create = function (options, callback) {
     let seeds = options.seeds;
 
     //  create the node
-    let peer = node(options);
+    let peer = new Node(options);
 
     if (!seeds || seeds.length == 0) {
         options.logger.warn("there are no seeds defined, the node is not connected to any seeds");
@@ -158,7 +156,7 @@ export const create = function (options, callback) {
 
 
 export const create_node = function (options) {
-    let node = require('./node');
+
 
     if (!options.logger || !options.logger.error || !options.logger.info || !options.logger.warn || !options.logger.debug) {
         throw new Error("alogger that implements the error, info, warn and debug methods must be passed to the node");
@@ -178,6 +176,6 @@ export const create_node = function (options) {
     }
 
     //  create the node
-    let peernode = node(options);
+    let peernode = new Node(options);
     return peernode;
 };

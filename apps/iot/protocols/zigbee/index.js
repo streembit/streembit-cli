@@ -29,7 +29,7 @@ import { IoTProtocolHandler } from '../index.js';
 import { ZigbeeCommands as zigbeecmd } from '../../protocols/zigbee/commands/index.js';
 
 
-class ZigbeeHandler extends IoTProtocolHandler {
+export class ZigbeeHandler extends IoTProtocolHandler {
 
     constructor(protocol, mcu) {
         super(protocol, mcu);
@@ -56,5 +56,5 @@ class ZigbeeHandler extends IoTProtocolHandler {
     }
 }
 
-module.exports = ZigbeeHandler;
+
 

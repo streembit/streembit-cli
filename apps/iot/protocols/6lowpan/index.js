@@ -26,7 +26,7 @@ import { logger } from "streembit-util";
 
 import { IoTProtocolHandler } from '../index.js';
 
-class SixLowPanHandler extends IoTProtocolHandler {
+export class SixLowPanHandler extends IoTProtocolHandler {
 
     constructor() {
         super();
@@ -43,4 +43,4 @@ class SixLowPanHandler extends IoTProtocolHandler {
     }
 }
 
-module.exports = SixLowPanHandler;
+

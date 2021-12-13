@@ -25,7 +25,7 @@ Copyright (C) 2017 The Streembit software development team
 
 
 
-import { definitions as iotdefinitions } from '../../definitionsjs';
+import { definitions as iotdefinitions } from '../../definitions.js';
 
 import { IoTFeature } from "./feature.js";
 

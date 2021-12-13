@@ -27,7 +27,7 @@ import { logger } from "streembit-util";
 
 import { IoTProtocolHandler } from '../index.js'
 
-class ZWaveHandler extends IoTProtocolHandler {
+export class ZWaveHandler extends IoTProtocolHandler {
 
     constructor() {
         super();
@@ -46,4 +46,4 @@ class ZWaveHandler extends IoTProtocolHandler {
     }
 }
 
-module.exports = ZWaveHandler;
+

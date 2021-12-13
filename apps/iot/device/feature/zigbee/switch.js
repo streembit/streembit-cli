@@ -35,7 +35,7 @@ import { ZigbeeCommands as zigbeecmd } from '../../../protocols/zigbee/commands/
 
 let CLUSTERID = 0x0006;
 
-class ZigbeeSwitchFeature extends SwitchFeature {
+export class ZigbeeSwitchFeature extends SwitchFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
         super(deviceid, feature, feature_type, transport);
@@ -217,4 +217,3 @@ class ZigbeeSwitchFeature extends SwitchFeature {
     }
 }
 
-module.exports = ZigbeeSwitchFeature;

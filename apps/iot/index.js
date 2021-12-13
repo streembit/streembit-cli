@@ -31,6 +31,7 @@ import Devices from "../../libs/devices/index.js";
 import { ZigbeeGateway } from './device/zigbee/gateway.js';
 import { ZigbeeDevice } from './device/zigbee/device.js';
 import { TrackingEvent } from './device/tracking_event.js';
+import { ProtocolsFactory } from './protocols/factory.js';
 
 
 export class IoTHandler {
@@ -651,8 +652,7 @@ export class IoTHandler {
             let protocols = conf.protocols;
             for (let i = 0; i < protocols.length; i++) {
                 logger.info("create protocol " + protocols[i].name + " handler");
-                let ProtocolHandler = require("apps/iot/protocols/" + protocols[i].name);
-                let handler = new ProtocolHandler(protocols[i].name, protocols[i].chipset);
+                let handler = ProtocolsFactory.init(protocols[i].name, protocols[i].chipset);
                 this.protocol_handlers.set(protocols[i].name, handler);
             };
 

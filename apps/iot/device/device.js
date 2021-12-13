@@ -25,7 +25,7 @@ Copyright (C) 2017 The Streembit software development team
 
 import { logger, events } from "streembit-util";
 import { definitions as iotdefinitions } from '../definitions.js';
-
+import { FeatureFactory } from './feature/factory.js';
 import { Users } from '../../../libs/users/index.js';
 
 import { constants } from '../../../libs/constants/index.js';
@@ -150,9 +150,8 @@ export class Device {
                         let feature_type = this.get_feature_type(feature);
                         let feature_name = this.get_feature_name(feature_type);
                         if ((feature_type && feature_name) && !this.features.has(feature_type)) {
-                            let feature_lib = "apps/iot/device/feature/" + this.protocol + "/" + feature_name;
-                            let feature_obj = require(feature_lib);
-                            let feature_handler = new feature_obj(this.id, feature, feature_type, this.transport);
+                            let feature_handler = FeatureFactory.init(this.protocol, feature_name, this.id, feature, feature_type, this.transport);
+
                             if (feature_handler) {
                                 this.features.set(feature_type, feature_handler);
                                 logger.debug("feature " + feature_name + " added to device " + this.id);
