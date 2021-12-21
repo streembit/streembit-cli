@@ -102,13 +102,13 @@ export class Account {
 
 
     getCryptPassword(password) {
-        var salt = createHash('sha256').update(password).digest('hex');
-        var pwdhex = createHash('sha256').update(salt).digest('hex');
+        let salt = createHash('sha256').update(password).digest('hex');
+        let pwdhex = createHash('sha256').update(salt).digest('hex');
         return pwdhex;
     }
 
     addToDB(password, cipher, callback) {
-        var database = new AccountsDb();
+        let database = new AccountsDb();
         database.add(
             this.accountname,
             this.accountpk,
@@ -128,15 +128,15 @@ export class Account {
 
     genCipher(smk) {
         // get an entropy for the ECC key
-        var rndstr = secrand.randomBuffer(32).toString("hex");
-        var entropy = createHash("sha256").update(rndstr).digest("hex");
+        let rndstr = secrand.randomBuffer(32).toString("hex");
+        let entropy = createHash("sha256").update(rndstr).digest("hex");
 
         // create ECC key
-        var key = new EccKey();
+        let key = new EccKey();
         key.generateKey(entropy);
 
         //  encrypt the account data
-        var user_context = {
+        let user_context = {
             "privatekey": key.privateKeyHex,
             "timestamp": Date.now()
         };
@@ -202,7 +202,7 @@ export class Account {
                 }
             }
 
-            var accountobj;
+            let accountobj;
             try {
                 accountobj = JSON.parse(plain_text);
                 if (!accountobj || !accountobj.privatekey || !accountobj.timestamp) {
@@ -213,9 +213,9 @@ export class Account {
                 return callback("Account initialize error. Select a saved account and enter the valid password. The encrypted account information must exists on the computer.");
             }
 
-            var hexPrivatekey = accountobj.privatekey;
+            let hexPrivatekey = accountobj.privatekey;
             // load ECC key from the hex private key
-            var key = new EccKey();
+            let key = new EccKey();
             key.keyFromPrivate(hexPrivatekey, 'hex');
 
             if (key.pkrmd160hash != data.accountpk) {
@@ -224,8 +224,8 @@ export class Account {
 
             this.ppkikey = key;
 
-            var skrnd = secrand.randomBuffer(32).toString("hex");
-            var skhash = createHash("sha256").update(skrnd).digest("hex");
+            let skrnd = secrand.randomBuffer(32).toString("hex");
+            let skhash = createHash("sha256").update(skrnd).digest("hex");
             this.connsymmkey = skhash;
 
             logger.info("loaded pkhash: " + this.public_key_hash);
@@ -247,12 +247,12 @@ export class Account {
                 throw new Error("invalid user data");
             }
 
-            var account = user.account;
+            let account = user.account;
 
-            var pbkdf2 = this.getCryptPassword(password);
+            let pbkdf2 = this.getCryptPassword(password);
 
             // decrypt the cipher
-            var plain_text;
+            let plain_text;
             try {
                 plain_text = peermsg.aes256decrypt(pbkdf2, data.cipher);
             }
@@ -265,7 +265,7 @@ export class Account {
                 }
             }
 
-            var accountobj;
+            let accountobj;
             try {
                 accountobj = JSON.parse(plain_text);
                 if (!accountobj || !accountobj.privatekey || !accountobj.timestamp) {
@@ -276,10 +276,10 @@ export class Account {
                 return callback("Account initialize error. Select a saved account and enter the valid password.");
             }
 
-            var hexPrivatekey = accountobj.privatekey;
+            let hexPrivatekey = accountobj.privatekey;
 
             // create ECC key
-            var key = new EccKey();
+            let key = new EccKey();
             key.keyFromPrivate(hexPrivatekey, 'hex');
             if (key.pkrmd160hash != accountobj.accountpk) {
                 return callback("Error in restoring the account, incorrect password or invalid backup data");
@@ -290,13 +290,13 @@ export class Account {
             }
 
             //  encrypt this
-            var user_context = {
+            let user_context = {
                 "privatekey": key.privateKeyHex,
                 "connsymmkey": accountobj.connsymmkey,
                 "timestamp": Date.now()
             };
 
-            var cipher_context = peermsg.aes256encrypt(pbkdf2, JSON.stringify(user_context));
+            let cipher_context = peermsg.aes256encrypt(pbkdf2, JSON.stringify(user_context));
 
             this.ppkikey = key;
             this.connsymmkey = accountobj.connsymmkey;
@@ -319,14 +319,14 @@ export class Account {
             }
 
 
-            var symcrypt_key = this.getCryptPassword(password);
-            var user_context = {
+            let symcrypt_key = this.getCryptPassword(password);
+            let user_context = {
                 "privatekey": this.ppkikey.privateKeyHex,
                 "connsymmkey": this.connsymmkey,
                 "timestamp": Date.now()
             };
 
-            var cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
+            let cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
             this.addToDB(this.accountpk, cipher_context, function () {
                 callback();
             });
@@ -383,7 +383,7 @@ export class Account {
     load(password, callback) {
         // get the account details from the database
         try {
-            var db = new AccountsDb();
+            let db = new AccountsDb();
             db.data(
                 (err, data) => {
                     if (err) {
