@@ -22,7 +22,7 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-import { config } from "../libs/config";
+import { config } from "../../libs/config";
 import { logger } from "streembit-util";
 const Blockchain = require('./bc');
 

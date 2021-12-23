@@ -1,5 +1,6 @@
 
-import { typeforce } from 'typeforce';
+import typeforce from 'typeforce';
+
 
 let UINT31_MAX = Math.pow(2, 31) - 1
 function UInt31(value) {

@@ -1,12 +1,12 @@
-var Buffer = require('safe-buffer').Buffer
-var bech32 = require('bech32')
-var bs58check = require('bs58check')
-var networks = require('./networks')
-var typeforce = require('typeforce')
-var types = require('./types')
+import { Buffer } from 'safe-buffer'
+import { decode, fromWords, toWords, encode } from 'bech32'
+import { decode as _decode, encode as _encode } from 'bs58check'
+import { osmio } from './networks.js'
+import typeforce from 'typeforce'
+import { tuple, Hash160bit } from './types.js'
 
-function fromBase58Check(address) {
-    var payload = bs58check.decode(address)
+export function fromBase58Check(address) {
+    var payload = _decode(address)
 
     // TODO: 4.0.0, move to "toOutputScript"
     if (payload.length < 21) throw new TypeError(address + ' is too short')
@@ -21,9 +21,9 @@ function fromBase58Check(address) {
     }
 }
 
-function fromBech32(address) {
-    var result = bech32.decode(address)
-    var data = bech32.fromWords(result.words.slice(1))
+export function fromBech32(address) {
+    var result = decode(address)
+    var data = fromWords(result.words.slice(1))
 
     return {
         version: result.words[0],
@@ -32,37 +32,29 @@ function fromBech32(address) {
     }
 }
 
-function toBase58Check(hash, version) {
-    typeforce(types.tuple(types.Hash160bit, types.UInt8), arguments)
+export function toBase58Check(hash, version) {
+    typeforce(tuple(Hash160bit, UInt8), arguments)
 
     var payload = Buffer.allocUnsafe(21)
     payload.writeUInt8(version, 0)
     hash.copy(payload, 1)
 
-    return bs58check.encode(payload)
+    return _encode(payload)
 }
 
-function toBech32(data, version, prefix) {
-    var words = bech32.toWords(data)
+export function toBech32(data, version, prefix) {
+    var words = toWords(data)
     words.unshift(version)
 
-    return bech32.encode(prefix, words)
+    return encode(prefix, words)
 }
 
-function fromOutputScript(outputScript, network) {
-
-}
-
-function toOutputScript(address, network) {
-    network = network || networks.osmio
+export function fromOutputScript(outputScript, network) {
 
 }
 
-module.exports = {
-    fromBase58Check: fromBase58Check,
-    fromBech32: fromBech32,
-    fromOutputScript: fromOutputScript,
-    toBase58Check: toBase58Check,
-    toBech32: toBech32,
-    toOutputScript: toOutputScript
+export function toOutputScript(address, network) {
+    network = network || osmio
+
 }
+
