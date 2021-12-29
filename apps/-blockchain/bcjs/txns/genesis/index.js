@@ -1,7 +1,7 @@
-﻿const Transaction = require('../../../bcjs').Transaction;
+﻿import { Transaction } from '../../../bcjs';
 
 function template(bckey) {
-    var txparams = {
+    let txparams = {
         type: Transaction.TYPES.DATA,
         inputs: [
             {
@@ -18,10 +18,10 @@ function template(bckey) {
         ]
     };
 
-    var tx = new Transaction();
+    let tx = new Transaction();
     tx.create(txparams);
 
     return tx;
 }
 
-module.exports = template;
+export default template;

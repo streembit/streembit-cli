@@ -2,18 +2,16 @@
 
 'use strict';
 
-const errcodes = require('streembit-errcodes');
-const config = require('libs/config');
-const constants = require('../bcjs/constants');
-const bccrypto = require('../bcjs/crypto');
-const matchscore = require('../utils/matchscore');
-const Block = require('../bcjs').Block;
-const Transaction = require('../bcjs').Transaction;
-const bcdb = require('../bcdatabase');
-const fs = require("fs")
-const path = require('path');
-const readline = require('readline');
-const async = require('async');
+import { BC_VALIDATETXN_PARAMS, BC_VALIDATETXN_HASHPARAM, BC_INVALID_BLOCK, BC_VALIDATEBLOCK_NOTXNS, SUCCESS } from 'streembit-errcodes';
+import { rootdir } from 'libs/config';
+
+import { Block } from '../bcjs';
+import { Transaction } from '../bcjs';
+import * as bcdb from '../bcdatabase/index';
+import { existsSync, unlinkSync, writeFileSync, readFileSync } from "fs";
+import { join } from 'path';
+
+import { eachSeries, waterfall, each } from 'async';
 
 class BcNode {
     constructor() {
@@ -21,18 +19,18 @@ class BcNode {
 
     static ValidateTransaction(txhex, txhash, txid) {
         if (!txhex || !txhash || !txid) {
-            return errcodes.BC_VALIDATETXN_PARAMS;
+            return BC_VALIDATETXN_PARAMS;
         }
         var tx = Transaction.fromHex(txhex);
         if (tx.getHashHex() != txhash) {
-            return errcodes.BC_VALIDATETXN_HASHPARAM;
+            return BC_VALIDATETXN_HASHPARAM;
         }
         return tx.validate();
     }
 
     static ValidateBlock(data, blocklist) {
 
-        const getPreviousBlock = function(prevhash) {
+        const getPreviousBlock = function (prevhash) {
             var prevblock;
             for (let i = 0; i < blocklist.length; i++) {
                 if (prevhash == blocklist[i].blockid) {
@@ -44,10 +42,10 @@ class BcNode {
 
         var block = data.block;
         if (!block) {
-            return errcodes.BC_INVALID_BLOCK;
+            return BC_INVALID_BLOCK;
         }
         if (!block.transactions || !block.transactions.length) {
-            return errcodes.BC_VALIDATEBLOCK_NOTXNS;
+            return BC_VALIDATEBLOCK_NOTXNS;
         }
 
         // get the previous block
@@ -62,10 +60,10 @@ class BcNode {
         try {
             var result = {};
 
-            const getblockidx = function( done) {
+            const getblockidx = function (done) {
                 result.blockidx = [];
 
-                async.eachSeries(blocknos, (blockno, cb) => {
+                eachSeries(blocknos, (blockno, cb) => {
                     bcdb.getBlockIdx(blockno, (err, data) => {
                         if (err) {
                             return cb(err);
@@ -74,15 +72,15 @@ class BcNode {
                         cb();
                     });
                 },
-                (err) => {
-                    done(err);
-                });
+                    (err) => {
+                        done(err);
+                    });
             };
 
-            const txnsbyblockno = function(done) {
+            const txnsbyblockno = function (done) {
                 result.txns = [];
 
-                async.eachSeries(blocknos, (blockno, cb) => {
+                eachSeries(blocknos, (blockno, cb) => {
                     bcdb.getTxnsByBlockno(blockno, (err, data) => {
                         if (err) {
                             return cb(err);
@@ -91,12 +89,12 @@ class BcNode {
                         cb();
                     });
                 },
-                (err) => {
-                    done(err);
-                });
+                    (err) => {
+                        done(err);
+                    });
             };
 
-            const getutxos = function(done) {
+            const getutxos = function (done) {
                 result.utxos = [];
                 var txns = [];
                 result.txns.forEach(
@@ -105,7 +103,7 @@ class BcNode {
                     }
                 );
 
-                async.eachSeries(txns, (txn, cb) => {
+                eachSeries(txns, (txn, cb) => {
                     let txnid = txn.txnid;
                     bcdb.getUtxosByTxnId(txnid, (err, data) => {
                         if (err) {
@@ -124,12 +122,12 @@ class BcNode {
                         cb();
                     });
                 },
-                (err) => {
-                    done(err);
-                });
+                    (err) => {
+                        done(err);
+                    });
             };
 
-            async.waterfall(
+            waterfall(
                 [
                     getblockidx,
                     txnsbyblockno,
@@ -146,42 +144,41 @@ class BcNode {
     }
 
     static BuildDB(blocknos, callback) {
-        
-        if (!config.rootdir) {
+
+        if (!rootdir) {
             throw new Error("global rootdir is missing");
         }
 
-        var filedir = path.join(config.rootdir, "bcfiles"); 
+        var filedir = join(rootdir, "bcfiles");
 
         var blocklist = [];
 
-        const readBlocks = function(done) {
-           
-            async.eachSeries(blocknos, (blockno, cb) =>
-                {
-                    var data = BcNode.GetBlockFileData(blockno);
-                    console.log("blockno: " + blockno + " " + data.blockid);
-                    data.block = Block.fromHex(data.blockhex);
-                    data.transactions.forEach(
-                        (transaction) => {
-                            transaction.txn = Transaction.fromHex(transaction.txnhex);
-                        }
-                    );
-                    blocklist.push(data);
-                    return cb();                    
-                },
+        const readBlocks = function (done) {
+
+            eachSeries(blocknos, (blockno, cb) => {
+                var data = BcNode.GetBlockFileData(blockno);
+                console.log("blockno: " + blockno + " " + data.blockid);
+                data.block = Block.fromHex(data.blockhex);
+                data.transactions.forEach(
+                    (transaction) => {
+                        transaction.txn = Transaction.fromHex(transaction.txnhex);
+                    }
+                );
+                blocklist.push(data);
+                return cb();
+            },
                 (err) => {
                     done(err);
                 }
             );
         };
 
-        const validateBlocks = function(done) {
-            async.eachSeries(
+        const validateBlocks = function (done) {
+            eachSeries(
                 blocklist,
                 (block, cb) => {
                     let result = BcNode.ValidateBlock(block, blocklist);
-                    if (result != errcodes.SUCCESS) {
+                    if (result != SUCCESS) {
                         return cb("block validate errno: " + result);
                     }
                     cb();
@@ -192,8 +189,8 @@ class BcNode {
             );
         };
 
-        const addBlocks = function(done) {
-            async.eachSeries(
+        const addBlocks = function (done) {
+            eachSeries(
                 blocklist,
                 (block, cb) => {
                     let blockno = block.blockno;
@@ -215,7 +212,7 @@ class BcNode {
             );
         };
 
-        const validateUtxos = function(done) {
+        const validateUtxos = function (done) {
 
             let transobjs = [];
 
@@ -236,37 +233,37 @@ class BcNode {
                 return done();
             }
 
-            const validate = function(transaction, cbfunc) {
+            const validate = function (transaction, cbfunc) {
                 bcdb.validateUtxos(transaction, cbfunc);
             }
 
             // validate the UTXOs in the database
-            async.each(
+            each(
                 transobjs,
                 validate,
-                (err, result) => {    
+                (err, result) => {
                     done(err);
                 }
             );
         };
 
-        const validateForging = function(done) {
+        const validateForging = function (done) {
             // TODO validate the forging rights, etc.
             done();
         };
 
-        async.waterfall(
-            [                
+        waterfall(
+            [
                 readBlocks,
                 validateBlocks,
                 validateForging,
-                validateUtxos,                
+                validateUtxos,
                 addBlocks
             ],
             (err, result) => {
                 callback(err);
             }
-        );        
+        );
     }
 
     static getTxnFromHex(txhex) {
@@ -279,7 +276,7 @@ class BcNode {
     }
 
     static CreateBlockFile(blockno, blockid, blockhex, txns) {
-        if (!config.rootdir) {
+        if (!rootdir) {
             throw new Error("rootdir in config is missing");
         }
 
@@ -304,18 +301,18 @@ class BcNode {
             }
         );
 
-        var ftext = JSON.stringify(data);       
+        var ftext = JSON.stringify(data);
 
-        var filedir = path.join(config.rootdir, "bcfiles");
+        var filedir = join(rootdir, "bcfiles");
         var numstr = (new String(blockno)).toString();
         var filename = "block" + numstr.padStart(8, "0") + ".dat";
-        var filepath = path.join(filedir, filename);
+        var filepath = join(filedir, filename);
 
-        if (fs.existsSync(filepath)) {
-            fs.unlinkSync(filepath);
+        if (existsSync(filepath)) {
+            unlinkSync(filepath);
         }
 
-        fs.writeFileSync(filepath, ftext, "ascii");
+        writeFileSync(filepath, ftext, "ascii");
 
         //
     }
@@ -323,15 +320,15 @@ class BcNode {
     // gets the static genesis blok from the output file
     // the caller must pass the filepath param
     static GetBlockFileData(blockno, callback) {
-        if (!config.rootdir) {
+        if (!rootdir) {
             throw new Error("global rootdir is missing");
         }
-        var filedir = path.join(config.rootdir, "bcfiles");
+        var filedir = join(rootdir, "bcfiles");
         var str = blockno + "";
         var filename = "block" + str.padStart(8, "0") + ".dat";
-        var filepath = path.join(filedir, filename);
+        var filepath = join(filedir, filename);
 
-        var ftext = fs.readFileSync(filepath);
+        var ftext = readFileSync(filepath);
         var data = JSON.parse(ftext);
 
         /*
@@ -408,11 +405,11 @@ class BcNode {
 
     static FindItem(item, callback) {
         bcdb.findItem(item, callback);
-    } 
+    }
 
     static GetBlockno(blockno, callback) {
         bcdb.getBlockno(blockno, callback);
-    } 
+    }
 }
 
-module.exports = BcNode;
+export default BcNode;

@@ -1,8 +1,8 @@
-﻿const Transaction = require('../../../bcjs').Transaction;
+﻿import { Transaction } from '../../../bcjs';
 
 function template(bckey, address, amount, forgeinfo) {
     forgeinfo.amount = amount;
-    var txparams = {
+    let txparams = {
         type: Transaction.TYPES.FORG,
         inputs: [
             {
@@ -16,15 +16,15 @@ function template(bckey, address, amount, forgeinfo) {
             {
                 type: Transaction.TYPES.P2PKH,
                 value: amount,
-                data: address               
+                data: address
             }
         ]
     };
 
-    var tx = new Transaction();
+    let tx = new Transaction();
     tx.create(txparams);
 
     return tx;
 }
 
-module.exports = template;
+export default template;

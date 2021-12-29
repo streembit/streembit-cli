@@ -9,7 +9,7 @@ import { Buffer } from 'safe-buffer';
 import { bs58check } from 'bs58check';
 import { createHash } from 'create-hash';
 
-let NETWORKS = require('./networks')
+import { osmio } from './networks.js';
 
 class BcKey {
     constructor(options) {
@@ -24,7 +24,7 @@ class BcKey {
         options = options || {};
 
         this.compressed = options.compressed === undefined ? true : options.compressed;
-        this.network = options.network || NETWORKS.osmio;
+        this.network = options.network || osmio;
 
         if (!options.curve) {
             options.curve = 'secp256k1';
@@ -122,7 +122,7 @@ class BcKey {
             if (!network)
                 throw new Error('Unknown network version');
         } else {
-            network = network || NETWORKS.osmio;
+            network = network || osmio;
             if (version !== network.wif)
                 throw new Error('Invalid network version');
         }

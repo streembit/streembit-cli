@@ -1,9 +1,8 @@
 ﻿'use strict';
 
-const errcodes = require('streembit-errcodes');
-const constants = require('../bcjs/constants');
-const bccrypto = require('../bcjs/crypto');
-const matchscore = require('../utils/matchscore');
+
+import { sha512 } from '../bcjs/crypto';
+import matchscore from '../utils/matchscore';
 
 class NodeInfo {
     constructor() {
@@ -14,7 +13,7 @@ class NodeInfo {
     }
 
     forgeNodeInfo() {
-        var obj = {
+        let obj = {
             nodeid: this.bckey.publicKeyID,
             publickey: this.bckey.publicKeyHex,
             starttime: this.starttime,
@@ -30,9 +29,9 @@ class NodeInfo {
             throw new Error("invalid getScore prevblock param");
         }
         // create a SHA512 hash from the cmpval (previous block hash)
-        var blockhash = bccrypto.sha512(this.prevblock);
+        let blockhash = sha512(this.prevblock);
         // create a SHA512 hash from the Node ID
-        var idhash = bccrypto.sha512(this.bckey.publicKeyHex);
+        let idhash = sha512(this.bckey.publicKeyHex);
         return matchscore(blockhash.toString("hex"), idhash.toString("hex"));
     }
 
@@ -41,4 +40,4 @@ class NodeInfo {
     }
 }
 
-module.exports = NodeInfo;
+export default NodeInfo;

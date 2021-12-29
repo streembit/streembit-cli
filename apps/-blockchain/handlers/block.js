@@ -21,35 +21,34 @@ Copyright (C) 2018 The Streembit software development team
 
 'use strict';
 
-const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
-const Database = require("./bcdatabase");
-const util = require('util');
-const bcdb = require('./bcdatabase');
-const BcKey = require('./bcjs').BcKey;
-const BcNode = require('./bcnode');
-const NodeInfo = require('./bcnode/nodeinfo');
-const ForgeTxn = require('./bcjs/txns/forge');
-const Block = require('./bcjs').Block;
-const Account = require("libs/account");
-const GenesisTxnHandler = require('./bcjs/txns/genesis');
-const ForgeTxnHandler = require('./bcjs/txns/forge');
+import { logger, events } from "streembit-util";
 
-var bckey = 0;
+
+import { getLastBlockno } from './bcdatabase';
+import { BcKey } from '../bcjs/index.js';
+import { GetBlockFileData, CreateBlockFile, getTxnFromHex, getBlockFromHex } from './bcnode';
+import NodeInfo from './bcnode/nodeinfo';
+import ForgeTxn from './bcjs/txns/forge';
+import { Block } from './bcjs';
+import Account from "libs/account";
+import GenesisTxnHandler from './bcjs/txns/genesis';
+import ForgeTxnHandler from './bcjs/txns/forge';
+
+let bckey = 0;
 
 // collect the transactions in this array
-var list_of_transactions = [];
-var last_block_time = 0;
+let list_of_transactions = [];
+let last_block_time = 0;
 
 
 function createBlock() {
-    var currtime = Date.now();
+    let currtime = Date.now();
     if (currtime - last_block_time < 60000 || list_of_transactions.length < 1) return;
 
     logger.debug("create block ...");
 
     // get the last block number
-    bcdb.getLastBlockno(
+    getLastBlockno(
         (err, lastblockno) => {
             if (err) {
                 return logger.error("getLastBlockno " + err);
@@ -57,23 +56,23 @@ function createBlock() {
 
             logger.debug("lastblockno: " + lastblockno);
 
-            var blockdata = BcNode.GetBlockFileData(lastblockno);
-            var params = {
+            let blockdata = GetBlockFileData(lastblockno);
+            let params = {
                 starttime: Date.now(),
                 prevblock: blockdata.blockid,
                 bckey: bckey
             };
-            var nodeinfo = Object.assign(new NodeInfo(), params);
-            var forgeinfo = nodeinfo.forgeNodeInfo();
-            var tx = ForgeTxn(bckey, getForgeAddress(), 1000, forgeinfo);
-            var txhex = tx.toHex();
-            var txhash = tx.getHashHex()
-            var txid = tx.getId();
+            let nodeinfo = Object.assign(new NodeInfo(), params);
+            let forgeinfo = nodeinfo.forgeNodeInfo();
+            let tx = ForgeTxn(bckey, getForgeAddress(), 1000, forgeinfo);
+            let txhex = tx.toHex();
+            let txhash = tx.getHashHex()
+            let txid = tx.getId();
 
-            var forgetxn = [tx];
+            let forgetxn = [tx];
 
-            var merkleroot = Block.calculateMerkleRoot([tx]);
-            var block = new Block();
+            let merkleroot = Block.calculateMerkleRoot([tx]);
+            let block = new Block();
             block.prevhash = blockdata.blockid;
             block.merkleroot = merkleroot;
             block.version = 1;
@@ -83,11 +82,11 @@ function createBlock() {
             list_of_transactions = [];
             forgetxn = null;
 
-            var blockhex = block.toHex();
-            var blockid = block.getId();
+            let blockhex = block.toHex();
+            let blockid = block.getId();
 
-            var blockno = lastblockno + 1;
-            BcNode.CreateBlockFile(blockno, txhex, txhash, txid, blockid, blockhex);
+            let blockno = lastblockno + 1;
+            CreateBlockFile(blockno, txhex, txhash, txid, blockid, blockhex);
 
             // at end -> remove the processed transactions from list_of_transactions
             last_block_time = Date.now();
@@ -106,36 +105,36 @@ function CreateGenesis(privkhex, callback) {
             }
         }
 
-        var bckey = BcKey.fromPrivateKey(privkhex, "hex");
-        var tx = GenesisTxnHandler(bckey);
+        let bckey = BcKey.fromPrivateKey(privkhex, "hex");
+        let tx = GenesisTxnHandler(bckey);
 
-        var txhex = tx.toHex();
-        var txhash = tx.getHashHex()
-        var txid = tx.getId();
+        let txhex = tx.toHex();
+        let txhash = tx.getHashHex()
+        let txid = tx.getId();
 
-        var merkleroot = Block.calculateMerkleRoot([tx]);
-        var block = new Block();
+        let merkleroot = Block.calculateMerkleRoot([tx]);
+        let block = new Block();
         block.prevhash = ''.padStart(32, "0");
         block.merkleroot = merkleroot;
         block.version = 1;
         block.timestamp = Date.now();
         block.transactions.push(tx);
-        var blockhex = block.toHex();
-        var blockid = block.getId();
-        var transactions = [
+        let blockhex = block.toHex();
+        let blockid = block.getId();
+        let transactions = [
             { txhex: txhex, txhash: txhash, txid: txid }
         ];
 
-        BcNode.CreateBlockFile(0, blockid, blockhex, transactions);
+        CreateBlockFile(0, blockid, blockhex, transactions);
 
         // verify
         console.log("verify");
 
-        var data = BcNode.GetBlockFileData(0);
+        let data = GetBlockFileData(0);
         console.log(data.blockid == blockid);
-        var importtx = BcNode.getTxnFromHex(data.transactions[0].txnhex);
+        let importtx = getTxnFromHex(data.transactions[0].txnhex);
         console.log(txhash == importtx.getHashHex());
-        var importblock = BcNode.getBlockFromHex(data.blockhex);
+        let importblock = getBlockFromHex(data.blockhex);
         console.log(blockid == importblock.getId());
 
         callback();
@@ -160,36 +159,36 @@ function ForgeTransaction(blockNo, privkeyHex, forgeAddress, amount, callback) {
             throw new Error("invalid address");
         }
 
-        var bckey = BcKey.fromPrivateKey(privkeyHex, "hex");
+        let bckey = BcKey.fromPrivateKey(privkeyHex, "hex");
 
-        var blockdata = BcNode.GetBlockFileData(blockNo - 1);
-        var params = {
+        let blockdata = GetBlockFileData(blockNo - 1);
+        let params = {
             starttime: Date.now(),
             prevblock: blockdata.blockid,
             bckey: bckey
         };
-        var nodeinfo = Object.assign(new NodeInfo(), params);
-        var forgeinfo = nodeinfo.forgeNodeInfo();
-        var tx = ForgeTxnHandler(bckey, forgeAddress, amount, forgeinfo);
-        var txhex = tx.toHex();
-        var txhash = tx.getHashHex()
-        var txid = tx.getId();
+        let nodeinfo = Object.assign(new NodeInfo(), params);
+        let forgeinfo = nodeinfo.forgeNodeInfo();
+        let tx = ForgeTxnHandler(bckey, forgeAddress, amount, forgeinfo);
+        let txhex = tx.toHex();
+        let txhash = tx.getHashHex()
+        let txid = tx.getId();
 
-        var merkleroot = Block.calculateMerkleRoot([tx]);
-        var block = new Block();
+        let merkleroot = Block.calculateMerkleRoot([tx]);
+        let block = new Block();
         block.prevhash = blockdata.blockid;
         block.merkleroot = merkleroot;
         block.version = 1;
         block.timestamp = Date.now();
         block.transactions.push(tx);
-        var blockhex = block.toHex();
-        var blockid = block.getId();
+        let blockhex = block.toHex();
+        let blockid = block.getId();
 
-        var transactions = [
+        let transactions = [
             { txhex: txhex, txhash: txhash, txid: txid }
         ];
 
-        BcNode.CreateBlockFile(blockNo, blockid, blockhex, transactions);
+        CreateBlockFile(blockNo, blockid, blockhex, transactions);
         callback()
     }
     catch (err) {
@@ -229,7 +228,7 @@ function onBcEvent(payload, callback) {
 }
 
 function TxnMonitor(payload, callback) {
-    
+
 }
 
 
@@ -239,7 +238,7 @@ class BlockHandler {
 
     async init(callback) {
         try {
-            var account = new Account();
+            let account = new Account();
             bckey = account.cryptokey;
 
             events.register(events.ONBCEVENT, onBcEvent);
@@ -261,4 +260,4 @@ class BlockHandler {
     }
 }
 
-module.exports = BlockHandler;
+export default BlockHandler;

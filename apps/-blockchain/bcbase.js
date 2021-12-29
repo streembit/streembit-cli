@@ -2,16 +2,16 @@
 
 'use strict';
 
-const errcodes = require('streembit-errcodes');
-const constants = require('./bcjs/constants');
+import { BC_ERROR, MAX_ERROR_CODE, BC_INVALID_TXPARAM, BC_PARSE_TX } from 'streembit-errcodes';
+import constants from './bcjs/constants';
 
 class BcBase {
     constructor() {
     }
 
-    throwError(errno, err) {  
+    throwError(errno, err) {
         var errobj = {
-            errno: errno || errcodes.BC_ERROR
+            errno: errno || BC_ERROR
         };
         if (err) {
             if (BcBase.isBcError(err)) {
@@ -32,7 +32,7 @@ class BcBase {
     }
 
     static isBcError(err) {
-        return (Number.isInteger(err) && err > 0 && err < errcodes.MAX_ERROR_CODE);
+        return (Number.isInteger(err) && err > 0 && err < MAX_ERROR_CODE);
     }
 
     static err(errno, err) {
@@ -46,13 +46,14 @@ class BcBase {
     parseTx(tx) {
         try {
             if (!tx || typeof tx != "string") {
-                return errcodes.BC_INVALID_TXPARAM;
+                return BC_INVALID_TXPARAM;
             }
         }
         catch (err) {
-            return errcodes.BC_PARSE_TX;
+            return BC_PARSE_TX;
         }
     }
 }
 
-module.exports.BcBase = BcBase;
+const _BcBase = BcBase;
+export { _BcBase as BcBase };

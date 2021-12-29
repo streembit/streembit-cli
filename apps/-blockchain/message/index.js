@@ -1,30 +1,30 @@
-const bs58check = require('bs58check');
-const bufferEquals = require('buffer-equals');
-const createHash = require('create-hash');
-const BcKey = require('../bcjs').BcKey;
-const BN = require('bn.js');
-const varuint = require('varuint-bitcoin');
+import { decode } from 'bs58check';
+import bufferEquals from 'buffer-equals';
+import createHash from 'create-hash';
+import { BcKey } from '../bcjs';
+import BN from 'bn.js';
+import { encodingLength, encode } from 'letuint-bitcoin';
 
 
-function sha256 (b) {
+function sha256(b) {
   return createHash('sha256').update(b).digest()
 }
-function hash256 (buffer) {
+function hash256(buffer) {
   return sha256(sha256(buffer))
 }
-function hash160 (buffer) {
+function hash160(buffer) {
   return createHash('ripemd160').update(sha256(buffer)).digest()
 }
 
-function encodeSignature (signature, recovery, compressed) {
+function encodeSignature(signature, recovery, compressed) {
   if (compressed) recovery += 4
   return Buffer.concat([Buffer.alloc(1, recovery + 27), signature])
 }
 
-function decodeSignature (buffer) {
+function decodeSignature(buffer) {
   if (buffer.length !== 65) throw new Error('Invalid signature length')
 
-  var flagByte = buffer.readUInt8(0) - 27
+  let flagByte = buffer.readUInt8(0) - 27
   if (flagByte > 7) throw new Error('Invalid signature parameter')
 
   return {
@@ -34,32 +34,32 @@ function decodeSignature (buffer) {
   }
 }
 
-function magicHash (message, messagePrefix) {
+function magicHash(message, messagePrefix) {
   messagePrefix = messagePrefix || '\u0018Bitcoin Signed Message:\n'
   if (!Buffer.isBuffer(messagePrefix)) messagePrefix = Buffer.from(messagePrefix, 'utf8')
 
-  var messageVISize = varuint.encodingLength(message.length)
-  var buffer = Buffer.allocUnsafe(messagePrefix.length + messageVISize + message.length)
+  let messageVISize = encodingLength(message.length)
+  let buffer = Buffer.allocUnsafe(messagePrefix.length + messageVISize + message.length)
   messagePrefix.copy(buffer, 0)
-  varuint.encode(message.length, buffer, messagePrefix.length)
+  encode(message.length, buffer, messagePrefix.length)
   buffer.write(message, messagePrefix.length + messageVISize)
   return hash256(buffer)
 }
 
-function sign (message, privateKey, compressed, messagePrefix) {
-  var hash = magicHash(message, messagePrefix);
-  var keyPair = BcKey.fromPrivateKey(privateKey);
-  var sigObj = keyPair.sign(hash);
-  var signature = Buffer.concat([sigObj.r.toArrayLike(Buffer, 'be', 32), sigObj.s.toArrayLike(Buffer, 'be', 32)]);
+function sign(message, privateKey, compressed, messagePrefix) {
+  let hash = magicHash(message, messagePrefix);
+  let keyPair = BcKey.fromPrivateKey(privateKey);
+  let sigObj = keyPair.sign(hash);
+  let signature = Buffer.concat([sigObj.r.toArrayLike(Buffer, 'be', 32), sigObj.s.toArrayLike(Buffer, 'be', 32)]);
   return encodeSignature(signature, sigObj.recoveryParam, compressed);
 }
 
-function recover (message, signature, recovery, compressed) {
-  var sigObj = { r: signature.slice(0, 32), s: signature.slice(32, 64) }
+function recover(message, signature, recovery, compressed) {
+  let sigObj = { r: signature.slice(0, 32), s: signature.slice(32, 64) }
 
-  var key = new BcKey();
-  var sigr = new BN(sigObj.r)
-  var sigs = new BN(sigObj.s)
+  let key = new BcKey();
+  let sigr = new BN(sigObj.r)
+  let sigs = new BN(sigObj.s)
   if (sigr.cmp(key.curve.n) >= 0 || sigs.cmp(key.curve.n) >= 0) {
     throw new Error('couldn\'t parse signature')
   }
@@ -69,31 +69,31 @@ function recover (message, signature, recovery, compressed) {
       throw new Error("isZero validation failed.")
     }
 
-    var point = key.recoverPubKey(message, sigObj, recovery)
+    let point = key.recoverPubKey(message, sigObj, recovery)
     return Buffer.from(point.encode(true, compressed))
-  } 
+  }
   catch (err) {
     throw new Error('Recovering public key from signature error: ' + err.message);
   }
 }
 
-function verify (message, address, signature, messagePrefix) {
+function verify(message, address, signature, messagePrefix) {
   if (!Buffer.isBuffer(signature)) {
     signature = Buffer.from(signature, 'base64')
   }
 
-  var parsed = decodeSignature(signature)
-  var hash = magicHash(message, messagePrefix)
-  var publicKey = recover(hash, parsed.signature, parsed.recovery, parsed.compressed)
+  let parsed = decodeSignature(signature)
+  let hash = magicHash(message, messagePrefix)
+  let publicKey = recover(hash, parsed.signature, parsed.recovery, parsed.compressed)
 
-  var actual = hash160(publicKey)
-  var expected = bs58check.decode(address).slice(1)
+  let actual = hash160(publicKey)
+  let expected = decode(address).slice(1)
 
   return bufferEquals(actual, expected)
 }
-
-module.exports = {
-  magicHash: magicHash,
-  sign: sign,
-  verify: verify
+export {
+  magicHash,
+  sign,
+  verify
 }
+
