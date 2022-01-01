@@ -1,3 +1,3 @@
-﻿const res = require('app-module-path').addPath(__dirname);
+﻿import { addPath } from "app-module-path";
 
-module.exports = res;
+export const res = addPath(process.cwd());

@@ -1,422 +1,405 @@
-const assert = require('chai').assert;
-const expect = require("chai").expect;
-const util = require("util");
-const createHash = require('create-hash');
-const res = require('../resolvedir');
-const Account = require('libs/account');
-const ecckey = require('libs/crypto');
-const config = require("libs/config");
-const dbschema = require("dbschematest");
-const database = require("streembit-db").instance;
-const account_config = require('./account_config.json');
-//const peerutils = require("libs/peernet/peerutils");
-//const stutils = require("libs/utils");
-//const constants = require("libs/constants");
+import { assert } from "chai";
+import { res } from "../resolvedir.js";
+import createHash from "create-hash";
+import { Account } from "../libs/account/index.js";
+import { EccKey } from "../libs/crypto/index.js";
+import { config } from "../libs/config/index.js";
+import dbschema from "../dbschematest.json";
+import Database from "streembit-db";
+import account_config from "./account_config.json";
 
 describe("Account module test lib/account", function () {
-    let account;
-    const password = 'pass550rd';
+  let account;
+  const password = "pass550rd";
 
-    before(function (done) {
-        account = new Account();
-        config.init(account_config.port, account_config.host, false, false, function () {
-            database.init(dbschema, function () {
-                done();
-            });
+  before(function (done) {
+    account = new Account();
+    config.init(
+      account_config.port,
+      account_config.host,
+      false,
+      false,
+      function () {
+        Database.init(dbschema, function () {
+          console.log("doneeeeeeeeeeeeeeeee");
+          done();
         });
+      }
+    );
+  });
+
+  describe("Test Constructor initialization", function () {
+    it("should set the m_key to null", function () {
+      assert.equal(account.m_key, null);
+    });
+    it("should set the m_connsymmkey to null", function () {
+      assert.equal(account.m_connsymmkey, null);
+    });
+    it("should set the m_accountname to null", function () {
+      assert.equal(account.m_accountname, null);
+    });
+  });
+
+  describe("Account name", function () {
+    it("should set a value to m_accountname", function () {
+      account.accountname = "test";
+      let account_name = account.accountname;
+
+      assert.equal(account_name, "test");
     });
 
-    describe("Test Constructor initialization", function () {
+    it("should neither null nor undefined", function () {
+      let account_name = account.accountname;
 
-        it("should set the m_key to null", function () {
-            assert.equal(account.m_key, null);
-        });
-        it("should set the m_connsymmkey to null", function () {
-            assert.equal(account.m_connsymmkey, null);
-        });
-        it("should set the m_accountname to null", function () {
-            assert.equal(account.m_accountname, null);
-        });
+      assert.exists(account_name);
     });
 
-    describe("Account name", function () {
+    it("should match with the account object's m_accountname", function () {
+      let account_name = account.accountname;
 
-        it("should set a value to m_accountname", function () {
-            account.accountname = 'test';
-            let account_name = account.accountname;
+      assert.equal(account_name, account.m_accountname);
+    });
+  });
 
-            assert.equal(account_name, 'test');
-        });
+  describe("Test ppkikey() value", function () {
+    it("should set a value to ppkikey", function () {
+      let ppkikey_value = new EccKey();
+      let m_publickey = account_config.publickey;
+      ppkikey_value.keyFromPrivate(m_publickey, "hex");
+      account.ppkikey = ppkikey_value;
 
-        it("should neither null nor undefined", function () {
-            let account_name = account.accountname;
-
-            assert.exists(account_name);
-        });
-
-        it("should match with the account object's m_accountname", function () {
-            let account_name = account.accountname;
-
-            assert.equal(account_name, account.m_accountname);
-        });
+      assert.isDefined(account.ppkikey);
     });
 
-    describe("Test ppkikey() value", function () {
+    it("should neither null nor undefined", function () {
+      let ppkikey_value = account.ppkikey;
 
-        it("should set a value to ppkikey", function () {
-            let ppkikey_value = new ecckey();
-            let m_publickey = account_config.publickey;
-            ppkikey_value.keyFromPrivate(m_publickey, 'hex');
-            account.ppkikey = ppkikey_value;
-
-            assert.isDefined(account.ppkikey);
-        });
-
-        it("should neither null nor undefined", function () {
-            let ppkikey_value = account.ppkikey;
-
-            assert.exists(ppkikey_value);
-        });
-
-        it("should not be an empty string", function () {
-            let ppkikey_value = account.ppkikey;
-
-            assert.notEqual(ppkikey_value, '');
-        });
-
-        it("Should be an object", function () {
-            let ppkikey_value = account.ppkikey;
-
-            assert.isObject(ppkikey_value);
-        });
+      assert.exists(ppkikey_value);
     });
 
-    describe("Test cryptokey()", function () {
+    it("should not be an empty string", function () {
+      let ppkikey_value = account.ppkikey;
 
-        it("should be defined", function () {
-            let crypto_key = account.cryptokey;
-
-            assert.isDefined(crypto_key);
-        });
-
-        it("should neither null or undefined", function () {
-            let crypto_key = account.cryptokey;
-
-            assert.exists(crypto_key);
-        });
-
-        it("should be truthy", function () {
-            let crypto_key = account.cryptokey;
-
-            assert.isOk(crypto_key);
-        });
-
-        it("should not be an empty string", function () {
-            let crypto_key = account.cryptokey;
-
-            assert.notEqual(crypto_key, '');
-        });
-
-        it("should be an object", function () {
-            let crypto_key = account.cryptokey;
-
-            assert.isObject(crypto_key);
-        });
+      assert.notEqual(ppkikey_value, "");
     });
 
-    describe("Test private_key()", function () {
+    it("Should be an object", function () {
+      let ppkikey_value = account.ppkikey;
 
-        it("should be defined", function () {
-            let private_key = account.private_key;
+      assert.isObject(ppkikey_value);
+    });
+  });
 
-            assert.isDefined(private_key);
-        });
+  describe("Test cryptokey()", function () {
+    it("should be defined", function () {
+      let crypto_key = account.cryptokey;
 
-        it("should neither null nor undefined", function () {
-            let private_key = account.private_key;
-
-            assert.exists(private_key);
-        });
-
-        it("should be truthy", function () {
-            let private_key = account.private_key;
-
-            assert.isOk(private_key);
-        });
-
-        it("should not be an empty string", function () {
-            let private_key = account.private_key;
-
-            assert.notEqual(private_key, '');
-        });
-
-        it("should be an object", function () {
-            let private_key = account.private_key;
-
-            assert.isObject(private_key);
-        });
+      assert.isDefined(crypto_key);
     });
 
-    describe("Test private_key_hex()", function () {
+    it("should neither null or undefined", function () {
+      let crypto_key = account.cryptokey;
 
-        it("should be defined", function () {
-            let private_key_hex = account.private_key_hex;
-
-            assert.isDefined(private_key_hex);
-        });
-
-        it("should neither null or undefined", function () {
-            let private_key_hex = account.private_key_hex;
-
-            assert.exists(private_key_hex);
-        });
-
-        it("should be truthy", function () {
-            let private_key_hex = account.private_key_hex;
-
-            assert.isOk(private_key_hex);
-        });
-
-        it("should be a string", function () {
-            let private_key_hex = account.private_key_hex;
-
-            assert.isString(private_key_hex);
-        });
-
-        it("should not be an empty string", function () {
-            let private_key_hex = account.private_key_hex;
-
-            assert.notEqual(private_key_hex, '');
-        });
+      assert.exists(crypto_key);
     });
 
-    describe("Test public_key()", function () {
+    it("should be truthy", function () {
+      let crypto_key = account.cryptokey;
 
-        it("should be defined", function () {
-            let public_key = account.public_key;
-
-            assert.isDefined(public_key);
-        });
-
-        it("should neither null nor undefined", function () {
-            let public_key = account.public_key;
-
-            assert.exists(public_key);
-        });
-
-        it("should be truthy", function () {
-            let public_key = account.public_key;
-
-            assert.isOk(public_key);
-        });
-
-        it("should be a string", function () {
-            let public_key = account.public_key;
-
-            assert.isString(public_key);
-        });
-
-        it("should not be an empty string", function () {
-            let public_key = account.public_key;
-
-            assert.notEqual(public_key, '');
-        });
+      assert.isOk(crypto_key);
     });
 
-    describe("Test bs58pk()", function () {
+    it("should not be an empty string", function () {
+      let crypto_key = account.cryptokey;
 
-        it("should be defined", function () {
-            let bs58pk_key = account.bs58pk;
-
-            assert.isDefined(bs58pk_key);
-        });
-
-        it("should neither null nor undefined", function () {
-            let bs58pk_key = account.bs58pk;
-
-            assert.exists(bs58pk_key);
-        });
-
-        it("should be truthy", function () {
-            let bs58pk_key = account.bs58pk;
-
-            assert.isOk(bs58pk_key);
-        });
-
-        it("should be a string", function () {
-            let bs58pk_key = account.bs58pk;
-
-            assert.isString(bs58pk_key);
-        });
-
-        it("should not be an empty string", function () {
-            let bs58pk_key = account.bs58pk;
-
-            assert.notEqual(bs58pk_key, '');
-        });
+      assert.notEqual(crypto_key, "");
     });
 
-    describe("Test public_key_hash()", function () {
+    it("should be an object", function () {
+      let crypto_key = account.cryptokey;
 
-        it("should be defined", function () {
-            let pk_hash = account.public_key_hash;
+      assert.isObject(crypto_key);
+    });
+  });
 
-            assert.isDefined(pk_hash);
-        });
+  describe("Test private_key()", function () {
+    it("should be defined", function () {
+      let private_key = account.private_key;
 
-        it("should neither null nor undefined", function () {
-            let pk_hash = account.public_key_hash;
-
-            assert.exists(pk_hash);
-        });
-
-        it("should be truthy", function () {
-            let pk_hash = account.public_key_hash;
-
-            assert.isOk(pk_hash);
-        });
-
-        it("should be a string", function () {
-            let pk_hash = account.public_key_hash;
-
-            assert.isString(pk_hash);
-        });
-
-        it("should not be an empty string", function () {
-            let pk_hash = account.public_key_hash;
-
-            assert.notEqual(pk_hash, '');
-        });
+      assert.isDefined(private_key);
     });
 
-    describe("Test accountpk()", function () {
+    it("should neither null nor undefined", function () {
+      let private_key = account.private_key;
 
-        it("should be defined", function () {
-            let acc_pk = account.accountpk;
-
-            assert.isDefined(acc_pk);
-        });
-
-        it("should neither null nor undefined", function () {
-            let acc_pk = account.accountpk;
-
-            assert.exists(acc_pk);
-        });
-
-        it("should be truthy", function () {
-            let acc_pk = account.accountpk;
-
-            assert.isOk(acc_pk);
-        });
-
-        it("should be a string", function () {
-            let acc_pk = account.accountpk;
-
-            assert.isString(acc_pk);
-        });
-
-        it("should not be an empty string", function () {
-            let acc_pk = account.accountpk;
-
-            assert.notEqual(acc_pk, '');
-        });
+      assert.exists(private_key);
     });
 
-    describe("Test User Initialization", function () {
+    it("should be truthy", function () {
+      let private_key = account.private_key;
 
-        it("should neither null nor undefined", function () {
-            let user = account.is_user_initialized;
-
-            assert.exists(user);
-        });
-
-        it("should be truthy", function () {
-            let user = account.is_user_initialized;
-
-            assert.isOk(user);
-        });
-
-        it("should be true", function () {
-            let user = account.is_user_initialized;
-
-            assert.isTrue(user);
-        });
+      assert.isOk(private_key);
     });
 
-    describe("Test password encryption", function () {
+    it("should not be an empty string", function () {
+      let private_key = account.private_key;
 
-        it("should neither empty nor undefined", function () {
-            let pwd_encrypt = account.getCryptPassword(password);
-
-            assert.exists(pwd_encrypt);
-        });
-
-        it("should be a string", function () {
-            let pwd_encrypt = account.getCryptPassword(password);
-
-            assert.isString(pwd_encrypt);
-        });
-
-        it("should match with the encrypted password", function () {
-            let pwd_encrypt = account.getCryptPassword(password);
-            let salt = createHash('sha256').update(password).digest('hex');
-            let pwdhex = createHash('sha256').update(salt).digest('hex');
-
-            assert.equal(pwd_encrypt, pwdhex);
-        });
+      assert.notEqual(private_key, "");
     });
 
-    describe("Test connsymmkey value", function () {
+    it("should be an object", function () {
+      let private_key = account.private_key;
 
-        it("should set a value to m_connsymmkey", function () {
-            account.connsymmkey = account_config.connsymmkey;
-            let connsymmkey_value = account.connsymmkey;
+      assert.isObject(private_key);
+    });
+  });
 
-            assert.equal(connsymmkey_value, account_config.connsymmkey);
-        });
+  describe("Test private_key_hex()", function () {
+    it("should be defined", function () {
+      let private_key_hex = account.private_key_hex;
 
-        it("should neither null nor undefined", function () {
-            let connsymmkey_value = account.connsymmkey;
-
-            assert.exists(connsymmkey_value);
-        });
-
-        it("should match with the account object's m_connsymmkey", function () {
-            let connsymmkey_value = account.connsymmkey;
-
-            assert.equal(connsymmkey_value, account.m_connsymmkey);
-        });
+      assert.isDefined(private_key_hex);
     });
 
-    describe("Test clear()", function () {
+    it("should neither null or undefined", function () {
+      let private_key_hex = account.private_key_hex;
 
-        it("should set ppkikey value to null", function () {
-            account.clear();
-
-            assert.isNull(account.ppkikey);
-        });
+      assert.exists(private_key_hex);
     });
 
+    it("should be truthy", function () {
+      let private_key_hex = account.private_key_hex;
 
-    describe("Test init()", function () {
-
-        it("should execute init()", function (done) {
-            account.init(password, function () {
-                console.log("init() executed");
-                done();
-            })
-
-        });
+      assert.isOk(private_key_hex);
     });
 
-    describe("Test load()", function () {
+    it("should be a string", function () {
+      let private_key_hex = account.private_key_hex;
 
-        it("should execute load()", function (done) {
-            account.load(password, function () {
-                console.log("load() executed");
-                done();
-            })
-
-        });
+      assert.isString(private_key_hex);
     });
+
+    it("should not be an empty string", function () {
+      let private_key_hex = account.private_key_hex;
+
+      assert.notEqual(private_key_hex, "");
+    });
+  });
+
+  describe("Test public_key()", function () {
+    it("should be defined", function () {
+      let public_key = account.public_key;
+
+      assert.isDefined(public_key);
+    });
+
+    it("should neither null nor undefined", function () {
+      let public_key = account.public_key;
+
+      assert.exists(public_key);
+    });
+
+    it("should be truthy", function () {
+      let public_key = account.public_key;
+
+      assert.isOk(public_key);
+    });
+
+    it("should be a string", function () {
+      let public_key = account.public_key;
+
+      assert.isString(public_key);
+    });
+
+    it("should not be an empty string", function () {
+      let public_key = account.public_key;
+
+      assert.notEqual(public_key, "");
+    });
+  });
+
+  describe("Test bs58pk()", function () {
+    it("should be defined", function () {
+      let bs58pk_key = account.bs58pk;
+
+      assert.isDefined(bs58pk_key);
+    });
+
+    it("should neither null nor undefined", function () {
+      let bs58pk_key = account.bs58pk;
+
+      assert.exists(bs58pk_key);
+    });
+
+    it("should be truthy", function () {
+      let bs58pk_key = account.bs58pk;
+
+      assert.isOk(bs58pk_key);
+    });
+
+    it("should be a string", function () {
+      let bs58pk_key = account.bs58pk;
+
+      assert.isString(bs58pk_key);
+    });
+
+    it("should not be an empty string", function () {
+      let bs58pk_key = account.bs58pk;
+
+      assert.notEqual(bs58pk_key, "");
+    });
+  });
+
+  describe("Test public_key_hash()", function () {
+    it("should be defined", function () {
+      let pk_hash = account.public_key_hash;
+
+      assert.isDefined(pk_hash);
+    });
+
+    it("should neither null nor undefined", function () {
+      let pk_hash = account.public_key_hash;
+
+      assert.exists(pk_hash);
+    });
+
+    it("should be truthy", function () {
+      let pk_hash = account.public_key_hash;
+
+      assert.isOk(pk_hash);
+    });
+
+    it("should be a string", function () {
+      let pk_hash = account.public_key_hash;
+
+      assert.isString(pk_hash);
+    });
+
+    it("should not be an empty string", function () {
+      let pk_hash = account.public_key_hash;
+
+      assert.notEqual(pk_hash, "");
+    });
+  });
+
+  describe("Test accountpk()", function () {
+    it("should be defined", function () {
+      let acc_pk = account.accountpk;
+
+      assert.isDefined(acc_pk);
+    });
+
+    it("should neither null nor undefined", function () {
+      let acc_pk = account.accountpk;
+
+      assert.exists(acc_pk);
+    });
+
+    it("should be truthy", function () {
+      let acc_pk = account.accountpk;
+
+      assert.isOk(acc_pk);
+    });
+
+    it("should be a string", function () {
+      let acc_pk = account.accountpk;
+
+      assert.isString(acc_pk);
+    });
+
+    it("should not be an empty string", function () {
+      let acc_pk = account.accountpk;
+
+      assert.notEqual(acc_pk, "");
+    });
+  });
+
+  describe("Test User Initialization", function () {
+    it("should neither null nor undefined", function () {
+      let user = account.is_user_initialized;
+
+      assert.exists(user);
+    });
+
+    it("should be truthy", function () {
+      let user = account.is_user_initialized;
+
+      assert.isOk(user);
+    });
+
+    it("should be true", function () {
+      let user = account.is_user_initialized;
+
+      assert.isTrue(user);
+    });
+  });
+
+  describe("Test password encryption", function () {
+    it("should neither empty nor undefined", function () {
+      let pwd_encrypt = account.getCryptPassword(password);
+
+      assert.exists(pwd_encrypt);
+    });
+
+    it("should be a string", function () {
+      let pwd_encrypt = account.getCryptPassword(password);
+
+      assert.isString(pwd_encrypt);
+    });
+
+    it("should match with the encrypted password", function () {
+      let pwd_encrypt = account.getCryptPassword(password);
+      let salt = createHash("sha256").update(password).digest("hex");
+      let pwdhex = createHash("sha256").update(salt).digest("hex");
+
+      assert.equal(pwd_encrypt, pwdhex);
+    });
+  });
+
+  describe("Test connsymmkey value", function () {
+    it("should set a value to m_connsymmkey", function () {
+      account.connsymmkey = account_config.connsymmkey;
+      let connsymmkey_value = account.connsymmkey;
+
+      assert.equal(connsymmkey_value, account_config.connsymmkey);
+    });
+
+    it("should neither null nor undefined", function () {
+      let connsymmkey_value = account.connsymmkey;
+
+      assert.exists(connsymmkey_value);
+    });
+
+    it("should match with the account object's m_connsymmkey", function () {
+      let connsymmkey_value = account.connsymmkey;
+
+      assert.equal(connsymmkey_value, account.m_connsymmkey);
+    });
+  });
+
+  describe("Test clear()", function () {
+    it("should set ppkikey value to null", function () {
+      account.clear();
+
+      assert.isNull(account.ppkikey);
+    });
+  });
+
+  describe("Test init()", function () {
+    it("should execute init()", function (done) {
+      account.init(password, function () {
+        console.log("init() executed");
+        done();
+      });
+    });
+  });
+
+  describe("Test load()", function () {
+    it("should execute load()", function (done) {
+      account.load(password, function () {
+        console.log("load() executed");
+        done();
+      });
+    });
+  });
 });
