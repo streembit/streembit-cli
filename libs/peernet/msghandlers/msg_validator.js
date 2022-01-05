@@ -57,26 +57,26 @@ const verify_signature = (params, callback) => {
         try {
             // payload.iss is a BS58check encoded key
             const bs58buffer = bs58check.decode(payload.iss);
-            publickey = bs58buffer.toString("hex");
+            const publickey = bs58buffer.toString("hex");
             const buffer = Buffer.from(publickey, 'hex');
             const rmd160buffer = createHash('rmd160').update(buffer).digest();
             const bs58pk = bs58check.encode(rmd160buffer);
             if (checkkey != bs58pk) {
                 return callback("validate() error invalid key value or public key mismatch");
             }
+
+            if (!publickey) {
+                return callback('invalid public key');
+            }
+
+            const decoded_msg = peermsg.decode(params.value, publickey);
+            if (!decoded_msg) {
+                return callback('VERIFYFAIL ' + checkkey);
+            }
         }
         catch (err) {
             return callback("validate() error: " + err.message);
-        }
-
-        if (!publickey) {
-            return callback('invalid public key');
-        }
-
-        const decoded_msg = peermsg.decode(params.value, publickey);
-        if (!decoded_msg) {
-            return callback('VERIFYFAIL ' + checkkey);
-        }
+        }        
 
         //  passed the validation -> add to the network
         logger.debug('validation for msgtype: ' + payload.data.type + ' is OK');
