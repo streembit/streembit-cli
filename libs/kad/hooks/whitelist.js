@@ -30,7 +30,7 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var assert = require('assert');
+import assert from 'assert';
 
 /**
  * Factory for whitelist middleware
@@ -38,7 +38,7 @@ var assert = require('assert');
  * @param {Array} whitelist - list of nodeID's to allow
  * @returns {Function}
  */
-const WhitelistFactory = (whitelist) => {
+export const WhitelistFactory = (whitelist) => {
   assert(Array.isArray(whitelist), 'Invalid whitelist supplied');
 
   return function whitelister(message, contact, next) {
@@ -50,4 +50,4 @@ const WhitelistFactory = (whitelist) => {
   };
 };
 
-module.exports = WhitelistFactory;
+

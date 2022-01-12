@@ -4,15 +4,14 @@
 
 'use strict';
 
-const assert = require('assert');
-const utils = require('./utils');
-
+import assert from "assert";
+import * as utils from "./utils.js";
 
 /**
  * Handles user-defined rules for allowing and preventing the processing of
  * messages from given identities
  */
-class TrustPlugin {
+export class TrustPlugin {
 
   /**
    * @typedef {object} module:kadence/trust~TrustPlugin~policy
@@ -183,12 +182,11 @@ class TrustPlugin {
  * @param {module:kadence/trust~TrustPlugin~policy[]} policies
  * @param {number} [mode=TrustPlugin.MODE_BLACKLIST] - Blacklist or whitelist
  */
-module.exports = function(policies, mode) {
-  return function(node) {
+export default (policies, mode) => {
+  return (node) => {
     return new TrustPlugin(node, policies, mode);
   }
 };
 
-module.exports.TrustPlugin = TrustPlugin;
-module.exports.MODE_BLACKLIST = TrustPlugin.MODE_BLACKLIST;
-module.exports.MODE_WHITELIST = TrustPlugin.MODE_WHITELIST;
+export const MODE_BLACKLIST = TrustPlugin.MODE_BLACKLIST;
+export const MODE_WHITELIST = TrustPlugin.MODE_WHITELIST;

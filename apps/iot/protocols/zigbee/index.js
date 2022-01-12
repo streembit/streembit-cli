@@ -23,33 +23,29 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
-const constants = require("libs/constants");
-const async = require("async");
-const util = require('util');
-const IoTProtocolHandler = require("apps/iot/protocols");
-const Devices = require("libs/devices");
-const iotdefinitions = require("apps/iot/definitions");
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
+import { logger } from "streembit-util";
 
-class ZigbeeHandler extends IoTProtocolHandler {
+import { IoTProtocolHandler } from '../index.js';
+import { ZigbeeCommands as zigbeecmd } from '../../protocols/zigbee/commands/index.js';
 
-    constructor(protocol, mcu) {        
+
+export class ZigbeeHandler extends IoTProtocolHandler {
+
+    constructor(protocol, mcu) {
         super(protocol, mcu);
     }
 
     init() {
         try {
-            logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);         
+            logger.info("init protocol: " + this.protocol + " mcu: " + this.mcu);
             this.mcuhandler.init();
             //this.mcuhandler.monitor();
-            this.initialized = true;            
+            this.initialized = true;
         }
         catch (err) {
             throw new Error("Zigbee protocol handler init error: " + err.message);
         }
-    }    
+    }
 
     on_gateway_updated(payload) {
         zigbeecmd.on_gateway_updated(payload);
@@ -60,5 +56,5 @@ class ZigbeeHandler extends IoTProtocolHandler {
     }
 }
 
-module.exports = ZigbeeHandler;
+
 

@@ -23,11 +23,9 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const logger = require("streembit-util").logger;
-const async = require("async");
-const config = require("libs/config");
-const Database = require("libs/database/devicesdb");
-const defs = require("apps/iot/definitions");
+import { logger } from "streembit-util";
+import { definitions as defs } from "../../apps/iot/definitions.js";
+import IoTDevicesDb from "../../libs/database/devicesdb.js";
 
 let instance = null;
 let m_devices = null;
@@ -49,7 +47,7 @@ class Devices {
     static getdevices() {
         Devices.devices.clear();
         return new Promise((resolve, reject) => {
-            var db = new Database();
+            var db = new IoTDevicesDb();
             db.devices().then(
                 (rows) => {
                     rows.forEach(
@@ -152,7 +150,7 @@ class Devices {
 
     static async set_device_permission(deviceid, permission, callback) {        
         try {
-            let db = new Database();
+            let db = new IoTDevicesDb();
             await db.update_device_permission(deviceid, permission);
 
             let dbdevice = Devices.devices.get(deviceid);
@@ -176,7 +174,7 @@ class Devices {
             let features = device.featuredef;
             let dbdevice = Devices.devices.get(deviceid);
         
-            let db = new Database();
+            let db = new IoTDevicesDb();
             if (!dbdevice)  {
                 // insert
                 var details = device.details ? JSON.stringify(device.details) : null;
@@ -202,7 +200,7 @@ class Devices {
 
     static async delete_device(deviceid, callback) {
         try {
-            let db = new Database();
+            let db = new IoTDevicesDb();
             await db.delete_device(deviceid);
 
             // update the local list
@@ -217,7 +215,7 @@ class Devices {
 
     populate() {
         return new Promise((resolve, reject) => {
-            var db = new Database();
+            var db = new IoTDevicesDb();
             db.devices().then(
                 (rows) => {
                     rows.forEach(
@@ -237,7 +235,7 @@ class Devices {
 
     async add(device) {
         try {
-            var db = new Database();
+            var db = new IoTDevicesDb();
             let dbrow = await db.get_device(device.id);
             if (!dbrow) {
                 // add to database
@@ -305,9 +303,4 @@ class Devices {
     }
 }
 
-
-module.exports = Devices;
-
-
-
-
+export default Devices;

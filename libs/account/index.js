@@ -21,19 +21,17 @@ Copyright (C) 2017 ZoVolt Ltd
 
 'use strict';
 
-const crypto = require('crypto');
-const ecckey = require('libs/crypto');
-const createHash = require('create-hash');
-const secrand = require('secure-random');
-const config = require("libs/config");
-const Database = require("libs/database/accountdb");
-const peermsg = require("libs/message");
-const utils = require("libs/utils");
-const logger = require("streembit-util").logger;
+import AccountsDb from "../database/accountdb.js";
+import { createHash } from 'crypto';
+import { config } from '../config/index.js';
+import * as peermsg from "../message/index.js";
+import secrand from "secure-random";
+import { logger } from "streembit-util";
+import { EccKey } from "../crypto/index.js";
 
 let instance = null;
 
-class Account {
+export class Account {
 
     constructor() {
         if (!instance) {
@@ -58,7 +56,7 @@ class Account {
         return this.m_key;
     }
 
-    set ppkikey (value) {
+    set ppkikey(value) {
         this.m_key = value;
     }
 
@@ -66,7 +64,7 @@ class Account {
         return this.m_key ? this.m_key.cryptoKey : '';
     }
 
-    get private_key () {
+    get private_key() {
         return this.m_key ? this.m_key.privateKey : '';
     }
 
@@ -74,7 +72,7 @@ class Account {
         return this.m_key ? this.m_key.privateKeyHex : '';
     }
 
-    get public_key () {
+    get public_key() {
         return this.m_key ? this.m_key.publicKeyHex : '';
     }
 
@@ -90,7 +88,7 @@ class Account {
         return this.m_key ? this.m_key.pkrmd160hash : '';
     }
 
-    get is_user_initialized () {
+    get is_user_initialized() {
         return this.m_key ? true : false;
     }
 
@@ -104,13 +102,13 @@ class Account {
 
 
     getCryptPassword(password) {
-        var salt = createHash('sha256').update(password).digest('hex');
-        var pwdhex = createHash('sha256').update(salt).digest('hex');
+        let salt = createHash('sha256').update(password).digest('hex');
+        let pwdhex = createHash('sha256').update(salt).digest('hex');
         return pwdhex;
     }
 
     addToDB(password, cipher, callback) {
-        var database = new Database();
+        let database = new AccountsDb();
         database.add(
             this.accountname,
             this.accountpk,
@@ -118,7 +116,7 @@ class Account {
             cipher,
             (err) => {
                 if (err) {
-                    return callback("Database update error: " + ( err.message || err));
+                    return callback("Database update error: " + (err.message || err));
                 }
 
                 if (callback) {
@@ -130,15 +128,15 @@ class Account {
 
     genCipher(smk) {
         // get an entropy for the ECC key
-        var rndstr = secrand.randomBuffer(32).toString("hex");
-        var entropy = createHash("sha256").update(rndstr).digest("hex");
+        let rndstr = secrand.randomBuffer(32).toString("hex");
+        let entropy = createHash("sha256").update(rndstr).digest("hex");
 
         // create ECC key
-        var key = new ecckey();
+        let key = new EccKey();
         key.generateKey(entropy);
 
         //  encrypt the account data
-        var user_context = {
+        let user_context = {
             "privatekey": key.privateKeyHex,
             "timestamp": Date.now()
         };
@@ -161,7 +159,7 @@ class Account {
             const cipher_context = this.genCipher(symcrypt_key);
             const skrnd = secrand.randomBuffer(32).toString("hex");
             const skhash = createHash("sha256").update(skrnd).digest("hex");
-            this.connsymmkey = skhash;    
+            this.connsymmkey = skhash;
 
             this.accountname = account;
 
@@ -204,10 +202,10 @@ class Account {
                 }
             }
 
-            var accountobj;
+            let accountobj;
             try {
                 accountobj = JSON.parse(plain_text);
-                if (!accountobj || !accountobj.privatekey || !accountobj.timestamp ) {
+                if (!accountobj || !accountobj.privatekey || !accountobj.timestamp) {
                     return callback("invalid password or invalid user object stored");
                 }
             }
@@ -215,9 +213,9 @@ class Account {
                 return callback("Account initialize error. Select a saved account and enter the valid password. The encrypted account information must exists on the computer.");
             }
 
-            var hexPrivatekey = accountobj.privatekey;
+            let hexPrivatekey = accountobj.privatekey;
             // load ECC key from the hex private key
-            var key = new ecckey();
+            let key = new EccKey();
             key.keyFromPrivate(hexPrivatekey, 'hex');
 
             if (key.pkrmd160hash != data.accountpk) {
@@ -226,8 +224,8 @@ class Account {
 
             this.ppkikey = key;
 
-            var skrnd = secrand.randomBuffer(32).toString("hex");
-            var skhash = createHash("sha256").update(skrnd).digest("hex");
+            let skrnd = secrand.randomBuffer(32).toString("hex");
+            let skhash = createHash("sha256").update(skrnd).digest("hex");
             this.connsymmkey = skhash;
 
             logger.info("loaded pkhash: " + this.public_key_hash);
@@ -243,18 +241,18 @@ class Account {
         }
     };
 
-    restore (account, password, data, callback) {
+    restore(account, password, data, callback) {
         try {
             if (!user || !user.account) {
                 throw new Error("invalid user data");
             }
 
-            var account = user.account;
+            let account = user.account;
 
-            var pbkdf2 = this.getCryptPassword(password);
+            let pbkdf2 = this.getCryptPassword(password);
 
             // decrypt the cipher
-            var plain_text;
+            let plain_text;
             try {
                 plain_text = peermsg.aes256decrypt(pbkdf2, data.cipher);
             }
@@ -267,7 +265,7 @@ class Account {
                 }
             }
 
-            var accountobj;
+            let accountobj;
             try {
                 accountobj = JSON.parse(plain_text);
                 if (!accountobj || !accountobj.privatekey || !accountobj.timestamp) {
@@ -275,13 +273,13 @@ class Account {
                 }
             }
             catch (e) {
-               return callback("Account initialize error. Select a saved account and enter the valid password.");
+                return callback("Account initialize error. Select a saved account and enter the valid password.");
             }
 
-            var hexPrivatekey = accountobj.privatekey;
+            let hexPrivatekey = accountobj.privatekey;
 
             // create ECC key
-            var key = new ecckey();
+            let key = new EccKey();
             key.keyFromPrivate(hexPrivatekey, 'hex');
             if (key.pkrmd160hash != accountobj.accountpk) {
                 return callback("Error in restoring the account, incorrect password or invalid backup data");
@@ -292,43 +290,43 @@ class Account {
             }
 
             //  encrypt this
-            var user_context = {
+            let user_context = {
                 "privatekey": key.privateKeyHex,
                 "connsymmkey": accountobj.connsymmkey,
                 "timestamp": Date.now()
             };
 
-            var cipher_context = peermsg.aes256encrypt(pbkdf2, JSON.stringify(user_context));
+            let cipher_context = peermsg.aes256encrypt(pbkdf2, JSON.stringify(user_context));
 
             this.ppkikey = key;
             this.connsymmkey = accountobj.connsymmkey;
 
             this.accountname = account;
 
-            this.addToDB(cipher_context, function () {               
+            this.addToDB(cipher_context, function () {
                 callback();
             });
         }
         catch (e) {
-           return callback("Account restore error: %j", e);
+            return callback("Account restore error: %j", e);
         }
     };
 
-    change_password (password, callback) {
+    change_password(password, callback) {
         try {
             if (!password) {
-               return callback("Invalid parameters, the account and passwords are required");
+                return callback("Invalid parameters, the account and passwords are required");
             }
 
 
-            var symcrypt_key = this.getCryptPassword(password);
-            var user_context = {
+            let symcrypt_key = this.getCryptPassword(password);
+            let user_context = {
                 "privatekey": this.ppkikey.privateKeyHex,
                 "connsymmkey": this.connsymmkey,
                 "timestamp": Date.now()
             };
 
-            var cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
+            let cipher_context = peermsg.aes256encrypt(symcrypt_key, JSON.stringify(user_context));
             this.addToDB(this.accountpk, cipher_context, function () {
                 callback();
             });
@@ -342,46 +340,50 @@ class Account {
         this.ppkikey = null;
     }
 
-    init(password, callback) {
-       try {
-           if (!this.validatePassword(password)) {
-               return callback("Password syntax validation error: Invalid password, the password must be at least 6 characters long, must include both lower case and upper case characters, a number and special character.");
-           }
+    init(password) {
+        //Todo need to change
+        return new Promise((resolve, reject) => {
+            try {
+                if (!this.validatePassword(password)) {
+                    return reject("Password syntax validation error: Invalid password, the password must be at least 6 characters long, must include both lower case and upper case characters, a number and special character.");
+                }
 
-            const db = new Database();
-            db.data(
-                (err, data) => {
-                    if (err) {
-                        return callback("Account database error: " + (err.message || err));
-                    }
-
-                    if (!data) {
-                        this.create_account('streembit-cli', password, callback);
-                    }
-                    else {
-                        //logger.debug("pwd : %s", password);
-                        const password_hash = createHash('sha256').update(password).digest('hex');
-                        //logger.debug("param pwd hash: %s", password_hash);
-                        //logger.debug("dbase pwd hash: %s", data.password);
-                        if (password_hash !== data.password) {
-                            return callback("Account initialization error: Invalid password");
+                const db = new AccountsDb();
+                db.data(
+                    (err, data) => {
+                        if (err) {
+                            return reject("Account database error: " + (err.message || err));
                         }
 
-                        config.account = data.account;
-                        this.load_account(password, data, callback);
+                        if (!data) {
+                            this.create_account('streembit-cli', password, resolve);
+                        }
+                        else {
+                            //logger.debug("pwd : %s", password);
+                            const password_hash = createHash('sha256').update(password).digest('hex');
+                            //logger.debug("param pwd hash: %s", password_hash);
+                            //logger.debug("dbase pwd hash: %s", data.password);
+                            if (password_hash !== data.password) {
+                                return reject("Account initialization error: Invalid password");
+                            }
+
+                            config.account = data.account;
+                            this.load_account(password, data, resolve);
+                        }
                     }
-                }
-            );
-        }
-        catch (err) {
-            callback(err);
-        }
+                );
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
+
     }
 
     load(password, callback) {
         // get the account details from the database
         try {
-            var db = new Database();
+            let db = new AccountsDb();
             db.data(
                 (err, data) => {
                     if (err) {
@@ -427,5 +429,3 @@ class Account {
         return true;
     }
 }
-
-module.exports = Account;

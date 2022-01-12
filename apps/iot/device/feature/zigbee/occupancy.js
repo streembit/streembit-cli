@@ -23,19 +23,19 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const OccupancyFeature = require("../occupancy");
-const logger = require("streembit-util").logger;
-const util = require('util');
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
+
+import { definitions as iotdefinitions } from '../../../definitions.js';
+
+import { OccupancyFeature } from '../occupancy.js';
+import { logger } from "streembit-util";
+import { ZigbeeCommands as zigbeecmd } from '../../../protocols/zigbee/commands/index.js';
 
 let CLUSTERID = 0x0406;
 
-class ZigbeeOccupancyFeature extends OccupancyFeature {
+export class ZigbeeOccupancyFeature extends OccupancyFeature {
 
-    constructor(deviceid, feature, feature_type,  transport) {
-        super(deviceid, feature, feature_type, transport);  
+    constructor(deviceid, feature, feature_type, transport) {
+        super(deviceid, feature, feature_type, transport);
 
         this.cluster = feature.toLowerCase();
         let clusternum = parseInt(this.cluster, 16);
@@ -48,10 +48,10 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
         this.NWKaddress = 0;
 
         this.report_max = 0x003c; // 60 seconds        
-        
+
         this.property_names.push(iotdefinitions.PROPERTY_OCCUPANCY);
 
-        logger.debug("Initialized a Zigbee occupancy feature");        
+        logger.debug("Initialized a Zigbee occupancy feature");
     }
 
     on_datareceive_event(properties) {
@@ -64,7 +64,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
                 (item) => {
                     if (item.property == iotdefinitions.PROPERTY_OCCUPANCY) {
                         this.occupancy = item.value;
-                        logger.debug("PROPERTY_OCCUPANCY: %d", this.occupancy);                        
+                        logger.debug("PROPERTY_OCCUPANCY: %d", this.occupancy);
                     }
                 }
             );
@@ -81,7 +81,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
         catch (err) {
             logger.error("ZigbeeOccupancyFeature on_datareceive_event() error: %j", err);
         }
-    }    
+    }
 
     iscluster(param) {
         return this.cluster == param;
@@ -106,7 +106,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
         }
     }
 
-    bind() {        
+    bind() {
         var txn = 0x53;
         logger.debug("ZigbeeOccupancyFeature cluster 0406, send bind request at endpoint: " + this.cluster_endpoint);
         var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
@@ -121,7 +121,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
         }
         catch (err) {
             logger.error("ZigbeeOccupancyFeature on_clusterlist_receive() error: %j", err);
-        }   
+        }
     }
 
     configure_report() {
@@ -195,7 +195,7 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
             // do the reading
             this.read_occupancy();
         }
-    }   
+    }
 
     configure() {
     }
@@ -203,4 +203,3 @@ class ZigbeeOccupancyFeature extends OccupancyFeature {
     //
 }
 
-module.exports = ZigbeeOccupancyFeature;

@@ -24,9 +24,8 @@ Based on
 
 'use strict';
 
-const assert = require('assert');
-const utils = require('./utils');
-
+import assert from 'assert'
+import * as utils from './utils.js'
 
 /**
  * Represent kademlia protocol handlers
@@ -164,4 +163,4 @@ class KademliaRules {
 
 }
 
-module.exports = KademliaRules;
+export default KademliaRules;

@@ -21,16 +21,16 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("streembit-util").logger;
-const async = require("async");
-const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
+import { logger } from "streembit-util";
 
-module.exports = (message, callback) => {
+import { validate } from './msg_validator.js';
+
+export default (message, callback) => {
     try {
         logger.debug("handle STORE message");
-        msgvalidator.validate(message, callback);
+        validate(message, callback);
     }
     catch (err) {
         callback(err);
     }
-};
+}

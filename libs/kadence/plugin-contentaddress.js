@@ -4,16 +4,15 @@
 
 'use strict';
 
-const { createHash } = require('crypto');
-const merge = require('merge');
-const assert = require('assert');
-
+import { createHash } from "crypto";
+import merge from "merge";
+import assert from "assert";
 
 /**
  * Enforces that any {@link KademliaNode~entry} stored in the DHT must be
  * content-addressable (keyed by the hash of it's value).
  */
-class ContentAddressPlugin {
+export class ContentAddressPlugin {
 
   static get DEFAULTS() {
     return {
@@ -66,10 +65,8 @@ class ContentAddressPlugin {
  * @param {string} [options.keyAlgorithm="rmd160"] - Algorithm for hashing
  * @param {string} [options.valueEncoding="base64"] - Text encoding of value
  */
-module.exports = function(options) {
-  return function(node) {
+export default (options) => {
+  return (node) => {
     return new ContentAddressPlugin(node, options);
   }
-};
-
-module.exports.ContentAddressPlugin = ContentAddressPlugin;
+}

@@ -29,13 +29,15 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-var events = require('events');
-var assert = require('assert');
-var async = require('async');
-var constants = require('./constants');
-var Contact = require('./contact');
-var Message = require('./message');
-var Logger = require('./logger');
+import { events } from 'events';
+import assert from 'assert';
+import async from 'async';
+import { Contact } from './contact.js';
+
+import { constants } from './constants.js';
+import { Message } from './message.js';
+import { Logger } from './logger.js';
+
 
 /**
  * Represents an RPC interface
@@ -96,7 +98,7 @@ var Logger = require('./logger');
  */
 
 
-class RPC extends events.EventEmitter {
+export class RPC extends events.EventEmitter {
     constructor(contact, options = {}) {
         super();
         assert(this instanceof RPC, 'Invalid instance supplied');
@@ -415,4 +417,3 @@ class RPC extends events.EventEmitter {
 }
 
 
-module.exports = RPC;

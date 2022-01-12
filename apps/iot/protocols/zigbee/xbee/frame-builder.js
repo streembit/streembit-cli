@@ -8,11 +8,14 @@
 
 'use strict';
 
-var assert = require('assert'),
-    C = require('./constants'),
-    Buffer = require('safe-buffer').Buffer;
+import assert from 'assert';
 
-var frame_builder = module.exports = {
+import * as C from './constants.js';
+
+import { Buffer } from 'safe-buffer';
+
+
+export const frame_builder = {
   frameId: 0,
   nextFrameId: function nextFrameId() {
     this.frameId = this.frameId >= 0xff ? 1 : ++this.frameId;
@@ -29,7 +32,7 @@ var frame_builder = module.exports = {
 
 // Appends data provided as Array, String, or Buffer
 function appendData(data, builder) {
-  if(Array.isArray(data) || Buffer.isBuffer(data)) {
+  if (Array.isArray(data) || Buffer.isBuffer(data)) {
     data = Buffer.from(data);
   } else {
     data = Buffer.from(data, 'ascii');
@@ -38,15 +41,15 @@ function appendData(data, builder) {
   builder.appendBuffer(data);
 }
 
-frame_builder[C.FRAME_TYPE.AT_COMMAND] = 
-frame_builder[C.FRAME_TYPE.AT_COMMAND_QUEUE_PARAMETER_VALUE] = function(frame, builder) {
-  builder.appendUInt8(frame.type);
-  builder.appendUInt8(this.getFrameId(frame));
-  builder.appendString(frame.command, 'ascii');
-  appendData(frame.commandParameter, builder);
-};
+frame_builder[C.FRAME_TYPE.AT_COMMAND] =
+  frame_builder[C.FRAME_TYPE.AT_COMMAND_QUEUE_PARAMETER_VALUE] = function (frame, builder) {
+    builder.appendUInt8(frame.type);
+    builder.appendUInt8(this.getFrameId(frame));
+    builder.appendString(frame.command, 'ascii');
+    appendData(frame.commandParameter, builder);
+  };
 
-frame_builder[C.FRAME_TYPE.REMOTE_AT_COMMAND_REQUEST] = function(frame, builder) {
+frame_builder[C.FRAME_TYPE.REMOTE_AT_COMMAND_REQUEST] = function (frame, builder) {
   builder.appendUInt8(frame.type);
   builder.appendUInt8(this.getFrameId(frame));
   builder.appendString(frame.destination64 || C.UNKNOWN_64, 'hex');
@@ -56,7 +59,7 @@ frame_builder[C.FRAME_TYPE.REMOTE_AT_COMMAND_REQUEST] = function(frame, builder)
   appendData(frame.commandParameter, builder);
 };
 
-frame_builder[C.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST] = function(frame, builder) {
+frame_builder[C.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST] = function (frame, builder) {
   builder.appendUInt8(frame.type);
   builder.appendUInt8(this.getFrameId(frame));
   builder.appendString(frame.destination64 || C.UNKNOWN_64, 'hex');
@@ -67,7 +70,7 @@ frame_builder[C.FRAME_TYPE.ZIGBEE_TRANSMIT_REQUEST] = function(frame, builder) {
 };
 
 
-frame_builder[C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME] = function(frame, builder) {
+frame_builder[C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME] = function (frame, builder) {
   builder.appendUInt8(frame.type);
   builder.appendUInt8(this.getFrameId(frame));
   builder.appendString(frame.destination64 || C.UNKNOWN_64, 'hex');
@@ -75,16 +78,16 @@ frame_builder[C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME] = function(
   builder.appendUInt8(frame.sourceEndpoint);
   builder.appendUInt8(frame.destinationEndpoint);
 
-  if (typeof(frame.clusterId) === 'number') {
-	  builder.appendUInt16BE(frame.clusterId, 'hex');
+  if (typeof (frame.clusterId) === 'number') {
+    builder.appendUInt16BE(frame.clusterId, 'hex');
   } else {
-	  builder.appendString(frame.clusterId, 'hex');
+    builder.appendString(frame.clusterId, 'hex');
   }
 
-  if (typeof(frame.profileId) === 'number') {
-	  builder.appendUInt16BE(frame.profileId, 'hex');
+  if (typeof (frame.profileId) === 'number') {
+    builder.appendUInt16BE(frame.profileId, 'hex');
   } else {
-	  builder.appendString(frame.profileId, 'hex');
+    builder.appendString(frame.profileId, 'hex');
   }
 
   builder.appendUInt8(frame.broadcastRadius || 0x00);
@@ -92,7 +95,7 @@ frame_builder[C.FRAME_TYPE.EXPLICIT_ADDRESSING_ZIGBEE_COMMAND_FRAME] = function(
   appendData(frame.data, builder);
 };
 
-frame_builder[C.FRAME_TYPE.CREATE_SOURCE_ROUTE] = function(frame, builder) {
+frame_builder[C.FRAME_TYPE.CREATE_SOURCE_ROUTE] = function (frame, builder) {
   builder.appendUInt8(frame.type);
   builder.appendUInt8(0); // Frame ID is always zero for this
   builder.appendString(frame.destination64, 'hex');
@@ -104,7 +107,7 @@ frame_builder[C.FRAME_TYPE.CREATE_SOURCE_ROUTE] = function(frame, builder) {
   }
 };
 
-frame_builder[C.FRAME_TYPE.TX_REQUEST_64] = function(frame, builder) {
+frame_builder[C.FRAME_TYPE.TX_REQUEST_64] = function (frame, builder) {
   builder.appendUInt8(frame.type);
   builder.appendUInt8(this.getFrameId(frame));
   builder.appendString(frame.destination64 || C.UNKNOWN_64, 'hex');
@@ -112,7 +115,7 @@ frame_builder[C.FRAME_TYPE.TX_REQUEST_64] = function(frame, builder) {
   appendData(frame.data, builder);
 };
 
-frame_builder[C.FRAME_TYPE.TX_REQUEST_16] = function(frame, builder) {
+frame_builder[C.FRAME_TYPE.TX_REQUEST_16] = function (frame, builder) {
   builder.appendUInt8(frame.type);
   builder.appendUInt8(this.getFrameId(frame));
   builder.appendString(frame.destination16 || C.BROADCAST_16_XB, 'hex');

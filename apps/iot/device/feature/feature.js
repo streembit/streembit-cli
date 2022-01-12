@@ -23,15 +23,13 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const events = require("streembit-util").events;
-const logger = require("streembit-util").logger;
-const constants = require("libs/constants");
-const EventEmitter = require('events');
-const iotdefinitions = require("apps/iot/definitions");
 
-class IoTFeature {
+import { events } from "streembit-util";
+import { definitions as iotdefinitions } from "../../definitions.js";
+
+export class IoTFeature {
     constructor(deviceid, feature, featuretype, transport) {
-        if (!feature || typeof feature != "string" ) {
+        if (!feature || typeof feature != "string") {
             throw new Error("IoTFeature error, the feature cannot be empty and must be a string");
         }
 
@@ -47,7 +45,7 @@ class IoTFeature {
         this.isactive = false;
         this.datareceived = false;
         this.callbacks = new Map();
-        this.property_names = [];        
+        this.property_names = [];
         this.last_update_time = 0;
         this.initialized = false;
 
@@ -75,7 +73,7 @@ class IoTFeature {
             data.payload.gatewayid = this.gatewayid;
             data.payload.feature = this.type;
             events.emit(event, this.deviceid, data);
-        }        
+        }
     }
 
     bind() {
@@ -102,7 +100,7 @@ class IoTFeature {
     on_device_contacting(payload) {
     }
 
-    read(payload, callback, timeout) {        
+    read(payload, callback, timeout) {
         if (!callback && typeof callback != "function") { return; }
 
         if (this.isonline == false) {
@@ -114,7 +112,7 @@ class IoTFeature {
             throw new Error("invalid txn in payload");
         }
 
-        try {   
+        try {
             this.callbacks.set(txn, callback);
             setTimeout(
                 () => {
@@ -133,12 +131,12 @@ class IoTFeature {
             }
             catch (e) { }
 
-            try {                
+            try {
                 if (txn && this.callbacks.has(txn)) {
                     this.callbacks.delete(txn);
                 }
             }
-            catch(e){}
+            catch (e) { }
         }
     }
 
@@ -164,4 +162,3 @@ class IoTFeature {
 }
 
 
-module.exports = IoTFeature;

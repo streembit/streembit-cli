@@ -30,7 +30,10 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-module.exports = {
-    TCP: require('./tcp'),
-    HTTP: require('./http')
+import { TCPTransport as TCP } from './tcp.js';
+import { HTTPTransport as HTTP } from './http.js';
+
+export {
+    TCP,
+    HTTP
 };

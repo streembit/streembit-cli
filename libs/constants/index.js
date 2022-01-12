@@ -22,7 +22,7 @@ Copyright (C) 2016 The Streembit software development team
 'use strict';
 
 
-var constants = {
+export const constants = {
     DEFAULT_TRANSPORT: "http",
     DEFAULT_WSTRANSPORT: "ws",
     DEFAULT_STREEMBIT_PORT: 32319,
@@ -110,5 +110,3 @@ var constants = {
         'verifymessage'
     ]
 };
-
-module.exports = constants;

@@ -19,13 +19,11 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-var utils = exports;
-
-utils.getNamespace = function getNamespace(data, uri) {
-  var ns;
+export const getNamespace = (data, uri) => {
+  let ns;
 
   if (data['@']) {
-    Object.keys(data['@']).some(function(key) {
+    Object.keys(data['@']).some((key) => {
       if (!/^xmlns:/.test(key)) return;
       if (data['@'][key] !== uri) {
         return;
@@ -37,4 +35,4 @@ utils.getNamespace = function getNamespace(data, uri) {
   }
 
   return ns ? ns + ':' : '';
-};
+}

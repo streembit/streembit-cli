@@ -30,17 +30,19 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-let assert = require('assert');
-let events = require('events');
-let async = require('async');
-let _ = require('lodash');
-let constants = require('./constants');
-let utils = require('./utils');
-let Message = require('./message');
-let Logger = require('./logger');
-let Bucket = require('./bucket');
-let Contact = require('./contact');
-let Item = require('./item');
+import assert from 'assert';
+import events from 'events';
+import async from 'async';
+import * as _ from 'lodash';
+import { constants } from './constants.js';
+import * as utils from './utils.js';
+import { Message } from './message.js';
+import { Bucket } from './bucket.js';
+import { Contact } from './contact.js';
+import { Logger } from './logger.js';
+import { Item } from './item.js';
+
+
 
 /**
  * Represents a routing table of known {@link Contact}s; used by {@link Node}.
@@ -55,7 +57,7 @@ let Item = require('./item');
  */
 
 
-class Router extends events.EventEmitter {
+export class Router extends events.EventEmitter {
     // NB: Don't ping contact at bucket head if seen within the last 5 minutes
     static PING_TTL = 300000;
     constructor(options) {
@@ -860,4 +862,3 @@ class Router extends events.EventEmitter {
 
 
 
-module.exports = Router;

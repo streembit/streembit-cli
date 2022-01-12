@@ -21,19 +21,16 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-
-const prompt = require('prompt');
-const logger = require('streembit-util').logger;
-const util = require('util');
-
-const DevicesDb = require('libs/database//devicesdb');
-
+import prompt from "prompt";
+import util from "util";
+import { logger } from "streembit-util";
+import IoTDevicesDb from "../database/devicesdb.js";
 
 class DevicesCmds {
     constructor(cmd, callback) {
         this.cmd = cmd;
         this.cb = callback;
-        this.devicesDB = new DevicesDb();
+        this.devicesDB = new IoTDevicesDb();
     }
 
     run() {
@@ -138,4 +135,4 @@ class DevicesCmds {
     }
 }
 
-module.exports = DevicesCmds;
+export default DevicesCmds;

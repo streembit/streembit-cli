@@ -31,13 +31,14 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const StreembitContact = require('../contacts/streembit-contact');
-const Message = require('../message');
-const assert = require('assert');
-const http = require('http');
-const https = require('https');
-const RPC = require('../rpc');
-const events = require("streembit-util").events;
+import { StreembitContact } from '../contacts/streembit-contact.js';
+import { Message } from '../message.js';
+import assert from 'assert';
+import http from 'http';
+import https from 'https';
+import { RPC } from '../rpc.js';
+import { events } from 'streembit-util';
+
 
 
 // create agents to enable http persistent connections:
@@ -54,7 +55,7 @@ var httpsagent = new https.Agent({ keepAlive: true, keepAliveMsecs: 25000 });
  * @param {Object} options.ssl - Options to pass to https.createServer()
  */
 
-class HTTPTransport extends RPC {
+export class HTTPTransport extends RPC {
 
 
     constructor(contact, options) {
@@ -87,7 +88,7 @@ class HTTPTransport extends RPC {
 
                 const create_error_buffer = (err) => {
                     const errmsg = JSON.stringify({ error: err.message ? err.message : err });
-                    const buffer = new Buffer(errmsg);
+                    const buffer = Buffer.from(errmsg);
                     return buffer;
                 }
 
@@ -109,7 +110,7 @@ class HTTPTransport extends RPC {
                 let message = JSON.parse(payload);
                 if (!message || !message.type) {
                     try {
-                        let buffer = new Buffer(payload);
+                        let buffer = Buffer.from(payload);
                         message = Message.fromBuffer(buffer);
 
                         if (Message.isRequest(message) && message.id) {
@@ -190,7 +191,7 @@ class HTTPTransport extends RPC {
                     return self.receive(null);
                 }
 
-                self.receive(new Buffer(payload), {});
+                self.receive(Buffer.from(payload), {});
             });
         }
 
@@ -260,4 +261,4 @@ class HTTPTransport extends RPC {
 
 }
 
-module.exports = HTTPTransport;
+

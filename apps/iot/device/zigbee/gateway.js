@@ -23,14 +23,14 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const Devices = require("libs/devices");
-const Device = require("apps/iot/device/device");
-const events = require("streembit-util").events;
-const logger = require("streembit-util").logger;
-const iotdefinitions = require("apps/iot/definitions");
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
-const ZigbeeDevice = require('apps/iot/device/zigbee/device');
+
+import { Device } from '../device.js';
+
+import { logger, events } from "streembit-util";
+import { definitions as iotdefinitions } from '../../definitions.js';
+import { ZigbeeCommands as zigbeecmd } from '../../protocols/zigbee/commands/index.js';
+
+
 
 const DEFAULT_JOIN_TIME = 180; // permit joining interval in seconds
 
@@ -38,7 +38,7 @@ let m_address64;
 let m_address16;
 let m_endpoint;
 
-class ZigbeeGateway extends Device {
+export class ZigbeeGateway extends Device {
 
     constructor(id, device, cmdbuilder, transport) {
         try {
@@ -47,7 +47,7 @@ class ZigbeeGateway extends Device {
             this.permission = iotdefinitions.PERMISSION_ALLOWED;
             this.active = false;
 
-            logger.debug("Initialized ZigbeeGateway device id: " + id);            
+            logger.debug("Initialized ZigbeeGateway device id: " + id);
         }
         catch (err) {
             throw new Error("ZigbeeGateway constructor error: " + err.message);
@@ -83,12 +83,12 @@ class ZigbeeGateway extends Device {
                         "address16": m_address16,
                         "endpoint": m_endpoint
                     }
-                );  
+                );
 
                 // enable join 
                 this.enable_join();
             }
-           
+
         }
         catch (err) {
             logger.error("ZigbeeGateway on_data_received() error: %j", err);
@@ -96,14 +96,14 @@ class ZigbeeGateway extends Device {
     }
 
     enable_join(interval) {
-        var time = interval || DEFAULT_JOIN_TIME;
+        let time = interval || DEFAULT_JOIN_TIME;
         logger.debug("Gateway " + this.id + " enable join for " + time + " seconds.")
-        var cmd = zigbeecmd.permitJoinRequest(m_address64, m_address16, time);
+        let cmd = zigbeecmd.permitJoinRequest(m_address64, m_address16, time);
         this.transport.send(cmd);
     }
 
     get_device_info() {
-        var info = this.details;
+        let info = this.details;
         info["address64"] = m_address64;
         info["address16"] = m_address16;
         info["deviceid"] = this.id;
@@ -122,4 +122,3 @@ class ZigbeeGateway extends Device {
 
 }
 
-module.exports = ZigbeeGateway;

@@ -23,21 +23,17 @@ Copyright (C) 2016 The Streembit software development team
 
 var streembit = streembit || {};
 
-const async = require("async");
-const config = require("libs/config");
-const logger = require("streembit-util").logger;
-const db = require("streembit-db").instance
-const kad = require("libs/peernet/kad");
-const msghandler = require("libs/peernet/msg");
-const constants = require("libs/constants");
+import async from "async";
+import { config } from '../../libs/config/index.js';
+import { constants } from "../../libs/constants/index.js";
+import * as msghandler from "../../libs/peernet/msg.js";
+import { KadHandler } from "../../libs/peernet/kad.js";
+import { logger } from 'streembit-util';
 
-const PubSub = require('libs/pubsub');
-
-module.exports = function (callback) {
+export function seed(callback) {
     try {
 
         config.net = constants.KADNET;
-
         var conf = config.seed_config;
         if (!conf.run) {
             logger.info("Config seed handler -> not running");
@@ -55,7 +51,7 @@ module.exports = function (callback) {
                             peermsgrcv: msghandler.on_peer_message
                         };
 
-                        var kadnet = new kad.KadHandler();
+                        var kadnet = new KadHandler();
                         kadnet.init(options, cb);
                     }
                     catch (e) {

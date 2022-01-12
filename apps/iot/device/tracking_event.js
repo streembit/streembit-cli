@@ -21,15 +21,14 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const events = require("streembit-util").events;
-const logger = require("streembit-util").logger;
+import { logger, events } from "streembit-util";
 
 const DEFAULT_INTERVAL = 60000;
 
 let instance = null;
 let m_events = null;
 
-class TrackingEvent {
+export class TrackingEvent {
 
     constructor() {
         if (!instance) {
@@ -44,10 +43,10 @@ class TrackingEvent {
     }
 
     static insert(eventtype, gatewayid, data, interval) {
-        var index = -1;
-        var eventitem = 0;
-        for (var i = 0; i < TrackingEvent.events.length; i++) {
-            var item = TrackingEvent.events[i];
+        let index = -1;
+        let eventitem = 0;
+        for (let i = 0; i < TrackingEvent.events.length; i++) {
+            let item = TrackingEvent.events[i];
             if (item.eventtype == eventtype && item.gatewayid == gatewayid && item.data.payload.event == data.payload.event) {
                 index = i;
                 eventitem = item[i];
@@ -74,9 +73,9 @@ class TrackingEvent {
     static remove_event_bydevice(deviceid, eventid) {
         try {
             //console.log("remove tracking event: " + eventid + ", deviceid: " + deviceid)
-            var index = -1;
-            for (var i = 0; i < TrackingEvent.events.length; i++) {
-                var item = TrackingEvent.events[i];
+            let index = -1;
+            for (let i = 0; i < TrackingEvent.events.length; i++) {
+                let item = TrackingEvent.events[i];
                 if (item.data && item.data.payload &&
                     item.data.payload.device && item.data.payload.device.deviceid == deviceid &&
                     item.data.payload.event == eventid) {
@@ -96,9 +95,9 @@ class TrackingEvent {
 
     static remove(eventtype, gatewayid, eventid) {
         console.log("remove tracking event type: " + eventtype + ", event: " + eventid + ", gateway: " + gatewayid)
-        var index = -1;
-        for (var i = 0; i < TrackingEvent.events.length; i++) {
-            var item = TrackingEvent.events[i];
+        let index = -1;
+        for (let i = 0; i < TrackingEvent.events.length; i++) {
+            let item = TrackingEvent.events[i];
             if (item.eventtype == eventtype && item.gatewayid == gatewayid && item.data.payload.event == eventid) {
                 index = i;
                 break;
@@ -111,7 +110,7 @@ class TrackingEvent {
     }
 
     static send(eventtype, gatewayid, data, interval) {
-        if (!eventtype ) {
+        if (!eventtype) {
             throw new Error("Invalid tracking event, eventtype required.");
         }
         if (!gatewayid) {
@@ -132,12 +131,12 @@ class TrackingEvent {
     static monitor() {
         try {
             //console.log("TrackingEvent monitor");
-            var currtime = Date.now();
-            for (var i = 0; i < TrackingEvent.events.length; i++) {
-                var item = TrackingEvent.events[i];
+            let currtime = Date.now();
+            for (let i = 0; i < TrackingEvent.events.length; i++) {
+                let item = TrackingEvent.events[i];
                 if ((currtime - item.time) > item.interval) {
                     // resend 
-                    var eventtype = item.eventtype, gatewayid = item.gatewayid, data = item.data, interval = item.interval;
+                    let eventtype = item.eventtype, gatewayid = item.gatewayid, data = item.data, interval = item.interval;
                     TrackingEvent.send(eventtype, gatewayid, data, interval);
                 }
             }
@@ -148,5 +147,3 @@ class TrackingEvent {
     }
 }
 
-
-module.exports = TrackingEvent;

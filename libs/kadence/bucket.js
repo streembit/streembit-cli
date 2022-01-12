@@ -24,8 +24,8 @@ Based on
 
 'use strict';
 
-const constants = require('./constants');
-const utils = require('./utils');
+import * as constants from './constants.js'
+import * as utils from './utils.js'
 
 
 /**
@@ -141,4 +141,4 @@ class Bucket extends Map {
     }
 }
 
-module.exports = Bucket;
+export default Bucket;

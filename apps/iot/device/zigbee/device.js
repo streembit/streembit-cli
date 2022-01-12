@@ -21,23 +21,26 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const Device = require("apps/iot/device/device");
-const events = require("streembit-util").events;
-const logger = require("streembit-util").logger;
-const config = require("libs/config");
-const util = require('util');
-const async = require('async');
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
-const TrackingEvent = require('apps/iot/device/tracking_event');
+import { definitions as iotdefinitions } from '../../definitions.js';
+import { Device } from '../device.js';
 
-class ZigbeeDevice extends Device {
+import { logger, events } from "streembit-util";
+
+
+import util from "util";
+import pkg from 'async';
+const { async } = pkg;
+
+import { ZigbeeCommands as zigbeecmd } from '../../protocols/zigbee/commands/index.js';
+import { TrackingEvent } from '../tracking_event.js';
+
+
+export class ZigbeeDevice extends Device {
 
     constructor(id, device, transport) {
         try {
             // call the base class
-            super(id, device, transport);           
+            super(id, device, transport);
 
             if (device.details && (typeof device.details != "string") &&
                 device.details.hasOwnProperty("address64") && device.details.hasOwnProperty("address16") &&
@@ -45,7 +48,7 @@ class ZigbeeDevice extends Device {
                 // this is being initialzing from an existing ZigbeeDevice object
                 this.details.address64 = device.details.address64 || 0;
                 this.details.address16 = device.details.address16 || 0;
-                this.details.descriptors = device.details.descriptors || 0;     
+                this.details.descriptors = device.details.descriptors || 0;
             }
 
             if (!this.details.address64) {
@@ -58,7 +61,7 @@ class ZigbeeDevice extends Device {
 
             this.details.descriptors = new Map();
 
-            logger.debug("Initialized Zigbee device id: " + id );
+            logger.debug("Initialized Zigbee device id: " + id);
         }
         catch (err) {
             throw new Error("IoTEndDevice constructor error: " + err.message);
@@ -66,7 +69,7 @@ class ZigbeeDevice extends Device {
     }
 
     is_feature_handled(feature) {
-        let num = iotdefinitions.ZIGBEE_CLUSTERMAP[feature]; 
+        let num = iotdefinitions.ZIGBEE_CLUSTERMAP[feature];
         return num > 1;
     }
 
@@ -82,7 +85,7 @@ class ZigbeeDevice extends Device {
         var features = [];
         for (let i = 0; i < types.length; i++) {
             let val = iotdefinitions.ZIGBEE_TYPEMAP[types[i]];
-            if (val && typeof val == "string")  {
+            if (val && typeof val == "string") {
                 features.push(val);
             }
         }
@@ -114,7 +117,7 @@ class ZigbeeDevice extends Device {
             // call the device online event handler of each features
             this.features.forEach((feature, key, map) => {
                 feature.on_report_configured(payload);
-            });            
+            });
         }
         catch (err) {
             logger.error("on_device_announce() error: %j", err);
@@ -187,11 +190,11 @@ class ZigbeeDevice extends Device {
                     logger.error("ZigbeeDevice on_endpoint_receive() async.eachSeries() simple_descriptor_request error: %j", err)
                 }
             }
-        );       
+        );
     }
 
     select_endpoint(cluster) {
-        var endpoint = null; 
+        var endpoint = null;
         this.details.descriptors.forEach(
             (clusters, endpoint_keyval) => {
                 for (let i = 0; i < clusters.length; i++) {
@@ -226,7 +229,7 @@ class ZigbeeDevice extends Device {
             if (endpoint == null || endpoint < 0) {
                 return logger.error("process_features() error: endpoint is not available for cluster " + cluster);
             }
-       
+
             feature.on_clusterlist_receive(endpoint);
 
             //
@@ -293,7 +296,7 @@ class ZigbeeDevice extends Device {
         return data;
     }
 
-    notify_device_info() {       
+    notify_device_info() {
 
         logger.debug("notify_device_info() send EVENT_GATEWAY_DATA_REQUEST");
 
@@ -306,20 +309,20 @@ class ZigbeeDevice extends Device {
             (gateway) => {
                 let gatewayid = gateway.id;
                 var deviceinfo = this.get_device_info();
-                let data = {                    
+                let data = {
                     payload: {
                         event: iotdefinitions.IOT_NEW_DEVICE_JOINED,
                         gateway: gatewayid,
                         device: deviceinfo
                     }
                 };
-               
+
                 logger.debug(`notify_device_info TrackingEvent.send event IOT_NEW_DEVICE_JOINED gateway:${gatewayid} deviceinfo: ${util.inspect(deviceinfo)}`);
 
                 TrackingEvent.send(iotdefinitions.EVENT_NOTIFY_USERS, gatewayid, data);
             }
-        );    
-       
+        );
+
         //
     }
 
@@ -375,7 +378,7 @@ class ZigbeeDevice extends Device {
                 this.on_endpoint_receive(payload);
             }
             else if (payload.type == iotdefinitions.EVENT_DEVICE_CLUSTERSRCV) {
-                this.on_clusterlist_receive(payload);    
+                this.on_clusterlist_receive(payload);
             }
             else if (payload.type == iotdefinitions.EVENT_DEVICE_INFO) {
                 this.on_device_info(payload);
@@ -409,7 +412,7 @@ class ZigbeeDevice extends Device {
                     }
                 );
                 this.features.forEach((feature, key, map) => {
-                    if (feature.is_property_handled(propnames)){
+                    if (feature.is_property_handled(propnames)) {
                         feature.on_datareceive_event(payload.properties);
                     }
                 });
@@ -464,7 +467,7 @@ class ZigbeeDevice extends Device {
             let cmd = zigbeecmd.netAddressRequest(this.id);
             this.transport.send(cmd);
 
-            
+
             setTimeout(
                 () => {
                     logger.debug("Set gateway id for the features at " + this.id);
@@ -487,10 +490,10 @@ class ZigbeeDevice extends Device {
                                 }
                             );
                         }
-                    );    
+                    );
                 },
                 100
-            );           
+            );
 
             let isactive_timer = setInterval(
                 () => {
@@ -513,4 +516,3 @@ class ZigbeeDevice extends Device {
 
 }
 
-module.exports = ZigbeeDevice;

@@ -29,27 +29,30 @@ Copyright (C) 2016 The Streembit software development team
  */
 
 'use strict';
+import { BlacklistFactory as blacklist } from './blacklist.js'
+import { WhitelistFactory as whitelist } from './whitelist.js'
+import { ProtocolFactory as protocol } from './protocol.js'
 
-module.exports = {
+export {
   /**
    * Creates a blacklist filter for rejecting messages from defined nodeIDs
    * @function
    * @param {Array} nodeIDs - List of nodeIDs to blacklist
    * @returns {Function}
    */
-  blacklist: require('./blacklist'),
+  blacklist,
   /**
    * Creates a whitelist filter for accepting messages from defined nodeIDs
    * @function
    * @param {Array} nodeIDs - List of nodeIDs to whitelist
    * @returns {Function}
    */
-  whitelist: require('./whitelist'),
+  whitelist,
   /**
    * Allows the definition of method handlers not defined by kademlia
    * @function
    * @param {Object} protocol - Hash map of <method_name>:<handler_function>
    * @returns {Function}
    */
-  protocol: require('./protocol')
+  protocol
 };

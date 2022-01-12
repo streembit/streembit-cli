@@ -20,18 +20,17 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const Wshandler = require("./handler");
-const iotdefinitions = require("apps/iot/definitions");
-const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
-const WebSocket = require('ws');
-const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
-const createHash = require('create-hash');
-const createHmac = require('create-hmac');
-const peermsg = require("libs/message");
-const util = require("util");
+import { WsHandler } from "./handler.js";
+import { logger, events } from "streembit-util";
+import WebSocket from "ws";
+import * as msgvalidator from "../../libs/peernet/msghandlers/msg_validator.js"
+import createHash from "create-hash";
+import createHmac from "create-hmac";
+import * as peermsg from "../../libs/message/index.js";
+import util from "util";
+import { definitions as iotdefinitions } from "../../apps/iot/definitions.js";
 
-class IoTWsHandler extends Wshandler {
+export class IoTWsHandler extends WsHandler {
     constructor() {
         super();
         this.list_of_devices = new Map();
@@ -43,7 +42,7 @@ class IoTWsHandler extends Wshandler {
                 throw new Error("no WS auth jwt presented");
             }
 
-            var res = msgvalidator.verify_wsjwt(jwt);
+            const res = msgvalidator.verify_wsjwt(jwt);
 
             const sha1st = createHash("sha512").update(res.token).digest("hex");
             const symmcryptkey = createHash("sha512").update(sha1st).digest("hex");
@@ -77,19 +76,19 @@ class IoTWsHandler extends Wshandler {
             throw new Error("invalid authentication fields");
         }
 
-        var usersession = this.list_of_sessions.get(message.pkhash);
+        const usersession = this.list_of_sessions.get(message.pkhash);
         if (!usersession) {
             throw new Error("invalid user WS session");
         }
-        var token = usersession.token;
+        const token = usersession.token;
         if (!token) {
             throw new Error("invalid authentication token data");
         }
 
         // validate the hmac
-        var hmac = createHmac('sha256', token);
+        const hmac = createHmac('sha256', token);
         hmac.update(message.txn);
-        var hmacdigest = hmac.digest('hex');
+        const hmacdigest = hmac.digest('hex');
 
         if (hmacdigest != message.hmacdigest) {
             throw new Error("invalid authentication secret");
@@ -113,7 +112,7 @@ class IoTWsHandler extends Wshandler {
         }
 
         // the message is valid, check if the deviceid is registered
-        var deviceid = data.id;
+        const deviceid = data.id;
         if (deviceid) {
             if (!this.list_of_devices.has(deviceid)) {
                 let lowercase_device = deviceid.toLowerCase();
@@ -216,17 +215,16 @@ class IoTWsHandler extends Wshandler {
             throw new Error("invalid auth payload");
         }
 
-        var resdata = this.auth_client(message.jwt, ws);
-        var session_key = resdata.session_key;
+        const resdata = this.auth_client(message.jwt, ws);
         resdata.txn = message.txn;
 
-        var data = JSON.stringify(resdata);
+        const data = JSON.stringify(resdata);
         return ws.send(data);
     }
 
     // handles messages from the client
     processmsg(ws, request) {
-        var message = 0;
+        let message = 0;
         try {
             //logger.debug(`processmsg->request: ${request}`);
             message = JSON.parse(request);
@@ -260,7 +258,7 @@ class IoTWsHandler extends Wshandler {
                     }
                     catch (err) {
                         try {
-                            var errmsg = super.format_error(message.txn, 0, err);
+                            const errmsg = super.format_error(message.txn, 0, err);
                             ws.send(errmsg);
                             logger.error("ONIOTEVENT return handling error %j", errmsg)
                         }
@@ -273,7 +271,7 @@ class IoTWsHandler extends Wshandler {
         }
         catch (err) {
             try {
-                var errmsg = super.format_error((message && message.txn ? message.txn : 0), 0, err);
+                const errmsg = super.format_error((message && message.txn ? message.txn : 0), 0, err);
                 ws.send(errmsg);
                 logger.error("sent to client ws error %j", errmsg)
             }
@@ -282,6 +280,3 @@ class IoTWsHandler extends Wshandler {
         }
     }
 }
-
-
-module.exports = IoTWsHandler;

@@ -23,26 +23,27 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const util = require('util');
 
-const ZDO_TXN_NEIGHBORTABLE= 0x77;
-const ZDO_TXN_TEMPERATURE= 0xc1;
-const ZDO_TXN_POWERMULTIPLIER= 0xbb;
-const ZDO_TXN_VOLTAGE= 0xbc;
-const ZDO_TXN_POWER= 0xbe;
-const ZDO_TXN_POWERDIVISOR= 0xbf;
-const ZDO_TXN_SWITCHSTATUS= 0xab;
-const ZDO_TXN_SWITCHOFF= 0xac;
-const ZDO_TXN_SWITCHON= 0xad;
-const ZDO_TXN_SWITCHTOGGLE= 0xae;
-const ZDO_TXN_CONFIGUREREPORT = 0xdd;     
+import util from 'util';
+
+const ZDO_TXN_NEIGHBORTABLE = 0x77;
+const ZDO_TXN_TEMPERATURE = 0xc1;
+const ZDO_TXN_POWERMULTIPLIER = 0xbb;
+const ZDO_TXN_VOLTAGE = 0xbc;
+const ZDO_TXN_POWER = 0xbe;
+const ZDO_TXN_POWERDIVISOR = 0xbf;
+const ZDO_TXN_SWITCHSTATUS = 0xab;
+const ZDO_TXN_SWITCHOFF = 0xac;
+const ZDO_TXN_SWITCHON = 0xad;
+const ZDO_TXN_SWITCHTOGGLE = 0xae;
+const ZDO_TXN_CONFIGUREREPORT = 0xdd;
 const ZDO_TXN_HUMIDITY = 0xde;
 const ZDO_TXN_READATTR = 0xdf;
 
 let zigbeegateway = {};
 
-class ZigbeeCommands {
-    constructor() {        
+export class ZigbeeCommands {
+    constructor() {
     }
 
     static on_gateway_updated(payload) {
@@ -76,8 +77,8 @@ class ZigbeeCommands {
         pjbuf.writeUInt8(duration, 1);
         //console.log("permit_join_req ClusterID=0x0036, duration: " + duration + ", buffer: " + util.inspect(pjbuf));
         var cmd = {
-            destination64: address64, 
-            destination16: address16, 
+            destination64: address64,
+            destination16: address16,
             clusterId: 0x0036,
             profileId: 0x0000,
             sourceEndpoint: 0x00,
@@ -109,7 +110,7 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    static netAddressRequest(address64) {   
+    static netAddressRequest(address64) {
         var addressbuf = ZigbeeCommands.swapEUI64toLittleEndian(address64);
         const narbuf = Buffer.alloc(10);
         narbuf.writeUInt8(0x03, 0); // 0x03 transaction sequence number (arbitrarily chosen) 
@@ -125,17 +126,17 @@ class ZigbeeCommands {
             data: narbuf
         };
 
-        return cmd; 
+        return cmd;
     }
 
     static active_endpoint_request(address64, address16) {
         let addressbuf = Buffer.from(address16, 'hex');
         addressbuf.swap16();
         let aerbuf = Buffer.alloc(3);
-        aerbuf.writeUInt8(0x05, 0);                     
+        aerbuf.writeUInt8(0x05, 0);
         addressbuf.copy(aerbuf, 1);
         console.log("Active Endpoint Request data: " + util.inspect(aerbuf));
-        var cmd = { 
+        var cmd = {
             destination64: address64,
             destination16: address16,
             clusterId: 0x0005,
@@ -152,7 +153,7 @@ class ZigbeeCommands {
         var addressbuf = Buffer.from(address16, 'hex');
         addressbuf.swap16();
         const sdrbuf = Buffer.alloc(4);
-        sdrbuf.writeUInt8(0x04, 0);                     
+        sdrbuf.writeUInt8(0x04, 0);
         addressbuf.copy(sdrbuf, 1);
         sdrbuf.writeUInt8(endpoint, 3);
         //console.log("Simple Descriptor Request data: " + util.inspect(sdrbuf));
@@ -206,7 +207,7 @@ class ZigbeeCommands {
 
         const bindingbuf = Buffer.alloc(22);
         // werite txn
-        bindingbuf.writeUInt8(txn, 0); 
+        bindingbuf.writeUInt8(txn, 0);
         // write the source address 
         source64.copy(bindingbuf, 1);
         // write the source endpoint
@@ -235,7 +236,7 @@ class ZigbeeCommands {
         const gateway64 = zigbeegateway.address64;
         if (!gateway64) {
             throw new Error("invalid gateway IEEE address");
-        }        
+        }
 
         const enrollbuf = Buffer.alloc(14);
         // werite txn
@@ -249,7 +250,7 @@ class ZigbeeCommands {
 
         const cmd = {
             destination64: address64,
-            destination16: address16, 
+            destination16: address16,
             sourceEndpoint: 0x00,           // ?????
             destinationEndpoint: 0x00,      // ?????
             clusterId: 0x0500,
@@ -260,13 +261,13 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    static readTemperature(address64, address16, destendpoint) {  
-        var txn = ZDO_TXN_TEMPERATURE; 
+    static readTemperature(address64, address16, destendpoint) {
+        var txn = ZDO_TXN_TEMPERATURE;
         var cmd = {
             destination64: address64,
-            destination16: address16, 
-            sourceEndpoint: zigbeegateway.endpoint, 
-            destinationEndpoint: destendpoint, 
+            destination16: address16,
+            sourceEndpoint: zigbeegateway.endpoint,
+            destinationEndpoint: destendpoint,
             clusterId: 0x0402,
             profileId: 0x0104,
             data: [0x00, txn, 0x00, 0x00, 0x00]
@@ -303,7 +304,7 @@ class ZigbeeCommands {
     }
 
     static readAttributes(address64, address16, clusterId, attributes, destendpoint) {
-        var txn = ZDO_TXN_READATTR; 
+        var txn = ZDO_TXN_READATTR;
 
         var data = [0x00, txn, 0x00];
         attributes.forEach(
@@ -324,7 +325,7 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    static readSwitchStatus(address64, address16, destendpoint) {   
+    static readSwitchStatus(address64, address16, destendpoint) {
         var txn = ZDO_TXN_SWITCHSTATUS;
         var cmd = {
             destination64: address64,
@@ -338,7 +339,7 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    static execToggleSwitch(address64, address16, destendpoint) { 
+    static execToggleSwitch(address64, address16, destendpoint) {
         var txn = ZDO_TXN_SWITCHTOGGLE;
         var cmd = {
             destination64: address64,
@@ -360,12 +361,12 @@ class ZigbeeCommands {
             destinationEndpoint: destendpoint,
             clusterId: 0x0020,
             profileId: 0x0104,
-            data: [0x01, 0x88, 0x01] 
+            data: [0x01, 0x88, 0x01]
         };
         return cmd;
     }
 
-    static readVoltage(address64, address16, destendpoint) { 
+    static readVoltage(address64, address16, destendpoint) {
         var txn = ZDO_TXN_VOLTAGE;
         var cmd = {
             destination64: address64,
@@ -380,7 +381,7 @@ class ZigbeeCommands {
     }
 
 
-    static readPower(address64, address16, destendpoint) {   
+    static readPower(address64, address16, destendpoint) {
         var txn = ZDO_TXN_POWER;
         var cmd = {
             destination64: address64,
@@ -394,7 +395,7 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    static readPowerDivisor(address64, address16, destendpoint) {  
+    static readPowerDivisor(address64, address16, destendpoint) {
         var txn = ZDO_TXN_POWERDIVISOR;
         var cmd = {
             destination64: address64,
@@ -409,7 +410,7 @@ class ZigbeeCommands {
     }
 
 
-    static readPowerMultiplier(address64, address16, destendpoint) {  
+    static readPowerMultiplier(address64, address16, destendpoint) {
         var txn = ZDO_TXN_POWERMULTIPLIER;
         var cmd = {
             destination64: address64,
@@ -423,7 +424,7 @@ class ZigbeeCommands {
         return cmd;
     }
 
-    static configureReport(address64, address16, cluster, reports, destendpoint) {   
+    static configureReport(address64, address16, cluster, reports, destendpoint) {
         var txn = ZDO_TXN_CONFIGUREREPORT;
         var len = 3; // frame control, txn and command -> 3 bytes
         var report_buffers = [];
@@ -571,4 +572,3 @@ class ZigbeeCommands {
 
 }
 
-module.exports = ZigbeeCommands

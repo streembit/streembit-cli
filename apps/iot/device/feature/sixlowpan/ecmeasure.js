@@ -23,14 +23,14 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const EcMeasureFeature = require("../ecmeasure");
+
+
+import { EcMeasureFeature } from '../ecmeasure.js'
 
 class SixLowPANEcMeasureFeature extends EcMeasureFeature {
 
     constructor(device, feature) {
-        super(device, feature);  
+        super(device, feature);
     }
 
     on_datareceive_event(properties) {
@@ -49,10 +49,10 @@ class SixLowPANEcMeasureFeature extends EcMeasureFeature {
     read(callback) {
     }
 
-    get_voltage(callback) { 
+    get_voltage(callback) {
     }
 
-    get_powerconsumption(callback) {        
+    get_powerconsumption(callback) {
     }
 
 }

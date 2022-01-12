@@ -21,14 +21,16 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const config = require("libs/config");
-const constants = require("libs/constants");
-const peermsg = require("libs/message");
-const bs58check = require('bs58check');
-const createHash = require("create-hash");
-const secrand = require('secure-random');
-const kad = require("./kad");
-const PeerClient = require("./peerclient");
+import { constants } from "../../libs/constants/index.js";
+import { config } from "../../libs/config/index.js";
+import * as peermsg from "../../libs/message/index.js";
+import bs58check from "bs58check";
+import createHash from "create-hash";
+import secrand from "secure-random";
+import { KadHandler } from "./kad.js";
+import PeerClient from "./peerclient.js";
+
+const kad = new KadHandler();
 
 //
 // Net Factory
@@ -55,7 +57,7 @@ class NetFactory {
     }
 }
 
-class PeerNet {
+export class PeerNet {
     constructor() {
     }
 
@@ -138,7 +140,7 @@ class PeerNet {
                 return cbfunc("send_contact_offer error: invalid connsymmkey parameters");
             }
 
-            var pkey_hexbuffer = new Buffer(contact_public_key, 'hex');
+            var pkey_hexbuffer = Buffer.from(contact_public_key, 'hex');
             var rmd160buffer = createHash('rmd160').update(pkey_hexbuffer).digest();
             var contact_pkhash = bs58check.encode(rmd160buffer);
             if (contact_pkey_hash != contact_pkhash) {
@@ -174,7 +176,7 @@ class PeerNet {
 
             var value = peermsg.create_jwt_token(crypto_key, id, payload, null, null, user_public_key, null, contact_bs58public_key);
 
-            var keybuffer = new Buffer(keydata);
+            var keybuffer = Buffer.from(keydata);
             var key = createHash('rmd160').update(keybuffer).digest('hex');
 
             // put the message to the network
@@ -187,6 +189,3 @@ class PeerNet {
         }
     }
 }
-
-
-module.exports = PeerNet;

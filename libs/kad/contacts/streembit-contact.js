@@ -31,9 +31,10 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var assert = require('assert');
-var Contact = require('../contact');
-var utils = require('../utils');
+import assert from 'assert';
+import { Contact } from '../contact.js';
+import * as utils from '../utils.js';
+
 
 
 
@@ -47,20 +48,9 @@ var utils = require('../utils');
  * @param {Number} options.publickey - Contacts public key
  */
 
-class StreembitContact extends Contact {
+export class StreembitContact extends Contact {
 
     constructor(options) {
-        let str;
-
-        if (options.publickey) {
-            assert(typeof options.publickey === 'string', 'Invalid public key was supplied');
-            str = options.publickey.trim();
-
-
-            assert(str.length <= 128, 'Invalid public key was supplied');
-
-        }
-        options.nodeID = options.nodeID || options.publickey;
         super(options);
 
         if (!(this instanceof StreembitContact)) {
@@ -76,8 +66,15 @@ class StreembitContact extends Contact {
         this.host = options.host;
         this.port = options.port;
         this.isseed = options.isseed ? false : true;
-        this.publickey = str;
 
+        if (options.publickey) {
+            assert(typeof options.publickey === 'string', 'Invalid public key was supplied');
+            var str = options.publickey.trim();
+
+
+            assert(str.length <= 128, 'Invalid public key was supplied');
+            this.publickey = str;
+        }
 
     }
 
@@ -93,7 +90,6 @@ class StreembitContact extends Contact {
     * Generate a user-friendly string for the contact
     */
     toString() {
-
         return this.publickey;
     };
 
@@ -107,5 +103,5 @@ class StreembitContact extends Contact {
    publickey: '5454545454534545454545454545454545345454545454545454545453454545454545454545454534545454545454545454545'
 });
 */
-module.exports = StreembitContact;
+
 

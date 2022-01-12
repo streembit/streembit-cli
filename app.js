@@ -19,437 +19,511 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-'use strict';
+"use strict";
+
+import fs from "fs";
+import util from "util";
+import async from "async";
+import * as utils from "./libs/utils/index.js";
+import { config } from './libs/config/index.js';
+import { constants } from "./libs/constants/index.js";
+import { logger, events } from "streembit-util";
+import HTTPTransport from "./transport/http/index.js";
+import Database from "streembit-db";
+import dbschema from "./dbschema.json";
+import { Account } from './libs/account/index.js';
+import { Tasks } from './libs/tasks/index.js';
+import { Users } from './libs/users/index.js';
+import { WsServer as WebSocket } from './transport/ws/index.js'
+import { ModulesHandler as AppsHandler } from "./apps/index.js"
+import WhitelistDB from "./libs/database/whitelistdb.js";
+import PubSub from "./libs/pubsub/index.js";
+import { es6Wrapper } from "./libs/es6Wrapper.js";
 
 
-const program = require('commander');
-const path = require('path');
-const fs = require('fs');
-const async = require('async');
-const util = require('util');
-const assert = require('assert');
-const logger = require("streembit-util").logger;
-const AppsHandler = require("apps");
-const database = require("streembit-db").instance;
-const config = require('libs/config');
-const utils = require("libs/utils");
-const Account = require("libs/account");
-const Tasks = require("libs/tasks");
-const events = require("streembit-util").events;
-const Users = require("libs/users");
-const HttpTransport = require("./transport/http");
-const WebSocket = require("./transport/ws");
-const dbschema = require("./dbschema");
-const WhitelistDB = require("libs/database/whitelistdb");
-const PubSub = require('libs/pubsub');
-const constants = require("libs/constants");
+const database = Database.instance;
+
+
+
 
 // initialize the logger
-module.exports = exports = function (port, ip, password, cmd, bcclient) {
+export class App {
+  /*init(port, ip, password, cmd, bcclient) {
     try {
-        async.waterfall(
-            [
-                function (callback) {
-                    try {
-                        config.init(port, ip, cmd, bcclient, callback);
-                    }
-                    catch (e) {
-                        callback(e);
-                    }
-                },
-                function (callback) {
-                    try {
-                        var loglevel = config.log && config.log.level ? config.log.level : "debug";
-                        if (config.cmdinput || config.bcclient) {
-                            logger.init(loglevel, null, ['file']);
-                        } else {
-                            logger.init(loglevel);
-                        }
-
-                        callback();
-                    }
-                    catch (e) {
-                        callback(e);
-                    }
-                },
-                function (callback) {
-                    if (config.bcclient) {
-                        return callback();
-                    }
-
-                    database.init(dbschema, callback);
-                },
-                function (callback) {
-                    if (config.bcclient) {
-                        return callback();
-                    }
-
-                    try {
-                        const account = new Account();
-                        account.init(password, callback);
-                    }
-                    catch (e) {
-                        callback("Account init error: " + e.message);
-                    }
-                },
-                function (callback) {
-                    if (config.bcclient) {
-                        return callback();
-                    }
-
-                    var options = {
-                        port: config.transport.port
-                    };
-                    var httptransport = new HttpTransport(options);
-                    httptransport.init(callback);
-                },
-                function (callback) {
-                    if (config.bcclient) {
-                        return callback();
-                    }
-
-                    try {
-                        var tasks = new Tasks();
-                        tasks.run(callback);
-                    }
-                    catch (e) {
-                        callback("Task init error: " + e.message);
-                    }
-                },
-                function (callback) {
-                    if (config.bcclient) {
-                        return callback();
-                    }
-
-                    try {
-                        var users = new Users();
-                        users.init(callback);
-                    }
-                    catch (e) {
-                        callback("Users init error: " + e.message);
-                    }
-                },
-                function (callback) {
-                    let port = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;
-                    let maxconn = config.transport && config.transport.ws && config.transport.ws.maxconn ? config.transport.ws.maxconn : constants.DEFAULT_WS_MAXCONN;
-                    let wsserver = new WebSocket(port, maxconn);
-                    wsserver.init(callback);
-                },
-                function (callback) {
-                    try {
-                        let apps = new AppsHandler();
-                        apps.init(callback);
-                    }
-                    catch (e) {
-                        callback(e);
-                    }
-                },
-                function (callback) {
-                    if (config.bcclient) {
-                        return callback();
-                    }
-
-                    const pubsub = new PubSub();
-                    pubsub.init(callback);
-                }
-            ],
-            function (err) {
-                if (err) {
-                    return logger.error("application init error: %j", err);
-                }
-
-                logger.info("The application has been initialized.");
-
-                // app init event
-                events.appinit();
-            }
-        );
-    }
-    catch (e) {
-        console.log("app error: " + e.message);
-    }
-};
-
-module.exports.display_data = function (password) {
-
-    async.waterfall(
+      async.waterfall(
         [
-            function (callback) {
-                config.init_account_params(callback);
-            },
-            function (callback) {
-                database.init(dbschema, callback);
-            },
-            function (callback) {
-                const account = new Account();
-                account.load(password, callback);
+          (callback) => {
+            try {
+              config.init(port, ip, cmd, bcclient, callback);
+            } catch (e) {
+              callback(e);
             }
+          },
+          (callback) => {
+            try {
+              const loglevel =
+                config.log && config.log.level ? config.log.level : "debug";
+              if (config.cmdinput || config.bcclient) {
+                logger.init(loglevel, null, ["file"]);
+              } else {
+                logger.init(loglevel);
+              }
+              callback();
+            } catch (e) {
+              callback(e);
+            }
+          },
+          (callback) => {
+            if (config.bcclient) {
+              return callback();
+            }
+            try {
+              database.init(dbschema, callback);
+            } catch (e) {
+            }
+          },
+          (callback) => {
+            if (config.bcclient) {
+              return callback();
+            }
+            try {
+              const account = new Account();
+              account.init(password, callback);
+            } catch (e) {
+              callback("Account init error: " + e.message);
+            }
+          },
+          (callback) => {
+            if (config.bcclient) {
+              return callback();
+            }
+
+            const options = {
+              port: config.transport.port,
+            };
+            const httptransport = new HTTPTransport(options);
+            httptransport.init(callback);
+          },
+          (callback) => {
+            if (config.bcclient) {
+              return callback();
+            }
+
+            try {
+              const tasks = new Tasks();
+              tasks.run(callback);
+            } catch (e) {
+              callback("Task init error: " + e.message);
+            }
+          },
+          (callback) => {
+            if (config.bcclient) {
+              return callback();
+            }
+
+            try {
+              const users = new Users();
+              users.init(callback);
+            } catch (e) {
+              callback("Users init error: " + e.message);
+            }
+          },
+          (callback) => {
+            let port =
+              config.transport && config.transport.ws && config.transport.ws.port
+                ? config.transport.ws.port
+                : constants.DEFAULT_WS_PORT;
+            let maxconn =
+              config.transport &&
+                config.transport.ws &&
+                config.transport.ws.maxconn
+                ? config.transport.ws.maxconn
+                : constants.DEFAULT_WS_MAXCONN;
+            let wsserver = new WebSocket(port, maxconn);
+            wsserver.init(callback);
+          },
+          (callback) => {
+            try {
+              let apps = new AppsHandler();
+              apps.init(callback);
+            } catch (e) {
+              callback(e);
+            }
+          },
+          (callback) => {
+            if (config.bcclient) {
+              return callback();
+            }
+
+            const pubsub = new PubSub();
+            pubsub.init(callback);
+          },
         ],
-        function (err, result) {
-            if (err) {
-                return console.log(err.message || err);
-            }
+        (err) => {
+          if (err) {
+            return logger.error("application init error: %j", err);
+          }
 
-            const account = new Account();
-            //print the node ID
-            console.log("accountname: %s", account.accountname);
-            console.log("node ID (rmd160hash public key): %s", account.accountpk);
-            console.log("publickey hex: %s", account.public_key);
-            console.log("publickey encoded hash: %s", account.public_key_hash);
-            console.log("publickey bs58pk: %s", account.bs58pk);
+          logger.info("The application has been initialized.");
+
+          // app init event
+          events.appinit();
         }
+      );
+    } catch (e) {
+      console.log("app error: " + e.message);
+    }
+  }; */
+
+  async init(_port, ip, password, cmd, bcclient) {
+    try {
+      await config.init(_port, ip, cmd, bcclient);
+
+      const loglevel =
+        config.log && config.log.level ? config.log.level : "debug";
+      if (config.cmdinput || config.bcclient) {
+        logger.init(loglevel, null, ["file"]);
+      } else {
+        logger.init(loglevel);
+      }
+
+      if (!config.bcclient) {
+
+        await es6Wrapper.initDatabase(database, dbschema);
+
+        try {
+          const account = new Account();
+          account.init(password);
+        } catch (e) {
+          throw new Error(`Account init error:   ${e.message}`);
+        }
+
+        const options = {
+          port: config.transport.port,
+        };
+        const httptransport = new HTTPTransport(options);
+        await httptransport.init();
+
+        try {
+          const tasks = new Tasks();
+          await tasks.run();
+        } catch (e) {
+          throw new Error(`Task init error:   ${e.message}`);
+
+        }
+
+        try {
+          const users = new Users();
+          await users.init();
+        } catch (e) {
+          throw new Error(`Users init error:   ${e.message}`);
+        }
+
+      }
+
+      let port =
+        config.transport && config.transport.ws && config.transport.ws.port
+          ? config.transport.ws.port
+          : constants.DEFAULT_WS_PORT;
+      let maxconn =
+        config.transport &&
+          config.transport.ws &&
+          config.transport.ws.maxconn
+          ? config.transport.ws.maxconn
+          : constants.DEFAULT_WS_MAXCONN;
+      let wsserver = new WebSocket(port, maxconn);
+      await wsserver.init();
+
+      try {
+        let apps = new AppsHandler();
+        await apps.init();
+      } catch (e) {
+        console.log(e);
+        throw new Error(`AppsHandler error: ${e.message}`);
+      }
+      if (!config.bcclient) {
+        const pubsub = new PubSub();
+        pubsub.init();
+      }
+
+      logger.info("The application has been initialized.");
+
+      // app init event
+      events.appinit();
+
+    } catch (e) {
+      console.log(e);
+      logger.error("application init error: %j", e)
+    }
+  };
+
+  display_data(password) {
+    async.waterfall(
+      [
+        (callback) => {
+          config.init_account_params(callback);
+        },
+        (callback) => {
+          database.init(dbschema, callback);
+        },
+        (callback) => {
+          const account = new Account();
+          account.load(password, callback);
+        },
+      ],
+      (err, result) => {
+        if (err) {
+          return console.log(err.message || err);
+        }
+
+        const account = new Account();
+        //print the node ID
+        console.log("accountname: %s", account.accountname);
+        console.log("node ID (rmd160hash public key): %s", account.accountpk);
+        console.log("publickey hex: %s", account.public_key);
+        console.log("publickey encoded hash: %s", account.public_key_hash);
+        console.log("publickey bs58pk: %s", account.bs58pk);
+      }
     );
+  }
 
-};
-
-module.exports.changepwd = function() {
+  changepwd() {
     console.log("app change password");
-};
+  }
 
-module.exports.list_users = function (password) {
+  list_users(password) {
     console.log("list users");
     async.waterfall(
-        [
-            function (callback) {
-                config.init_account_params(callback);
-            },
-            function (callback) {
-                database.init(dbschema, callback);
-            },
-            function (callback) {
-                const account = new Account();
-                account.load(password, callback);
-            },
-            function (callback) {
-                try {
-                    var users = new Users();
-                    users.init(callback);
-                }
-                catch (e) {
-                    callback("Users init error: " + e.message);
-                }
-            }
-        ],
-        function (err, result) {
-            if (err) {
-                return console.log(err.message || err);
-            }
-
-            var users = new Users();
-            var list = users.list();
-            console.log("\nUsers:");
-            console.log(util.inspect(list));
-        }
-    );
-};
-
-module.exports.delete_user = function (password) {
-    // get the password from the command prompt
-    utils.prompt_for_userid(function (err, userid) {
+      [
+        (callback) => {
+          config.init_account_params(callback);
+        },
+        (callback) => {
+          database.init(dbschema, callback);
+        },
+        (callback) => {
+          const account = new Account();
+          account.load(password, callback);
+        },
+        (callback) => {
+          try {
+            const users = new Users();
+            users.init(callback);
+          } catch (e) {
+            callback("Users init error: " + e.message);
+          }
+        },
+      ],
+      (err, result) => {
         if (err) {
-            return console.log(err.message || err);
+          return console.log(err.message || err);
         }
 
-        //delete the user id
-        async.waterfall(
-            [
-                function (callback) {
-                    config.init_account_params(callback);
-                },
-                function (callback) {
-                    database.init(dbschema, callback);
-                },
-                function (callback) {
-                    const account = new Account();
-                    account.load(password, callback);
-                },
-                function (callback) {
-                    try {
-                        var users = new Users();
-                        users.init(callback);
-                    }
-                    catch (e) {
-                        callback("Users init error: " + e.message);
-                    }
-                }
-            ],
-            function (err, result) {
-                if (err) {
-                    return console.log(err.message || err);
-                }
+        const users = new Users();
+        const list = users.list();
+        console.log("\nUsers:");
+        console.log(util.inspect(list));
+      }
+    );
+  }
 
-                console.log("deleting user ID: " + userid);
+  delete_user(password) {
+    // get the password from the command prompt
+    utils.prompt_for_userid((err, userid) => {
+      if (err) {
+        return console.log(err.message || err);
+      }
 
-                var users = new Users();
-                users.delete_user(userid).then(
-                    () => {
-                        console.log("User was deleted from the database");
-                    })
-                    .catch(
-                        (err) => {
-                            console.log("Deleting user failed: " + err.message || err);
-                        }
-                    );
+      //delete the user id
+      async.waterfall(
+        [
+          (callback) => {
+            config.init_account_params(callback);
+          },
+          (callback) => {
+            database.init(dbschema, callback);
+          },
+          (callback) => {
+            const account = new Account();
+            account.load(password, callback);
+          },
+          (callback) => {
+            try {
+              const users = new Users();
+              users.init(callback);
+            } catch (e) {
+              callback("Users init error: " + e.message);
             }
-        );
+          },
+        ],
+        (err, result) => {
+          if (err) {
+            return console.log(err.message || err);
+          }
 
+          console.log("deleting user ID: " + userid);
+
+          const users = new Users();
+          users
+            .delete_user(userid)
+            .then(() => {
+              console.log("User was deleted from the database");
+            })
+            .catch((err) => {
+              console.log("Deleting user failed: " + err.message || err);
+            });
+        }
+      );
     });
-};
+  }
 
-
-module.exports.backup = function(password) {
+  backup(password) {
     console.log("app backup account data");
 
     async.waterfall(
-        [
-            function (callback) {
-                config.init_account_params(callback);
-            },
-            function (callback) {
-                try {
-                    database.init(dbschema, callback);
-                }
-                catch (err) {
-                    callback(err);
-                }
-            },
-            function (callback) {
-                const account = new Account();
-                account.load(password, function (err) {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    var data = {
-                        bs58pk: account.bs58pk,
-                        pkhex: account.public_key,
-                        encoded_pkhash: account.public_key_hash,
-                        private_key: account.private_key_hex,
-                        nodeid: account.accountpk
-                    };
-
-                    callback(null, data);
-                });
-            },
-            function (data, callback) {
-                try {
-                    // write to file
-                    data.timestamp = Date.now();
-                    var str = JSON.stringify(data, null, 4);
-                    var wdir = process.cwd();
-                    var datadir = path.join(wdir, 'data');
-                    var backupfile = path.join(datadir, 'account.json');
-                    fs.writeFile(backupfile, str, function (err) {
-                        if (err) {
-                            return callback(err);
-                        }
-
-                        callback();
-                    });
-
-                }
-                catch (err) {
-                    callback(err);
-                }
-            }
-        ],
-        function (err) {
+      [
+        (callback) => {
+          config.init_account_params(callback);
+        },
+        (callback) => {
+          try {
+            database.init(dbschema, callback);
+          } catch (err) {
+            callback(err);
+          }
+        },
+        (callback) => {
+          const account = new Account();
+          account.load(password, (err) => {
             if (err) {
-                return console.log("Backup error: %j", err.message || err);
+              return callback(err);
             }
 
-            console.log("Backup file account.json was created in the data directory");
-        }
-    );
-};
+            const data = {
+              bs58pk: account.bs58pk,
+              pkhex: account.public_key,
+              encoded_pkhash: account.public_key_hash,
+              private_key: account.private_key_hex,
+              nodeid: account.accountpk,
+            };
 
-module.exports.whitelist_update = function (password, pkey, rm) {
+            callback(null, data);
+          });
+        },
+        (data, callback) => {
+          try {
+            // write to file
+            data.timestamp = Date.now();
+            const str = JSON.stringify(data, null, 4);
+            const wdir = process.cwd();
+            const datadir = path.join(wdir, "data");
+            const backupfile = path.join(datadir, "account.json");
+            fs.writeFile(backupfile, str, (err) => {
+              if (err) {
+                return callback(err);
+              }
+
+              callback();
+            });
+          } catch (err) {
+            callback(err);
+          }
+        },
+      ],
+      (err) => {
+        if (err) {
+          return console.log("Backup error: %j", err.message || err);
+        }
+
+        console.log(
+          "Backup file account.json was created in the data directory"
+        );
+      }
+    );
+  }
+
+  whitelist_update(password, pkey, rm) {
     async.waterfall(
-        [
-            function (callback) {
-                config.init_account_params(callback);
-            },
-            function (callback) {
-                database.init(dbschema, callback);
-            },
-            function (callback) {
-                const account = new Account();
-                account.load(password, callback);
-            },
-            function (callback) {
-                const db = new WhitelistDB();
-                callback(null, db);
-            }
-        ],
-        function (err, wlDb) {
-            if (err) {
-                return console.log(err.message || err);
-            }
-
-            pkey = pkey.replace(/["']/g, '');
-
-            console.log("updating whitelist: " +pkey);
-
-            if (!rm) {
-                wlDb.add_rule(pkey, 1).then(
-                    () => {
-                        console.log("Whitelist rule was added");
-                    })
-                    .catch(
-                        (err) => {
-                            console.log("Error adding whitelist rule: " +err);
-                        }
-                    );
-            }
-            else {
-                wlDb.delete_rule(pkey).then(
-                    () => {
-                        console.log("Whitelist rule was deleted");
-                    })
-                    .catch(
-                        (err) => {
-                            console.log("Error deleting whitelist rule: " +err);
-                        }
-                    );
-            }
+      [
+        (callback) => {
+          config.init_account_params(callback);
+        },
+        (callback) => {
+          database.init(dbschema, callback);
+        },
+        (callback) => {
+          const account = new Account();
+          account.load(password, callback);
+        },
+        (callback) => {
+          const db = new WhitelistDB();
+          callback(null, db);
+        },
+      ],
+      (err, wlDb) => {
+        if (err) {
+          return console.log(err.message || err);
         }
-    );
-};
 
-module.exports.get_wl = function (password) {
+        pkey = pkey.replace(/["']/g, "");
+
+        console.log("updating whitelist: " + pkey);
+
+        if (!rm) {
+          wlDb
+            .add_rule(pkey, 1)
+            .then(() => {
+              console.log("Whitelist rule was added");
+            })
+            .catch((err) => {
+              console.log("Error adding whitelist rule: " + err);
+            });
+        } else {
+          wlDb
+            .delete_rule(pkey)
+            .then(() => {
+              console.log("Whitelist rule was deleted");
+            })
+            .catch((err) => {
+              console.log("Error deleting whitelist rule: " + err);
+            });
+        }
+      }
+    );
+  }
+
+  get_wl(password) {
     async.waterfall(
-        [
-            function (callback) {
-                config.init_account_params(callback);
-            },
-            function (callback) {
-                database.init(dbschema, callback);
-            },
-            function (callback) {
-                const account = new Account();
-                account.load(password, callback);
-            },
-            function (callback) {
-                const db = new WhitelistDB();
-                callback(null, db);
-            }
-        ],
-        function (err, wlDb) {
-            if (err) {
-                return console.log(err.message || err);
-            }
-
-
-            wlDb.get_rules().then(
-                (res) => {
-                    console.log(res);
-                })
-                .catch(
-                    (err) => {
-                        console.log("Error adding whitelist rule: " +err);
-                    }
-                );
-
+      [
+        (callback) => {
+          config.init_account_params(callback);
+        },
+        (callback) => {
+          database.init(dbschema, callback);
+        },
+        (callback) => {
+          const account = new Account();
+          account.load(password, callback);
+        },
+        (callback) => {
+          const db = new WhitelistDB();
+          callback(null, db);
+        },
+      ],
+      (err, wlDb) => {
+        if (err) {
+          return console.log(err.message || err);
         }
+
+        wlDb
+          .get_rules()
+          .then((res) => {
+            console.log(res);
+          })
+          .catch((err) => {
+            console.log("Error adding whitelist rule: " + err);
+          });
+      }
     );
-};
+  }
+}

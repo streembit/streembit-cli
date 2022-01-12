@@ -23,16 +23,18 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const AlarmFeature = require("../alarms");
-const logger = require("streembit-util").logger;
-const util = require('util');
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
+
+
+import { definitions as iotdefinitions } from "../../../definitions.js";
+import { AlarmFeature } from "../alarms.js";
+
+
+import { logger } from "streembit-util";
+import { ZigbeeCommands as zigbeecmd } from '../../../protocols/zigbee/commands/index.js';
 
 let CLUSTERID = 0x0500;
 
-class ZigbeeAlarmFeature extends AlarmFeature {
+export class ZigbeeAlarmFeature extends AlarmFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
         super(deviceid, feature, feature_type, transport);
@@ -65,7 +67,7 @@ class ZigbeeAlarmFeature extends AlarmFeature {
                 properties.forEach(
                     (item) => {
                         if (item.property === iotdefinitions.PROPERTY_ALARMS) {
-                            var val = new Number(item.value);
+                            let val = new Number(item.value);
                             this.alarm = val.toFixed(2);
                             let data = {
                                 payload: {
@@ -111,9 +113,9 @@ class ZigbeeAlarmFeature extends AlarmFeature {
     }
 
     bind() {
-        var txn = 0x56;
+        let txn = 0x56;
         logger.debug("ZigbeeAlarmFeature cluster 0500, send bind request at endpoint: " + this.cluster_endpoint);
-        var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
+        let cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
         this.transport.send(cmd);
     }
 
@@ -124,7 +126,7 @@ class ZigbeeAlarmFeature extends AlarmFeature {
 
             zigbeecmd.writeCieAddress(0x57, this.IEEEaddress, this.NWKaddres);
 
-           
+
         }
         catch (err) {
             logger.error("ZigbeeAlarmFeature on_bind_complete() error: %j", err);
@@ -144,8 +146,8 @@ class ZigbeeAlarmFeature extends AlarmFeature {
 
     configure_report() {
         logger.debug("ZigbeeAlarmFeature send configure report");
-        var attribute = 0x0000, datatype = 0xf0, mininterval = 0x05, maxinterval = 0x005a;
-        var reports = [];
+        let attribute = 0x0000, datatype = 0xf0, mininterval = 0x05, maxinterval = 0x005a;
+        let reports = [];
         reports.push(
             {
                 attribute: attribute,
@@ -155,7 +157,7 @@ class ZigbeeAlarmFeature extends AlarmFeature {
             }
         );
 
-        var cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, CLUSTERID, reports, this.cluster_endpoint);
+        let cmd = zigbeecmd.configureReport(this.IEEEaddress, this.NWKaddress, CLUSTERID, reports, this.cluster_endpoint);
         this.transport.send(cmd);
     }
 
@@ -189,17 +191,17 @@ class ZigbeeAlarmFeature extends AlarmFeature {
                 //console.log("poll alarm data");
                 this.read_alarm();
             },
-            ((this.long_poll_interval /4)*1000)
+            ((this.long_poll_interval / 4) * 1000)
         );
     }
 
     checkin(callback) {
-        var cmd = zigbeecmd.pollCheckIn(this.IEEEaddress, this.NWKaddress, this.cluster_endpoint);
+        let cmd = zigbeecmd.pollCheckIn(this.IEEEaddress, this.NWKaddress, this.cluster_endpoint);
         this.transport.send(cmd);
     }
 
     read_alarm(callback) {
-        var cmd = zigbeecmd.readAlarm(this.IEEEaddress, this.NWKaddress, this.cluster_endpoint);
+        let cmd = zigbeecmd.readAlarm(this.IEEEaddress, this.NWKaddress, this.cluster_endpoint);
         this.transport.send(cmd);
     }
 
@@ -210,7 +212,7 @@ class ZigbeeAlarmFeature extends AlarmFeature {
             let is_report_available = last_update_elapsed < this.report_max * 1000
             //console.log("ZigbeeAlarmFeature last_update_elapsed: " + last_update_elapsed + " is_report_available: " + is_report_available);
             if (is_report_available) {
-                var data = {
+                let data = {
                     payload: {
                         alarm: this.alarm
                     }
@@ -218,7 +220,7 @@ class ZigbeeAlarmFeature extends AlarmFeature {
                 callback(null, data);
             }
             else {
-                super.read(payload, callback, (this.report_max * 1000 - 1 ));
+                super.read(payload, callback, (this.report_max * 1000 - 1));
                 // do the reading
                 this.read_alarm();
             }
@@ -234,4 +236,3 @@ class ZigbeeAlarmFeature extends AlarmFeature {
 
 }
 
-module.exports = ZigbeeAlarmFeature;

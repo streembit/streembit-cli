@@ -24,8 +24,7 @@ Based on
 
 'use strict';
 
-const { Transform } = require('stream');
-
+import { Transform } from "stream";
 
 /**
  * Logs all incoming messages
@@ -109,7 +108,7 @@ class OutgoingMessageLogger extends Transform {
     }
 }
 
-module.exports = {
-    IncomingMessage: IncomingMessageLogger,
-    OutgoingMessage: OutgoingMessageLogger
+export {
+    IncomingMessageLogger as IncomingMessage,
+    OutgoingMessageLogger as OutgoingMessage
 };

@@ -8,47 +8,63 @@
 
 'use strict';
 
-exports = module.exports;
 
-exports.START_BYTE = 0x7E;
-exports.ESCAPE = 0x7D;
-exports.XOFF = 0x13;
-exports.XON = 0x11;
-exports.ESCAPE_WITH = 0x20;
 
-exports.UNKNOWN_16     = [ 0xff, 0xfe ];
-exports.UNKNOWN_64     = [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff ];
-exports.BROADCAST_16_XB= [ 0xff, 0xff ];
-exports.COORDINATOR_16 = [ 0x00, 0x00 ];
-exports.COORDINATOR_64 = [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ];
+export const START_BYTE = 0x7E;
+export const ESCAPE = 0x7D;
+export const XOFF = 0x13;
+export const XON = 0x11;
+export const ESCAPE_WITH = 0x20;
 
-exports.ESCAPE_BYTES = [ 
-  exports.START_BYTE,
-  exports.ESCAPE,
-  exports.XOFF,
-  exports.XON
+export const UNKNOWN_16 = [0xff, 0xfe];
+export const UNKNOWN_64 = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff];
+export const BROADCAST_16_XB = [0xff, 0xff];
+export const COORDINATOR_16 = [0x00, 0x00];
+export const COORDINATOR_64 = [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00];
+
+export const ESCAPE_BYTES = [
+  START_BYTE,
+  ESCAPE,
+  XOFF,
+  XON
 ];
 
-var ft = exports.FRAME_TYPE = {};
-var diss = exports.DISCOVERY_STATUS = {};
-var dels = exports.DELIVERY_STATUS = {};
-var coms = exports.COMMAND_STATUS = {};
-var ms = exports.MODEM_STATUS = {};
-var ro = exports.RECEIVE_OPTIONS = {};
-var dt = exports.DEVICE_TYPE = {};
+export const FRAME_TYPE = {};
+export const DISCOVERY_STATUS = {};
+export const DELIVERY_STATUS = {};
+export const COMMAND_STATUS = {};
+export const MODEM_STATUS = {};
+export const RECEIVE_OPTIONS = {};
+export const DEVICE_TYPE = {};
 
-var dc = exports.DIGITAL_CHANNELS = { MASK: {}, PIN:{} };
-var ac = exports.ANALOG_CHANNELS = { MASK: {}, PIN:{} };
-var pr = exports.PULLUP_RESISTOR = { MASK: {}, PIN:{} };
-var ic = exports.CHANGE_DETECTION = { MASK: {}, PIN:{} };
-var pm = exports.PIN_MODE = {};
-var pc = exports.PIN_COMMAND = { PIN:{} };
+export const DIGITAL_CHANNELS = { MASK: {}, PIN: {} };
+export const ANALOG_CHANNELS = { MASK: {}, PIN: {} };
+export const PULLUP_RESISTOR = { MASK: {}, PIN: {} };
+export const CHANGE_DETECTION = { MASK: {}, PIN: {} };
+export const PIN_MODE = {};
+export const PIN_COMMAND = { PIN: {} };
 
-exports.FRAME_TYPE_SETS = {
-  "802.15.4": [0x00,0x01,0x08,0x09,0x17,0x80,0x81,0x82,0x83,0x88,0x89,0x8A,0x97],
-  "ZNet": [0x08,0x09,0x10,0x11,0x17,0x88,0x8A,0x8B,0x90,0x91,0x92,0x94,0x95,0x97],
-  "ZigBee": [0x08,0x09,0x10,0x11,0x17,0x21,0x24,0x88,0x8A,0x8B,0x90,0x91,0x92,0x94,0x95,0x97,0xA0,0xA1,0xA2,0xA3,0xA4,0xA5],
-  "Any": [0x00,0x01,0x08,0x09,0x17,0x80,0x81,0x82,0x83,0x88,0x89,0x8a,0x97,0x10,0x11,0x8b,0x90,0x91,0x92,0x94,0x95,0x21,0x24,0xa0,0xa1,0xa2,0xa3,0xa4,0xa5]
+
+let ft = FRAME_TYPE;
+let diss = DISCOVERY_STATUS;
+let dels = DELIVERY_STATUS;
+let coms = COMMAND_STATUS;
+let ms = MODEM_STATUS;
+let ro = RECEIVE_OPTIONS;
+let dt = DEVICE_TYPE;
+
+let dc = DIGITAL_CHANNELS;
+let ac = ANALOG_CHANNELS;
+let pr = PULLUP_RESISTOR;
+let ic = CHANGE_DETECTION;
+let pm = PIN_MODE;
+let pc = PIN_COMMAND;
+
+export const FRAME_TYPE_SETS = {
+  "802.15.4": [0x00, 0x01, 0x08, 0x09, 0x17, 0x80, 0x81, 0x82, 0x83, 0x88, 0x89, 0x8A, 0x97],
+  "ZNet": [0x08, 0x09, 0x10, 0x11, 0x17, 0x88, 0x8A, 0x8B, 0x90, 0x91, 0x92, 0x94, 0x95, 0x97],
+  "ZigBee": [0x08, 0x09, 0x10, 0x11, 0x17, 0x21, 0x24, 0x88, 0x8A, 0x8B, 0x90, 0x91, 0x92, 0x94, 0x95, 0x97, 0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5],
+  "Any": [0x00, 0x01, 0x08, 0x09, 0x17, 0x80, 0x81, 0x82, 0x83, 0x88, 0x89, 0x8a, 0x97, 0x10, 0x11, 0x8b, 0x90, 0x91, 0x92, 0x94, 0x95, 0x21, 0x24, 0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5]
 };
 
 // Device Type
@@ -218,17 +234,17 @@ ro[0x40] = "Packet was sent from an end device (if known) (0x40)";
 // Digital Channel Mask/Pins
 //
 // Map mask to name
-dc.MASK[0]  = ["DIO0", "AD0"];
-dc.MASK[1]  = ["DIO1", "AD1"];
-dc.MASK[2]  = ["DIO2", "AD2"];
-dc.MASK[3]  = ["DIO3", "AD3"]; 
-dc.MASK[4]  = ["DIO4"]; 
-dc.MASK[5]  = ["DIO5", "ASSOCIATE"];
-dc.MASK[6]  = ["DIO6", "RTS"]; 
-dc.MASK[7]  = ["DIO7", "CTS"];
-dc.MASK[10] = ["DIO10", "RSSI"]; 
-dc.MASK[11] = ["DIO11", "PWM"]; 
-dc.MASK[12] = ["DIO12", "CD"]; 
+dc.MASK[0] = ["DIO0", "AD0"];
+dc.MASK[1] = ["DIO1", "AD1"];
+dc.MASK[2] = ["DIO2", "AD2"];
+dc.MASK[3] = ["DIO3", "AD3"];
+dc.MASK[4] = ["DIO4"];
+dc.MASK[5] = ["DIO5", "ASSOCIATE"];
+dc.MASK[6] = ["DIO6", "RTS"];
+dc.MASK[7] = ["DIO7", "CTS"];
+dc.MASK[10] = ["DIO10", "RSSI"];
+dc.MASK[11] = ["DIO11", "PWM"];
+dc.MASK[12] = ["DIO12", "CD"];
 // Map pin/name to mask
 ac.PIN[20] = dc.DIO0 = dc.AD0 = 0;
 ac.PIN[19] = dc.DIO1 = dc.AD1 = 1;
@@ -238,18 +254,18 @@ ac.PIN[11] = dc.DIO4 = 4;
 ac.PIN[15] = dc.DIO5 = dc.ASSOCIATE = 5;
 ac.PIN[16] = dc.DIO6 = dc.RTS = 6;
 ac.PIN[12] = dc.DIO7 = dc.CTS = 7;
-ac.PIN[6]  = dc.DIO10 = dc.RSSI = 10;
-ac.PIN[7]  = dc.DIO11 = dc.PWM = 11;
-ac.PIN[4]  = dc.DIO12 = dc.CD = 12;
+ac.PIN[6] = dc.DIO10 = dc.RSSI = 10;
+ac.PIN[7] = dc.DIO11 = dc.PWM = 11;
+ac.PIN[4] = dc.DIO12 = dc.CD = 12;
 
 //
 // Analog Channel Mask/Pins
 //
 // Map mask to name
-ac.MASK[0] = ["AD0", "DIO0" ];
-ac.MASK[1] = ["AD1", "DIO1" ];
-ac.MASK[2] = ["AD2", "DIO2" ];
-ac.MASK[3] = ["AD3", "DIO3" ];
+ac.MASK[0] = ["AD0", "DIO0"];
+ac.MASK[1] = ["AD1", "DIO1"];
+ac.MASK[2] = ["AD2", "DIO2"];
+ac.MASK[3] = ["AD3", "DIO3"];
 ac.MASK[7] = ["SUPPLY"];
 // map pin/name to mask
 ac.PIN[20] = ac.AD0 = ac.DIO0 = 0;
@@ -278,13 +294,13 @@ pr.MASK[12] = ["DIO11", "PWM1"];
 pr.MASK[13] = ["DIO7", "CTS"];
 // Map pin/name to maks
 pr.PIN[11] = pr.DIO4 = 0;
-pr.PIN[17] = pr.AD3 = pr.DIO3 = 1; 
+pr.PIN[17] = pr.AD3 = pr.DIO3 = 1;
 pr.PIN[18] = pr.AD2 = pr.DIO2 = 2;
 pr.PIN[19] = pr.AD1 = pr.DIO1 = 3;
 pr.PIN[20] = pr.AD0 = pr.DIO0 = 4;
 pr.PIN[16] = pr.RTS = pr.DIO6 = 5;
-pr.PIN[9] = pr.DIO8 = pr.DTR  = pr.SLEEP_REQUEST = 6;
-pr.PIN[3] = pr.DIN  = pr.CONFIG = 7;
+pr.PIN[9] = pr.DIO8 = pr.DTR = pr.SLEEP_REQUEST = 6;
+pr.PIN[3] = pr.DIN = pr.CONFIG = 7;
 pr.PIN[15] = pr.ASSOCIATE = pr.DIO5 = 8;
 pr.PIN[13] = pr.ON = pr.SLEEP = pr.DIO9 = 9;
 pr.PIN[4] = pr.DIO12 = 10;
@@ -300,15 +316,15 @@ pr.PIN[12] = pr.CTS = pr.DIO7 = 13;
 ic.MASK[0] = ["DIO0"];
 ic.MASK[1] = ["DIO1"];
 ic.MASK[2] = ["DIO2"];
-ic.MASK[3] = ["DIO3"]; 
-ic.MASK[4] = ["DIO4"]; 
-ic.MASK[5] = ["DIO5"]; 
-ic.MASK[6] = ["DIO6"]; 
-ic.MASK[7] = ["DIO7"]; 
-ic.MASK[8] = ["DIO8"]; 
-ic.MASK[9] = ["DIO9"]; 
-ic.MASK[10] = ["DIO10"]; 
-ic.MASK[11] = ["DIO11"]; 
+ic.MASK[3] = ["DIO3"];
+ic.MASK[4] = ["DIO4"];
+ic.MASK[5] = ["DIO5"];
+ic.MASK[6] = ["DIO6"];
+ic.MASK[7] = ["DIO7"];
+ic.MASK[8] = ["DIO8"];
+ic.MASK[9] = ["DIO9"];
+ic.MASK[10] = ["DIO10"];
+ic.MASK[11] = ["DIO11"];
 // Map pin/name to mask
 ic.PIN[20] = ic.DIO0 = 0;
 ic.PIN[19] = ic.DIO1 = 1;
@@ -318,10 +334,10 @@ ic.PIN[11] = ic.DIO4 = 4;
 ic.PIN[15] = ic.DIO5 = 5;
 ic.PIN[16] = ic.DIO6 = 6;
 ic.PIN[12] = ic.DIO7 = 7;
-ic.PIN[9]  = ic.DIO8 = 8;
+ic.PIN[9] = ic.DIO8 = 8;
 ic.PIN[13] = ic.DIO9 = 9;
-ic.PIN[6]  = ic.DIO10 = 10;
-ic.PIN[7]  = ic.DIO11 = 11;
+ic.PIN[6] = ic.DIO10 = 10;
+ic.PIN[7] = ic.DIO11 = 11;
 
 
 // 
@@ -384,8 +400,8 @@ pm.D0 = pm.D1 = pm.D2 = pm.D3 = {
   DIGITAL_OUTPUT_HIGH: 0x05
 };
 
-for (var pin in pm) {
-  for (var key in pm[pin]) {
+for (let pin in pm) {
+  for (let key in pm[pin]) {
     pm[pin][pm[pin][key]] = key;
   }
 }

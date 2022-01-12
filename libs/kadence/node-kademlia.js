@@ -24,23 +24,23 @@ Based on
 
 'use strict';
 
-const async = require('async');
-const { Writable: WritableStream } = require('stream');
-const constants = require('./constants');
-const config = require('libs/config');
-const utils = require('./utils');
-const AbstractNode = require('./node-abstract');
-const KademliaRules = require('./rules-kademlia');
-const ContactList = require('./contact-list');
-const MetaPipe = require('metapipe');
-
+import async from 'async';
+import { AbstractNode } from './node-abstract.js';
+import HTTPSTransport from './transport-https.js';
+import HTTPTransport from './transport-http.js';
+import KademliaRules from './rules-kademlia.js';
+import * as constants from './constants.js';
+import MetaPipe from 'metapipe';
+import { Writable as WritableStream } from 'stream';
+import * as utils from './utils.js';
+import { ContactList } from './contact-list.js';
 
 /**
  * Extends {@link AbstractNode} with Kademlia-specific rules
  * @class
  * @extends {AbstractNode}
  */
-class KademliaNode extends AbstractNode {
+export class KademliaNode extends AbstractNode {
 
     /**
      * @typedef {object} KademliaNode~entry
@@ -58,10 +58,10 @@ class KademliaNode extends AbstractNode {
                 console.log("Creating transport-https");
             }
             const http_transport = options.contact.key ?
-                require('./transport-https') :
-                require('./transport-http');
+                new HTTPSTransport(options.contact) :
+                new HTTPTransport(options.contact);
 
-            options.transport = new http_transport(options.contact);
+            options.transport = http_transport;
         }
         super(options);
 
@@ -86,8 +86,8 @@ class KademliaNode extends AbstractNode {
 
         setInterval(() => this.refresh(0), constants.T_REFRESH);
         setInterval(() => this.replicate(
-                err => err ? this.logger.error('Replicate error: %j', err) : ''
-            ), constants.T_REPLICATE);
+            err => err ? this.logger.error('Replicate error: %j', err) : ''
+        ), constants.T_REPLICATE);
 
         super.listen(...arguments);
     }
@@ -440,7 +440,7 @@ class KademliaNode extends AbstractNode {
 
                     // NB: we found a value, so stop searching
                     callback(null, result, contact);
-                    callback = () => {};
+                    callback = () => { };
                 })
             }, () => {
 
@@ -576,7 +576,7 @@ class KademliaNode extends AbstractNode {
                 result = JSON.parse(resultBufString);
             }
 
-            this.logger.debug('get value for key:' +key);
+            this.logger.debug('get value for key:' + key);
 
             if (result.length < 1) {
                 // find value in local storage
@@ -584,7 +584,7 @@ class KademliaNode extends AbstractNode {
                     valueEncoding: 'json'
                 }, (err, item) => {
                     if (!err && item) {
-                        this.logger.debug('get value from storage for key:' +key, item);
+                        this.logger.debug('get value from storage for key:' + key, item);
                         callback(null, JSON.parse(item).value);
                     }
                     else {
@@ -602,5 +602,3 @@ class KademliaNode extends AbstractNode {
         })
     };
 }
-
-module.exports = KademliaNode;

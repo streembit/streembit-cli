@@ -29,9 +29,11 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-let constants = require('./constants');
-let hat = require('hat');
-let merge = require('merge');
+
+import { constants } from './constants';
+import hat from 'hat';
+import merge from 'merge';
+
 
 /**
  * Represents a [JSON-RPC 2.0](http://www.jsonrpc.org/specification) request or
@@ -52,7 +54,7 @@ let merge = require('merge');
  * @param {Error} spec.error - Error object to convert to message
  */
 
-class Message {
+export class Message {
     constructor(spec) {
         if (!(this instanceof Message)) {
             return new Message(spec);
@@ -84,7 +86,7 @@ class Message {
      * @returns {Buffer}
      */
     serialize() {
-        return new Buffer(JSON.stringify(this), 'utf8');
+        return Buffer.from(JSON.stringify(this), 'utf8');
     };
 
     /**
@@ -112,7 +114,7 @@ class Message {
      */
     static fromBuffer(buffer) {
         const _convertByteArrays = (key, value) => {
-            return value && value.type === 'Buffer' ? new Buffer(value.data) : value;
+            return value && value.type === 'Buffer' ? Buffer.from(value.data) : value;
         }
 
         let jsonstr = buffer.toString('utf8');
@@ -134,4 +136,4 @@ class Message {
 }
 
 
-module.exports = Message;
+

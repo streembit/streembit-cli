@@ -23,11 +23,9 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const TemperatureFeature = require("../temperature");
 
-const TEMPSENS_TIMEOUT = 10000; 
+import { TemperatureFeature } from "../temperature.js";
+
 
 class SixLowPANTemperatureFeature extends TemperatureFeature {
 
@@ -45,7 +43,7 @@ class SixLowPANTemperatureFeature extends TemperatureFeature {
     on_device_online(payload) {
     }
 
-    read(callback) {        
+    read(callback) {
     }
 
 }

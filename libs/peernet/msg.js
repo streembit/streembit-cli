@@ -21,25 +21,27 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("streembit-util").logger;
-const async = require("async");
-const peermsg = require("./msghandlers/peer.js");
-const storemsg = require("./msghandlers/store.js");
-const txnmsg = require("./msghandlers/txn.js");
-const bchmsg = require("./msghandlers/bch.js");
-const fnodemsg = require("./msghandlers/fnode.js");
+import { logger } from "streembit-util";
+import async from "async";
 
-module.exports.on_transport_error = function (err) {
+
+import * as peermsg from './msghandlers/peer.js'
+import { default as txnmsg } from './msghandlers/txn.js'
+import { default as bchmsg } from './msghandlers/bch.js'
+import { default as fnodemsg } from './msghandlers/fnode.js'
+
+
+export const on_transport_error = (err) => {
     //TODO error handling
     logger.error('KAD transport error: %j', err);
 }
 
-function validate_contact(callback) {
+const validate_contact = (callback) => {
     logger.debug('validate_contact');
     callback();
 }
 
-function handle_msg(message, callback) {
+const handle_msg = (message, callback) => {
     try {
         if (!message || !message.method) {
             return callback();
@@ -47,7 +49,7 @@ function handle_msg(message, callback) {
 
         logger.info(`RMTP message ${message.method} received`);
 
-        var method = message.method.toLowerCase(message.method);
+        const method = message.method.toLowerCase(message.method);
         switch (method) {
             case "store":
                 storemsg(message, callback);
@@ -64,20 +66,19 @@ function handle_msg(message, callback) {
             default:
                 return callback();
         }
-    }
-    catch (err) {
+    } catch (err) {
         logger.error('handle_msg error: %j', err);
         return callback(err);
     }
 }
 
-module.exports.on_kad_message = function (message, contact, next){
+export const on_kad_message = (message, contact, next) => {
 
     logger.debug("on_kad_message");
 
     async.waterfall(
         [
-            function (cb) {
+            (cb) => {
                 try {
                     validate_contact(cb)
                 }
@@ -85,7 +86,7 @@ module.exports.on_kad_message = function (message, contact, next){
                     cb(e);
                 }
             },
-            function (cb) {
+            (cb) => {
                 try {
                     handle_msg(message, cb);
                 }
@@ -94,14 +95,14 @@ module.exports.on_kad_message = function (message, contact, next){
                 }
             }
         ],
-        function (err) {
+        (err) => {
             next(err);
         }
     );
 
 }
 
-module.exports.on_peer_message = function (msg, callback) {
+export const on_peer_message = (msg, callback) => {
     logger.debug("on_peer_message");
     peermsg(msg, callback);
 }

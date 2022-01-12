@@ -19,148 +19,154 @@ Copyright (C) 2018 The Streembit software development team
 
 */
 
-'use strict';
+"use strict";
 
-const constants = require("libs/constants");
-const async = require("async");
-const config = require("libs/config");
-const logger = require("streembit-util").logger;
-const peerutils = require("libs/peernet/peerutils");
-const events = require("streembit-util").events;
-const natupnp = require("libs/upnp");
-const PeerClient = require("libs/peernet/peerclient");
-const libutils = require("libs/utils");
+import async from "async";
+import { logger, events } from "streembit-util";
+import { constants } from "../../libs/constants/index.js";
+import { config } from "../../libs/config/index.js";
+import PeerClient from "../../libs/peernet/peerclient.js";
+import * as libutils from "../../libs/utils/index.js";
+import { natupnp } from "../../libs/upnp/index.js";
 
 const peerclient = new PeerClient();
 const interval = 600000; // 10 mins
 
-function upnpProc(callback) {
-    try {
-        var upnpclient = natupnp.createClient(logger);
-        var wsport = config.transport && config.transport.ws && config.transport.ws.port ? config.transport.ws.port : constants.DEFAULT_WS_PORT;
-        var httpport = config.transport.port;
-        async.waterfall([
-                (next) => {
-                    upnpclient.portMapping(
-                        {
-                            public: wsport,
-                            private: wsport,
-                            ttl: 0
-                        },
-                        err => next(err)
-                    );
-                },
-                (next) => {
-                    upnpclient.portMapping(
-                        {
-                            public: httpport,
-                            private: httpport,
-                            ttl: 0
-                        },
-                        err => next(err)
-                    );
-                },
-                (next) => {
-                    upnpclient.externalIp(next)
-                }
-            ],
-            (err, ip) => {
-                if (err) {
-                    logger.error(`UPnP procedure error: ${err.message}`);
-                }
-                else {
-                    logger.info(`UPnP set, public IP: ${ip}`);
-                }
+const upnpProc = (callback) => {
+  try {
+    const upnpclient = natupnp.createClient(logger);
+    const wsport =
+      config.transport && config.transport.ws && config.transport.ws.port
+        ? config.transport.ws.port
+        : constants.DEFAULT_WS_PORT;
+    const httpport = config.transport.port;
+    async.waterfall(
+      [
+        (next) => {
+          upnpclient.portMapping(
+            {
+              public: wsport,
+              private: wsport,
+              ttl: 0,
+            },
+            (err) => next(err)
+          );
+        },
+        (next) => {
+          upnpclient.portMapping(
+            {
+              public: httpport,
+              private: httpport,
+              ttl: 0,
+            },
+            (err) => next(err)
+          );
+        },
+        (next) => {
+          upnpclient.externalIp(next);
+        },
+      ],
+      (err, ip) => {
+        if (err) {
+          logger.error(`UPnP procedure error: ${err.message}`);
+        } else {
+          logger.info(`UPnP set, public IP: ${ip}`);
+        }
 
-                callback();
-        });
-    }
-    catch (e) {
-        logger.error(`UPnP procedure error: ${e.message}`);
         callback();
-    }
-}
+      }
+    );
+  } catch (e) {
+    logger.error(`UPnP procedure error: ${e.message}`);
+    callback();
+  }
+};
 
 /*
     Use this method to work out the host. It is either a domain name or the external IP address.
     If the host is defined then use that data. If the host is empty then get the external IP address by pinging a seed.
 */
-function resolveHost(callback, initUpdater = null) {
-    try {
-        if (initUpdater && config.transport && config.transport.host) {
-            // validate the host is correct in the config, either it is a valid domain and IP address 
-            if (!libutils.is_ipaddress(config.transport.host) && !libutils.is_valid_domain(config.transport.host)) {
-                return callback("Invalid host configuration value. When the host is defined it must be either a valid domain name or IP adddress");
-            }
-            else {
-                return callback();
-            }
-        }
-
-        peerclient.ping(
-            (err, response) => {
-                if (err) {
-                    return callback(`Resolving IP address failed, error: ${err}`);
-                }
-                if (!response ) {
-                    return callback("Resolving IP address failed, error: invalid response returned");
-                }
-
-                let data = JSON.parse(response);
-
-                if (!data || !data.clientip || !libutils.is_ipaddress(data.clientip)){
-                    return callback("Resolving IP address failed, error: invalid external IP address returned from a seed");
-                }
-
-                // the IP is returned, set the host to the IP value
-                config.transport.host = data.clientip;
-
-                callback();
-
-                if (initUpdater) {
-                    setInterval(function() {
-                        resolveHost(err => {
-                            if (err) {
-                                logger.error(err);
-                            }
-                        })
-                    }, interval);
-                }
-            }
+const resolveHost = (callback, initUpdater = null) => {
+  try {
+    if (initUpdater && config.transport && config.transport.host) {
+      // validate the host is correct in the config, either it is a valid domain and IP address
+      if (
+        !libutils.is_ipaddress(config.transport.host) &&
+        !libutils.is_valid_domain(config.transport.host)
+      ) {
+        return callback(
+          "Invalid host configuration value. When the host is defined it must be either a valid domain name or IP adddress"
         );
+      } else {
+        return callback();
+      }
     }
-    catch (e) {
-        callback(`Resolving host IP address error: ${e.message}`);
-    }
-}
 
-module.exports = exports = function (callback) {
-    try {
-        config.net = constants.CLIENTNET;
+    peerclient.ping((err, response) => {
+      if (err) {
+        return callback(`Resolving IP address failed, error: ${err}`);
+      }
+      if (!response) {
+        return callback(
+          "Resolving IP address failed, error: invalid response returned"
+        );
+      }
 
-        var conf = config.client_config;
-        if (!conf.run) {
-            logger.info("Config client handler -> not running");
-            return callback();
-        }
+      let data = JSON.parse(response);
 
-        logger.info("Run streembit client handler");
+      if (!data || !data.clientip || !libutils.is_ipaddress(data.clientip)) {
+        return callback(
+          "Resolving IP address failed, error: invalid external IP address returned from a seed"
+        );
+      }
 
-        resolveHost((err) => {
+      // the IP is returned, set the host to the IP value
+      config.transport.host = data.clientip;
+
+      callback();
+
+      if (initUpdater) {
+        setInterval(() => {
+          resolveHost((err) => {
             if (err) {
-                return callback(err);
+              logger.error(err);
             }
+          });
+        }, interval);
+      }
+    });
+  } catch (e) {
+    callback(`Resolving host IP address error: ${e.message}`);
+  }
+};
 
-            upnpProc(() => {
-                logger.info("Client handler started");
-                callback();
+export default (callback) => {
+  try {
+    config.net = constants.CLIENTNET;
 
-                // process the tasks following init
-                events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
-            });
-        }, 1);
+    const conf = config.client_config;
+    if (!conf.run) {
+      logger.info("Config client handler -> not running");
+      return callback();
     }
-    catch (err) {
-        callback(err.message);
-    }
+
+    logger.info("Run streembit client handler");
+
+    resolveHost((err) => {
+      if (err) {
+        return callback(err);
+      }
+
+      upnpProc(() => {
+        logger.info("Client handler started");
+        callback();
+
+        // process the tasks following init
+        events.taskinit(constants.TASK_INFORM_CONTACTS, { all: true });
+      });
+    }, 1);
+  } catch (err) {
+    console.log("err: ------------- ", err);
+    callback(err.message);
+  }
 };

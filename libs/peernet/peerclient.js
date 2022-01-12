@@ -21,12 +21,11 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const config = require("libs/config");
-const logger = require("streembit-util").logger;
-const constants = require("libs/constants");
-const async = require("async");
-const HTTPTransport = require("transport/http")
-const utils = require("libs/utils");
+import async from 'async';
+import { logger } from 'streembit-util';
+import { config } from '../../libs/config/index.js';
+import HTTPTransport from '../../transport/http/index.js'
+import * as utils from '../../libs/utils/index.js';
 
 let instance = null;
 
@@ -41,15 +40,15 @@ class PeerClient{
     }
 
     query(message, callback) {
-        var seeds = utils.shuffle(config.seeds);
+        const seeds = utils.shuffle(config.seeds);
 
-        var response = null;
-        var errormsg = null;
+        let response = null;
+        let errormsg = null;
 
-        function write(seed, cb) {
+        const write = (seed, cb) => {
             seed.protocol = seed.protocol || protocol;
-            HTTPTransport.write(message, seed, "/", function (err, msg) {
-                var complete = false;
+            HTTPTransport.write(message, seed, "/", (err, msg) => {
+                let complete = false;
                 if (err) {
                     logger.error("HTTPTransport.write error: %j", err);
                     errormsg = err;
@@ -62,7 +61,7 @@ class PeerClient{
             });
         }
 
-        async.detectSeries(seeds, write, function (err, result) {
+        async.detectSeries(seeds, write, (err, result) => {
             // result now equals the first file in the list that exists
             if (!result && errormsg) {
                 callback(errormsg);
@@ -74,21 +73,20 @@ class PeerClient{
     }
 
     ping(callback) {
-        var data = {
+        const data = {
             type: "ping"
         };
-        var message = JSON.stringify(data);
+        const message = JSON.stringify(data);
         this.query(message, callback);
     }
 
     put(key, value, callback) {
-
-        var data = {
+        const data = {
             type: "dhtput",
             key: key,
             value: value
         };
-        var message = JSON.stringify(data);
+        const message = JSON.stringify(data);
 
         this.query(message, (err, result) => {
             if (err) {
@@ -108,7 +106,7 @@ class PeerClient{
             'streembit-bc-msg': 'true'
         };
 
-        HTTPTransport.write(cmd, options, "/", function (err, response) {
+        HTTPTransport.write(cmd, options, "/", (err, response) => {
             if (err) {
                 callback(err)
             }
@@ -118,4 +116,4 @@ class PeerClient{
     }
 }
 
-module.exports = PeerClient;
+export default PeerClient;

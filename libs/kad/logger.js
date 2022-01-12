@@ -30,11 +30,12 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var colors = require('colors/safe');
+
+import colors from 'colors/safe';
 
 
 
-class Logger {
+export class Logger {
     /**
     * Kad, by default, prints log messages to the console using pretty-printed
     * status messages. There are different types of messages indicating the nature
@@ -97,4 +98,3 @@ class Logger {
 }
 
 
-module.exports = Logger;

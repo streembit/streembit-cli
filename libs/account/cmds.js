@@ -21,15 +21,12 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-
-const logger = require("streembit-util").logger;
-const prompt = require("prompt");
-const createHash = require('create-hash');
-
-const AccountDb = require("libs/database/accountdb");
-const Account = require("libs/account");
-const config = require("libs/config");
-
+import { logger } from "streembit-util";
+import prompt from "prompt";
+import createHash from "create-hash";
+import AccountDb from "../../libs/database/accountdb.js";
+import { Account } from "../../libs/account/index.js";
+import { config } from "../../libs/config/index.js";
 
 class AccountCmds {
     constructor(cmd, callback) {
@@ -228,4 +225,4 @@ class AccountCmds {
     }
 }
 
-module.exports = AccountCmds;
+export default AccountCmds;

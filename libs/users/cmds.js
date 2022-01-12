@@ -21,15 +21,12 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-
-const prompt = require("prompt");
-const bs58check = require('bs58check');
-const createHash = require('create-hash');
-const logger = require("streembit-util").logger;
-
-const Users = require("./");
-const UsersDb = require("libs/database/usersdb");
-
+import prompt from "prompt";
+import bs58check from "bs58check";
+import createHash from "create-hash";
+import { logger } from "streembit-util";
+import { Users } from "./index.js";
+import UsersDb from "../database/usersdb.js";
 
 class UsersCmds {
     constructor(cmd, callback) {
@@ -203,7 +200,7 @@ class UsersCmds {
             settings = '{}';
         }
 
-        const buffer = new Buffer(pk, 'hex');
+        const buffer = Buffer.from(pk, 'hex');
         const rmd160buffer = createHash('rmd160').update(buffer).digest();
         const pkhash = bs58check.encode(rmd160buffer);
 
@@ -248,7 +245,7 @@ class UsersCmds {
                 }
                 if (pk && pk.length) {
                     update['publickey'] = pk;
-                    const buffer = new Buffer(pk, 'hex');
+                    const buffer = Buffer.from(pk, 'hex');
                     const rmd160buffer = createHash('rmd160').update(buffer).digest();
                     update['pkhash'] = bs58check.encode(rmd160buffer);
                 }
@@ -304,4 +301,4 @@ class UsersCmds {
     }
 }
 
-module.exports = UsersCmds;
+export default UsersCmds;

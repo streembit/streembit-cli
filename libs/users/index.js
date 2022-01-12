@@ -22,17 +22,14 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const bs58check = require('bs58check');
-const createHash = require('create-hash');
-
-const logger = require("streembit-util").logger;
-const async = require("async");
-const config = require("libs/config");
-const Database = require("libs/database/usersdb");
+import bs58check from "bs58check";
+import createHash from "create-hash";
+import { logger } from "streembit-util";
+import UsersDb from "../database/usersdb.js";
 
 let instance = null;
 
-class Users {
+export class Users {
 
     constructor() {
         if (!instance) {
@@ -62,7 +59,7 @@ class Users {
     }
 
     get_user_bypublickey(publickey) {
-        var user;
+        let user;
         this.users.forEach(
             (item, key) => {
                 if (item.publickey == publickey) {
@@ -78,14 +75,14 @@ class Users {
     }
 
     delete_user(userid) {
-        var db = new Database();
+        let db = new UsersDb();
         return db.delete_user(userid);
     }
 
     add_user(user) {
-        const db = new Database();
+        const db = new UsersDb();
 
-        const buffer = new Buffer(user.publickey, 'hex');
+        const buffer = Buffer.from(user.publickey, 'hex');
         const rmd160buffer = createHash('rmd160').update(buffer).digest();
         const pkhash = bs58check.encode(rmd160buffer);
 
@@ -93,14 +90,14 @@ class Users {
     }
 
     update_user(user) {
-        const db = new Database();
+        const db = new UsersDb();
         delete user.userid;
         return db.update_user(user.pkhash, user);
     }
 
     populate() {
         return new Promise((resolve, reject) => {
-            var db = new Database();
+            let db = new UsersDb();
             db.getall().then(
                 rows => {
                     instance.m_users = new Map();
@@ -113,7 +110,7 @@ class Users {
                     (err) => {
                         reject(err);
                     }
-                );            
+                );
         });
     }
 
@@ -124,7 +121,7 @@ class Users {
                 return Promise.resolve();
             }
 
-            var db = new Database();
+            let db = new UsersDb();
 
             const dbusers = await db.getall();
 
@@ -171,26 +168,24 @@ class Users {
         }
     }
 
-    async init(callback) {
+    async init() {
 
         try {
             await this.populate();
         }
         catch (err) {
-            return callback("users populate error: " + err.message);
-        }            
+            throw new Error(`users populate error:  + ${err.message}`);
+        }
 
-        var namesarr = [];
+        let namesarr = [];
         this.users.forEach(
             (value, key) => {
                 namesarr.push(value.username);
             }
         );
 
-        var list = namesarr.length ? namesarr.join() : "-";
+        let list = namesarr.length ? namesarr.join() : "-";
         logger.info("Users: " + list);
-
-        callback();
     }
 
     validateUsername(username) {
@@ -205,7 +200,7 @@ class Users {
     }
 
     validate10(val) {
-        var valid = /^[0-1]{0,1}$/.test(val);
+        let valid = /^[0-1]{0,1}$/.test(val);
         return valid;
     }
 
@@ -223,6 +218,3 @@ class Users {
         return true;
     }
 }
-
-
-module.exports = Users;

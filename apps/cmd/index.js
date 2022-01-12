@@ -21,16 +21,14 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
+import prompt from "prompt";
+import { logger } from "streembit-util";
+import { config } from "../../libs/config/index.js";
+import AccountCmds from "../../libs/account/cmds.js"
+import UsersCmds from "../../libs/users/cmds.js";
+import DevicesCmds from "../../libs/devices/cmds.js"
 
-const logger = require('streembit-util').logger;
-const config = require('libs/config');
-const AccountCmds = require('libs/account/cmds');
-const UsersCmds = require('libs/users/cmds');
-const DevicesCmds = require('libs/devices/cmds');
-const prompt = require('prompt');
-
-
-class CmdHandler {
+export class CmdHandler {
     constructor() {        
     }
 
@@ -128,5 +126,3 @@ class CmdHandler {
         console.log('-------------------');
     }
 }
-
-module.exports = CmdHandler;

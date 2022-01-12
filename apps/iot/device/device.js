@@ -22,16 +22,16 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const logger = require("streembit-util").logger;
-const iotdefinitions = require("apps/iot/definitions");
-const Devices = require("libs/devices");
-const TrackingEvent = require("./tracking_event");
-const Users = require('libs/users');
-const events = require("streembit-util").events;
-const constants = require('libs/constants');
+
+import { logger, events } from "streembit-util";
+import { definitions as iotdefinitions } from '../definitions.js';
+import { FeatureFactory } from './feature/factory.js';
+import { Users } from '../../../libs/users/index.js';
+
+import { constants } from '../../../libs/constants/index.js';
 
 
-class Device {
+export class Device {
 
     constructor(id, device, transport) {
         if (!id) {
@@ -55,9 +55,9 @@ class Device {
                 if (deteailsobj) {
                     this.m_details = deteailsobj;
                 }
-            }            
+            }
         }
-        catch (err) { }        
+        catch (err) { }
 
         this.transport = transport;
         this.m_active = false;
@@ -70,7 +70,7 @@ class Device {
             this.featuredef = device.features;
         }
 
-        this.features = new Map();  
+        this.features = new Map();
         if (this.featuredef && this.featuredef.length) {
             this.setfeatures();
         }
@@ -102,7 +102,7 @@ class Device {
         if (flist.length) {
             flist.forEach(
                 (feature) => {
-                    let feature_type = iotdefinitions.ZIGBEE_CLUSTERMAP[feature]; 
+                    let feature_type = iotdefinitions.ZIGBEE_CLUSTERMAP[feature];
                     types.push(feature_type);
                 }
             );
@@ -146,16 +146,15 @@ class Device {
 
             flist.forEach(
                 (feature) => {
-                    try {     
-                        let feature_type = this.get_feature_type(feature); 
+                    try {
+                        let feature_type = this.get_feature_type(feature);
                         let feature_name = this.get_feature_name(feature_type);
                         if ((feature_type && feature_name) && !this.features.has(feature_type)) {
-                            let feature_lib = "apps/iot/device/feature/" + this.protocol + "/" + feature_name;
-                            let feature_obj = require(feature_lib);
-                            let feature_handler = new feature_obj(this.id, feature, feature_type, this.transport);
+                            let feature_handler = FeatureFactory.init(this.protocol, feature_name, this.id, feature, feature_type, this.transport);
+
                             if (feature_handler) {
                                 this.features.set(feature_type, feature_handler);
-                                logger.debug("feature " + feature_name + " added to device " + this.id);                                
+                                logger.debug("feature " + feature_name + " added to device " + this.id);
                             }
                         }
                     }
@@ -164,7 +163,7 @@ class Device {
                     }
                 }
             );
-            
+
         }
         catch (err) {
             logger.error("Device setfeatures() error: %j", err)
@@ -186,7 +185,7 @@ class Device {
                 let tmparr = [];
                 for (let i = 0; i < features.length; i++) {
                     if (this.is_feature_handled(features[i])) {
-                        tmparr.push(features[i]);                        
+                        tmparr.push(features[i]);
                     }
                 }
                 this.featuredef = JSON.stringify(tmparr);
@@ -197,7 +196,7 @@ class Device {
                 if (this.featuredef) {
                     let arr = JSON.parse(this.featuredef);
                     for (let i = 0; i < features.length; i++) {
-                        if (this.is_feature_handled(features[i])){
+                        if (this.is_feature_handled(features[i])) {
                             if (arr.indexOf(features[i]) == -1) {
                                 arr.push(features[i]);
                             }
@@ -216,7 +215,7 @@ class Device {
         }
     }
 
-    init() {}
+    init() { }
 
     get active() {
         return this.m_active;
@@ -251,7 +250,7 @@ class Device {
                     }
                 }
             );
-        }       
+        }
     }
 
     update_property(name, value) {
@@ -307,14 +306,14 @@ class Device {
                     callback(null, result);
                 }
             )
-        .catch(err => {
-            const result = {
-                payload: {
-                    result: err.message
-                }
-            };
-            callback(null, result);
-        });
+            .catch(err => {
+                const result = {
+                    payload: {
+                        result: err.message
+                    }
+                };
+                callback(null, result);
+            });
     }
 
     update_user(user, callback) {
@@ -337,14 +336,14 @@ class Device {
                     callback(null, result);
                 }
             )
-        .catch(err => {
-            const result = {
-                payload: {
-                    result: err.message
-                }
-            };
-            callback(null, result);
-        });
+            .catch(err => {
+                const result = {
+                    payload: {
+                        result: err.message
+                    }
+                };
+                callback(null, result);
+            });
     }
 
     delete_user(uid, callback) {
@@ -367,14 +366,14 @@ class Device {
                     callback(null, result);
                 }
             )
-        .catch(err => {
-            const result = {
-                payload: {
-                    result: err.message
-                }
-            };
-            callback(null, result);
-        });
+            .catch(err => {
+                const result = {
+                    payload: {
+                        result: err.message
+                    }
+                };
+                callback(null, result);
+            });
     }
 
     configure_reports(payload, callback) {
@@ -424,4 +423,3 @@ class Device {
 }
 
 
-module.exports = Device;

@@ -24,15 +24,15 @@ Streembit team plugin for
 
 'use strict';
 
-const SeedlistDb = require("libs/database/seedlistdb");
-const constants = require('./constants');
+import * as constants from './constants.js'
+import SeedlistDb from '../../libs/database/seedlistdb.js'
 
 
 /**
  * Keeps track of seen contacts in a sqlite database so they can be used as
  * bootstrap nodes
  */
-class SeedlistPlugin {
+export class SeedlistPlugin {
     /**
      * @constructor
      * @param {KademliaNode} node
@@ -82,10 +82,8 @@ class SeedlistPlugin {
  * Registers a {@link module:kadence/seedlist~SeedlistPlugin} with a
  * {@link KademliaNode}
  */
-module.exports = function () {
+export default function () {
     return function (node) {
         return new SeedlistPlugin(node);
     }
 };
-
-module.exports.SeedlistPlugin = SeedlistPlugin;

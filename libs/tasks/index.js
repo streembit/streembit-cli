@@ -22,14 +22,13 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
-const constants = require("libs/constants");
-const PeerNet = require("libs/peernet");
-const Users = require("libs/users");
-const async = require("async");
-const Account = require("libs/account");
-const config = require("libs/config");
+import async from "async";
+import { logger, events } from "streembit-util";
+import { constants } from "../constants/index.js";
+// import { PeerNet } from "../peernet/index.js";
+// import { Users } from '../users/index.js';
+import { Account } from '../account/index.js';
+import { config } from '../config/index.js';
 
 class TaskManager {
 
@@ -57,7 +56,7 @@ class TaskManager {
 
             var peernet = new PeerNet();
 
-            var send_to_contact = function(contact, next) {
+            var send_to_contact = function (contact, next) {
                 try {
                     peernet.send_contact_offer(
                         crypto_key, account_name, pubkey_hash, public_key, contact.publickey, contact.pkhash, symcryptkey, transport, address, localip, port, type,
@@ -69,7 +68,7 @@ class TaskManager {
                             }
                             next();
                         }
-                    );                    
+                    );
                 }
                 catch (err) {
                     logger.error("send_to_contact error, contact: " + contact.public_key + " error: " + err.message);
@@ -86,7 +85,7 @@ class TaskManager {
             }
 
             async.eachSeries(list, send_to_contact, function () {
-                logger.debug("inform_users ended. error count: " + error_count );
+                logger.debug("inform_users ended. error count: " + error_count);
             });
         }
         catch (err) {
@@ -115,39 +114,46 @@ class TaskManager {
         logger.debug("on_application_init");
     }
 
-    run(callback) {
-        try {
+    async run() {
 
-            // initialize the task event handler
-            events.register(
-                events.ONTASKINIT,
-                (task, payload) => {
-                    switch (task) {
-                        case constants.TASK_PUBLISHACCOUNT:
-                            this.publish_account();
-                            break;
-                        case constants.TASK_INFORM_CONTACTS:
-                            this.inform_users(payload);
-                            break;
-                        default:
-                            break;
+        return new Promise((resolve, reject) => {
+            try {
+
+                // initialize the task event handler
+                events.register(
+                    events.ONTASKINIT,
+                    (task, payload) => {
+                        switch (task) {
+                            case constants.TASK_PUBLISHACCOUNT:
+                                this.publish_account();
+                                break;
+                            case constants.TASK_INFORM_CONTACTS:
+                                this.inform_users(payload);
+                                break;
+                            default:
+                                break;
+                        }
                     }
-                }
-            );
+                );
 
-            events.register(
-                events.ONAPPINIT,
-                (result) => {
-                    this.on_application_init();
-                }
-            );
+                events.register(
+                    events.ONAPPINIT,
+                    (result) => {
+                        this.on_application_init();
+                    }
+                );
 
-            callback();
-        }
-        catch (err) {
-            logger.error("task manager error: " + err.message);
-        }
+                resolve(true);
+            }
+            catch (err) {
+                logger.error("task manager error: " + err.message);
+            }
+        });
+
     }
 }
 
-module.exports = TaskManager;
+export {
+    TaskManager as Tasks
+}
+// module.exports = TaskManager;

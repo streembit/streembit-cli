@@ -31,14 +31,14 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-var assert = require('assert');
+import assert from 'assert';
 
 /**
  * Factory for blacklist middleware
  * @param {Array} blacklist - array of nodeID's to ban
  * @returns {Function}
  */
-const BlacklistFactory = (blacklist) => {
+export const BlacklistFactory = (blacklist) => {
   assert(Array.isArray(blacklist), 'Invalid blacklist supplied');
 
   return function blacklister(message, contact, next) {
@@ -50,4 +50,4 @@ const BlacklistFactory = (blacklist) => {
   };
 };
 
-module.exports = BlacklistFactory;
+

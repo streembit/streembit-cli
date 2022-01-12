@@ -23,16 +23,15 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const EcMeasureFeature = require("../ecmeasure");
-const logger = require("streembit-util").logger;
+
+import { EcMeasureFeature } from '../ecmeasure.js'
+import { logger } from "streembit-util";
 
 
 class ZwaveEcMeasureFeature extends EcMeasureFeature {
 
     constructor(device, feature) {
-        super(device, feature);  
+        super(device, feature);
         logger.debug("initialized a ZwaveEcMeasureFeature for device id: " + this.deviceid + ", power_multiplier: " + this.power_multiplier + " power_divisor: " + this.power_divisor);
     }
 
@@ -60,7 +59,7 @@ class ZwaveEcMeasureFeature extends EcMeasureFeature {
 
     // start managing features
     // called once the permission is PERMISSION_ALLOWED and the comm is established
-    process_features() {       
+    process_features() {
     }
 
 }

@@ -20,30 +20,24 @@ Copyright (C) 2017 The Streembit software development team
 
 'use strict';
 
-const constants = require("libs/constants");
-const Wshandler = require("./handler");
-const iotdefinitions = require("apps/iot/definitions");
-const logger = require("streembit-util").logger;
-const events = require("streembit-util").events;
-const WebSocket = require('ws');
-const msgvalidator = require("libs/peernet/msghandlers/msg_validator");
-const createHmac = require('create-hmac');
-const secrand = require('secure-random');
-const WsDb = require("libs/database/wsdb");
-const appinfo = require('libs/appinfo');
-const PeerNet = require("libs/peernet");
-const peersrvc = require('libs/peernet/msghandlers/peer');
-const peermsg = require("libs/message");
-const errcodes = require('streembit-errcodes');
-const Account = require("libs/account");
-const config = require("libs/config");
-const bs58check = require('bs58check');
-const createHash = require("create-hash");
+import { constants } from "../../libs/constants/index.js";
+import { logger, events } from "streembit-util";
+import { Account } from "../../libs/account/index.js";
+import { WsHandler } from "./handler.js";
+import { WsDb } from "../../libs/database/wsdb.js";
+import WebSocket from "ws";
+import createHash from "create-hash";
+import bs58check from "bs58check";
+import * as errcodes from "streembit-errcodes";
+import * as peermsg from "../../libs/message/index.js";
+import secrand from "secure-random";
+import * as peersrvc from "../../libs/peernet/msghandlers/peer.js";
+import { PeerNet } from "../../libs/peernet/index.js"
 
 // 
 // Service WS handler
 //
-class SrvcWsHandler extends Wshandler {
+export class SrvcWsHandler extends WsHandler {
     constructor() {
         super();
         this.database = new WsDb();
@@ -51,7 +45,7 @@ class SrvcWsHandler extends Wshandler {
 
     senderror(ws, message, errcode, err) {
         try {
-            var errmsg = super.format_error((message && message.txn ? message.txn : 0), errcode, err);
+            const errmsg = super.format_error((message && message.txn ? message.txn : 0), errcode, err);
             ws.send(errmsg);
         }
         catch (e) {
@@ -173,7 +167,7 @@ class SrvcWsHandler extends Wshandler {
                         const account = new Account();
                         const peernet = new PeerNet();
 
-                        const buffer = new Buffer(account.public_key, 'hex');
+                        const buffer = Buffer.from(account.public_key, 'hex');
                         const rmd160buffer = createHash('rmd160').update(buffer).digest();
                         const signature = bs58check.encode(rmd160buffer);
                         const jwt_plain = {
@@ -234,7 +228,7 @@ class SrvcWsHandler extends Wshandler {
     // handles messages from the client
     processmsg(ws, request) {
         try {
-            var message = JSON.parse(request);
+            const message = JSON.parse(request);
             if (!message.action || !message.txn) {
                 //TODO report this client as it is sending a bogus message, another 3 bogus message and blacklist it
                 return;
@@ -298,6 +292,3 @@ class SrvcWsHandler extends Wshandler {
         }
     }
 }
-
-
-module.exports = SrvcWsHandler;

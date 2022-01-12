@@ -19,9 +19,14 @@ Copyright (C) 2016 The Streembit software development team
 
 */
 
-var nat = exports;
+import * as utils from "./nat-upnp/utils.js";
+import { Ssdp } from "./nat-upnp/ssdp.js";
+import { Device } from "./nat-upnp/device.js";
+import { Client } from "./nat-upnp/client.js";
 
-nat.utils = require('./nat-upnp/utils');
-nat.ssdp = require('./nat-upnp/ssdp');
-nat.device = require('./nat-upnp/device');
-nat.createClient = require('./nat-upnp/client').create;
+export const natupnp = {
+    utils: utils,
+    ssdp: Ssdp,
+    Device: Device,
+    createClient: Client
+};

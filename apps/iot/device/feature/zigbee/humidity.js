@@ -23,16 +23,16 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const HumidityFeature = require("../humidity");
-const logger = require("streembit-util").logger;
-const util = require('util');
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
+
+
+import { definitions as iotdefinitions } from '../../../definitions.js';
+import { HumidityFeature } from '../humidity.js';
+import { logger } from "streembit-util";
+import { ZigbeeCommands as zigbeecmd } from '../../../protocols/zigbee/commands/index.js';
 
 const CLUSTERID = 0x0405;
 
-class ZigbeeHumidityFeature extends HumidityFeature {
+export class ZigbeeHumidityFeature extends HumidityFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
         super(deviceid, feature, feature_type, transport);
@@ -183,7 +183,7 @@ class ZigbeeHumidityFeature extends HumidityFeature {
             () => {
                 this.read_humidity();
             },
-            ((this.long_poll_interval /4)*1000)
+            ((this.long_poll_interval / 4) * 1000)
         );
     }
 
@@ -212,7 +212,7 @@ class ZigbeeHumidityFeature extends HumidityFeature {
                 callback(null, data);
             }
             else {
-                super.read(payload, callback, (this.report_max * 1000 - 1 ));
+                super.read(payload, callback, (this.report_max * 1000 - 1));
                 // do the reading
                 this.read_humidity();
             }
@@ -228,4 +228,3 @@ class ZigbeeHumidityFeature extends HumidityFeature {
 
 }
 
-module.exports = ZigbeeHumidityFeature;

@@ -24,11 +24,10 @@ Based on
 
 'use strict';
 
-const { EventEmitter } = require('events');
-const Bucket = require('./bucket');
-const utils = require('./utils');
-const constants = require('./constants');
-
+import { EventEmitter } from "events";
+import * as constants from "./constants.js";
+import * as utils from "./utils.js";
+import Bucket from "./bucket.js";
 
 /**
  * Represents a kademlia routing table
@@ -178,4 +177,4 @@ class RoutingTable extends Map {
 
 }
 
-module.exports = RoutingTable;
+export default RoutingTable;

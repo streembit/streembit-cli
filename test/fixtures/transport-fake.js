@@ -1,14 +1,14 @@
-'use strict';
+"use strict";
 
-const { Duplex: DuplexStream } = require('stream');
+// const { Duplex: DuplexStream } = require('stream');
 
+import { Duplex as DuplexStream } from "stream";
 
 /**
  * Represents a fake transport adapter that implements the read/write interface
  * and just emits a send and recv event
  */
-class FakeTransport extends DuplexStream {
-
+export class FakeTransport extends DuplexStream {
   /**
    * @constructor
    */
@@ -20,23 +20,16 @@ class FakeTransport extends DuplexStream {
    * @private
    */
   _read() {
-    this.once('recv', (data) => this.push(data));
+    this.once("recv", (data) => this.push(data));
   }
 
   /**
    * @private
    */
   _write(data, enc, callback) {
-    this.emit('send', data);
+    this.emit("send", data);
     callback();
   }
 
-  listen() { }
-
-  toString() {
-    return 'that';
-  }
-
+  listen() {}
 }
-
-module.exports = FakeTransport;

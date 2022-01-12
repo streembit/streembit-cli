@@ -31,12 +31,14 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-const assert = require('assert');
-const clarinet = require('clarinet');
-const net = require('net');
-const StreembitContact = require('../contacts/streembit-contact');
-const RPC = require('../rpc');
-const Message = require('../message');
+import assert from 'assert';
+
+import clarinet from 'clarinet';
+import net from 'net';
+import { StreembitContact } from '../contacts/streembit-contact.js';
+import { RPC } from '../rpc.js';
+import { Message } from '../message.js';
+
 
 /**
  * Transport adapter that sends and receives messages over a TCP socket
@@ -45,15 +47,15 @@ const Message = require('../message');
  * @param {StreembitContact} contact - Your node's {@link Contact} instance
  */
 
-class TCPTransport extends RPC {
+export class TCPTransport extends RPC {
 
     constructor(contact, options) {
         super(contact, options);
         if (!(this instanceof TCPTransport)) {
             return new TCPTransport(contact, options);
         }
-    
-        assert(contact instanceof StreembitContact , 'Invalid contact supplied');
+
+        assert(contact instanceof StreembitContact, 'Invalid contact supplied');
         assert(typeof contact.host === 'string' && contact.host.length > 0, 'Invalid host was supplied');
         assert(typeof contact.port === 'number' && contact.port > 0, 'Invalid port was supplied');
 
@@ -73,7 +75,7 @@ class TCPTransport extends RPC {
         this._queuedResponses = {};
 
         this._socket.on('error', (err) => {
-        self._log.error('rpc encountered and error: %s', err.message);
+            self._log.error('rpc encountered and error: %s', err.message);
         });
 
         this._socket.on('listening', done);
@@ -182,13 +184,13 @@ class TCPTransport extends RPC {
                                 connection.end();
                                 break;
                         }
-                    } else{
+                    } else {
                         // all other messages
                         if (parsed.id && !self._queuedResponses[parsed.id]) {
                             self._queuedResponses[parsed.id] = connection;
                         }
 
-                        self.receive(new Buffer(buffer), connection);
+                        self.receive(Buffer.from(buffer), connection);
                     }
                 } catch (e) {
                     self._log.error('TCP handleConnection error: %j', e);
@@ -241,4 +243,4 @@ class TCPTransport extends RPC {
     };
 }
 
-module.exports = TCPTransport;
+

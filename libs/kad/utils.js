@@ -32,16 +32,17 @@ Copyright (C) 2016 The Streembit software development team
 
 'use strict';
 
-let assert = require('assert');
-let crypto = require('crypto');
-let constants = require('./constants');
+import assert from 'assert';
+import crypto from 'crypto'
+import { constants } from './constants.js';
+
 
 /**
  * Validate a key
  * @param {String} key - Key to test
  * @returns {Boolean}
  */
-exports.isValidKey = (key) => {
+export const isValidKey = (key) => {
     return !!key && key.length === constants.B / 4;
 };
 
@@ -68,7 +69,7 @@ exports.getRandomKeyBuffer = function () {
  * @param {String|Buffer} data - Data to SHA1 hash
  * @returns {String}
  */
-exports.createID = (data) => {
+export const createID = (data) => {
     //if (exports.isValidKey(data)) {
     //    return data;
     //}
@@ -82,10 +83,8 @@ exports.createID = (data) => {
  * @param {String} hexString
  * @returns {Buffer}
  */
-exports.hexToBuffer = (hexString) => {
-    //let buf = new Buffer(constants.B / 8);
-    //buf.write(hexString, 0, 'hex');
-    let buf = Buffer.from(hexString, 'hex');
+export const hexToBuffer = (hexString) => {
+    var buf = Buffer.from(hexString, 'hex');
     return buf;
 };
 
@@ -95,13 +94,13 @@ exports.hexToBuffer = (hexString) => {
  * @param {String} key2
  * @returns {Number}
  */
-exports.getDistance = (id1, id2) => {
-    assert(exports.isValidKey(id1), 'Invalid key supplied');
-    assert(exports.isValidKey(id2), 'Invalid key supplied');
+export const getDistance = (id1, id2) => {
+    assert(isValidKey(id1), 'Invalid key supplied');
+    assert(isValidKey(id2), 'Invalid key supplied');
 
-    let distance = new Buffer(constants.B / 8);
-    let id1Buf = exports.hexToBuffer(id1);
-    let id2Buf = exports.hexToBuffer(id2);
+    var distance = Buffer.alloc(constants.B / 8);
+    var id1Buf = hexToBuffer(id1);
+    var id2Buf = hexToBuffer(id2);
 
     for (let i = 0; i < constants.B / 8; ++i) {
         distance[i] = id1Buf[i] ^ id2Buf[i];
@@ -116,7 +115,7 @@ exports.getDistance = (id1, id2) => {
  * @param {Buffer} b2
  * @returns {Number}
  */
-exports.compareKeys = (b1, b2) => {
+export const compareKeys = (b1, b2) => {
     assert.equal(b1.length, b2.length);
 
     for (let i = 0; i < b1.length; ++i) {
@@ -138,12 +137,12 @@ exports.compareKeys = (b1, b2) => {
  * @param {String} id2
  * @returns {Number}
  */
-exports.getBucketIndex = (id1, id2) => {
-    assert(exports.isValidKey(id1), 'Invalid key supplied');
-    assert(exports.isValidKey(id2), 'Invalid key supplied');
+export const getBucketIndex = (id1, id2) => {
+    assert(isValidKey(id1), 'Invalid key supplied');
+    assert(isValidKey(id2), 'Invalid key supplied');
 
-    let distance = exports.getDistance(id1, id2);
-    let bucketNum = constants.B;
+    var distance = getDistance(id1, id2);
+    var bucketNum = constants.B;
 
     for (let i = 0; i < distance.length; i++) {
         if (distance[i] === 0) {
@@ -168,11 +167,11 @@ exports.getBucketIndex = (id1, id2) => {
  * @param {Number} exp
  * @returns {Buffer}
  */
-exports.getPowerOfTwoBuffer = (exp) => {
+export const getPowerOfTwoBuffer = (exp) => {
     assert.ok(exp >= 0 && exp < constants.B);
 
-    let buffer = new Buffer(constants.K);
-    let byte = parseInt(exp / 8);
+    var buffer = Buffer.alloc(constants.K);
+    var byte = parseInt(exp / 8);
 
     // we set the byte containing the bit to the right left shifted amount
     buffer.fill(0);
@@ -186,9 +185,9 @@ exports.getPowerOfTwoBuffer = (exp) => {
  * (index = n has nodes within distance 2^n <= distance < 2^(n+1))
  * @param {Number} index
  */
-exports.getRandomInBucketRangeBuffer = (index) => {
-    let base = exports.getPowerOfTwoBuffer(index);
-    let byte = parseInt(index / 8); // randomize bytes below the power of two
+export const getRandomInBucketRangeBuffer = (index) => {
+    var base = getPowerOfTwoBuffer(index);
+    var byte = parseInt(index / 8); // randomize bytes below the power of two
 
     for (let i = constants.K - 1; i > (constants.K - byte - 1); i--) {
         base[i] = parseInt(Math.random() * 256);

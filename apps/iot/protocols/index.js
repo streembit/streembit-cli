@@ -20,8 +20,9 @@ Copyright (C) 2017 The Streembit software development team
 */
 
 'use strict';
+import { ProtocolsFactory } from './factory.js';
 
-class IoTProtocolHandler {
+export class IoTProtocolHandler {
     constructor(protocol, mcu) {
         this.protocol = protocol;
         this.mcu = mcu;
@@ -29,28 +30,19 @@ class IoTProtocolHandler {
         this.mcuhandler = 0;
 
         if (protocol && mcu) {
-            var handler = 0;
-            try {
-                var lib = 'apps/iot/protocols/' + this.protocol + '/' + this.mcu;
-                handler = require(lib);
-            }
-            catch (err) {
-                throw new Error("MCU library " + this.mcu + " error: " + err.message);
-            }
-
+            let handler = 0;
             if (!handler) {
                 throw new Error("handler for MCU " + this.mcu + " is missing");
             }
-            this.mcuhandler = new handler();
+            this.mcuhandler = ProtocolsFactory.initMcu(this.protocol, this.mcu);
         }
     }
 
     dotasks() {
     }
 
-    init() {        
+    init() {
     }
 
 }
 
-module.exports = IoTProtocolHandler;

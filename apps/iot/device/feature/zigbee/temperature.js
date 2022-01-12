@@ -23,19 +23,20 @@ Copyright (C) 2017 The Streembit software development team
 'use strict';
 
 
-const constants = require("libs/constants");
-const iotdefinitions = require("apps/iot/definitions");
-const TemperatureFeature = require("../temperature");
-const logger = require("streembit-util").logger;
-const util = require('util');
-const zigbeecmd = require("apps/iot/protocols/zigbee/commands");
+
+
+import { definitions as iotdefinitions } from '../../../definitions.js';
+import { TemperatureFeature } from "../temperature.js";
+import { logger } from "streembit-util";
+
+import { ZigbeeCommands as zigbeecmd } from '../../../protocols/zigbee/commands/index.js';
 
 let CLUSTERID = 0x0402;
 
-class ZigbeeTemperatureFeature extends TemperatureFeature {
+export class ZigbeeTemperatureFeature extends TemperatureFeature {
 
     constructor(deviceid, feature, feature_type, transport) {
-        super(deviceid, feature, feature_type, transport);     
+        super(deviceid, feature, feature_type, transport);
 
         this.cluster = feature.toLowerCase();
         let clusternum = parseInt(this.cluster, 16);
@@ -48,14 +49,14 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         this.NWKaddress = 0;
         this.ispolling = (feature.settings && feature.settings.ispolling) ? feature.settings.ispolling : false;
         this.long_poll_interval = (feature.settings && feature.settings.long_poll_interval) ? feature.settings.long_poll_interval : -1;
-        this.longpolling_enabled = this.ispolling && this.long_poll_interval > 0;    
-        this.polling_timer = 0;      
+        this.longpolling_enabled = this.ispolling && this.long_poll_interval > 0;
+        this.polling_timer = 0;
 
         this.report_max = 0x003c; // 60 seconds  
 
         this.property_names.push(iotdefinitions.PROPERTY_TEMPERATURE);
 
-        logger.debug("Initialized a Zigbee temperature sensor feature");        
+        logger.debug("Initialized a Zigbee temperature sensor feature");
     }
 
     on_datareceive_event(properties) {
@@ -65,11 +66,11 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
                     (item) => {
                         if (item.property == iotdefinitions.PROPERTY_TEMPERATURE) {
                             var val = new Number(item.value);
-                            this.temperature = val.toFixed(2);                            
+                            this.temperature = val.toFixed(2);
                             let data = {
                                 payload: {
                                     event: iotdefinitions.EVENT_PROPERTY_REPORT,
-                                    temperature: this.temperature 
+                                    temperature: this.temperature
                                 }
                             };
                             super.on_datareceive_event(data, iotdefinitions.EVENT_NOTIFY_USERS);
@@ -82,7 +83,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         }
         catch (err) {
             logger.error("ZigbeeTemperatureFeature on_datareceive_event() error: %j", err);
-        }        
+        }
     }
 
     iscluster(param) {
@@ -108,7 +109,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         }
     }
 
-    bind() {        
+    bind() {
         var txn = 0x52;
         logger.debug("ZigbeeTemperatureFeature cluster 0402, send bind request at endpoint: " + this.cluster_endpoint);
         var cmd = zigbeecmd.bind(txn, this.IEEEaddress, this.NWKaddress, CLUSTERID, this.cluster_endpoint);
@@ -118,7 +119,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
     on_clusterlist_receive(endpoint) {
         try {
             logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " on_clusterlist_receive()");
-            this.cluster_endpoint = endpoint; 
+            this.cluster_endpoint = endpoint;
             this.bind();
         }
         catch (err) {
@@ -159,7 +160,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
         logger.debug("ZigbeeTemperatureFeature " + this.IEEEaddress + " on_report_configured()");
     }
 
-    on_device_online(properties) {       
+    on_device_online(properties) {
         this.IEEEaddress = properties.address64;
         this.NWKaddress = properties.address16;
         logger.debug("ZigbeeTemperatureFeature IEEEaddress: " + this.IEEEaddress + " NWKaddress: " + this.NWKaddress);
@@ -184,7 +185,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
                 //console.log("poll temperature data");
                 this.read_temperature();
             },
-            ((this.long_poll_interval /4)*1000)
+            ((this.long_poll_interval / 4) * 1000)
         );
     }
 
@@ -199,7 +200,7 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
     }
 
     read(payload, callback) {
-        try {    
+        try {
             let current_time = Date.now();
             let last_update_elapsed = current_time - this.last_update_time;
             let is_report_available = last_update_elapsed < this.report_max * 1000
@@ -210,10 +211,10 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
                         temperature: this.temperature
                     }
                 };
-                callback(null, data);                
+                callback(null, data);
             }
             else {
-                super.read(payload, callback, (this.report_max * 1000 - 1 ));
+                super.read(payload, callback, (this.report_max * 1000 - 1));
                 // do the reading
                 this.read_temperature();
             }
@@ -229,4 +230,3 @@ class ZigbeeTemperatureFeature extends TemperatureFeature {
 
 }
 
-module.exports = ZigbeeTemperatureFeature;
