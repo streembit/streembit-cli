@@ -477,6 +477,7 @@ class StreembitConfig {
     this.m_database_name = null;
     this.m_users = null;
     this.m_wsmode = null;
+    this.m_rootdir = null;
     this.cnfobj = {
       transport: {
         identity: "",
@@ -615,6 +616,14 @@ class StreembitConfig {
 
   set database_name(value) {
     this.cnfobj.database_name = value;
+  }
+
+  get rootdir() {
+    return this.cnfobj.rootdir;
+  }
+
+  set rootdir(value) {
+    this.cnfobj.rootdir = value;
   }
   get users() {
     return this.m_users;

@@ -203,7 +203,7 @@ export class WsServer {
                     });
 
                     ws.on('pong', () => {
-                        this.isAlive = true;
+                        ws.isAlive = true;
                     });
                 }
                 catch (err) {
