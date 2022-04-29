@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "app-module-path": "^2.2.0",
-    "async": "^2.6.0",
+    "async": "^2.6.4",
     "atbf": "^1.1.0",
     "boscar": "^2.0.0",
     "browserify-aes": "1.2.0",
